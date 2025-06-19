@@ -76,33 +76,12 @@ struct IsolatedTripDetailView: View {
         }
         .onAppear {
             print("📱 IsolatedTripDetailView.onAppear - START for \(trip.name)")
-            
-            // Initialize authentication state only once on appear
-            print("📱 Getting BiometricAuthManager.shared...")
-            let authManager = BiometricAuthManager.shared
-            
-            print("📱 Calling authManager.isAuthenticated(for: trip)...")
-            isLocallyAuthenticated = authManager.isAuthenticated(for: trip)
-            
-            print("📱 Calling authManager.isProtected(trip)...")
-            isTripProtected = authManager.isProtected(trip)
-            
-            needsAuthentication = isTripProtected && !isLocallyAuthenticated
-            
-            print("📱 Calling authManager.canUseBiometrics()...")
-            canUseBiometrics = authManager.canUseBiometrics()
-            
-            print("📱 Accessing authManager.isEnabled...")
-            biometricAuthEnabled = authManager.isEnabled
-            
-            print("📱 Accessing authManager.biometricType...")
-            isFaceID = authManager.biometricType == .faceID
-            
-            print("📱 About to call updateCachedActivities...")
-            // Update cached activities
-            updateCachedActivities(for: trip)
-            
+            updateViewState()
             print("📱 IsolatedTripDetailView.onAppear - COMPLETED for \(trip.name)")
+        }
+        .onChange(of: trip.id) { _, newTripID in
+            print("📱 IsolatedTripDetailView.onChange(of: trip.id) - Trip changed to \(trip.name)")
+            updateViewState()
         }
     }
     
@@ -372,6 +351,32 @@ struct IsolatedTripDetailView: View {
     
     // fetchTrip method removed since we now receive trip directly
     
+    private func updateViewState() {
+        print("📱 Getting BiometricAuthManager.shared...")
+        let authManager = BiometricAuthManager.shared
+        
+        print("📱 Calling authManager.isAuthenticated(for: trip)...")
+        isLocallyAuthenticated = authManager.isAuthenticated(for: trip)
+        
+        print("📱 Calling authManager.isProtected(trip)...")
+        isTripProtected = authManager.isProtected(trip)
+        
+        needsAuthentication = isTripProtected && !isLocallyAuthenticated
+        
+        print("📱 Calling authManager.canUseBiometrics()...")
+        canUseBiometrics = authManager.canUseBiometrics()
+        
+        print("📱 Accessing authManager.isEnabled...")
+        biometricAuthEnabled = authManager.isEnabled
+        
+        print("📱 Accessing authManager.biometricType...")
+        isFaceID = authManager.biometricType == .faceID
+        
+        print("📱 About to call updateCachedActivities...")
+        // Update cached activities for the current trip
+        updateCachedActivities(for: trip)
+    }
+    
     private func updateCachedActivities(for trip: Trip) {
         let lodgingActivities = trip.lodging.map { ActivityWrapper($0) }
         let transportationActivities = trip.transportation.map { ActivityWrapper($0) }
@@ -379,5 +384,7 @@ struct IsolatedTripDetailView: View {
         
         cachedActivities = (lodgingActivities + transportationActivities + activityActivities)
             .sorted { $0.tripActivity.start < $1.tripActivity.start }
+        
+        print("📱 Updated cachedActivities for \(trip.name): \(cachedActivities.count) activities")
     }
 }

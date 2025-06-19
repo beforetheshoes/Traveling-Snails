@@ -56,7 +56,7 @@ struct NavigationSplitTripView: View {
     private var tripSidebar: some View {
         VStack(spacing: 0) {
             // Search bar
-            SearchBar(text: $searchText, placeholder: "Search trips...")
+            UnifiedSearchBar.general(text: $searchText, placeholder: "Search trips...")
                 .padding(.horizontal)
                 .padding(.top, 8)
             
