@@ -1,0 +1,15 @@
+{
+  "mcp": {
+    "servers": {
+      "XcodeBuildMCP": {
+        "command": "mise",
+        "args": [
+          "x",
+          "npm:xcodebuildmcp@1.3.0",
+          "--",
+          "xcodebuildmcp"
+        ]
+      }
+    }
+  }
+}

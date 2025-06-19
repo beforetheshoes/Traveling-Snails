@@ -8,7 +8,8 @@
 import SwiftUI
 import Foundation
 
-class ImageCacheManager: ObservableObject {
+@Observable
+class ImageCacheManager {
     static let shared = ImageCacheManager()
     
     private let cacheDirectory: URL
@@ -24,7 +25,7 @@ class ImageCacheManager: ObservableObject {
     }
     
     func cacheImage(from urlString: String, for organizationId: UUID) async -> String? {
-        // First check URL security
+        // Use SecureURLHandler for security evaluation instead of duplicating logic
         let securityLevel = SecureURLHandler.evaluateURL(urlString)
         guard securityLevel != .blocked else {
             print("Blocked URL, not caching: \(urlString)")
@@ -82,24 +83,28 @@ class ImageCacheManager: ObservableObject {
     }
 }
 
-struct CachedAsyncImage<Content: View, Placeholder: View>: View {
+// MARK: - Updated CachedAsyncImage using SecureURLHandler
+
+struct CachedAsyncImage<Content: View & Sendable, Placeholder: View & Sendable>: View {
     let urlString: String?
     let organizationId: UUID
-    let content: (Image) -> Content
-    let placeholder: () -> Placeholder
+    let content: @Sendable (Image) -> Content
+    let placeholder: @Sendable () -> Placeholder
     
     @State private var cachedImageURL: URL?
     @State private var isLoading = false
     @State private var showingSecurityAlert = false
     @State private var alertTitle = ""
     @State private var alertMessage = ""
-    @StateObject private var cacheManager = ImageCacheManager.shared
+    @State private var isConfirmationAlert = false
+    @State private var pendingDownloadAction: (() -> Void)?
+    @State private var cacheManager = ImageCacheManager.shared
     
     init(
         url urlString: String?,
         organizationId: UUID,
-        @ViewBuilder content: @escaping (Image) -> Content,
-        @ViewBuilder placeholder: @escaping () -> Placeholder
+        @ViewBuilder content: @escaping @Sendable (Image) -> Content,
+        @ViewBuilder placeholder: @escaping @Sendable () -> Placeholder
     ) {
         self.urlString = urlString
         self.organizationId = organizationId
@@ -135,9 +140,13 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
             loadImage()
         }
         .alert(alertTitle, isPresented: $showingSecurityAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Download Anyway") {
-                downloadImage()
+            if isConfirmationAlert {
+                Button("Cancel", role: .cancel) { }
+                Button("Download Anyway") {
+                    pendingDownloadAction?()
+                }
+            } else {
+                Button("OK") { }
             }
         } message: {
             Text(alertMessage)
@@ -156,23 +165,27 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
             return
         }
         
-        // Check URL security before downloading
-        let securityLevel = SecureURLHandler.evaluateURL(urlString)
-        
-        switch securityLevel {
-        case .safe:
-            downloadImage()
-            
-        case .suspicious:
-            alertTitle = "Suspicious Image URL"
-            alertMessage = "This image URL appears suspicious:\n\n\(urlString)\n\nDo you want to download it anyway? The image will be cached locally."
-            showingSecurityAlert = true
-            
-        case .blocked:
-            alertTitle = "Blocked Image URL"
-            alertMessage = "This image URL is blocked for security reasons and cannot be downloaded."
-            showingSecurityAlert = true
-        }
+        // Use SecureURLHandler for consistent security handling
+        SecureURLHandler.handleURL(
+            urlString,
+            action: .cache,
+            onSafe: {
+                downloadImage()
+            },
+            onSuspicious: { continueAction in
+                alertTitle = SecureURLHandler.alertTitle(for: .suspicious, action: .cache)
+                alertMessage = SecureURLHandler.alertMessage(for: .suspicious, action: .cache, url: urlString)
+                isConfirmationAlert = true
+                pendingDownloadAction = continueAction
+                showingSecurityAlert = true
+            },
+            onBlocked: {
+                alertTitle = SecureURLHandler.alertTitle(for: .blocked, action: .cache)
+                alertMessage = SecureURLHandler.alertMessage(for: .blocked, action: .cache, url: urlString)
+                isConfirmationAlert = false
+                showingSecurityAlert = true
+            }
+        )
     }
     
     private func downloadImage() {
@@ -195,28 +208,43 @@ struct CachedAsyncImage<Content: View, Placeholder: View>: View {
     }
 }
 
-// Convenience initializer
-extension CachedAsyncImage where Content == AnyView, Placeholder == AnyView {
+// MARK: - Sendable Wrapper (unchanged)
+
+struct SendableAnyView: View, Sendable {
+    private let viewBuilder: @Sendable () -> AnyView
+    
+    init<Content: View & Sendable>(_ content: @escaping @Sendable () -> Content) {
+        self.viewBuilder = { AnyView(content()) }
+    }
+    
+    var body: some View {
+        viewBuilder()
+    }
+}
+
+// MARK: - Convenience Initializer (unchanged)
+
+extension CachedAsyncImage where Content == SendableAnyView, Placeholder == SendableAnyView {
     init(url urlString: String?, organizationId: UUID) {
         self.init(
             url: urlString,
             organizationId: organizationId,
             content: { image in
-                AnyView(
+                SendableAnyView {
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                )
+                }
             },
             placeholder: {
-                AnyView(
+                SendableAnyView {
                     RoundedRectangle(cornerRadius: 8)
                         .fill(Color.secondary.opacity(0.3))
                         .overlay(
                             Image(systemName: "building.2")
                                 .foregroundColor(.secondary)
                         )
-                )
+                }
             }
         )
     }

@@ -9,6 +9,9 @@ import SwiftUI
 import SwiftData
 
 struct OrganizationPicker: View {
+    // Sentinel value for "no organization selected"
+    static let noneOrganization = Organization(name: "None")
+    
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query private var organizations: [Organization]
@@ -30,14 +33,30 @@ struct OrganizationPicker: View {
     var body: some View {
         VStack {
             // Search bar
-            SearchBar(text: $searchText)
+            UnifiedSearchBar(text: $searchText)
             
             List {
+                // None option
+                Button {
+                    selectedOrganization = Self.noneOrganization
+                    dismiss()
+                } label: {
+                    HStack {
+                        Text("None")
+                            .foregroundColor(.primary)
+                        Spacer()
+                        if selectedOrganization?.id == Self.noneOrganization.id {
+                            Image(systemName: "checkmark")
+                                .foregroundColor(.blue)
+                        }
+                    }
+                }
+                
                 // Existing organizations
                 ForEach(filteredOrganizations) { organization in
                     Button {
                         selectedOrganization = organization
-                        //dismiss()
+                        dismiss()
                     } label: {
                         HStack {
                             VStack(alignment: .leading) {
@@ -108,22 +127,6 @@ struct OrganizationPicker: View {
         }
     }
 }
-
-struct SearchBar: View {
-    @Binding var text: String
-    
-    var body: some View {
-        HStack {
-            Image(systemName: "magnifyingglass")
-                .foregroundColor(.secondary)
-            
-            TextField("Search organizations...", text: $text)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-        }
-        .padding(.horizontal)
-    }
-}
-
 
 #Preview {
     OrganizationPicker(selectedOrganization: .constant(nil))

@@ -1,117 +1,93 @@
-//
-//  TripDetailView.swift
-//  Traveling Snails
-//
-//  Created by Ryan Williams on 5/24/25.
-//
-
 import SwiftUI
 import SwiftData
 
-
 struct TripDetailView: View {
     let trip: Trip
+    private let authManager = BiometricAuthManager.shared
     @State private var showingLodgingSheet: Bool = false
     @State private var showingTransportationSheet: Bool = false
+    @State private var showingActivitySheet: Bool = false
+    @State private var showingEditTripSheet: Bool = false
+    @State private var showingCalendarView: Bool = false
+    @State private var navigationPath = NavigationPath()
+    @State private var viewMode: ViewMode = .list
+    @State private var isAuthenticating: Bool = false
+    @State private var isLocallyAuthenticated: Bool = false
     
-    struct ActivityWrapper: Identifiable {
-        let id = UUID()
-        let activity: any TripActivity
-        let type: String
-        
-        init(_ activity: any TripActivity) {
-            self.activity = activity
-            let fullTypeName = String(describing: Swift.type(of: activity))
-            self.type = fullTypeName.components(separatedBy: ".").last ?? fullTypeName
+    enum ViewMode: String, CaseIterable {
+            case list = "List"
+            case calendar = "Calendar"
+            
+            var icon: String {
+                switch self {
+                case .list: return "list.bullet"
+                case .calendar: return "calendar"
+                }
+            }
         }
-    }
     
     var allActivities: [ActivityWrapper] {
-        let lodgingActivities = trip.lodging.map { ActivityWrapper($0) }
-        let transportationActivities = trip.transportation.map { ActivityWrapper($0) }
+        let lodgingActivities = (trip.lodging).map { ActivityWrapper($0) }
+        let transportationActivities = (trip.transportation).map { ActivityWrapper($0) }
+        let activityActivities = (trip.activity).map { ActivityWrapper($0) }
         
-        return (lodgingActivities + transportationActivities)
-            .sorted { $0.activity.start < $1.activity.start }
+        return (lodgingActivities + transportationActivities + activityActivities)
+            .sorted { $0.tripActivity.start < $1.tripActivity.start }
+    }
+    
+    // Check if we need to show lock screen
+    private var needsLockScreen: Bool {
+        return authManager.isProtected(trip) && !isLocallyAuthenticated
+    }
+    
+    // Main content view with stable identity to prevent flickering
+    @ViewBuilder
+    private var contentView: some View {
+        if needsLockScreen {
+            BiometricLockView(trip: trip, isAuthenticating: $isAuthenticating) { 
+                // Callback when authentication succeeds
+                isLocallyAuthenticated = true
+            }
+        } else {
+            TripContentView(trip: trip, 
+                          viewMode: $viewMode,
+                          navigationPath: $navigationPath,
+                          showingLodgingSheet: $showingLodgingSheet,
+                          showingTransportationSheet: $showingTransportationSheet,
+                          showingActivitySheet: $showingActivitySheet,
+                          showingEditTripSheet: $showingEditTripSheet,
+                          showingCalendarView: $showingCalendarView) {
+                // Callback when trip is locked
+                isLocallyAuthenticated = false
+            }
+        }
     }
     
     var body: some View {
-        VStack {
-            if allActivities.isEmpty {
-                ContentUnavailableView(
-                    "No Acitivities Yet",
-                    systemImage: "calendar.badge.plus",
-                    description: Text("Add transportation or lodging to get started")
-                )
-            } else {
-                List {
-                    ForEach(allActivities) { wrapper in
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Text(wrapper.activity.name)
-                                    .font(.headline)
-                                
-                                Spacer()
-                                
-                                Text(wrapper.type)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 2)
-                                    .background(Color.secondary.opacity(0.2))
-                                    .clipShape(Capsule())
-                            }
-                            
-                            HStack {
-                                Text("Start: \(wrapper.activity.start, style: .date)")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                
-                                Spacer()
-                                
-                                Text("End: \(wrapper.activity.end, style: .date)")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        .padding(.vertical, 2)
-                    }
+        NavigationStack(path: $navigationPath) {
+            contentView
+            .onAppear {
+                // Initialize local authentication state based on manager state
+                isLocallyAuthenticated = authManager.isAuthenticated(for: trip)
+            }
+            .navigationDestination(for: DestinationType.self) { destination in
+                switch destination {
+                case .lodging(let lodging):
+                    UnifiedTripActivityDetailView<Lodging>(activity: lodging)
+                case .transportation(let transportation):
+                    UnifiedTripActivityDetailView<Transportation>(activity: transportation)
+                case .activity(let activity):
+                    UnifiedTripActivityDetailView<Activity>(activity: activity)
                 }
-            }
-        }
-        .navigationTitle(trip.name)
-        .navigationBarTitleDisplayMode(.large)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Menu {
-                    Button {
-                        showingLodgingSheet = true
-                    } label: {
-                        Label("Add Lodging", systemImage: "bed.double")
-                    }
-                    
-                    Button {
-                        showingTransportationSheet = true
-                    } label: {
-                        Label("Add Transportation", systemImage: "airplane")
-                    }
-                } label: {
-                    Image(systemName: "plus")
-                }
-            }
-        }
-        .sheet(isPresented: $showingLodgingSheet) {
-            NavigationStack {
-                AddLodgingView(trip: trip)
-            }
-        }
-        .sheet(isPresented: $showingTransportationSheet) {
-            NavigationStack {
-                AddTransportationView(trip: trip)
             }
         }
     }
+    
+    
 }
 
 #Preview {
-    TripDetailView(trip: .init(name: "Test Trip"))
+    NavigationStack {
+        TripDetailView(trip: .init(name: "Test Trip"))
+    }
 }

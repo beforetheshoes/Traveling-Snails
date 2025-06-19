@@ -7,6 +7,7 @@
 
 import Foundation
 import MapKit
+import SwiftUI
 import SwiftData
 
 @Model
@@ -20,6 +21,10 @@ class Address: Identifiable {
     var latitude: Double = 0.0
     var longitude: Double = 0.0
     var formattedAddress: String = ""
+    
+    var activities: [Activity]? = []
+    var lodgings: [Lodging]? = []
+    var organizations: [Organization]? = []
     
     init(
         street: String = "",

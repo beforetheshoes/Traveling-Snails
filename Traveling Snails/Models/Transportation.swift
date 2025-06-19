@@ -9,36 +9,45 @@ import SwiftUI
 import SwiftData
 
 @Model
-class Transportation: Identifiable, TripActivity {
+class Transportation: Identifiable {
     var id = UUID()
-    var name: String
+    var name: String = ""
     var type: TransportationType = TransportationType.plane
-    var start: Date
+    var start: Date = Date()
     var startTZId: String = ""
-    var end: Date
+    var end: Date = Date()
     var endTZId: String = ""
     var cost: Decimal = 0
     var paid: PaidStatus = PaidStatus.none
     var confirmation: String = ""
     var notes: String = ""
     
-    var trip: Trip
-    var organization: Organization
+    var trip: Trip? = nil
+    var organization: Organization? = nil
     
+    // CLOUDKIT REQUIRED: Optional file attachments with SAFE accessor
+    @Relationship(deleteRule: .cascade, inverse: \EmbeddedFileAttachment.transportation)
+    private var _fileAttachments: [EmbeddedFileAttachment]? = nil
+    
+    // SAFE ACCESSOR: Never return nil
+    var fileAttachments: [EmbeddedFileAttachment] {
+        get { _fileAttachments ?? [] }
+        set { _fileAttachments = newValue.isEmpty ? nil : newValue }
+    }
     
     init(
-        name: String,
+        name: String = "",
         type: TransportationType = TransportationType.plane,
-        start: Date,
+        start: Date = Date(),
         startTZ: TimeZone? = nil,
-        end: Date,
+        end: Date = Date(),
         endTZ: TimeZone? = nil,
         cost: Decimal = 0,
         paid: PaidStatus = PaidStatus.none,
         confirmation: String = "",
         notes: String = "",
-        trip: Trip,
-        organization: Organization
+        trip: Trip? = nil,
+        organization: Organization? = nil
     ) {
         self.name = name
         self.type = type
@@ -54,12 +63,24 @@ class Transportation: Identifiable, TripActivity {
         self.organization = organization
     }
     
-    var startTZ: TimeZone {
-        TimeZone(identifier: startTZId) ?? TimeZone.current
+    // MARK: - Computed Properties
+    var startTZ: TimeZone { TimeZone(identifier: startTZId) ?? TimeZone.current }
+    var endTZ: TimeZone { TimeZone(identifier: endTZId) ?? TimeZone.current }
+    
+    var startFormatted: String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        formatter.timeZone = startTZ
+        return formatter.string(from: start)
     }
     
-    var endTZ: TimeZone {
-        TimeZone(identifier: endTZId) ?? TimeZone.current
+    var endFormatted: String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        formatter.timeZone = endTZ
+        return formatter.string(from: end)
     }
     
     var departureFormatted: String {
@@ -77,6 +98,10 @@ class Transportation: Identifiable, TripActivity {
         formatter.timeZone = endTZ
         return formatter.string(from: end)
     }
+    
+    // File attachment support
+    var hasAttachments: Bool { !fileAttachments.isEmpty }
+    var attachmentCount: Int { fileAttachments.count }
 }
 
 enum TransportationType: String, CaseIterable, Codable {
@@ -102,5 +127,3 @@ enum TransportationType: String, CaseIterable, Codable {
         }
     }
 }
-
-
