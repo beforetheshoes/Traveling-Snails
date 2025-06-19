@@ -24,7 +24,8 @@ struct WeekView: View {
                         FullDayEventBar(
                             wrapper: wrapper,
                             weekDates: currentWeek,
-                            onTap: { onDayTap(dateForEvent(wrapper)) }
+                            onTap: { onDayTap(dateForEvent(wrapper)) },
+                            timeColumnWidth: 50
                         )
                     }
                 }

@@ -12,7 +12,7 @@ struct CompactCalendarView: View {
     let activities: [ActivityWrapper]
     let onActivityTap: (any TripActivityProtocol) -> Void
     
-    @State private var selectedWeekOffset = 0
+    @State private var currentDateOffset = 0 // Day-based offset instead of week-based
     @State private var showingFullCalendar = false
     @State private var scrollPosition: CGFloat = 0 // Track scroll position
 
@@ -29,41 +29,35 @@ struct CompactCalendarView: View {
         #endif
     }
 
-    private var visibleWeekRange: [Date] {
-        // For phones, just show first few days of the week
-        if visibleDaysCount < 7 {
-            return Array(currentWeek.prefix(visibleDaysCount))
-        } else {
-            return currentWeek
-        }
-    }
-
     private var calendar: Calendar { Calendar.current }
     
-    private var currentWeek: [Date] {
+    private var baseStartDate: Date {
         // Use trip dates instead of today
-        let baseDate: Date
         if let tripRange = trip.actualDateRange {
-            baseDate = tripRange.lowerBound
+            return tripRange.lowerBound
         } else {
-            baseDate = Date() // Fallback only if no trip activities
-        }
-        
-        let startOfWeek = calendar.dateInterval(of: .weekOfYear, for: baseDate)?.start ?? baseDate
-        let adjustedStart = calendar.date(byAdding: .weekOfYear, value: selectedWeekOffset, to: startOfWeek) ?? startOfWeek
-        
-        return (0..<7).compactMap { dayOffset in
-            calendar.date(byAdding: .day, value: dayOffset, to: adjustedStart)
+            return Date() // Fallback only if no trip activities
         }
     }
+    
+    private var currentStartDate: Date {
+        return calendar.date(byAdding: .day, value: currentDateOffset, to: baseStartDate) ?? baseStartDate
+    }
+    
+    private var visibleDateRange: [Date] {
+        return (0..<visibleDaysCount).compactMap { dayOffset in
+            calendar.date(byAdding: .day, value: dayOffset, to: currentStartDate)
+        }
+    }
+    
     
     var body: some View {
         VStack(spacing: 0) {
-            // Week navigation
+            // Date range navigation
             HStack {
                 Button {
                     withAnimation(.easeInOut(duration: 0.3)) {
-                        selectedWeekOffset -= 1
+                        currentDateOffset -= visibleDaysCount
                     }
                 } label: {
                     Image(systemName: "chevron.left")
@@ -79,7 +73,7 @@ struct CompactCalendarView: View {
                 
                 Button {
                     withAnimation(.easeInOut(duration: 0.3)) {
-                        selectedWeekOffset += 1
+                        currentDateOffset += visibleDaysCount
                     }
                 } label: {
                     Image(systemName: "chevron.right")
@@ -92,12 +86,14 @@ struct CompactCalendarView: View {
             
             // Week view with full height - takes all remaining space
             GeometryReader { geometry in
-                // Add safety check here too
-                if geometry.size.width > 0 && geometry.size.height > 0 {
+                // Comprehensive safety check for valid geometry
+                if geometry.size.width.isFinite && geometry.size.width > 50 &&
+                   geometry.size.height.isFinite && geometry.size.height > 50 {
                     dayScrollView(geometry: geometry)
                 } else {
-                    // Fallback view when geometry is invalid
-                    Text("Loading...")
+                    // Fallback view when geometry is invalid or too small
+                    Text("Calculating layout...")
+                        .frame(width: 100, height: 100)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
@@ -119,11 +115,7 @@ struct CompactCalendarView: View {
             .padding()
         }
         .onAppear {
-            // Debug the initial state
-            print("=== CompactCalendarView onAppear ===")
-            print("Visible days count: \(visibleDaysCount)")
-            print("Current week: \(currentWeek)")
-            print("Activities count: \(activities.count)")
+            // Initialize calendar to proper starting position if needed
         }
         .fullScreenCover(isPresented: $showingFullCalendar) {
             TripCalendarRootView(trip: trip)
@@ -143,56 +135,35 @@ struct CompactCalendarView: View {
     }
 
     private var headerTitleText: String {
-        if visibleWeekRange.count > 1,
-           let firstDay = visibleWeekRange.first,
-           let lastDay = visibleWeekRange.last {
+        if visibleDateRange.count > 1,
+           let firstDay = visibleDateRange.first,
+           let lastDay = visibleDateRange.last {
             return "\(firstDay.formatted(.dateTime.month(.abbreviated).day())) - \(lastDay.formatted(.dateTime.month(.abbreviated).day()))"
-        } else if let singleDay = visibleWeekRange.first {
+        } else if let singleDay = visibleDateRange.first {
             return singleDay.formatted(.dateTime.month(.abbreviated).day())
         }
         return ""
     }
 
     private var headerSubtitleText: String {
-        return currentWeek.first?.formatted(.dateTime.year()) ?? ""
+        return visibleDateRange.first?.formatted(.dateTime.year()) ?? ""
     }
     
     private func dayScrollView(geometry: GeometryProxy) -> some View {
-        // Debug logging
-        print("=== GeometryReader Debug ===")
-        print("Geometry size: \(geometry.size)")
-        print("Available width: \(geometry.size.width - 48)")
-        print("Visible days count: \(visibleDaysCount)")
-        print("Current week count: \(currentWeek.count)")
-        
-        return ScrollViewReader { proxy in
-            ScrollView(.horizontal, showsIndicators: false) {
-                dayHStack(geometry: geometry)
-            }
-            .onChange(of: selectedWeekOffset) { _, _ in
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    proxy.scrollTo(0, anchor: .leading)
-                }
-            }
-            .onAppear {
-                // Start at beginning of week
-                proxy.scrollTo(0, anchor: .leading)
-            }
+        VStack(spacing: 0) {
+            // Full day events spanning across visible days
+            fullDayEventBarsSection(geometry: geometry)
+            
+            // Day views - using simple HStack since we're showing exact visible days
+            dayHStack(geometry: geometry)
         }
     }
 
     private func dayHStack(geometry: GeometryProxy) -> some View {
-        let safeWidth = max(100, geometry.size.width - 48) // Ensure minimum total width
-        let safeDayCount = max(1, min(visibleDaysCount, currentWeek.count))
-        let dayWidth = safeWidth / CGFloat(safeDayCount)
-        
-        print("=== HStack Debug ===")
-        print("Safe width: \(safeWidth)")
-        print("Safe day count: \(safeDayCount)")
-        print("Day width: \(dayWidth)")
+        let dayWidth = calculateDayWidth(geometry: geometry)
         
         return HStack(spacing: 12) {
-            ForEach(Array(currentWeek.enumerated()), id: \.element) { index, date in
+            ForEach(Array(visibleDateRange.enumerated()), id: \.element) { index, date in
                 dayView(for: date, index: index, dayWidth: dayWidth)
             }
         }
@@ -200,41 +171,58 @@ struct CompactCalendarView: View {
     }
 
     private func dayView(for date: Date, index: Int, dayWidth: CGFloat) -> some View {
-        print("=== Day View Debug ===")
-        print("Date: \(date)")
-        print("Index: \(index)")
-        print("Day width: \(dayWidth)")
+        // Ensure width is always valid, finite, and positive
+        let safeWidth = dayWidth.isFinite && dayWidth > 0 ? dayWidth : 100
+        let validWidth = max(50, min(safeWidth, 500))
         
-        // Ensure width is always valid
-        let validWidth = max(50, min(dayWidth, 500)) // Between 50 and 500 points
-        
-        return ZStack(alignment: .top) {
-            CompactDayView(
-                date: date,
-                activities: activitiesForDate(date).filter { !isFullDayEvent($0) },
-                onActivityTap: onActivityTap
-            )
-            
-            fullDayEventsOverlay(for: date)
-        }
-        .frame(
-            width: validWidth,
-            height: .infinity
+        return CompactDayView(
+            date: date,
+            activities: activitiesForDate(date).filter { !isFullDayEvent($0) },
+            onActivityTap: onActivityTap
         )
+        .frame(width: validWidth)
+        .frame(maxHeight: .infinity)
         .id(index)
     }
     
-    private func calculateDayViewWidth(geometry: GeometryProxy) -> CGFloat {
-        let availableWidth = max(0, geometry.size.width - 48)
-        let dayCount = max(1, min(visibleDaysCount, currentWeek.count))
-        
-        guard availableWidth > 0 && dayCount > 0 else {
-            return 100
+    private func calculateDayWidth(geometry: GeometryProxy) -> CGFloat {
+        // Comprehensive safety checks for geometry values
+        guard geometry.size.width.isFinite,
+              geometry.size.width > 0,
+              geometry.size.height.isFinite,
+              geometry.size.height > 0 else {
+            return 100 // Safe fallback
         }
+        
+        let availableWidth = max(48, geometry.size.width - 48) // Ensure at least 48pt available
+        let dayCount = max(1, visibleDaysCount)
         
         let calculatedWidth = availableWidth / CGFloat(dayCount)
         
-        return max(50, calculatedWidth)
+        // Ensure the result is always finite, positive, and reasonable
+        guard calculatedWidth.isFinite,
+              calculatedWidth > 0,
+              calculatedWidth < CGFloat.greatestFiniteMagnitude else {
+            return 100 // Safe fallback
+        }
+        
+        return max(50, min(calculatedWidth, 500)) // Bounded between 50-500pt
+    }
+    
+    private func fullDayEventBarsSection(geometry: GeometryProxy) -> some View {
+        VStack(spacing: 2) {
+            ForEach(fullDayEvents, id: \.id) { wrapper in
+                CompactFullDayEventBar(
+                    wrapper: wrapper,
+                    visibleDates: visibleDateRange,
+                    onTap: {
+                        onActivityTap(wrapper.tripActivity)
+                    }
+                )
+            }
+        }
+        .padding(.horizontal)
+        .padding(.top, 8)
     }
 
     private func fullDayEventsOverlay(for date: Date) -> some View {
@@ -327,7 +315,7 @@ struct CompactCalendarView: View {
     }
     
     private var fullDayEvents: [ActivityWrapper] {
-        let allFullDayEvents = currentWeek.flatMap { date in
+        let allFullDayEvents = visibleDateRange.flatMap { date in
             activitiesForDate(date).filter { isFullDayEvent($0) }
         }
         
