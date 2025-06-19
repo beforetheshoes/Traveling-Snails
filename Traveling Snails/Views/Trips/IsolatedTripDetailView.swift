@@ -76,12 +76,16 @@ struct IsolatedTripDetailView: View {
         }
         .onAppear {
             print("📱 IsolatedTripDetailView.onAppear - START for \(trip.name)")
-            updateViewState()
-            print("📱 IsolatedTripDetailView.onAppear - COMPLETED for \(trip.name)")
+            Task {
+                await updateViewState()
+                print("📱 IsolatedTripDetailView.onAppear - COMPLETED for \(trip.name)")
+            }
         }
         .onChange(of: trip.id) { _, newTripID in
             print("📱 IsolatedTripDetailView.onChange(of: trip.id) - Trip changed to \(trip.name)")
-            updateViewState()
+            Task {
+                await updateViewState()
+            }
         }
     }
     
@@ -351,7 +355,8 @@ struct IsolatedTripDetailView: View {
     
     // fetchTrip method removed since we now receive trip directly
     
-    private func updateViewState() {
+    @MainActor
+    private func updateViewState() async {
         print("📱 Getting BiometricAuthManager.shared...")
         let authManager = BiometricAuthManager.shared
         

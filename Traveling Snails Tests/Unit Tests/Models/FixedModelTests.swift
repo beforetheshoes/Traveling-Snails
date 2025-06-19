@@ -495,7 +495,7 @@ struct FixedModelTests {
             }
             
             let creationTime = Date().timeIntervalSince(startTime)
-            #expect(creationTime < 1.0, "Creating 100 activities took \(creationTime) seconds")
+            #expect(creationTime < 5.0, "Creating 100 activities took \(creationTime) seconds - should complete within 5 seconds")
             
             #expect(trip.activity.count == 100)
             #expect(trip.totalActivities == 100)

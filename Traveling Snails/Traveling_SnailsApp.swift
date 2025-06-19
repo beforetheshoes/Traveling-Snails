@@ -49,8 +49,7 @@ struct Traveling_SnailsApp: App {
                 Transportation.self,
                 Activity.self,
                 Address.self,
-                EmbeddedFileAttachment.self,
-                SyncedSettings.self  // Add SyncedSettings to sync biometric settings
+                EmbeddedFileAttachment.self
             ]
         )
     }

@@ -1,6 +1,6 @@
 # SwiftData Patterns and Anti-Patterns
 
-This document outlines critical SwiftData usage patterns to prevent infinite view recreation bugs and ensure optimal performance.
+This document outlines critical SwiftData usage patterns to prevent infinite view recreation bugs, ensure optimal performance, and maintain proper test isolation.
 
 ## 🚨 Critical Anti-Patterns (NEVER DO THESE)
 
@@ -276,6 +276,136 @@ Before implementing any SwiftData-related feature:
 - [ ] Do you have tests covering the SwiftData usage?
 - [ ] Have you verified no infinite recreation occurs?
 
+## 🧪 Test Isolation Patterns
+
+### Critical Test Data Isolation
+
+To prevent test data contamination in the production app, all SwiftData tests must use isolated containers:
+
+#### SwiftDataTestBase Pattern (Recommended)
+```swift
+@MainActor
+class MyTests {
+    @Test("Isolated test example")
+    func testWithIsolation() throws {
+        let testBase = SwiftDataTestBase()
+        
+        // Create test data in isolated container
+        let trip = Trip(name: "Test Trip")
+        testBase.modelContext.insert(trip)
+        try testBase.modelContext.save()
+        
+        // Test business logic
+        #expect(trip.name == "Test Trip")
+        #expect(trip.totalActivities == 0)
+    }
+}
+```
+
+#### Manual Isolation Pattern
+```swift
+@Test("Manual isolation example")
+func testWithManualIsolation() throws {
+    // Create isolated in-memory container
+    let config = ModelConfiguration(
+        isStoredInMemoryOnly: true,
+        allowsSave: true,
+        groupContainer: .none,
+        cloudKitDatabase: .none  // Explicitly disable CloudKit
+    )
+    
+    let container = try ModelContainer(
+        for: Trip.self, Organization.self, Activity.self,
+        configurations: config
+    )
+    
+    let context = container.mainContext
+    
+    // Test with isolated data
+    let trip = Trip(name: "Isolated Test")
+    context.insert(trip)
+    try context.save()
+}
+```
+
+#### TestGuard for Environment Detection
+```swift
+@MainActor
+struct TestGuard {
+    static func ensureTestEnvironment() {
+        #if DEBUG
+        let isInTests = NSClassFromString("XCTestCase") != nil || 
+                       ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        
+        if isInTests {
+            print("🧪 Test environment detected - ensuring data isolation")
+            UserDefaults.standard.set(true, forKey: "isRunningTests")
+        }
+        #endif
+    }
+    
+    static var isRunningTests: Bool {
+        UserDefaults.standard.bool(forKey: "isRunningTests")
+    }
+}
+```
+
+### Database Cleanup for Production
+
+#### DatabaseCleanupView Implementation
+```swift
+// In Settings -> Data Management
+struct DatabaseCleanupView: View {
+    @Environment(\.modelContext) private var modelContext
+    
+    private func removeTestData() {
+        let testPatterns = [
+            "test trip", "debug", "sample", "demo", 
+            "Trip 0", "Trip 1", "Performance Test",
+            "unprotected trip", "protected trip"
+        ]
+        
+        // Conservative pattern matching to avoid removing real data
+        for trip in trips {
+            let tripName = trip.name.lowercased()
+            if testPatterns.contains(where: { tripName.contains($0.lowercased()) }) {
+                modelContext.delete(trip)
+            }
+        }
+    }
+}
+```
+
+### Test Isolation Verification
+
+#### Pre-Test Checks
+```swift
+@MainActor
+class IsolatedTestBase {
+    func verifyIsolation() throws {
+        let trips = try testModelContext.fetch(FetchDescriptor<Trip>())
+        let organizations = try testModelContext.fetch(FetchDescriptor<Organization>())
+        
+        guard trips.isEmpty && organizations.isEmpty else {
+            throw TestIsolationError.dataContamination
+        }
+    }
+}
+
+enum TestIsolationError: Error {
+    case dataContamination
+    case mainContainerAccess
+}
+```
+
+### Benefits of Proper Test Isolation
+
+1. **No Production Data Contamination**: Tests never affect real user data
+2. **Reliable Test Results**: Each test starts with clean state
+3. **Parallel Test Execution**: Tests can run concurrently without conflicts
+4. **CloudKit Safety**: Tests don't trigger CloudKit sync operations
+5. **Performance**: In-memory tests run faster than disk-based tests
+
 ---
 
-Following these patterns ensures stable, performant SwiftData operations throughout the Traveling Snails app.
+Following these patterns ensures stable, performant SwiftData operations throughout the Traveling Snails app while maintaining robust test isolation.

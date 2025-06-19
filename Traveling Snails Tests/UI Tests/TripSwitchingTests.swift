@@ -35,9 +35,8 @@ struct TripSwitchingTests {
         testBase.modelContext.insert(businessLodging)
         try testBase.modelContext.save()
         
-        // Simulate authentication for protected trip
-        let authManager = BiometricAuthManager.shared
-        authManager.isEnabled = true
+        // Get reference to auth manager (biometrics always enabled if available)
+        _ = BiometricAuthManager.shared
         
         // Test: When switching from authenticated protected trip to unprotected trip,
         // the activities should update to show only the new trip's activities
@@ -93,7 +92,7 @@ struct TripSwitchingTests {
         testBase.modelContext.insert(unprotectedTrip)
         
         let authManager = BiometricAuthManager.shared
-        authManager.isEnabled = true
+        // Biometrics always enabled if available
         
         // Initially, no trips should be authenticated
         #expect(!authManager.isAuthenticated(for: protectedTrip1))
@@ -101,7 +100,7 @@ struct TripSwitchingTests {
         #expect(authManager.isAuthenticated(for: unprotectedTrip)) // Unprotected = always authenticated
         
         // Simulate authenticating trip 1 only
-        await authManager.authenticateTrip(protectedTrip1)
+        _ = await authManager.authenticateTrip(protectedTrip1)
         
         // Trip 1 should be authenticated, trip 2 should still be locked
         #expect(authManager.isAuthenticated(for: protectedTrip1))
@@ -169,11 +168,11 @@ struct TripSwitchingTests {
         // This ensures you can't get "stuck" in a detail view from the previous trip
         
         let trip1 = Trip(name: "Trip 1")
-        let trip2 = Trip(name: "Trip 2")
+        _ = Trip(name: "Trip 2")
         
         // Create navigation paths
         var navigationPath1 = NavigationPath()
-        var navigationPath2 = NavigationPath()
+        let navigationPath2 = NavigationPath()
         
         // Add some navigation state to path 1
         let lodging1 = Lodging(name: "Hotel 1", trip: trip1)
@@ -207,7 +206,7 @@ struct TripSwitchingTests {
         testBase.modelContext.insert(unprotectedActivity)
         
         let authManager = BiometricAuthManager.shared
-        authManager.isEnabled = true
+        // Biometrics always enabled if available
         
         // Switching between protected and unprotected should work seamlessly
         #expect(authManager.isProtected(protectedTrip))

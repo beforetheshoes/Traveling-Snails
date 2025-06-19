@@ -5,30 +5,30 @@ Welcome to the comprehensive technical documentation for Traveling Snails, a mod
 ## 📚 Documentation Overview
 
 ### Architecture & Design
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - Detailed MVVM patterns, code organization, and architectural decisions
-- **[SwiftData-Patterns.md](SwiftData-Patterns.md)** - Critical SwiftData usage patterns and anti-patterns
-- **[CloudKit-Integration.md](CloudKit-Integration.md)** - CloudKit sync implementation and compatibility patterns
+- **[ARCHITECTURE](ARCHITECTURE)** - Detailed MVVM patterns, code organization, and architectural decisions
+- **[SwiftData-Patterns](SwiftData-Patterns)** - Critical SwiftData usage patterns and anti-patterns
+- **[CloudKit-Integration](CloudKit-Integration)** - CloudKit sync implementation and compatibility patterns
 
 ### Development Guides
-- **[Testing-Strategy.md](Testing-Strategy.md)** - Comprehensive testing approach with Swift Testing framework
-- **[Code-Style-Guide.md](Code-Style-Guide.md)** - Coding standards and best practices
-- **[Performance-Guidelines.md](Performance-Guidelines.md)** - Performance optimization techniques
+- **[Testing-Strategy](Testing-Strategy)** - Comprehensive testing approach with Swift Testing framework
+- **[Code-Style-Guide](Code-Style-Guide)** - Coding standards and best practices
+- **[Performance-Guidelines](Performance-Guidelines)** - Performance optimization techniques
 
 ### Feature Documentation
-- **[Biometric-Authentication.md](Biometric-Authentication.md)** - Touch ID/Face ID implementation details
-- **[File-Management.md](File-Management.md)** - Embedded file system architecture
-- **[Localization.md](Localization.md)** - Multi-language support implementation
+- **[Biometric-Authentication](Biometric-Authentication)** - Touch ID/Face ID implementation details
+- **[File-Management](File-Management)** - Embedded file system architecture
+- **[Localization](Localization)** - Multi-language support implementation
 
 ### Contributing
-- **[Development-Workflow.md](Development-Workflow.md)** - Development process and contribution guidelines
-- **[Documentation-Guidelines.md](Documentation-Guidelines.md)** - How to maintain and update documentation
+- **[Development-Workflow](Development-Workflow)** - Development process and contribution guidelines
+- **[Documentation-Guidelines](Documentation-Guidelines)** - How to maintain and update documentation
 
 ## 🚀 Quick Start for Developers
 
-1. Read [ARCHITECTURE.md](ARCHITECTURE.md) to understand the codebase structure
-2. Review [SwiftData-Patterns.md](SwiftData-Patterns.md) for critical data handling patterns
-3. Check [Testing-Strategy.md](Testing-Strategy.md) for testing requirements
-4. Follow [Development-Workflow.md](Development-Workflow.md) for contribution process
+1. Read [ARCHITECTURE](ARCHITECTURE) to understand the codebase structure
+2. Review [SwiftData-Patterns](SwiftData-Patterns) for critical data handling patterns
+3. Check [Testing-Strategy](Testing-Strategy) for testing requirements
+4. Follow [Development-Workflow](Development-Workflow) for contribution process
 
 ## 🔄 Documentation Workflow
 

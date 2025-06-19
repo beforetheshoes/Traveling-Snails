@@ -8,26 +8,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Comprehensive SwiftData regression tests to prevent infinite view recreation bugs
+- Database Cleanup Tool in Settings for removing test data and resetting database
+- Custom iPad tab bar for proper bottom navigation without title overlap
+- Enhanced test isolation with TestConfiguration.swift and TestGuard
+- CloudKit sync loading indicator for better user experience during data sync
+- Performance test timeout adjustments for realistic expectations
+- Comprehensive developer documentation (CLAUDE.md) with critical SwiftData patterns
 - Swift Testing framework implementation replacing XCTests
 - Organized test directory structure (Unit Tests, Integration Tests, UI Tests, SwiftData Tests, Security Tests)
 - SwiftDataTestBase for isolated test environments
 - CloudKit + SwiftData compatibility patterns with private optional + safe accessor approach
-- Biometric authentication (Touch ID/Face ID) for app security
-- Comprehensive developer documentation (CLAUDE.md) with critical SwiftData patterns
+- Biometric authentication (Touch ID/Face ID) for individual trip protection
 - Wiki documentation structure for technical details
 
 ### Changed
+- iPad navigation now uses custom tab bar instead of NavigationSplitView for consistent UI
+- Biometric authentication changed from global app protection to per-trip protection
+- Test performance expectations adjusted for realistic device performance
+- Enhanced database cleanup patterns to be more conservative with user data
 - Migrated from XCTests to modern Swift Testing framework (@Test, @Suite)
-- Moved CLAUDE.md to project root for better accessibility
-- Updated README.md with biometric security features and modern architecture patterns
+- Updated README.md with adaptive navigation and database management features
 - Reorganized test suite into logical directories for better maintainability
 
 ### Fixed
+- iPad tab bar overlapping navigation titles by implementing custom bottom tab bar
+- Test data contamination in real app database through improved isolation
+- Performance test failures by adjusting timeout expectations (DirectoryRestructureIntegrationTests, CloudKitSwiftDataConformanceTests, SwiftDataRegressionTests)
 - SwiftData infinite view recreation bugs through proper @Query usage patterns
-- Test isolation issues with proper SwiftDataTestBase implementation
+- Biometric authentication crashes caused by missing NSFaceIDUsageDescription in Info.plist
+- Swift 6 Sendable compliance errors in BiometricAuthManager
+- iOS NavigationSplitView compatibility issues in ContentView
+
+### Security
+- Added NSFaceIDUsageDescription privacy permission for biometric authentication
+- Enhanced test isolation to prevent accidental access to production data
+- Improved error handling for LAContext operations with proper privacy compliance
 
 ### Removed
+- Global biometric authentication settings (replaced with per-trip protection)
 - Roadmap section from README (replaced with changelog)
 - Duplicate README.md from app bundle directory
 

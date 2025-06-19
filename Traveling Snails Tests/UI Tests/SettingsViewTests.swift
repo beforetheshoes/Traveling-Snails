@@ -182,7 +182,7 @@ struct SettingsViewTests {
         @Test("Biometric authentication settings")
         @MainActor func testBiometricAuthenticationSettings() {
             let authManager = BiometricAuthManager.shared
-            let appSettings = AppSettings.shared
+            _ = AppSettings.shared // AppSettings exists but no longer has biometric settings
             
             // Test biometric availability check (async)
             Task {
@@ -190,8 +190,8 @@ struct SettingsViewTests {
                 #expect(canUseBiometrics == true || canUseBiometrics == false) // Should return a boolean
             }
             
-            // Test settings access
-            #expect(appSettings.biometricAuthenticationEnabled == true || appSettings.biometricAuthenticationEnabled == false)
+            // Biometric authentication is now always enabled when available
+            #expect(authManager.isEnabled == authManager.canUseBiometrics())
         }
         
         @Test("Timeout options enumeration")
@@ -374,7 +374,7 @@ struct SettingsViewTests {
     struct SettingsIntegrationTests {
         
         @Test("Complete settings flow")
-        func testCompleteSettingsFlow() {
+        @MainActor func testCompleteSettingsFlow() {
             // Test a complete settings interaction flow
             let appSettings = AppSettings.shared
             
@@ -383,10 +383,9 @@ struct SettingsViewTests {
             appSettings.colorScheme = .dark
             #expect(appSettings.colorScheme == .dark)
             
-            // 2. Toggle biometric setting
-            let originalBiometric = appSettings.biometricAuthenticationEnabled
-            appSettings.biometricAuthenticationEnabled = !originalBiometric
-            #expect(appSettings.biometricAuthenticationEnabled == !originalBiometric)
+            // 2. Biometric authentication is now always enabled when available
+            let authManager = BiometricAuthManager.shared
+            #expect(authManager.isEnabled == authManager.canUseBiometrics())
             
             // 3. Test data management trigger
             var dataManagementAction = false
@@ -395,7 +394,7 @@ struct SettingsViewTests {
             
             // Restore original settings
             appSettings.colorScheme = originalScheme
-            appSettings.biometricAuthenticationEnabled = originalBiometric
+            // Biometric setting no longer exists - always enabled when available
         }
     }
 }

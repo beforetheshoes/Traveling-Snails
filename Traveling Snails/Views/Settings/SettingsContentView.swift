@@ -52,6 +52,9 @@ struct SettingsContentView: View {
         .sheet(isPresented: $viewModel.showingImportProgress) {
             DatabaseImportProgressView(importManager: viewModel.importManager)
         }
+        .sheet(isPresented: $viewModel.showingDatabaseCleanup) {
+            DatabaseCleanupView()
+        }
     }
 }
 
@@ -137,6 +140,18 @@ struct DataManagementSection: View {
                 )
             }
             .foregroundColor(.primary)
+            
+            Button {
+                viewModel.openDatabaseCleanup()
+            } label: {
+                SettingsRow(
+                    icon: "trash.circle",
+                    iconColor: .red,
+                    title: "Database Cleanup",
+                    subtitle: "Remove test data and reset database"
+                )
+            }
+            .foregroundColor(.primary)
         }
     }
 }
@@ -172,37 +187,68 @@ struct SecuritySection: View {
     var body: some View {
         Section {
             if authManager.canUseBiometrics() {
-                Toggle("Enable \(authManager.biometricType == .faceID ? "Face ID" : "Touch ID")", isOn: $viewModel.biometricAuthenticationEnabled)
-                
-                if viewModel.biometricAuthenticationEnabled {
-                    HStack {
-                        Text("Auto-lock timeout")
-                        Spacer()
-                        Menu {
-                            ForEach(SettingsViewModel.TimeoutOption.allCases, id: \.self) { option in
-                                Button(option.displayName) {
-                                    viewModel.setBiometricTimeout(option)
-                                }
-                            }
-                        } label: {
-                            Text(viewModel.currentBiometricTimeout.displayName)
-                                .foregroundColor(.blue)
-                        }
+                HStack {
+                    Image(systemName: authManager.biometricType == .faceID ? "faceid" : "touchid")
+                        .foregroundColor(.green)
+                        .frame(width: 24)
+                    
+                    VStack(alignment: .leading) {
+                        Text("\(authManager.biometricType == .faceID ? "Face ID" : "Touch ID") Available")
+                            .font(.headline)
+                        Text("You can protect individual trips with biometric authentication")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
                     
-                    Button("Lock All Protected Trips Now") {
-                        viewModel.lockAllProtectedTrips()
-                    }
-                    .foregroundColor(.red)
+                    Spacer()
+                    
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
                 }
+                
+                HStack {
+                    Text("Auto-lock timeout")
+                    Spacer()
+                    Menu {
+                        ForEach(SettingsViewModel.TimeoutOption.allCases, id: \.self) { option in
+                            Button(option.displayName) {
+                                viewModel.setBiometricTimeout(option)
+                            }
+                        }
+                    } label: {
+                        Text(viewModel.currentBiometricTimeout.displayName)
+                            .foregroundColor(.blue)
+                    }
+                }
+                
+                Button("Lock All Protected Trips Now") {
+                    viewModel.lockAllProtectedTrips()
+                }
+                .foregroundColor(.red)
             } else {
-                Text("Biometric authentication is not available on this device")
-                    .foregroundColor(.secondary)
+                HStack {
+                    Image(systemName: "faceid")
+                        .foregroundColor(.gray)
+                        .frame(width: 24)
+                    
+                    VStack(alignment: .leading) {
+                        Text("Biometric Authentication Unavailable")
+                            .font(.headline)
+                        Text("This device doesn't support biometric authentication")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                    
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundColor(.orange)
+                }
             }
         } header: {
             Text("Security")
         } footer: {
-            Text("When enabled, you can protect individual trips with biometric authentication. Auto-lock will require re-authentication after the specified time.")
+            Text("Biometric authentication is always enabled when available. You can protect individual trips by enabling protection in trip settings. Auto-lock will require re-authentication after the specified time.")
         }
     }
 }

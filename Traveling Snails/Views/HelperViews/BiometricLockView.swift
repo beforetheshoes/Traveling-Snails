@@ -36,9 +36,7 @@ struct BiometricLockView: View {
             
             // Authentication button
             Button {
-                Task {
-                    await authenticateUser()
-                }
+                authenticateUser()
             } label: {
                 HStack {
                     if isAuthenticating {
@@ -63,8 +61,7 @@ struct BiometricLockView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
     
-    @MainActor
-    private func authenticateUser() async {
+    private func authenticateUser() {
         print("🔓 BiometricLockView.authenticateUser() for \(trip.name) - START")
         print("   - isAuthenticating: \(isAuthenticating)")
         
@@ -76,26 +73,28 @@ struct BiometricLockView: View {
         print("   - Setting isAuthenticating = true")
         isAuthenticating = true
         
-        // Add slight delay for better UX
-        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
-        
-        print("   - Calling authManager.authenticateTrip()")
-        let success = await authManager.authenticateTrip(trip)
-        print("   - Authentication result: \(success)")
-        
-        // Only update isAuthenticating if authentication failed
-        // If successful, the view will automatically switch due to @Observable
-        if !success {
-            print("   - Authentication failed, setting isAuthenticating = false")
-            isAuthenticating = false
-        } else {
-            print("   - Authentication successful, allowing transition")
-            // Small delay to allow state to settle and reduce flickering
-            try? await Task.sleep(nanoseconds: 50_000_000) // 0.05 seconds
-            isAuthenticating = false
-            onAuthenticationSuccess()
+        Task {
+            // Add slight delay for better UX
+            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+            
+            print("   - Calling authManager.authenticateTrip()")
+            let success = await authManager.authenticateTrip(trip)
+            print("   - Authentication result: \(success)")
+            
+            await MainActor.run {
+                // Only update isAuthenticating if authentication failed
+                // If successful, the view will automatically switch due to @Observable
+                if !success {
+                    print("   - Authentication failed, setting isAuthenticating = false")
+                    isAuthenticating = false
+                } else {
+                    print("   - Authentication successful, allowing transition")
+                    isAuthenticating = false
+                    onAuthenticationSuccess()
+                }
+            }
+            
+            print("🔓 BiometricLockView.authenticateUser() for \(trip.name) - END")
         }
-        
-        print("🔓 BiometricLockView.authenticateUser() for \(trip.name) - END")
     }
 }

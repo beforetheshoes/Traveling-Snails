@@ -132,7 +132,13 @@ cd wiki/
 git add .
 git commit -m "Update wiki documentation for [feature/change description]"
 git push origin main  # To https://github.com/beforetheshoes/Traveling-Snails.wiki.git
+
+# CRITICAL: GitHub wikis default to 'master' branch, so also push to master
+git push origin main:master  # Ensures GitHub wiki interface shows latest changes
 ```
+
+**⚠️ Important Wiki Branch Note:**
+GitHub wikis display content from the `master` branch by default, even if your local repository uses `main`. Always push to both branches to ensure wiki changes are visible on GitHub.
 
 ### When Stuck or Uncertain:
 - **STOP and ASK** - don't guess or assume

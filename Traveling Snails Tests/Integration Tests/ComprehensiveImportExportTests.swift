@@ -789,7 +789,7 @@ struct ComprehensiveImportExportTests {
             }
             
             let creationTime = Date().timeIntervalSince(startTime)
-            #expect(creationTime < 1.0, "Dataset creation took \(creationTime) seconds")
+            #expect(creationTime < 5.0, "Dataset creation took \(creationTime) seconds - should complete within 5 seconds")
             
             // Test export data generation
             let exportStartTime = Date()

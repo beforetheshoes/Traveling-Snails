@@ -20,12 +20,35 @@ class SwiftDataTestBase {
     }
     
     init() {
+        // Ensure we're in test environment
+        TestGuard.ensureTestEnvironment()
+        
         // Create a unique in-memory database for each test instance
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let config = ModelConfiguration(
+            isStoredInMemoryOnly: true,
+            allowsSave: true,
+            groupContainer: .none,
+            cloudKitDatabase: .none // Explicitly disable CloudKit for tests
+        )
+        
         do {
-            self.modelContainer = try ModelContainer(for: Trip.self, Lodging.self, Transportation.self, Activity.self, configurations: config)
+            self.modelContainer = try ModelContainer(
+                for: Trip.self, 
+                Lodging.self, 
+                Transportation.self, 
+                Activity.self, 
+                Organization.self, 
+                Address.self, 
+                EmbeddedFileAttachment.self,
+                configurations: config
+            )
+            
+            // Verify isolation
+            print("🧪 Test container created with \(modelContainer.configurations.count) configurations")
+            print("🧪 Test container in-memory: \(modelContainer.configurations.first?.isStoredInMemoryOnly == true)")
+            
         } catch {
-            fatalError("Failed to create ModelContainer: \(error)")
+            fatalError("Failed to create test ModelContainer: \(error)")
         }
     }
     

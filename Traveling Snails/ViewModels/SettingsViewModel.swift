@@ -23,6 +23,7 @@ class SettingsViewModel {
     var showingImportPicker = false
     var showingFileAttachmentSettings = false
     var showingImportProgress = false
+    var showingDatabaseCleanup = false
     
     // Data management
     var importManager = DatabaseImportManager()
@@ -41,10 +42,8 @@ class SettingsViewModel {
         set { appSettings.colorScheme = newValue }
     }
     
-    var biometricAuthenticationEnabled: Bool {
-        get { appSettings.biometricAuthenticationEnabled }
-        set { appSettings.biometricAuthenticationEnabled = newValue }
-    }
+    // Biometric authentication is now always enabled when available
+    // Removed global setting - protection is per-trip only
     
     var canUseBiometrics: Bool {
         // Simple wrapper - the actual UI will handle the MainActor call
@@ -86,6 +85,10 @@ class SettingsViewModel {
     
     func openFileAttachmentSettings() {
         showingFileAttachmentSettings = true
+    }
+    
+    func openDatabaseCleanup() {
+        showingDatabaseCleanup = true
     }
     
     func setBiometricTimeout(_ timeout: TimeoutOption) {

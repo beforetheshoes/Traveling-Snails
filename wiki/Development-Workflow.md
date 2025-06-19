@@ -38,8 +38,8 @@ git push origin main
 ## 🛠️ Development Process
 
 ### 1. Before Starting Work
-- [ ] Read [ARCHITECTURE.md](ARCHITECTURE.md) to understand codebase structure
-- [ ] Review [SwiftData-Patterns.md](SwiftData-Patterns.md) for data handling requirements
+- [ ] Read [ARCHITECTURE](ARCHITECTURE) to understand codebase structure
+- [ ] Review [SwiftData-Patterns](SwiftData-Patterns) for data handling requirements
 - [ ] Check existing issues and PRs to avoid duplicate work
 - [ ] Create feature branch: `git checkout -b feature/your-feature-name`
 

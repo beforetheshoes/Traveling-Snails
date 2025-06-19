@@ -131,6 +131,51 @@ struct ComponentTests {
 }
 ```
 
+## Platform-Specific Navigation Architecture
+
+### Adaptive Navigation Pattern
+
+The app implements platform-specific navigation to provide optimal user experience:
+
+#### iPhone Navigation
+```swift
+// Native TabView for bottom tab bar
+TabView(selection: $selectedTab) {
+    tripsTab.tabItem { Label("Trips", systemImage: "airplane") }.tag(0)
+    organizationsTab.tabItem { Label("Organizations", systemImage: "building.2") }.tag(1)
+    settingsTab.tabItem { Label("Settings", systemImage: "gear") }.tag(2)
+}
+```
+
+#### iPad Navigation  
+```swift
+// Custom bottom tab bar to avoid navigation title overlap
+VStack(spacing: 0) {
+    // Content area with switch statement for selected tab
+    switch selectedTab {
+    case 0: tripsTab
+    case 1: organizationsTab  
+    case 2: settingsTab
+    default: tripsTab
+    }
+    
+    // Custom bottom tab bar with material background
+    HStack(spacing: 0) {
+        iPadTabButton(title: "Trips", icon: "airplane", isSelected: selectedTab == 0)
+        iPadTabButton(title: "Organizations", icon: "building.2", isSelected: selectedTab == 1) 
+        iPadTabButton(title: "Settings", icon: "gear", isSelected: selectedTab == 2)
+    }
+    .frame(height: 60)
+    .background(.regularMaterial)
+}
+```
+
+### Benefits of Adaptive Navigation:
+- **iPhone**: Native TabView provides system-standard bottom tabs
+- **iPad**: Custom implementation avoids navigation title overlap issues
+- **Consistent UX**: Both platforms feel native while maintaining feature parity
+- **Maintainable**: Shared content views with platform-specific navigation containers
+
 ## File Organization
 
 ### Current Structure:
@@ -140,13 +185,13 @@ Views/
 ├── FileAttachments/    # File attachment views
 ├── HelperViews/        # Reusable UI components
 ├── Organizations/      # Organization views
-├── Settings/           # Settings views
+├── Settings/           # Settings views including DatabaseCleanupView
 ├── Trips/              # Trip views
 ├── Unified/            # Generic/unified views
 └── UnifiedTripActivities/ # Trip activity views
 
 ViewModels/             # Business logic and state management
-├── ActivityFormViewModel.swift
+├── SettingsViewModel.swift  # Enhanced with database cleanup functionality
 ├── CalendarViewModel.swift
 └── SettingsViewModel.swift
 
