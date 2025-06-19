@@ -96,16 +96,50 @@ class Trip {
    - Verify performance (especially for SwiftData operations)
    - Check accessibility and localization
 
-6. **Documentation**
-   - Update code comments for complex logic
-   - Update ARCHITECTURE.md if architectural patterns change
-   - Update README.md if user-facing features change
+6. **Documentation (CRITICAL - ALWAYS REQUIRED)**
+   - **ALWAYS update README.md** for user-facing changes and feature additions
+   - **ALWAYS update CHANGELOG.md** with all changes (Added/Changed/Fixed/Removed)
+   - **ALWAYS update Wiki** for technical details and implementation guides
+   - **ALWAYS push wiki changes** to https://github.com/beforetheshoes/Traveling-Snails.wiki.git
+
+## 📝 Documentation Workflow (MANDATORY)
+
+### For Every Change to the Codebase:
+
+#### 1. Update README.md (User-Facing Documentation)
+- **New features** - Add to features section with clear descriptions
+- **Setup changes** - Update installation/configuration instructions
+- **Requirements changes** - iOS versions, Xcode versions, dependencies
+- **High-level architecture** - Major technical changes affecting users
+
+#### 2. Update CHANGELOG.md (Version History)
+Use proper categories for all changes:
+- **Added** - New features and functionality
+- **Changed** - Changes in existing functionality  
+- **Fixed** - Bug fixes and corrections
+- **Removed** - Removed features or deprecated functionality
+- **Security** - Security-related improvements
+
+#### 3. Update Wiki Documentation (Technical Details)
+- **Architecture changes** - Update wiki/ARCHITECTURE.md for MVVM patterns
+- **SwiftData patterns** - Update wiki/SwiftData-Patterns.md for data handling
+- **Implementation guides** - Create/update technical deep-dive documents
+- **Code examples** - Add detailed implementation examples
+
+#### 4. Push Wiki Changes (Required Step)
+```bash
+cd wiki/
+git add .
+git commit -m "Update wiki documentation for [feature/change description]"
+git push origin main  # To https://github.com/beforetheshoes/Traveling-Snails.wiki.git
+```
 
 ### When Stuck or Uncertain:
 - **STOP and ASK** - don't guess or assume
 - Read existing similar code in the project
 - Check Apple documentation for latest patterns
 - Verify your approach follows the SwiftData anti-patterns above
+- Review wiki/Development-Workflow.md for detailed guidelines
 
 ## 🛡️ Security & Best Practices
 

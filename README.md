@@ -43,6 +43,7 @@ A comprehensive travel planning and management app built with SwiftUI for iOS 18
 
 - **iOS 18+ Native**: Built with latest SwiftUI and SwiftData
 - **Cross-Device Sync**: iCloud integration for seamless device synchronization
+- **Biometric Security**: Touch ID/Face ID authentication for app access
 - **Internationalization**: Support for 10+ languages
 - **Accessibility**: Full VoiceOver and accessibility support
 - **Dark Mode**: Native dark mode support
@@ -325,6 +326,7 @@ Text(L(L10n.General.save))         // "Save"
 
 ### Security Features
 
+- **Biometric Authentication**: Touch ID/Face ID protection for sensitive data
 - **Secure File Handling**: Validated file types and sizes
 - **Privacy-First Logging**: No sensitive data in logs
 - **Input Validation**: All user inputs are properly validated
@@ -355,27 +357,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - iCloud sync requires stable internet connection
 - Some localization strings may be incomplete in beta languages
 
-## 🔮 Roadmap
+## 📝 Changelog
 
-### Version 2.0 (Planned)
-
-- [ ] Apple Watch companion app
-- [ ] Collaborative trip planning
-- [ ] Advanced budget tracking and analytics
-- [ ] Integration with popular travel booking sites
-- [ ] Offline mode with local-only data
-- [ ] Advanced search and filtering
-- [ ] Trip sharing and social features
-
-### Version 1.1 (Recently Completed)
-
-- [x] Modern SwiftUI patterns (`@Observable`)
-- [x] Swift Testing framework implementation
-- [x] SwiftData infinite recreation bug prevention
-- [x] Comprehensive test coverage with isolated data
-- [x] Advanced error handling
-- [x] Performance optimizations
-- [x] Enhanced accessibility features
+See [CHANGELOG.md](CHANGELOG.md) for detailed version history and release notes.
 
 ## 🛡️ Data Safety
 
