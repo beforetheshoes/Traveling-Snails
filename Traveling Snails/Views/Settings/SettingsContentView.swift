@@ -221,10 +221,15 @@ struct SecuritySection: View {
                     }
                 }
                 
-                Button("Lock All Protected Trips Now") {
-                    viewModel.lockAllProtectedTrips()
+                if (!viewModel.allTripsLocked) {
+                    Button("Lock All Protected Trips Now") {
+                        viewModel.lockAllProtectedTrips()
+                    }
+                    .foregroundColor(.red)
+                } else {
+                    Text("All Protected Trips Are Locked")
+                        .foregroundColor(.secondary)
                 }
-                .foregroundColor(.red)
             } else {
                 HStack {
                     Image(systemName: "faceid")

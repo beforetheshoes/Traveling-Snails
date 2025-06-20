@@ -10,7 +10,8 @@ import SwiftUI
 import QuickLook
 import UniformTypeIdentifiers
 
-class EmbeddedFileAttachmentManager: ObservableObject {
+@Observable
+class EmbeddedFileAttachmentManager {
     static let shared = EmbeddedFileAttachmentManager()
     
     private init() {}

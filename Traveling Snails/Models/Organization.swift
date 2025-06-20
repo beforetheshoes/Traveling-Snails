@@ -96,6 +96,7 @@ class Organization: Identifiable {
     static func ensureUniqueNoneOrganization(in context: ModelContext) -> Organization {
         switch OrganizationManager.shared.ensureNoneOrganization(in: context) {
         case .success(let org):
+            print("✅ Successfully ensured unique None organization")
             return org
         case .failure(let error):
             print("❌ Error ensuring unique None organization: \(error.localizedDescription)")

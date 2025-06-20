@@ -9,6 +9,7 @@ import SwiftUI
 import SwiftData
 
 struct FileAttachmentSummaryView: View {
+    @Environment(\.modelContext) private var modelContext
     @Query private var allAttachments: [EmbeddedFileAttachment]
     
     private var totalSize: Int64 {

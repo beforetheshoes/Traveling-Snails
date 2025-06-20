@@ -9,7 +9,8 @@ import Foundation
 import SwiftData
 import Observation
 
-@Observable @MainActor
+@Observable
+@MainActor
 class SettingsViewModel {
     // MARK: - Properties
     
@@ -36,6 +37,10 @@ class SettingsViewModel {
     }
     
     // MARK: - Computed Properties
+    
+    var allTripsLocked: Bool {
+        authManager.allTripsLocked
+    }
     
     var colorScheme: ColorSchemePreference {
         get { appSettings.colorScheme }

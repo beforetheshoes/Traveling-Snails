@@ -1,8 +1,9 @@
 import LocalAuthentication
 import SwiftUI
 
+@Observable
 @MainActor
-class BiometricAuthManager: ObservableObject {
+class BiometricAuthManager {
     static let shared = BiometricAuthManager()
     
     // Simple session tracking - which trips are authenticated this session
@@ -270,6 +271,10 @@ class BiometricAuthManager: ObservableObject {
     
     func lockAllTrips() {
         authenticatedTripIDs.removeAll()
+    }
+    
+    var allTripsLocked: Bool {
+        return authenticatedTripIDs.isEmpty
     }
     
     func resetSession() {

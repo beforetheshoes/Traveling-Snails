@@ -3,11 +3,12 @@ import SwiftData
 
 // A completely isolated trip detail view that doesn't depend on @Observable state
 struct IsolatedTripDetailView: View {
+    @Environment(\.modelContext) private var modelContext
+    
     // Store trip data as immutable values to prevent rebuilds from Trip mutations
+    let trip: Trip // Use let instead of @State!
     private let tripID: UUID
     private let tripName: String
-    let trip: Trip // Use let instead of @State!
-    @Environment(\.modelContext) private var modelContext
     
     // Local authentication state that doesn't observe the auth manager
     @State private var isLocallyAuthenticated: Bool
@@ -170,30 +171,29 @@ struct IsolatedTripDetailView: View {
         }
         .navigationTitle(tripName)
         .navigationBarTitleDisplayMode(.inline)
-        // TEMPORARILY COMMENTED OUT TO TEST IF SHEETS CAUSE INFINITE RECREATION
-        // .sheet(isPresented: $showingActivitySheet) {
-        //     NavigationStack {
-        //         UniversalAddTripActivityRootView.forActivity(trip: trip)
-        //     }
-        // }
-        // .sheet(isPresented: $showingLodgingSheet) {
-        //     NavigationStack {
-        //         UniversalAddTripActivityRootView.forLodging(trip: trip)
-        //     }
-        // }
-        // .sheet(isPresented: $showingTransportationSheet) {
-        //     NavigationStack {
-        //         UniversalAddTripActivityRootView.forTransportation(trip: trip)
-        //     }
-        // }
-        // .sheet(isPresented: $showingEditTripSheet) {
-        //     NavigationStack {
-        //         EditTripView(trip: trip)
-        //     }
-        // }
-        // .fullScreenCover(isPresented: $showingCalendarView) {
-        //     TripCalendarRootView(trip: trip)
-        // }
+         .sheet(isPresented: $showingActivitySheet) {
+             NavigationStack {
+                 UniversalAddTripActivityRootView.forActivity(trip: trip)
+             }
+         }
+         .sheet(isPresented: $showingLodgingSheet) {
+             NavigationStack {
+                 UniversalAddTripActivityRootView.forLodging(trip: trip)
+             }
+         }
+         .sheet(isPresented: $showingTransportationSheet) {
+             NavigationStack {
+                 UniversalAddTripActivityRootView.forTransportation(trip: trip)
+             }
+         }
+         .sheet(isPresented: $showingEditTripSheet) {
+             NavigationStack {
+                 EditTripView(trip: trip)
+             }
+         }
+         .fullScreenCover(isPresented: $showingCalendarView) {
+             TripCalendarRootView(trip: trip)
+         }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button {
