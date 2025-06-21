@@ -340,6 +340,46 @@ struct ComponentTests {
 
 ## Platform-Specific Navigation Architecture
 
+### Modern Navigation Patterns (iOS 18+)
+
+The app uses modern SwiftUI navigation patterns for optimal performance and compatibility:
+
+#### NavigationStack (Not NavigationView)
+✅ **CORRECT - Modern Pattern:**
+```swift
+struct ModernView: View {
+    var body: some View {
+        NavigationStack {  // ✅ Use NavigationStack for iOS 16+
+            List {
+                // Content here
+            }
+            .navigationTitle("Title")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+}
+```
+
+❌ **DEPRECATED - Avoid NavigationView:**
+```swift
+struct DeprecatedView: View {
+    var body: some View {
+        NavigationView {  // ❌ NavigationView is deprecated in iOS 16+
+            List {
+                // Content here
+            }
+            .navigationTitle("Title")
+        }
+    }
+}
+```
+
+**Why NavigationStack is Better:**
+- **Performance**: Better memory management and rendering performance
+- **iOS 18+ Optimized**: Takes advantage of latest SwiftUI improvements
+- **Future-Proof**: NavigationView is deprecated and will be removed
+- **Consistent Behavior**: More predictable navigation behavior across platforms
+
 ### Adaptive Navigation Pattern
 
 The app implements platform-specific navigation to provide optimal user experience:
@@ -377,9 +417,43 @@ VStack(spacing: 0) {
 }
 ```
 
-### Benefits of Adaptive Navigation:
+### Navigation Best Practices
+
+#### 1. Always Use NavigationStack
+```swift
+// All navigation containers use NavigationStack
+struct AddTrip: View {
+    var body: some View {
+        NavigationStack {  // Modern, performant navigation
+            Form {
+                // Form content
+            }
+            .navigationTitle("New Trip")
+        }
+    }
+}
+```
+
+#### 2. Navigation State Management
+```swift
+struct UnifiedNavigationView: View {
+    @State private var navigationPath = NavigationPath()
+    
+    var body: some View {
+        NavigationSplitView {
+            // Sidebar content
+        } detail: {
+            // Detail content with proper navigation state
+        }
+    }
+}
+```
+
+### Benefits of Modern Navigation:
 - **iPhone**: Native TabView provides system-standard bottom tabs
 - **iPad**: Custom implementation avoids navigation title overlap issues
+- **Performance**: NavigationStack provides better performance than NavigationView
+- **iOS 18+ Optimized**: Takes advantage of latest SwiftUI navigation improvements
 - **Consistent UX**: Both platforms feel native while maintaining feature parity
 - **Maintainable**: Shared content views with platform-specific navigation containers
 

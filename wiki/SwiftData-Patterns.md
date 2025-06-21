@@ -147,7 +147,7 @@ struct GoodAddActivityView: View {
     @State private var viewModel: UniversalActivityFormViewModel?
     
     var body: some View {
-        NavigationView {
+        NavigationStack {  // Use NavigationStack, not NavigationView
             if let viewModel = viewModel {
                 UniversalAddActivityFormContent(viewModel: viewModel)
             } else {
@@ -171,6 +171,43 @@ struct GoodAddActivityView: View {
 - SwiftUI maintains the same instance across view updates
 - No unnecessary recreation or performance impact
 - Clean separation of concerns
+
+### 4.1. Modern Navigation Pattern (NavigationStack)
+
+✅ **CORRECT - Always Use NavigationStack:**
+```swift
+struct ModernNavigationView: View {
+    var body: some View {
+        NavigationStack {  // ✅ Modern iOS 16+ navigation
+            List {
+                // Content
+            }
+            .navigationTitle("Title")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+}
+```
+
+❌ **DEPRECATED - Avoid NavigationView:**
+```swift
+struct DeprecatedNavigationView: View {
+    var body: some View {
+        NavigationView {  // ❌ Deprecated in iOS 16+, causes performance issues
+            List {
+                // Content
+            }
+            .navigationTitle("Title")
+        }
+    }
+}
+```
+
+**Navigation Pattern Benefits:**
+- **Performance**: NavigationStack provides better memory management than NavigationView
+- **iOS 18+ Optimized**: Takes advantage of latest SwiftUI navigation improvements
+- **Future-Proof**: NavigationView is deprecated and will be removed in future iOS versions
+- **Consistent Behavior**: More predictable navigation state management
 
 ### 5. CloudKit Compatibility Pattern
 

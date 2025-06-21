@@ -57,6 +57,7 @@ A comprehensive travel planning and management app built with SwiftUI for iOS 18
 
 - **`@Observable` Classes**: Modern observation system replacing `@ObservableObject`
 - **`@State` Properties**: Latest property wrapper patterns
+- **NavigationStack**: Modern navigation using NavigationStack instead of deprecated NavigationView
 - **SwiftData Integration**: Native Core Data replacement for iOS 17+
 - **CloudKit Sync**: Seamless cross-device synchronization with CloudKit
 - **Structured Concurrency**: Async/await throughout the codebase
@@ -294,7 +295,7 @@ Text(L(L10n.General.save))         // "Save"
 ### Development Guidelines
 
 1. **Modern SwiftUI**: Use `@Observable` instead of `@ObservableObject`
-2. **iOS 18+ Features**: Leverage latest SwiftUI capabilities
+2. **iOS 18+ Features**: Leverage latest SwiftUI capabilities including NavigationStack
 3. **SwiftData Patterns**: Follow anti-infinite-recreation patterns
 4. **Swift Testing**: Use `@Test` and `@Suite` for all tests
 5. **Testing**: All new features require comprehensive tests
