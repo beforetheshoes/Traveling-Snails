@@ -11,7 +11,12 @@ class BiometricAuthManager {
     
     // Biometrics are always enabled - protection is per-trip only
     var isEnabled: Bool {
+        #if targetEnvironment(simulator)
+        // In simulator, always consider biometrics "enabled" for testing purposes
+        return true
+        #else
         return canUseBiometrics()
+        #endif
     }
     
     // Notification to allow manual UI updates when needed

@@ -1,6 +1,6 @@
 # SwiftData Patterns and Anti-Patterns
 
-This document outlines critical SwiftData usage patterns to prevent infinite view recreation bugs, ensure optimal performance, and maintain proper test isolation.
+This document outlines critical SwiftData usage patterns to prevent infinite view recreation bugs, ensure optimal performance, maintain proper test isolation, and enable CloudKit sync compatibility.
 
 ## 🚨 Critical Anti-Patterns (NEVER DO THESE)
 
@@ -129,6 +129,57 @@ class Trip {
     // ... other properties
 }
 ```
+
+### 5. App Settings and Observable Pattern
+
+✅ **CORRECT - @Observable Settings with ContentView Integration:**
+```swift
+// AppSettings.swift - Centralized app configuration
+@Observable
+class AppSettings {
+    static let shared = AppSettings()
+    
+    public var colorScheme: ColorSchemePreference {
+        didSet {
+            UserDefaults.standard.set(colorScheme.rawValue, forKey: "colorScheme")
+        }
+    }
+    
+    private init() {
+        let savedScheme = UserDefaults.standard.string(forKey: "colorScheme") ?? "system"
+        self.colorScheme = ColorSchemePreference(rawValue: savedScheme) ?? .system
+    }
+}
+
+// ContentView.swift - Apply settings globally
+struct ContentView: View {
+    @State private var appSettings = AppSettings.shared
+    
+    var body: some View {
+        // Main content here
+        mainContent
+            .preferredColorScheme(appSettings.colorScheme.colorScheme)
+    }
+}
+
+// SettingsViewModel.swift - Expose settings to settings UI
+@Observable @MainActor
+class SettingsViewModel {
+    private let appSettings = AppSettings.shared
+    
+    var colorScheme: ColorSchemePreference {
+        get { appSettings.colorScheme }
+        set { appSettings.colorScheme = newValue }
+    }
+}
+```
+
+**Why this pattern works:**
+- Settings are centralized in `@Observable` class
+- Changes automatically trigger UI updates
+- UserDefaults persistence is handled automatically
+- ContentView applies settings globally via `.preferredColorScheme()`
+- Settings UI can bind directly to SettingsViewModel properties
 
 ## 🧪 Testing SwiftData Patterns
 
@@ -406,6 +457,83 @@ enum TestIsolationError: Error {
 4. **CloudKit Safety**: Tests don't trigger CloudKit sync operations
 5. **Performance**: In-memory tests run faster than disk-based tests
 
+## 🔄 User Preferences and Settings Sync Pattern
+
+### Critical: Use NSUbiquitousKeyValueStore for User Preferences
+
+❌ **WRONG - SwiftData for User Preferences (Causes Fatal Crashes):**
+User preferences (color scheme, biometric timeout, etc.) should NEVER use SwiftData models. This causes fatal ModelContext lifecycle crashes when accessing settings from singleton classes.
+
+✅ **CORRECT - NSUbiquitousKeyValueStore for User Preferences:**
+```swift
+@Observable
+class AppSettings {
+    static let shared = AppSettings()
+    
+    private let ubiquitousStore = NSUbiquitousKeyValueStore.default
+    private let userDefaults = UserDefaults.standard
+    
+    public var colorScheme: ColorSchemePreference {
+        get {
+            // Try iCloud first, fallback to UserDefaults, then system default
+            if let cloudValue = ubiquitousStore.string(forKey: Keys.colorScheme),
+               let preference = ColorSchemePreference(rawValue: cloudValue) {
+                return preference
+            }
+            if let localValue = userDefaults.string(forKey: Keys.colorScheme),
+               let preference = ColorSchemePreference(rawValue: localValue) {
+                return preference
+            }
+            return .system
+        }
+        set {
+            // Write to both stores simultaneously for reliability
+            ubiquitousStore.set(newValue.rawValue, forKey: Keys.colorScheme)
+            userDefaults.set(newValue.rawValue, forKey: Keys.colorScheme)
+            ubiquitousStore.synchronize()
+        }
+    }
+    
+    private init() {
+        setupNotificationHandling()
+    }
+    
+    private func setupNotificationHandling() {
+        // Handle iCloud changes from other devices
+        NotificationCenter.default.addObserver(
+            forName: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
+            object: ubiquitousStore,
+            queue: .main
+        ) { [weak self] notification in
+            self?.handleiCloudChange(notification)
+        }
+    }
+}
+```
+
+### When to Use Each Pattern
+
+#### Use NSUbiquitousKeyValueStore for:
+- ✅ **User preferences** (color scheme, notification settings, etc.)
+- ✅ **App configuration** (biometric timeout, language preference)
+- ✅ **Simple key-value data** that needs cross-device sync
+- ✅ **Settings that need immediate availability** (no model context required)
+
+#### Use SwiftData for:
+- ✅ **Complex relational data** (trips, activities, organizations)
+- ✅ **Large datasets** with relationships and queries
+- ✅ **Data that benefits from model relationships** and computed properties
+- ✅ **Content that needs offline sync** with conflict resolution
+
+### Benefits of NSUbiquitousKeyValueStore for User Preferences
+
+1. **Purpose-Built**: Apple's official solution for user preferences sync
+2. **No Fatal Crashes**: No ModelContext lifecycle issues
+3. **Immediate Availability**: Works without model context setup
+4. **Automatic Notifications**: Built-in change notifications from other devices
+5. **Reliability**: UserDefaults fallback when iCloud unavailable
+6. **Simplicity**: No complex model relationships needed
+
 ---
 
-Following these patterns ensures stable, performant SwiftData operations throughout the Traveling Snails app while maintaining robust test isolation.
+Following these patterns ensures stable, performant SwiftData operations throughout the Traveling Snails app while maintaining robust test isolation and seamless cross-device sync for user preferences.

@@ -200,6 +200,15 @@ enum AppError: LocalizedError, Equatable {
 
 typealias AppResult<T> = Result<T, AppError>
 
+extension AppResult {
+    var isSuccess: Bool {
+        switch self {
+        case .success: return true
+        case .failure: return false
+        }
+    }
+}
+
 // MARK: - Error Handler Protocol
 
 protocol ErrorHandling {

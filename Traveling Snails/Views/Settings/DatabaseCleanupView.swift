@@ -2,7 +2,7 @@
 //  DatabaseCleanupView.swift
 //  Traveling Snails
 //
-//  Created by Claude on 6/19/25.
+//  Created by Ryan Williams on 6/19/25.
 //
 
 import SwiftUI

@@ -3,6 +3,7 @@ import SwiftData
 
 @main
 struct Traveling_SnailsApp: App {
+    @State private var appSettings = AppSettings.shared
     @State private var showSplash = true
     @State private var hasShownSplashOnce = false
     @Environment(\.scenePhase) private var scenePhase
@@ -11,6 +12,7 @@ struct Traveling_SnailsApp: App {
         WindowGroup {
             ZStack {
                 ContentView()
+                    .environment(appSettings)
                     .opacity(showSplash ? 0 : 1) // Hide content while splash is showing
                 
                 if showSplash {

@@ -115,14 +115,85 @@ struct OrganizationPicker: View {
             }
         }
         .sheet(isPresented: $showingAddOrganization) {
-            NavigationStack {
-                AddOrganizationView(
-                    prefilledName: searchText.isEmpty ? nil : searchText,
-                    onSave: { newOrg in
-                        selectedOrganization = newOrg
-                        //dismiss()
+            AddOrganizationForm(
+                prefilledName: searchText.isEmpty ? nil : searchText,
+                onSave: { newOrg in
+                    selectedOrganization = newOrg
+                    showingAddOrganization = false
+                }
+            )
+        }
+    }
+}
+
+// MARK: - Add Organization Form
+
+struct AddOrganizationForm: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
+    
+    let prefilledName: String?
+    let onSave: (Organization) -> Void
+    
+    @State private var name = ""
+    @State private var phone = ""
+    @State private var email = ""
+    @State private var website = ""
+    
+    init(prefilledName: String? = nil, onSave: @escaping (Organization) -> Void) {
+        self.prefilledName = prefilledName
+        self.onSave = onSave
+    }
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Organization Details") {
+                    TextField("Organization Name", text: $name)
+                    TextField("Phone", text: $phone)
+                        .keyboardType(.phonePad)
+                    TextField("Email", text: $email)
+                        .keyboardType(.emailAddress)
+                    TextField("Website", text: $website)
+                        .keyboardType(.URL)
+                }
+            }
+            .navigationTitle("Add Organization")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
                     }
-                )
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Save") {
+                        let organization = Organization(
+                            name: name.trimmingCharacters(in: .whitespacesAndNewlines),
+                            phone: phone.trimmingCharacters(in: .whitespacesAndNewlines),
+                            email: email.trimmingCharacters(in: .whitespacesAndNewlines),
+                            website: website.trimmingCharacters(in: .whitespacesAndNewlines)
+                        )
+                        
+                        modelContext.insert(organization)
+                        
+                        do {
+                            try modelContext.save()
+                            onSave(organization)
+                            dismiss()
+                        } catch {
+                            // Handle error appropriately
+                            print("Failed to save organization: \(error)")
+                        }
+                    }
+                    .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+            .onAppear {
+                if let prefilledName = prefilledName {
+                    name = prefilledName
+                }
             }
         }
     }

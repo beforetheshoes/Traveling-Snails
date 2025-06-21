@@ -42,13 +42,14 @@ A comprehensive travel planning and management app built with SwiftUI for iOS 18
 ### 🌐 Modern Features
 
 - **iOS 18+ Native**: Built with latest SwiftUI and SwiftData
-- **Cross-Device Sync**: iCloud integration for seamless device synchronization
+- **Cross-Device Sync**: iCloud integration for seamless device synchronization of all travel data (trips, activities, organizations) plus automatic settings sync using iCloud Key-Value Store
+- **Settings Sync**: Dark/light mode preferences and app settings automatically sync across all your devices in real-time
 - **Biometric Security**: Touch ID/Face ID protection for individual trips
 - **Adaptive Navigation**: Custom tab bar for iPad, native TabView for iPhone
 - **Database Management**: Built-in cleanup tools for data maintenance
 - **Internationalization**: Support for 10+ languages
 - **Accessibility**: Full VoiceOver and accessibility support
-- **Dark Mode**: Native dark mode support
+- **Dark Mode**: Full dark/light mode support with system integration and user preference persistence
 
 ## 🏗️ Architecture
 
@@ -274,7 +275,7 @@ Text(L(L10n.General.save))         // "Save"
 
 ### App Settings
 
-- **Color Scheme**: System, Light, or Dark mode
+- **Color Scheme**: System, Light, or Dark mode with real-time switching, local persistence, and automatic iCloud sync across devices
 - **Language**: Dynamic language switching
 - **iCloud Sync**: Enable/disable cross-device synchronization
 - **Data Export**: Export all data as JSON

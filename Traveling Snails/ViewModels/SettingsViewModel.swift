@@ -61,9 +61,9 @@ class SettingsViewModel {
     }
     
     var currentBiometricTimeout: TimeoutOption {
-        let saved = UserDefaults.standard.double(forKey: "biometricTimeout")
-        let current = saved > 0 ? saved : 900 // Default to 15 minutes
-        return TimeoutOption.from(current)
+        let minutes = appSettings.biometricTimeoutMinutes
+        let seconds = TimeInterval(minutes * 60)
+        return TimeoutOption.from(seconds)
     }
     
     var appVersion: String {
@@ -97,7 +97,8 @@ class SettingsViewModel {
     }
     
     func setBiometricTimeout(_ timeout: TimeoutOption) {
-        UserDefaults.standard.set(timeout.rawValue, forKey: "biometricTimeout")
+        let minutes = Int(timeout.rawValue / 60)
+        appSettings.biometricTimeoutMinutes = minutes
     }
     
     func lockAllProtectedTrips() {

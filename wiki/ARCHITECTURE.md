@@ -49,6 +49,213 @@ class SomeViewModel {
 }
 ```
 
+### 3. Global Settings Management Pattern
+
+#### AppSettings with Simplified @Observable + Environment Object Pattern
+Used for app-wide configuration that needs persistence, global access, and iCloud synchronization:
+
+```swift
+@Observable
+class AppSettings {
+    static let shared = AppSettings()
+    
+    // MARK: - Storage systems
+    private let ubiquitousStore = NSUbiquitousKeyValueStore.default
+    private let userDefaults = UserDefaults.standard
+    
+    // MARK: - Private backing storage (prevents infinite @Observable loops)
+    private var _colorScheme: ColorSchemePreference = .system
+    private var _biometricTimeoutMinutes: Int = 5
+    
+    // MARK: - Public @Observable properties with computed accessors
+    var colorScheme: ColorSchemePreference {
+        get { _colorScheme }
+        set {
+            _colorScheme = newValue
+            // Save to both stores for reliability
+            userDefaults.set(newValue.rawValue, forKey: Keys.colorScheme)
+            ubiquitousStore.set(newValue.rawValue, forKey: Keys.colorScheme)
+            ubiquitousStore.synchronize()
+        }
+    }
+    
+    var biometricTimeoutMinutes: Int {
+        get { _biometricTimeoutMinutes }
+        set {
+            _biometricTimeoutMinutes = newValue
+            // Save to both stores
+            userDefaults.set(newValue, forKey: Keys.biometricTimeoutMinutes)
+            ubiquitousStore.set(newValue, forKey: Keys.biometricTimeoutMinutes)
+            ubiquitousStore.synchronize()
+        }
+    }
+    
+    // Private init ensures singleton usage
+    private init() {
+        loadFromStorage()
+        setupICloudNotifications()
+    }
+    
+    private func loadFromStorage() {
+        // Load with proper fallback hierarchy: UserDefaults -> iCloud -> defaults
+        if let stored = userDefaults.string(forKey: Keys.colorScheme),
+           let preference = ColorSchemePreference(rawValue: stored) {
+            _colorScheme = preference
+        } else if let cloud = ubiquitousStore.string(forKey: Keys.colorScheme),
+                  let preference = ColorSchemePreference(rawValue: cloud) {
+            _colorScheme = preference
+        } else {
+            _colorScheme = .system // Reset to default when both stores are empty
+        }
+        
+        // Load biometric timeout with defaults
+        let storedTimeout = userDefaults.integer(forKey: Keys.biometricTimeoutMinutes)
+        if storedTimeout > 0 {
+            _biometricTimeoutMinutes = storedTimeout
+        } else {
+            let cloudTimeout = Int(ubiquitousStore.longLong(forKey: Keys.biometricTimeoutMinutes))
+            if cloudTimeout > 0 {
+                _biometricTimeoutMinutes = cloudTimeout
+            } else {
+                _biometricTimeoutMinutes = 5 // Reset to default
+            }
+        }
+    }
+    
+    private func setupICloudNotifications() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(iCloudChanged(_:)),
+            name: NSUbiquitousKeyValueStore.didChangeExternallyNotification,
+            object: ubiquitousStore
+        )
+        ubiquitousStore.synchronize()
+    }
+    
+    @objc private func iCloudChanged(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let changedKeys = userInfo[NSUbiquitousKeyValueStoreChangedKeysKey] as? [String] else {
+            return
+        }
+        
+        Task { @MainActor in
+            // Handle external changes from other devices
+            if changedKeys.contains(Keys.colorScheme) {
+                if let cloudValue = self.ubiquitousStore.string(forKey: Keys.colorScheme),
+                   let preference = ColorSchemePreference(rawValue: cloudValue),
+                   preference != self._colorScheme {
+                    
+                    // Update backing storage directly to avoid writing back to iCloud
+                    self._colorScheme = preference
+                    // Also update UserDefaults for consistency
+                    self.userDefaults.set(preference.rawValue, forKey: Keys.colorScheme)
+                }
+            }
+            
+            if changedKeys.contains(Keys.biometricTimeoutMinutes) {
+                let cloudValue = Int(self.ubiquitousStore.longLong(forKey: Keys.biometricTimeoutMinutes))
+                if cloudValue > 0 && cloudValue != self._biometricTimeoutMinutes {
+                    // Update backing storage directly
+                    self._biometricTimeoutMinutes = cloudValue
+                    self.userDefaults.set(cloudValue, forKey: Keys.biometricTimeoutMinutes)
+                }
+            }
+        }
+    }
+}
+```
+
+#### Why NSUbiquitousKeyValueStore for User Settings
+
+**✅ CORRECT Pattern (Current Implementation):**
+- **NSUbiquitousKeyValueStore**: Purpose-built for user preferences that sync across devices
+- **UserDefaults fallback**: Provides reliability when iCloud is unavailable
+- **Automatic notifications**: Built-in change notifications when other devices update settings
+- **Apple-recommended**: Official Apple solution for syncing user preferences
+
+**❌ WRONG Pattern (Previous Implementation):**
+- **SwiftData for user preferences**: Overkill for simple key-value settings
+- **Fatal crashes**: SwiftData model lifecycle issues with singleton settings access
+- **Complexity**: Relationship management unnecessary for simple preferences
+
+#### @State Environment Object Pattern (Recommended)
+For immediate UI response and simplified architecture, use direct environment object access:
+
+```swift
+// App Root - Provide AppSettings as environment object
+struct Traveling_SnailsApp: App {
+    @State private var appSettings = AppSettings.shared
+    
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .environment(appSettings) // Provide as environment object
+        }
+    }
+}
+
+// Content Views - Direct environment access (NO @Bindable layers)
+struct AppearanceSection: View {
+    @Environment(AppSettings.self) private var appSettings
+    
+    var body: some View {
+        Picker("Color Scheme", selection: Binding(
+            get: { appSettings.colorScheme },
+            set: { appSettings.colorScheme = $0 }
+        )) {
+            Text("System").tag(ColorSchemePreference.system)
+            Text("Light").tag(ColorSchemePreference.light)
+            Text("Dark").tag(ColorSchemePreference.dark)
+        }
+        .pickerStyle(.segmented)
+    }
+}
+
+// Global Application in ContentView
+struct ContentView: View {
+    @Environment(AppSettings.self) private var appSettings
+    
+    var body: some View {
+        mainContent
+            .preferredColorScheme(appSettings.colorScheme.colorScheme)
+    }
+}
+```
+
+#### ⚠️ Critical Pattern: Avoid Broken @Observable Chains
+
+**❌ WRONG Pattern (Causes Broken Observation):**
+```swift
+// Multiple @Bindable layers break external change propagation
+struct SettingsContentView: View {
+    @Bindable var viewModel: SettingsViewModel // ❌ Extra abstraction layer
+    
+    var body: some View {
+        AppearanceSection(viewModel: viewModel) // ❌ Parameter passing
+    }
+}
+
+struct AppearanceSection: View {
+    @Bindable var viewModel: SettingsViewModel // ❌ Another @Bindable layer
+    // This prevents external iCloud changes from reaching the UI!
+}
+```
+
+**✅ CORRECT Pattern (Direct Environment Access):**
+```swift
+// No abstraction layers - direct environment object access
+struct SettingsContentView: View {
+    var body: some View {
+        AppearanceSection() // ✅ No parameter passing
+    }
+}
+
+struct AppearanceSection: View {
+    @Environment(AppSettings.self) private var appSettings // ✅ Direct access
+    // External iCloud changes propagate immediately to UI!
+}
+```
+
 #### Current ViewModels:
 - **ActivityFormViewModel**: Form state management and validation
 - **CalendarViewModel**: Calendar state and coordination

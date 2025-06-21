@@ -13,6 +13,9 @@ struct ContentView: View {
     @Query private var trips: [Trip]
     @Query private var organizations: [Organization]
     
+    // App settings for color scheme
+    @Environment(AppSettings.self) private var appSettings
+    
     // Navigation state
     @State private var selectedTab = 0
     @State private var selectedTrip: Trip?
@@ -41,6 +44,7 @@ struct ContentView: View {
                 mainContent
             }
         }
+        .preferredColorScheme(appSettings.colorScheme.colorScheme)
     }
     
     @ViewBuilder

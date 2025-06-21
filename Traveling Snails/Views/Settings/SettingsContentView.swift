@@ -62,6 +62,7 @@ struct SettingsContentView: View {
 
 struct AppearanceSection: View {
     @Bindable var viewModel: SettingsViewModel
+    @Environment(AppSettings.self) private var appSettings
     
     var body: some View {
         Section("Appearance") {
@@ -74,7 +75,10 @@ struct AppearanceSection: View {
                 
                 Spacer()
                 
-                Picker("Color Scheme", selection: $viewModel.colorScheme) {
+                Picker("Color Scheme", selection: Binding(
+                    get: { appSettings.colorScheme },
+                    set: { appSettings.colorScheme = $0 }
+                )) {
                     Text("System").tag(ColorSchemePreference.system)
                     Text("Light").tag(ColorSchemePreference.light)
                     Text("Dark").tag(ColorSchemePreference.dark)
@@ -82,6 +86,13 @@ struct AppearanceSection: View {
                 .pickerStyle(.segmented)
                 .frame(width: 180)
             }
+            
+            #if DEBUG
+            Button("🧪 Test iCloud Sync") {
+                AppSettings.shared.forceSyncTest()
+            }
+            .foregroundColor(.orange)
+            #endif
         }
     }
 }

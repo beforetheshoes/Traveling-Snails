@@ -7,7 +7,7 @@
 
 import SwiftUI
 import SwiftData
-import OSLog
+//import OSLog
 
 /// Root view for unified navigation - coordinates ViewModels and handles external dependencies
 struct UnifiedNavigationRootView<Item: NavigationItem, DetailView: View>: View {

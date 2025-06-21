@@ -20,17 +20,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CloudKit + SwiftData compatibility patterns with private optional + safe accessor approach
 - Biometric authentication (Touch ID/Face ID) for individual trip protection
 - Wiki documentation structure for technical details
+- NSUbiquitousKeyValueStore implementation for user preferences with automatic iCloud sync
+- Comprehensive notification handling for iCloud key-value store changes (server changes, account changes, quota violations)
+- UserDefaults fallback when iCloud unavailable for robust settings management
+- Simplified @Observable AppSettings architecture with @State environment object pattern for immediate UI response
+- Cross-device dark/light mode settings sync with real-time updates
 
 ### Changed
 - iPad navigation now uses custom tab bar instead of NavigationSplitView for consistent UI
 - Biometric authentication changed from global app protection to per-trip protection
 - Test performance expectations adjusted for realistic device performance
 - Enhanced database cleanup patterns to be more conservative with user data
+- User preferences sync method from SwiftData to NSUbiquitousKeyValueStore for improved reliability and purpose-built iCloud sync
+- AppSettings architecture simplified from complex abstraction layers to direct @Observable with @State environment object pattern
+- Settings UI updated to use direct environment object access instead of multiple @Bindable wrapper layers
+
+### Fixed
+- SwiftData fatal crashes in AppSettings caused by stale model references and ModelContext lifecycle issues
+- Settings sync reliability issues between devices using proper Apple-provided iCloud Key-Value Store
+- Broken @Observable chain in settings UI that prevented external iCloud changes from updating the interface
+- AppSettings singleton behavior now properly handles external notification changes from other devices
+- Test failures related to singleton caching behavior by implementing reloadFromStorage() debug method
 - Migrated from XCTests to modern Swift Testing framework (@Test, @Suite)
 - Updated README.md with adaptive navigation and database management features
+- User preferences (color scheme, biometric timeout) now sync via iCloud instead of being device-local
+- AppSettings refactored to use SwiftData instead of UserDefaults for CloudKit compatibility
 - Reorganized test suite into logical directories for better maintainability
 
 ### Fixed
+- Dark/light mode toggle not applying user preference to app interface
 - iPad tab bar overlapping navigation titles by implementing custom bottom tab bar
 - Test data contamination in real app database through improved isolation
 - Performance test failures by adjusting timeout expectations (DirectoryRestructureIntegrationTests, CloudKitSwiftDataConformanceTests, SwiftDataRegressionTests)

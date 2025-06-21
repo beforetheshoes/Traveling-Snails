@@ -7,7 +7,7 @@
 
 import SwiftUI
 import SwiftData
-import OSLog
+//import OSLog
 
 // MARK: - Navigation Item Protocol
 

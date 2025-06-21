@@ -52,6 +52,7 @@ final class Logger {
         case navigation = "Navigation"
         case settings = "Settings"
         case debug = "Debug"
+        case userPrefs = "UserPreferences"
         
         var emoji: String {
             switch self {
@@ -69,6 +70,7 @@ final class Logger {
             case .navigation: return "🧭"
             case .settings: return "⚙️"
             case .debug: return "🐛"
+            case .userPrefs: return "🔑"
             }
         }
     }

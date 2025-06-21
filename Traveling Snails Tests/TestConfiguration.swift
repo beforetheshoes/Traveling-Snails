@@ -2,7 +2,7 @@
 //  TestConfiguration.swift
 //  Traveling Snails Tests
 //
-//  Created by Claude on 6/19/25.
+//  Created by Ryan Williams on 6/19/25.
 //
 
 import Foundation
@@ -42,10 +42,8 @@ extension TestDataIsolation {
     }
 }
 
-/// Macro to ensure test isolation
-/// Usage: @TestIsolated struct MyTests: TestDataIsolation { ... }
-@attached(extension, conformances: TestDataIsolation)
-public macro TestIsolated() = #externalMacro(module: "TestMacros", type: "TestIsolatedMacro")
+/// Note: Removed TestIsolated macro - not needed for basic SwiftData testing
+/// Tests should use ModelConfiguration(isStoredInMemoryOnly: true) for isolation
 
 /// Base class that all SwiftData tests should inherit from
 @MainActor
