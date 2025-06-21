@@ -14,22 +14,31 @@ struct UniversalAddTripActivityRootView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     
+    // FIX: Create view model once using @State instead of recreating on every view update
+    @State private var viewModel: UniversalActivityFormViewModel?
+    
     var body: some View {
         NavigationView {
-            UniversalAddActivityFormContent(
-                viewModel: UniversalActivityFormViewModel(
-                    trip: trip,
-                    activityType: activityType,
-                    modelContext: modelContext
-                )
-            )
-            .navigationTitle("Add \(activityType.displayName)")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
+            if let viewModel = viewModel {
+                UniversalAddActivityFormContent(viewModel: viewModel)
+            } else {
+                ProgressView("Loading...")
+                    .onAppear {
+                        // Create view model only once
+                        viewModel = UniversalActivityFormViewModel(
+                            trip: trip,
+                            activityType: activityType,
+                            modelContext: modelContext
+                        )
                     }
+            }
+        }
+        .navigationTitle("Add \(activityType.displayName)")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") {
+                    dismiss()
                 }
             }
         }

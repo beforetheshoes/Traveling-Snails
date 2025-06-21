@@ -49,6 +49,33 @@ struct BadView: View {
 }
 ```
 
+### 3. Creating @Observable View Models Directly in SwiftUI View Body
+
+❌ **WRONG - Causes Infinite Recreation:**
+```swift
+struct BadAddActivityView: View {
+    let trip: Trip
+    @Environment(\.modelContext) private var modelContext
+    
+    var body: some View {
+        // BAD: Creates new view model on every view update!
+        UniversalAddActivityFormContent(
+            viewModel: UniversalActivityFormViewModel(
+                trip: trip,
+                activityType: .activity,
+                modelContext: modelContext
+            )
+        )
+    }
+}
+```
+
+**Why this is wrong:**
+- SwiftUI recreates views frequently during state changes
+- Creating expensive objects (like @Observable view models) in `body` causes constant recreation
+- Each recreation triggers init() methods, causing performance issues and unnecessary work
+- Can lead to infinite loops if the view model triggers further state changes
+
 ## ✅ Correct Patterns (ALWAYS USE THESE)
 
 ### 1. Direct @Query in Consuming Views
@@ -110,7 +137,42 @@ struct AddTripView: View {
 }
 ```
 
-### 4. CloudKit Compatibility Pattern
+### 4. Use @State for Stable View Model Creation
+
+✅ **CORRECT - Cache Expensive View Models:**
+```swift
+struct GoodAddActivityView: View {
+    let trip: Trip
+    @Environment(\.modelContext) private var modelContext
+    @State private var viewModel: UniversalActivityFormViewModel?
+    
+    var body: some View {
+        NavigationView {
+            if let viewModel = viewModel {
+                UniversalAddActivityFormContent(viewModel: viewModel)
+            } else {
+                ProgressView("Loading...")
+                    .onAppear {
+                        // Create view model only once
+                        viewModel = UniversalActivityFormViewModel(
+                            trip: trip,
+                            activityType: .activity,
+                            modelContext: modelContext
+                        )
+                    }
+            }
+        }
+    }
+}
+```
+
+**Why this pattern works:**
+- View model is created only once using @State
+- SwiftUI maintains the same instance across view updates
+- No unnecessary recreation or performance impact
+- Clean separation of concerns
+
+### 5. CloudKit Compatibility Pattern
 
 ✅ **CORRECT - Private Optional + Safe Accessor:**
 ```swift
@@ -130,7 +192,7 @@ class Trip {
 }
 ```
 
-### 5. App Settings and Observable Pattern
+### 6. App Settings and Observable Pattern
 
 ✅ **CORRECT - @Observable Settings with ContentView Integration:**
 ```swift
@@ -289,6 +351,7 @@ struct DebugView: View {
     var body: some View {
         #if DEBUG
         let _ = print("DebugView recreated with \(trips.count) trips")
+        let _ = Self._printChanges()  // Shows what triggered the recreation
         #endif
         
         List(trips) { trip in
@@ -298,7 +361,34 @@ struct DebugView: View {
 }
 ```
 
-### 3. Performance Testing
+### 3. Debug Infinite Recreation Issues
+
+```swift
+struct ProblematicView: View {
+    @State private var debugCount = 0
+    
+    var body: some View {
+        #if DEBUG
+        let _ = {
+            debugCount += 1
+            print("🔄 ProblematicView recreated \(debugCount) times")
+            Self._printChanges()  // Shows exactly what changed
+        }()
+        #endif
+        
+        // Your view content here
+        Text("Debug Count: \(debugCount)")
+    }
+}
+```
+
+**Using Self._printChanges():**
+- Add to problematic views to see what triggers recreation
+- Shows specific property changes that cause rebuilds
+- Helps identify infinite recreation loops
+- Use only in DEBUG builds
+
+### 4. Performance Testing
 
 ```swift
 @Test("View recreation performance")

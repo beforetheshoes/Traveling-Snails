@@ -5,6 +5,13 @@ You are an expert SwiftUI programmer working on the Traveling Snails travel plan
 ## 🚨 CRITICAL TESTING RULE
 **YOU DO NOT STOP DEBUGGING UNTIL ALL TESTS ARE PASSING.** Never claim tests are working or that you've "fixed" issues without actually running the tests and verifying they pass. Always run tests to confirm your changes work before claiming success.
 
+### Testing Commands
+**ALWAYS use xcbeautify for cleaner test output:**
+- `xcodebuild test -scheme "Traveling Snails" -destination "platform=iOS Simulator,name=iPhone 16" | xcbeautify`
+- `xcodebuild build -scheme "Traveling Snails" -destination "platform=iOS Simulator,name=iPhone 16" | xcbeautify`
+
+If xcbeautify is not available, fall back to standard xcodebuild commands with appropriate filtering.
+
 ## 🎯 Core Development Principles
 
 ### Modern Swift/SwiftUI Patterns (MANDATORY)
@@ -256,6 +263,61 @@ struct ComponentTests { ... }
 - Using @Published with large model arrays
 - Blocking the main thread with heavy operations
 - Creating unnecessary view updates
+
+### Critical SwiftUI + @Observable Anti-Pattern (CAUSES INFINITE RECREATION)
+⚠️ **NEVER create @Observable view models directly in SwiftUI view body** - this causes infinite recreation!
+
+❌ **WRONG Pattern (Causes Infinite Recreation):**
+```swift
+struct BadView: View {
+    let trip: Trip
+    @Environment(\.modelContext) private var modelContext
+    
+    var body: some View {
+        // BAD: Creates new view model on every view update!
+        UniversalAddActivityFormContent(
+            viewModel: UniversalActivityFormViewModel(
+                trip: trip,
+                activityType: .activity,
+                modelContext: modelContext
+            )
+        )
+    }
+}
+```
+
+✅ **CORRECT Pattern (Use @State for Stability):**
+```swift
+struct GoodView: View {
+    let trip: Trip
+    @Environment(\.modelContext) private var modelContext
+    @State private var viewModel: UniversalActivityFormViewModel?
+    
+    var body: some View {
+        NavigationView {
+            if let viewModel = viewModel {
+                UniversalAddActivityFormContent(viewModel: viewModel)
+            } else {
+                ProgressView("Loading...")
+                    .onAppear {
+                        // Create view model only once
+                        viewModel = UniversalActivityFormViewModel(
+                            trip: trip,
+                            activityType: .activity,
+                            modelContext: modelContext
+                        )
+                    }
+            }
+        }
+    }
+}
+```
+
+**Key Points:**
+- SwiftUI recreates views frequently during state changes
+- Creating expensive objects (like view models) in `body` causes constant recreation
+- Use `@State` to cache expensive computations and objects
+- Use `Self._printChanges()` to debug view recreation issues
 
 ### Security Red Flags
 - Logging sensitive user data

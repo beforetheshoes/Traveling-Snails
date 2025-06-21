@@ -10,13 +10,14 @@ import SwiftData
 
 // MARK: - Database Browser Tab
 struct DatabaseBrowserTab: View {
-    let trips: [Trip]
-    let transportation: [Transportation]
-    let lodging: [Lodging]
-    let activities: [Activity]
-    let organizations: [Organization]
-    let addresses: [Address]
-    let attachments: [EmbeddedFileAttachment]
+    @Environment(\.modelContext) private var modelContext
+    @Query private var trips: [Trip]
+    @Query private var transportation: [Transportation]
+    @Query private var lodging: [Lodging]
+    @Query private var activities: [Activity]
+    @Query private var organizations: [Organization]
+    @Query private var addresses: [Address]
+    @Query private var attachments: [EmbeddedFileAttachment]
     
     @State private var selectedSection = 0
     @State private var searchText = ""

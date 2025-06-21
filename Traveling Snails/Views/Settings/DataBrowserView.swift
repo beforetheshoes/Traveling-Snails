@@ -147,15 +147,7 @@ struct DataBrowserView: View {
                 .tag(0)
                 
                 // Database Browser Tab
-                DatabaseBrowserTab(
-                    trips: allTrips,
-                    transportation: allTransportation,
-                    lodging: allLodging,
-                    activities: allActivities,
-                    organizations: allOrganizations,
-                    addresses: allAddresses,
-                    attachments: allAttachments
-                )
+                DatabaseBrowserTab()
                 .tabItem {
                     Label("Browse", systemImage: "folder")
                 }

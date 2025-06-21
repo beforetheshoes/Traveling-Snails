@@ -158,8 +158,7 @@ struct ContentView: View {
     }
     
     private var tripsTab: some View {
-        UnifiedNavigationView.trips(
-            trips: trips,
+        TripsNavigationView(
             selectedTab: $selectedTab,
             selectedTrip: $selectedTrip,
             tabIndex: 0
@@ -167,8 +166,7 @@ struct ContentView: View {
     }
     
     private var organizationsTab: some View {
-        UnifiedNavigationView.organizations(
-            organizations: organizations,
+        OrganizationsNavigationView(
             selectedTab: $selectedTab,
             selectedTrip: $selectedTrip,
             tabIndex: 1
@@ -231,6 +229,54 @@ struct CloudKitSyncIndicatorView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.systemBackground))
+    }
+}
+
+// MARK: - Query-Based Navigation Wrappers
+
+struct TripsNavigationView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query private var trips: [Trip]
+    @Binding var selectedTab: Int
+    @Binding var selectedTrip: Trip?
+    let tabIndex: Int
+    
+    init(selectedTab: Binding<Int>, selectedTrip: Binding<Trip?>, tabIndex: Int) {
+        self._selectedTab = selectedTab
+        self._selectedTrip = selectedTrip
+        self.tabIndex = tabIndex
+    }
+    
+    var body: some View {
+        UnifiedNavigationView.trips(
+            trips: trips,
+            selectedTab: $selectedTab,
+            selectedTrip: $selectedTrip,
+            tabIndex: tabIndex
+        )
+    }
+}
+
+struct OrganizationsNavigationView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query private var organizations: [Organization]
+    @Binding var selectedTab: Int
+    @Binding var selectedTrip: Trip?
+    let tabIndex: Int
+    
+    init(selectedTab: Binding<Int>, selectedTrip: Binding<Trip?>, tabIndex: Int) {
+        self._selectedTab = selectedTab
+        self._selectedTrip = selectedTrip
+        self.tabIndex = tabIndex
+    }
+    
+    var body: some View {
+        UnifiedNavigationView.organizations(
+            organizations: organizations,
+            selectedTab: $selectedTab,
+            selectedTrip: $selectedTrip,
+            tabIndex: tabIndex
+        )
     }
 }
 

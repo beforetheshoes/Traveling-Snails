@@ -46,8 +46,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - User preferences (color scheme, biometric timeout) now sync via iCloud instead of being device-local
 - AppSettings refactored to use SwiftData instead of UserDefaults for CloudKit compatibility
 - Reorganized test suite into logical directories for better maintainability
-
-### Fixed
 - Dark/light mode toggle not applying user preference to app interface
 - iPad tab bar overlapping navigation titles by implementing custom bottom tab bar
 - Test data contamination in real app database through improved isolation
@@ -56,6 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Biometric authentication crashes caused by missing NSFaceIDUsageDescription in Info.plist
 - Swift 6 Sendable compliance errors in BiometricAuthManager
 - iOS NavigationSplitView compatibility issues in ContentView
+- **Critical infinite recreation bug** in UniversalAddTripActivityRootView where @Observable view models were created directly in view body causing constant recreation and performance issues
 
 ### Security
 - Added NSFaceIDUsageDescription privacy permission for biometric authentication
