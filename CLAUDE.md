@@ -16,6 +16,7 @@ If xcbeautify is not available, fall back to standard xcodebuild commands with a
 
 ### Modern Swift/SwiftUI Patterns (MANDATORY)
 - **Use `@State` and `@Observable`** instead of `@StateObject` and `@ObservableObject`
+- **Use NavigationStack** instead of NavigationView (NavigationView is deprecated)
 - **Use Swift Testing** (`@Test`, `@Suite`, `#expect`) instead of XCTests
 - **Use SwiftData** instead of CoreData for all data operations
 - **Use `async/await`** for all asynchronous operations
@@ -294,7 +295,7 @@ struct GoodView: View {
     @State private var viewModel: UniversalActivityFormViewModel?
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             if let viewModel = viewModel {
                 UniversalAddActivityFormContent(viewModel: viewModel)
             } else {

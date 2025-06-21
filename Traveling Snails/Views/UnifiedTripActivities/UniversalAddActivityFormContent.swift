@@ -13,44 +13,17 @@ struct UniversalAddActivityFormContent: View {
     
     var body: some View {
         ScrollView {
-            VStack(spacing: 24) {
-                // Header with Icon
-                UniversalActivityHeaderView(viewModel: viewModel)
-                
-                // Basic Info Section
-                UniversalBasicInfoSection(viewModel: viewModel)
-                
-                // Organization Section
-                UniversalOrganizationSection(viewModel: viewModel)
-                
-                // Schedule Section
-                UniversalScheduleSection(viewModel: viewModel)
-                
-                // Cost & Payment Section
-                UniversalCostSection(viewModel: viewModel)
-                
-                // Additional Details Section
-                UniversalDetailsSection(viewModel: viewModel)
-                
-                // File Attachments Section
-                UniversalAttachmentsSection(viewModel: viewModel)
-                
-                // Submit Button
-                UniversalSubmitButton(
-                    viewModel: viewModel,
-                    onSubmit: {
-                        Task { @MainActor in
-                            do {
-                                try await viewModel.save()
-                                dismiss()
-                            } catch {
-                                // Error is stored in viewModel.saveError
-                            }
-                        }
-                    }
-                )
+            VStack(spacing: 20) {
+                headerSection
+                basicInfoSection
+                organizationSection
+                scheduleSection
+                costSection
+                detailsSection
+                attachmentsSection
+                submitButton
             }
-            .padding()
+            .padding(.horizontal, 16)
         }
         .sheet(isPresented: $viewModel.showingOrganizationPicker) {
             OrganizationPicker(
@@ -58,197 +31,306 @@ struct UniversalAddActivityFormContent: View {
             )
         }
     }
-}
-
-// MARK: - Supporting Views
-
-struct UniversalActivityHeaderView: View {
-    let viewModel: UniversalActivityFormViewModel
     
-    var body: some View {
-        VStack(spacing: 8) {
-            Image(systemName: viewModel.icon)
-                .font(.system(size: 40))
-                .foregroundColor(Color(viewModel.color))
-            
-            Text("Add \(viewModel.activityType.displayName)")
-                .font(.title2)
-                .fontWeight(.semibold)
-        }
-        .padding()
+    // MARK: - Section Views
+    
+    private var headerSection: some View {
+        ActivityHeaderView(
+            icon: viewModel.icon,
+            color: colorFromString(viewModel.color),
+            title: viewModel.activityType.displayName
+        )
     }
-}
-
-struct UniversalBasicInfoSection: View {
-    @Bindable var viewModel: UniversalActivityFormViewModel
     
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Basic Information")
-                .font(.headline)
-            
-            TextField("Name", text: $viewModel.editData.name)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-            
-            if viewModel.hasTypeSelector {
-                Picker("Transportation Type", selection: $viewModel.editData.transportationType) {
-                    ForEach(TransportationType.allCases, id: \.self) { type in
-                        Label(type.displayName, systemImage: type.systemImage)
-                            .tag(type as TransportationType?)
-                    }
-                }
-                .pickerStyle(MenuPickerStyle())
-            }
-        }
-    }
-}
-
-struct UniversalOrganizationSection: View {
-    @Bindable var viewModel: UniversalActivityFormViewModel
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Organization")
-                .font(.headline)
-            
-            Button(action: { viewModel.showingOrganizationPicker = true }) {
-                HStack {
-                    Text(viewModel.editData.organization?.name ?? "Select Organization")
-                        .foregroundColor(viewModel.editData.organization == nil ? .secondary : .primary)
-                    Spacer()
-                    Image(systemName: "chevron.down")
-                        .foregroundColor(.secondary)
-                }
-                .padding()
-                .background(Color(.systemGray6))
-                .cornerRadius(8)
-            }
-            
-            if viewModel.supportsCustomLocation {
-                TextField("Custom Location Name (Optional)", text: $viewModel.editData.customLocationName)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                
-                Toggle("Hide Location", isOn: $viewModel.editData.hideLocation)
-            }
-        }
-    }
-}
-
-struct UniversalScheduleSection: View {
-    @Bindable var viewModel: UniversalActivityFormViewModel
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Schedule")
-                .font(.headline)
-            
-            DatePicker(viewModel.startLabel, selection: $viewModel.editData.start, displayedComponents: [.date, .hourAndMinute])
-            
-            DatePicker(viewModel.endLabel, selection: $viewModel.editData.end, displayedComponents: [.date, .hourAndMinute])
-        }
-    }
-}
-
-struct UniversalCostSection: View {
-    @Bindable var viewModel: UniversalActivityFormViewModel
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Cost & Payment")
-                .font(.headline)
-            
-            FancyCurrencyTextField(value: $viewModel.editData.cost)
-            
-            Picker("Payment Status", selection: $viewModel.editData.paid) {
-                ForEach(PaidStatus.allCases, id: \.self) { status in
-                    Text(status.displayName).tag(status)
-                }
-            }
-            .pickerStyle(MenuPickerStyle())
-        }
-    }
-}
-
-struct UniversalDetailsSection: View {
-    @Bindable var viewModel: UniversalActivityFormViewModel
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Additional Details")
-                .font(.headline)
-            
-            TextField(viewModel.confirmationLabel, text: $viewModel.editData.confirmationField)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-            
-            TextField("Notes (Optional)", text: $viewModel.editData.notes, axis: .vertical)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .lineLimit(3...6)
-        }
-    }
-}
-
-struct UniversalAttachmentsSection: View {
-    @Bindable var viewModel: UniversalActivityFormViewModel
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("File Attachments")
-                .font(.headline)
-            
-            if viewModel.attachments.isEmpty {
-                Text("No attachments")
-                    .foregroundColor(.secondary)
-                    .italic()
-            } else {
-                ForEach(viewModel.attachments) { attachment in
-                    HStack {
-                        Image(systemName: "doc.fill")
-                        Text(attachment.fileName)
-                        Spacer()
-                        Button("Remove") {
-                            viewModel.removeAttachment(attachment)
+    private var basicInfoSection: some View {
+        ActivitySectionCard(
+            headerIcon: "info.circle.fill",
+            headerTitle: "Basic Information",
+            headerColor: colorFromString(viewModel.color)
+        ) {
+            VStack(spacing: 16) {
+                ActivityFormField(
+                    label: "Name",
+                    text: $viewModel.editData.name,
+                    placeholder: "\(viewModel.activityType.displayName) Name"
+                )                
+                if viewModel.hasTypeSelector {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Transportation Type")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        Picker("Transportation Type", selection: $viewModel.editData.transportationType) {
+                            ForEach(TransportationType.allCases, id: \.self) { type in
+                                Label(type.displayName, systemImage: type.systemImage)
+                                    .tag(type as TransportationType?)
+                            }
                         }
-                        .foregroundColor(.red)
+                        .pickerStyle(.segmented)
                     }
-                    .padding(.vertical, 4)
                 }
             }
-            
-            Button("Add Attachment") {
-                // TODO: Implement file picker
-            }
-            .buttonStyle(.bordered)
         }
     }
-}
-
-struct UniversalSubmitButton: View {
-    let viewModel: UniversalActivityFormViewModel
-    let onSubmit: () -> Void
     
-    var body: some View {
-        Button(action: onSubmit) {
-            HStack {
-                if viewModel.isSaving {
-                    ProgressView()
-                        .scaleEffect(0.8)
-                        .padding(.trailing, 4)
+    private var organizationSection: some View {
+        ActivitySectionCard(
+            headerIcon: "mappin.circle.fill",
+            headerTitle: viewModel.supportsCustomLocation ? "Location" : "Organization",
+            headerColor: colorFromString(viewModel.color)
+        ) {
+            VStack(spacing: 16) {
+                ActivityFormButton(
+                    label: "Organization",
+                    value: viewModel.editData.organization?.name ?? "Select Organization",
+                    action: { viewModel.showingOrganizationPicker = true }
+                )
+                
+                if viewModel.supportsCustomLocation {
+                    if viewModel.editData.organization?.isNone == true {
+                        VStack(spacing: 16) {
+                            ActivityFormField(
+                                label: "Custom Location Name",
+                                text: $viewModel.editData.customLocationName,
+                                placeholder: "Enter location name"
+                            )
+                            
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Address")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                
+                                AddressAutocompleteView(
+                                    selectedAddress: $viewModel.editData.customAddress,
+                                    placeholder: "Enter address"
+                                )
+                            }
+                        }
+                    }
+                    
+                    Toggle("Hide location in views", isOn: $viewModel.editData.hideLocation)
+                        .toggleStyle(SwitchToggleStyle(tint: colorFromString(viewModel.color)))
+                }
+            }
+        }
+    }
+    
+    private var scheduleSection: some View {
+        ActivitySectionCard(
+            headerIcon: viewModel.activityType == .lodging ? "calendar.badge.plus" :
+                        viewModel.activityType == .transportation ? "airplane" : "clock.fill",
+            headerTitle: "Schedule",
+            headerColor: colorFromString(viewModel.color)
+        ) {
+            if viewModel.activityType == .transportation {
+                TransportationDateTimeSection(
+                    trip: viewModel.trip,
+                    startDate: $viewModel.editData.start,
+                    endDate: $viewModel.editData.end,
+                    startTimeZoneId: $viewModel.editData.startTZId,
+                    endTimeZoneId: $viewModel.editData.endTZId,
+                    address: viewModel.locationAddress
+                )
+            } else {
+                SingleLocationDateTimeSection(
+                    startLabel: viewModel.startLabel,
+                    endLabel: viewModel.endLabel,
+                    activityType: ActivityWrapper.ActivityType(rawValue: viewModel.activityType.rawValue) ?? .activity,
+                    trip: viewModel.trip,
+                    startDate: $viewModel.editData.start,
+                    endDate: $viewModel.editData.end,
+                    timeZoneId: $viewModel.editData.startTZId,
+                    address: viewModel.locationAddress
+                )
+                .onChange(of: viewModel.editData.startTZId) { _, newValue in
+                    viewModel.editData.endTZId = newValue
+                }
+            }
+        }
+    }
+    
+    private var costSection: some View {
+        ActivitySectionCard(
+            headerIcon: "dollarsign.circle.fill",
+            headerTitle: "Cost & Payment",
+            headerColor: colorFromString(viewModel.color)
+        ) {
+            VStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Cost")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    CurrencyTextField(value: $viewModel.editData.cost, color: colorFromString(viewModel.color))
                 }
                 
-                Text(viewModel.isSaving ? "Saving..." : "Save \(viewModel.activityType.displayName)")
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Payment Status")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    Picker("", selection: $viewModel.editData.paid) {
+                        ForEach(PaidStatus.allCases, id: \.self) { status in
+                            Text(status.displayName).tag(status)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                }
+            }
+        }
+    }
+    
+    private var detailsSection: some View {
+        ActivitySectionCard(
+            headerIcon: "note.text",
+            headerTitle: "Additional Details",
+            headerColor: colorFromString(viewModel.color)
+        ) {
+            VStack(spacing: 16) {
+                ActivityFormField(
+                    label: viewModel.confirmationLabel,
+                    text: $viewModel.editData.confirmationField,
+                    placeholder: "Enter \(viewModel.confirmationLabel.lowercased()) number"
+                )
+                
+                ActivityFormField(
+                    label: "Notes",
+                    text: $viewModel.editData.notes,
+                    placeholder: "Add any additional notes",
+                    axis: .vertical
+                )
+            }
+        }
+    }
+    
+    private var attachmentsSection: some View {
+        ActivitySectionCard(
+            headerIcon: "paperclip",
+            headerTitle: "File Attachments",
+            headerColor: colorFromString(viewModel.color)
+        ) {
+            VStack(spacing: 12) {
+                if !viewModel.attachments.isEmpty {
+                    HStack {
+                        Spacer()
+                        Text("(\(viewModel.attachments.count))")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                if viewModel.attachments.isEmpty {
+                    VStack(spacing: 8) {
+                        Image(systemName: "doc.badge.plus")
+                            .font(.title2)
+                            .foregroundColor(.secondary)
+                        
+                        Text("No attachments yet")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.vertical, 16)
+                } else {
+                    ForEach(viewModel.attachments) { attachment in
+                        HStack {
+                            Image(systemName: "doc.fill")
+                                .foregroundColor(colorFromString(viewModel.color))
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(attachment.fileName)
+                                    .font(.body)
+                                    .foregroundColor(.primary)
+                                
+                                if attachment.fileSize > 0 {
+                                    Text(ByteCountFormatter.string(fromByteCount: Int64(attachment.fileSize), countStyle: .file))
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            
+                            Spacer()
+                            
+                            Button {
+                                viewModel.removeAttachment(attachment)
+                            } label: {
+                                Image(systemName: "trash")
+                                    .foregroundColor(.red)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 8)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
+                    }
+                }
+                
+                Button {
+                    // TODO: Implement file picker
+                } label: {
+                    HStack {
+                        Image(systemName: "plus.circle.fill")
+                        Text("Add Attachment")
+                    }
+                    .foregroundColor(colorFromString(viewModel.color))
+                }
+                .buttonStyle(.bordered)
+                .tint(colorFromString(viewModel.color))
             }
             .frame(maxWidth: .infinity)
-            .padding()
-            .background(viewModel.isFormValid && !viewModel.isSaving ? Color.blue : Color.gray)
-            .foregroundColor(.white)
-            .cornerRadius(10)
         }
-        .disabled(!viewModel.isFormValid || viewModel.isSaving)
-        
-        if let error = viewModel.saveError {
-            Text("Error: \(error.localizedDescription)")
-                .foregroundColor(.red)
-                .font(.caption)
+        .frame(maxWidth: .infinity)
+    }
+    
+    private var submitButton: some View {
+        ActivitySubmitButton(
+            title: "Save \(viewModel.activityType.displayName)",
+            isValid: viewModel.isFormValid,
+            isSaving: viewModel.isSaving,
+            color: colorFromString(viewModel.color),
+            saveError: viewModel.saveError,
+            action: {
+                Task { @MainActor in
+                    do {
+                        try await viewModel.save()
+                        dismiss()
+                    } catch {
+                        // Error is stored in viewModel.saveError
+                    }
+                }
+            }
+        )
+    }
+    
+    // Helper function to convert color strings to SwiftUI Colors
+    private func colorFromString(_ colorString: String) -> Color {
+        switch colorString.lowercased() {
+        case "indigo":
+            return .indigo
+        case "blue":
+            return .blue
+        case "purple":
+            return .purple
+        case "green":
+            return .green
+        case "orange":
+            return .orange
+        case "red":
+            return .red
+        case "yellow":
+            return .yellow
+        case "pink":
+            return .pink
+        case "cyan":
+            return .cyan
+        case "mint":
+            return .mint
+        case "teal":
+            return .teal
+        case "brown":
+            return .brown
+        default:
+            return .blue // fallback
         }
     }
 }

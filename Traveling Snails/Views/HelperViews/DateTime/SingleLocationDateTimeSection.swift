@@ -41,9 +41,9 @@ struct SingleLocationDateTimeSection: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("\(sectionIcon) Schedule")
-                .font(.headline)
-                .foregroundColor(sectionColor)
+//            Text("\(sectionIcon) Schedule")
+//                .font(.headline)
+//                .foregroundColor(sectionColor)
             
             VStack(spacing: 16) {
                 // Start Date/Time - FIX: Add timezone environment

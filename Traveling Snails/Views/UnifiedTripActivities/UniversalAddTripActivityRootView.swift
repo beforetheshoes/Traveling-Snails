@@ -18,9 +18,18 @@ struct UniversalAddTripActivityRootView: View {
     @State private var viewModel: UniversalActivityFormViewModel?
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             if let viewModel = viewModel {
                 UniversalAddActivityFormContent(viewModel: viewModel)
+                    .navigationTitle("Add \(activityType.displayName)")
+                    .navigationBarTitleDisplayMode(.inline)
+                    .toolbar {
+                        ToolbarItem(placement: .cancellationAction) {
+                            Button("Cancel") {
+                                dismiss()
+                            }
+                        }
+                    }
             } else {
                 ProgressView("Loading...")
                     .onAppear {
@@ -31,15 +40,6 @@ struct UniversalAddTripActivityRootView: View {
                             modelContext: modelContext
                         )
                     }
-            }
-        }
-        .navigationTitle("Add \(activityType.displayName)")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
-                    dismiss()
-                }
             }
         }
     }
