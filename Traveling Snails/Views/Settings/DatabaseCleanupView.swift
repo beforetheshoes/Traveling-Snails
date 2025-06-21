@@ -22,7 +22,7 @@ struct DatabaseCleanupView: View {
     @State private var deleteResult: String = ""
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List {
                 Section {
                     VStack(alignment: .leading, spacing: 8) {

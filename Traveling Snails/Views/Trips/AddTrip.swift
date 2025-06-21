@@ -31,7 +31,7 @@ struct AddTrip: View {
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section("Trip Details") {
                     TextField("Name", text: $name)

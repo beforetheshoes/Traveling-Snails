@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - User preferences sync method from SwiftData to NSUbiquitousKeyValueStore for improved reliability and purpose-built iCloud sync
 - AppSettings architecture simplified from complex abstraction layers to direct @Observable with @State environment object pattern
 - Settings UI updated to use direct environment object access instead of multiple @Bindable wrapper layers
+- Migrated all NavigationView instances to NavigationStack for modern iOS 18+ compatibility
 
 ### Fixed
 - SwiftData fatal crashes in AppSettings caused by stale model references and ModelContext lifecycle issues

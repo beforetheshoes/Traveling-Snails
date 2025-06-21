@@ -17,7 +17,7 @@ struct DebugDataView: View {
     @Query private var allTransportation: [Transportation]
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List {
                 Section("Debug Info") {
                     Text("Trips: \(allTrips.count)")
