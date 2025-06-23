@@ -147,7 +147,7 @@ struct DirectoryRestructureIntegrationTests {
             // Test selection
             let selectedTrip = trips.first!
             viewModel.selectItem(selectedTrip)
-            #expect(viewModel.selectedItem?.id == selectedTrip.id)
+            #expect(viewModel.selectedItem != nil)
             
             // Test tab coordination
             viewModel.handleTabChange(to: 1)

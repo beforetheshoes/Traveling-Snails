@@ -32,15 +32,10 @@ struct FileAttachmentSummaryView: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Attachment Summary")
                 .font(.headline)
+                .padding(.horizontal, 4)
             
-            HStack(spacing: 20) {
-                StatCard(
-                    title: "Total Files",
-                    value: "\(allAttachments.count)",
-                    icon: "doc.on.doc",
-                    color: .blue
-                )
-                
+            // First row: Images, Documents, Other (more space for each)
+            HStack(spacing: 12) {
                 StatCard(
                     title: "Images",
                     value: "\(imageCount)",
@@ -62,20 +57,50 @@ struct FileAttachmentSummaryView: View {
                     color: .purple
                 )
             }
+            .frame(maxWidth: .infinity)
             
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Storage Used")
-                    .font(.subheadline)
-                    .fontWeight(.medium)
+            // Second row: Total Files and Storage Used
+            HStack(spacing: 12) {
+                StatCard(
+                    title: "Total Files",
+                    value: "\(allAttachments.count)",
+                    icon: "doc.on.doc",
+                    color: .blue
+                )
                 
-                Text(ByteCountFormatter.string(fromByteCount: totalSize, countStyle: .file))
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.blue)
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Spacer()
+                        
+                        Image(systemName: "externaldrive")
+                            .font(.title2)
+                            .foregroundColor(.blue)
+                            .frame(height: 24)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(ByteCountFormatter.string(fromByteCount: totalSize, countStyle: .file))
+                                .font(.title2)
+                                .fontWeight(.bold)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
+                            
+                            Text("Storage Used")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
+                        }
+                        
+                        Spacer()
+                    }
+                }
+                .frame(maxWidth: .infinity, minHeight: 80)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 12)
+                .background(Color.blue.opacity(0.1))
+                .cornerRadius(10)
             }
-            .padding()
-            .background(Color.blue.opacity(0.1))
-            .cornerRadius(12)
+            .frame(maxWidth: .infinity)
         }
+        .padding(.vertical, 8)
     }
 }

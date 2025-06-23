@@ -22,43 +22,51 @@ struct CalendarContentView: View {
                 activities: viewModel.allActivities
             )
             
-            // Calendar content with drag support
-            ZStack {
-                Group {
-                    switch viewModel.calendarMode {
-                    case .day:
-                        DayView(
-                            date: viewModel.currentDisplayDate,
-                            activities: viewModel.activitiesForCurrentPeriod,
-                            onDragStart: viewModel.handleDragStart,
-                            onDragUpdate: viewModel.handleDragUpdate,
-                            onDragEnd: viewModel.handleDragEnd
-                        )
-                    case .week:
-                        WeekView(
-                            currentWeek: viewModel.currentWeek,
-                            activities: viewModel.allActivities,
-                            onDayTap: viewModel.handleDayTap,
-                            onLongPress: viewModel.handleLongPress
-                        )
-                    case .month:
-                        MonthView(
-                            monthDates: viewModel.currentMonth,
-                            activities: viewModel.allActivities,
-                            currentDisplayDate: viewModel.currentDisplayDate,
-                            onDayTap: viewModel.handleDayTap
-                        )
+            // Calendar content with proper layout constraints
+            GeometryReader { geometry in
+                ZStack {
+                    Group {
+                        switch viewModel.calendarMode {
+                        case .day:
+                            DayView(
+                                date: viewModel.currentDisplayDate,
+                                activities: viewModel.activitiesForCurrentPeriod,
+                                onDragStart: viewModel.handleDragStart,
+                                onDragUpdate: viewModel.handleDragUpdate,
+                                onDragEnd: viewModel.handleDragEnd
+                            )
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        case .week:
+                            WeekView(
+                                currentWeek: viewModel.currentWeek,
+                                activities: viewModel.allActivities,
+                                onDayTap: viewModel.handleDayTap,
+                                onLongPress: viewModel.handleLongPress
+                            )
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        case .month:
+                            MonthView(
+                                monthDates: viewModel.currentMonth,
+                                activities: viewModel.allActivities,
+                                currentDisplayDate: viewModel.currentDisplayDate,
+                                onDayTap: viewModel.handleDayTap
+                            )
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        }
+                    }
+                    
+                    // Drag preview overlay positioned correctly
+                    if viewModel.showingDragPreview {
+                        DragPreviewView(frame: viewModel.dragPreviewFrame)
+                            .clipped()
                     }
                 }
-                
-                // Drag preview overlay
-                if viewModel.showingDragPreview {
-                    DragPreviewView(frame: viewModel.dragPreviewFrame)
-                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .navigationTitle("\(viewModel.trip.name)")
+        .navigationTitle(viewModel.trip.name)
         .navigationBarTitleDisplayMode(.inline)
+        .background(Color(.systemBackground))
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button("Done") { dismiss() }
@@ -75,11 +83,13 @@ struct CalendarContentView: View {
             createActivityTypeActionSheet(viewModel: viewModel)
         }
         .sheet(isPresented: $viewModel.showingDayDetail) {
-            DayDetailView(
-                date: viewModel.selectedDate,
-                activities: viewModel.selectedDayActivities,
-                trip: viewModel.trip
-            )
+            NavigationStack {
+                DayDetailView(
+                    date: viewModel.selectedDate,
+                    activities: viewModel.selectedDayActivities,
+                    trip: viewModel.trip
+                )
+            }
         }
         .onDisappear {
             viewModel.cancelActivityCreation()

@@ -7,6 +7,7 @@
 
 import Testing
 import SwiftUI
+import SwiftData
 import MapKit
 
 @testable import Traveling_Snails
@@ -18,11 +19,22 @@ struct UIPickerAndSearchTests {
     struct OrganizationPickerTests {
         
         @Test("None organization creation")
-        func noneOrganizationCreation() {
-            let noneOrg = OrganizationPicker.noneOrganization
+        func noneOrganizationCreation() throws {
+            let config = ModelConfiguration(isStoredInMemoryOnly: true)
+            let container = try ModelContainer(
+                for: Organization.self,
+                configurations: config
+            )
+            let context = ModelContext(container)
             
-            #expect(noneOrg.name == "None")
-            #expect(noneOrg.isNone == true)
+            let noneOrg = OrganizationManager.shared.ensureNoneOrganization(in: context)
+            switch noneOrg {
+            case .success(let org):
+                #expect(org.name == "None")
+                #expect(org.isNone == true)
+            case .failure:
+                Issue.record("Failed to get None organization")
+            }
         }
         
         @Test("Organization filtering")

@@ -9,9 +9,6 @@ import SwiftUI
 import SwiftData
 
 struct OrganizationPicker: View {
-    // Sentinel value for "no organization selected"
-    static let noneOrganization = Organization(name: "None")
-    
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query private var organizations: [Organization]
@@ -19,6 +16,14 @@ struct OrganizationPicker: View {
     @Binding var selectedOrganization: Organization?
     @State private var showingAddOrganization = false
     @State private var searchText = ""
+    
+    // Get the actual persisted "None" organization
+    private var noneOrganization: Organization? {
+        switch OrganizationManager.shared.ensureNoneOrganization(in: modelContext) {
+        case .success(let org): return org
+        case .failure: return nil
+        }
+    }
     
     var filteredOrganizations: [Organization] {
         if searchText.isEmpty {
@@ -38,14 +43,14 @@ struct OrganizationPicker: View {
             List {
                 // None option
                 Button {
-                    selectedOrganization = Self.noneOrganization
+                    selectedOrganization = noneOrganization
                     dismiss()
                 } label: {
                     HStack {
                         Text("None")
                             .foregroundColor(.primary)
                         Spacer()
-                        if selectedOrganization?.id == Self.noneOrganization.id {
+                        if let noneOrg = noneOrganization, selectedOrganization?.id == noneOrg.id {
                             Image(systemName: "checkmark")
                                 .foregroundColor(.blue)
                         }

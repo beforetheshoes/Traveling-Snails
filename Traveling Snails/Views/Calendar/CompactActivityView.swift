@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Foundation
 
 struct CompactActivityView: View {
     let wrapper: ActivityWrapper
@@ -17,7 +18,7 @@ struct CompactActivityView: View {
                     .fill(wrapper.type.color)
                     .frame(width: 6, height: 6)
                 
-                Text(wrapper.tripActivity.start, style: .time)
+                Text(timeWithTimezone(wrapper.tripActivity.start, timezone: wrapper.tripActivity.startTZ))
                     .font(.caption2)
                     .foregroundColor(.secondary)
                 
@@ -37,5 +38,14 @@ struct CompactActivityView: View {
             RoundedRectangle(cornerRadius: 6)
                 .fill(wrapper.type.color.opacity(0.1))
         )
+    }
+    
+    private func timeWithTimezone(_ date: Date, timezone: TimeZone) -> String {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        formatter.timeZone = timezone
+        let timeString = formatter.string(from: date)
+        let abbreviation = TimeZoneHelper.getAbbreviation(for: timezone)
+        return "\(timeString) \(abbreviation)"
     }
 }

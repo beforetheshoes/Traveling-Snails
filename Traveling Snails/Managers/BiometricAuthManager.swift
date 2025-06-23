@@ -116,29 +116,24 @@ class BiometricAuthManager {
         #endif
         
         #if targetEnvironment(simulator)
-        let isSimulator = true
-        #else
-        let isSimulator = ProcessInfo.processInfo.environment["SIMULATOR_DEVICE_NAME"] != nil
+        // On simulator, simulate successful authentication for testing
+        #if DEBUG
+        print("   - Simulator detected, simulating successful authentication")
         #endif
-        
-        if isSimulator {
-            // On simulator, simulate successful authentication for testing
+        await MainActor.run {
+            self.authenticatedTripIDs.insert(tripId)
             #if DEBUG
-            print("   - Simulator detected, simulating successful authentication")
+            print("   - Added trip \(tripId) to authenticated set (simulator)")
+            print("   - Updated authenticatedTripIDs: \(self.authenticatedTripIDs)")
             #endif
-            await MainActor.run {
-                self.authenticatedTripIDs.insert(tripId)
-                #if DEBUG
-                print("   - Added trip \(tripId) to authenticated set (simulator)")
-                print("   - Updated authenticatedTripIDs: \(self.authenticatedTripIDs)")
-                #endif
-            }
-            return true
         }
-        
+        return true
+        #else
+        // Real device - perform actual biometric authentication
         #if DEBUG
         print("   - Real device detected, proceeding with actual biometric authentication")
         #endif
+        
         // Perform biometric authentication with fresh context
         let context = LAContext()
         
@@ -237,6 +232,7 @@ class BiometricAuthManager {
             group.cancelAll()
             return result
         }
+        #endif
     }
     
     func lockTrip(_ trip: Trip) {

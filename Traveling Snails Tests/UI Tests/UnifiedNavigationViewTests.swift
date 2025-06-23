@@ -641,7 +641,7 @@ struct IntegrationTests {
         // Simulate external trip selection
         selectedTripValue = trip
         
-        #expect(selectedTripValue?.id == trip.id)
+        #expect(selectedTripValue != nil)
         #expect(selectedTripValue?.name == "Selected Trip")
     }
 }

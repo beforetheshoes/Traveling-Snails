@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Foundation
 
 struct CompactCalendarView: View {
     let trip: Trip
@@ -241,7 +242,7 @@ struct CompactCalendarView: View {
                                     .foregroundColor(.white)
                                     .lineLimit(1)
                                 HStack(spacing: 4) {
-                                    Text(wrapper.tripActivity.start, style: .time)
+                                    Text(timeWithTimezone(wrapper.tripActivity.start, timezone: wrapper.tripActivity.startTZ))
                                         .font(.caption2)
                                         .foregroundColor(.white.opacity(0.8))
                                     Text("→")
@@ -256,7 +257,7 @@ struct CompactCalendarView: View {
                                     .fontWeight(.medium)
                                     .foregroundColor(.white)
                                     .lineLimit(1)
-                                Text(wrapper.tripActivity.end, style: .time)
+                                Text(timeWithTimezone(wrapper.tripActivity.end, timezone: wrapper.tripActivity.endTZ))
                                     .font(.caption2)
                                     .foregroundColor(.white.opacity(0.8))
                             }
@@ -339,17 +340,34 @@ struct CompactCalendarView: View {
     }
     
     private func isFullDayEvent(_ wrapper: ActivityWrapper) -> Bool {
-        let calendar = Calendar.current
         let start = wrapper.tripActivity.start
         let end = wrapper.tripActivity.end
         
+        // Lodging is always full-day
         if wrapper.type == .lodging {
             return true
         }
         
+        // Check if any activity spans multiple days or is marked as all-day
         let startOfDay = calendar.startOfDay(for: start)
+        let endOfDay = calendar.startOfDay(for: end)
         let duration = end.timeIntervalSince(start)
         
-        return start == startOfDay && duration >= 12 * 3600
+        // Full day if:
+        // 1. Activity spans multiple days
+        // 2. Activity starts at midnight and lasts 8+ hours
+        // 3. Activity duration is 16+ hours (likely full day)
+        return startOfDay != endOfDay || 
+               (start == startOfDay && duration >= 8 * 3600) ||
+               duration >= 16 * 3600
+    }
+    
+    private func timeWithTimezone(_ date: Date, timezone: TimeZone) -> String {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        formatter.timeZone = timezone
+        let timeString = formatter.string(from: date)
+        let abbreviation = TimeZoneHelper.getAbbreviation(for: timezone)
+        return "\(timeString) \(abbreviation)"
     }
 }

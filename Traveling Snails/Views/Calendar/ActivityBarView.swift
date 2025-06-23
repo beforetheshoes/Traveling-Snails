@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Foundation
 
 struct ActivityBarView: View {
     let wrapper: ActivityWrapper
@@ -39,7 +40,7 @@ struct ActivityBarView: View {
                             .foregroundColor(.white)
                             .lineLimit(1)
                         
-                        Text(wrapper.tripActivity.start, style: .time)
+                        Text(timeWithTimezone(wrapper.tripActivity.start, timezone: wrapper.tripActivity.startTZ))
                             .font(.caption2)
                             .foregroundColor(.white.opacity(0.8))
                     }
@@ -49,5 +50,14 @@ struct ActivityBarView: View {
                 .padding(.vertical, 2)
             )
             .padding(.leading, 4)
+    }
+    
+    private func timeWithTimezone(_ date: Date, timezone: TimeZone) -> String {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        formatter.timeZone = timezone
+        let timeString = formatter.string(from: date)
+        let abbreviation = TimeZoneHelper.getAbbreviation(for: timezone)
+        return "\(timeString) \(abbreviation)"
     }
 }

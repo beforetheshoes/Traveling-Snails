@@ -12,6 +12,15 @@ enum DestinationType: Hashable {
     case transportation(Transportation)
     case activity(Activity)
     
+    // Computed property to get the activity ID
+    var activityId: UUID {
+        switch self {
+        case .lodging(let l): return l.id
+        case .transportation(let t): return t.id
+        case .activity(let a): return a.id
+        }
+    }
+    
     static func == (lhs: DestinationType, rhs: DestinationType) -> Bool {
         switch (lhs, rhs) {
         case (.lodging(let l1), .lodging(let l2)):
@@ -37,5 +46,50 @@ enum DestinationType: Hashable {
             hasher.combine("activity")
             hasher.combine(a.id)
         }
+    }
+}
+
+// MARK: - Navigation Restoration Support
+
+struct ActivityNavigationReference: Codable {
+    let activityId: UUID
+    let activityType: ActivityTypeKey
+    let tripId: UUID
+    
+    enum ActivityTypeKey: String, Codable {
+        case lodging, transportation, activity
+    }
+    
+    init(from destination: DestinationType, tripId: UUID) {
+        self.tripId = tripId
+        switch destination {
+        case .lodging(let l):
+            self.activityId = l.id
+            self.activityType = .lodging
+        case .transportation(let t):
+            self.activityId = t.id
+            self.activityType = .transportation
+        case .activity(let a):
+            self.activityId = a.id
+            self.activityType = .activity
+        }
+    }
+    
+    func createDestination(from trip: Trip) -> DestinationType? {
+        switch activityType {
+        case .lodging:
+            if let lodging = trip.lodging.first(where: { $0.id == activityId }) {
+                return .lodging(lodging)
+            }
+        case .transportation:
+            if let transportation = trip.transportation.first(where: { $0.id == activityId }) {
+                return .transportation(transportation)
+            }
+        case .activity:
+            if let activity = trip.activity.first(where: { $0.id == activityId }) {
+                return .activity(activity)
+            }
+        }
+        return nil
     }
 }

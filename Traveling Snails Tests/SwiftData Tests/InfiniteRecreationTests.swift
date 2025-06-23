@@ -20,8 +20,14 @@ struct InfiniteRecreationTests {
         
         // Create test data
         let trip = Trip(name: "Test Trip")
-        let activity = Activity(name: "Test Activity", start: Date(), end: Date().addingTimeInterval(3600))
-        activity.trip = trip
+        let startDate = Date()
+        let endDate = startDate.addingTimeInterval(3600)
+        let activity = Activity(
+            name: "Test Activity",
+            start: startDate,
+            end: endDate,
+            trip: trip
+        )
         
         testBase.modelContext.insert(trip)
         testBase.modelContext.insert(activity)

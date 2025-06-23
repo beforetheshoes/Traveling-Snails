@@ -76,6 +76,21 @@ class Trip {
 - **Solution**: Private optional storage + public non-optional computed properties
 - **Benefit**: Best of both worlds - CloudKit sync works + SwiftData code is clean
 
+## 🔍 Test Debugging Principles (MANDATORY)
+
+**Critical Insight**: When tests fail with crashes or unexpected behavior, **research existing working patterns in the codebase FIRST** instead of making assumptions about timing, configurations, or implementation details.
+
+### Essential Research Checklist for Test Debugging:
+1. **Find Working Examples**: Search for similar tests that already work and understand their patterns
+2. **Read Existing Test Infrastructure**: Look for test base classes, utilities, or established patterns (like `SwiftDataTestBase`)
+3. **Compare Failing vs Working**: Identify the exact differences between failing tests and working ones
+4. **Check Framework Documentation**: Read official docs for the technology (SwiftData, etc.) when patterns aren't obvious
+5. **Look for Anti-Pattern Comments**: Search for comments like "No SwiftData", "WRONG PATTERN", etc. that document what NOT to do
+6. **Follow Established Conventions**: Use the same initialization, setup, and teardown patterns as working tests
+7. **Don't Guess About Lifecycle**: Framework lifecycles (like SwiftData's persistent property requirements) have specific rules that must be followed
+
+**Key Takeaway**: The codebase already contains the solutions - working tests demonstrate the correct patterns. Research and pattern-matching beats guessing every time.
+
 ## 🔄 Development Process (Follow These Steps)
 
 ### For Every Feature/Fix:

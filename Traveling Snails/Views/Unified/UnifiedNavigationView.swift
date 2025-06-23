@@ -182,6 +182,12 @@ struct UnifiedNavigationView<Item: NavigationItem, DetailView: View>: View {
                 selectedItem = nil
                 navigationPath = NavigationPath()
                 Logger.shared.debug("Tab changed to \(newTab), clearing selection", category: .navigation)
+            } else if newTab == tabIndex, let trip = selectedTrip {
+                // Restore trip selection when returning to this tab
+                if let tripItem = items.first(where: { $0.id == trip.id }) {
+                    selectedItem = tripItem
+                    Logger.shared.info("Restoring trip selection on tab return: \(trip.name)", category: .navigation)
+                }
             }
         }
         .onChange(of: selectedTrip) { _, newTrip in
@@ -190,6 +196,15 @@ struct UnifiedNavigationView<Item: NavigationItem, DetailView: View>: View {
                 if let tripItem = items.first(where: { $0.id == trip.id }) {
                     selectedItem = tripItem
                     Logger.shared.info("Navigating to trip: \(trip.name)", category: .navigation)
+                }
+            }
+        }
+        .onAppear {
+            // iPad fix: Ensure trip selection is restored when view appears
+            if selectedTab == tabIndex, let trip = selectedTrip, selectedItem == nil {
+                if let tripItem = items.first(where: { $0.id == trip.id }) {
+                    selectedItem = tripItem
+                    Logger.shared.info("iPad restoration: Restoring trip selection on view appear: \(trip.name)", category: .navigation)
                 }
             }
         }

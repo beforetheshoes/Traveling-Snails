@@ -56,9 +56,35 @@ class NavigationViewModel<Item: NavigationItem> {
     
     func handleTabChange(to newTab: Int) {
         if newTab != tabIndex {
+            // Save current navigation state before clearing
+            if let selected = selectedItem {
+                let state = NavigationState(
+                    selectedItemId: selected.id,
+                    navigationPath: [],
+                    currentView: createCurrentView(for: selected)
+                )
+                coordinator.saveNavigationState(for: tabIndex, state: state)
+            }
+            
             selectedItem = nil
             coordinator.clearNavigationPath()
+        } else {
+            // Restore navigation state when returning to this tab
+            if let savedState = coordinator.restoreNavigationState(for: tabIndex) {
+                if let itemId = savedState.selectedItemId {
+                    selectedItem = items.first { $0.id == itemId }
+                }
+            }
         }
+    }
+    
+    private func createCurrentView<NavigationItemType: NavigationItem>(for item: NavigationItemType) -> NavigationState.CurrentView? {
+        if let trip = item as? Trip {
+            return .tripDetail(trip.id)
+        } else if let organization = item as? Organization {
+            return .organizationDetail(organization.id)
+        }
+        return nil
     }
     
     func showAddView() {
@@ -90,6 +116,9 @@ class NavigationCoordinator {
     var onTripSelected: ((Trip) -> Void)?
     var onOrganizationSelected: ((Organization) -> Void)?
     
+    // Navigation state preservation
+    private var savedNavigationStates: [Int: NavigationState] = [:]
+    
     func navigateToTrip(_ trip: Trip, fromTab: Int, toTab: Int) {
         onTripSelected?(trip)
     }
@@ -113,5 +142,36 @@ class NavigationCoordinator {
         } else if let organization = item as? Organization {
             onOrganizationSelected?(organization)
         }
+    }
+    
+    // Navigation state preservation methods
+    func saveNavigationState(for tabIndex: Int, state: NavigationState) {
+        savedNavigationStates[tabIndex] = state
+    }
+    
+    func restoreNavigationState(for tabIndex: Int) -> NavigationState? {
+        return savedNavigationStates[tabIndex]
+    }
+    
+    func clearNavigationState(for tabIndex: Int) {
+        savedNavigationStates.removeValue(forKey: tabIndex)
+    }
+}
+
+// MARK: - Navigation State
+
+struct NavigationState {
+    let selectedItemId: UUID?
+    let navigationPath: [AnyHashable]
+    let currentView: CurrentView?
+    
+    enum CurrentView {
+        case tripDetail(UUID)
+        case activityDetail(UUID, activityType: ActivityType)
+        case organizationDetail(UUID)
+    }
+    
+    enum ActivityType {
+        case lodging, transportation, activity
     }
 }

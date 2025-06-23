@@ -7,6 +7,7 @@
 
 import Testing
 import SwiftUI
+import SwiftData
 import MapKit
 
 @testable import Traveling_Snails
@@ -309,10 +310,22 @@ struct ViewModelTests {
     struct OrganizationPickerTests {
         
         @Test("None organization sentinel behavior")
-        func noneOrganizationSentinelBehavior() {
-            let noneOrg = OrganizationPicker.noneOrganization
-            #expect(noneOrg.name == "None")
-            #expect(noneOrg.isNone == true)
+        func noneOrganizationSentinelBehavior() throws {
+            let config = ModelConfiguration(isStoredInMemoryOnly: true)
+            let container = try ModelContainer(
+                for: Organization.self,
+                configurations: config
+            )
+            let context = ModelContext(container)
+            
+            let noneOrg = OrganizationManager.shared.ensureNoneOrganization(in: context)
+            switch noneOrg {
+            case .success(let org):
+                #expect(org.name == "None")
+                #expect(org.isNone == true)
+            case .failure:
+                Issue.record("Failed to get None organization")
+            }
         }
         
         @Test("Organization filtering logic")

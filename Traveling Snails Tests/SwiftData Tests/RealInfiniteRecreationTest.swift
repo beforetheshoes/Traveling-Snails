@@ -43,8 +43,14 @@ struct RealInfiniteRecreationTest {
                     
                     // Simulate the scenario where user adds activities
                     Button("Add Activity") {
-                        let activity = Activity(name: "New Activity", start: Date(), end: Date().addingTimeInterval(3600))
-                        activity.trip = trip
+                        let startDate = Date()
+                        let endDate = startDate.addingTimeInterval(3600)
+                        let _ = Activity(
+                            name: "New Activity",
+                            start: startDate,
+                            end: endDate,
+                            trip: trip
+                        )
                         // This triggers the SwiftData update that causes recreation
                     }
                 }
@@ -62,8 +68,14 @@ struct RealInfiniteRecreationTest {
         
         // Now simulate adding activities (this is where the infinite recreation happens)
         for i in 1...3 {
-            let activity = Activity(name: "Activity \(i)", start: Date(), end: Date().addingTimeInterval(3600))
-            activity.trip = trip
+            let startDate = Date()
+            let endDate = startDate.addingTimeInterval(3600)
+            let activity = Activity(
+                name: "Activity \(i)",
+                start: startDate,
+                end: endDate,
+                trip: trip
+            )
             testBase.modelContext.insert(activity)
             try testBase.modelContext.save()
             
@@ -143,8 +155,14 @@ struct RealInfiniteRecreationTest {
         
         // Add activities - this should not cause excessive recreation
         for i in 1...3 {
-            let activity = Activity(name: "Activity \(i)", start: Date(), end: Date().addingTimeInterval(3600))
-            activity.trip = trip
+            let startDate = Date()
+            let endDate = startDate.addingTimeInterval(3600)
+            let activity = Activity(
+                name: "Activity \(i)",
+                start: startDate,
+                end: endDate,
+                trip: trip
+            )
             testBase.modelContext.insert(activity)
             try testBase.modelContext.save()
             

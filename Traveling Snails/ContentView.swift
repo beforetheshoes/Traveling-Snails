@@ -19,6 +19,7 @@ struct ContentView: View {
     // Navigation state
     @State private var selectedTab = 0
     @State private var selectedTrip: Trip?
+    private let navigationContext = NavigationContext.shared
     
     // CloudKit sync state
     @State private var isInitialSyncComplete = false
@@ -45,82 +46,42 @@ struct ContentView: View {
             }
         }
         .preferredColorScheme(appSettings.colorScheme.colorScheme)
+        .environment(navigationContext)
+        .onChange(of: selectedTab) { oldTab, newTab in
+            if oldTab != newTab {
+                print("📱 ContentView: Using NavigationContext instance: \(ObjectIdentifier(navigationContext))")
+                print("📱 ContentView: selectedTrip = \(selectedTrip?.name ?? "nil")")
+                navigationContext.markTabSwitch(to: newTab, from: oldTab)
+                print("📱 ContentView: Tab changed from \(oldTab) to \(newTab)")
+            }
+        }
+        .onChange(of: selectedTrip) { oldTrip, newTrip in
+            print("📱 ContentView: selectedTrip changed from '\(oldTrip?.name ?? "nil")' to '\(newTrip?.name ?? "nil")'")
+        }
     }
     
     @ViewBuilder
     private var mainContent: some View {
         #if os(iOS)
-        if UIDevice.current.userInterfaceIdiom == .phone {
-            // Use TabView for iPhone (bottom tabs)
-            TabView(selection: $selectedTab) {
-                tripsTab
-                    .tabItem {
-                        Label("Trips", systemImage: "airplane")
-                    }
-                    .tag(0)
-                
-                organizationsTab
-                    .tabItem {
-                        Label("Organizations", systemImage: "building.2")
-                    }
-                    .tag(1)
-                
-                settingsTab
-                    .tabItem {
-                        Label("Settings", systemImage: "gear")
-                    }
-                    .tag(2)
-            }
-        } else {
-            // Use custom tab bar for iPad to avoid overlap
-            VStack(spacing: 0) {
-                // Content area
-                switch selectedTab {
-                case 0:
-                    tripsTab
-                case 1:
-                    organizationsTab
-                case 2:
-                    settingsTab
-                default:
-                    tripsTab
+        // Use TabView for both iPhone and iPad
+        TabView(selection: $selectedTab) {
+            tripsTab
+                .tabItem {
+                    Label("Trips", systemImage: "airplane")
                 }
-                
-                // Custom bottom tab bar
-                HStack(spacing: 0) {
-                    iPadTabButton(
-                        title: "Trips",
-                        icon: "airplane",
-                        isSelected: selectedTab == 0
-                    ) {
-                        selectedTab = 0
-                    }
-                    
-                    iPadTabButton(
-                        title: "Organizations",
-                        icon: "building.2",
-                        isSelected: selectedTab == 1
-                    ) {
-                        selectedTab = 1
-                    }
-                    
-                    iPadTabButton(
-                        title: "Settings",
-                        icon: "gear",
-                        isSelected: selectedTab == 2
-                    ) {
-                        selectedTab = 2
-                    }
+                .tag(0)
+            
+            organizationsTab
+                .tabItem {
+                    Label("Organizations", systemImage: "building.2")
                 }
-                .frame(height: 60)
-                .background(.regularMaterial)
-                .overlay(
-                    Rectangle()
-                        .frame(height: 0.5)
-                        .foregroundColor(Color(UIColor.separator)),
-                    alignment: .top
-                )
-            }
+                .tag(1)
+            
+            settingsTab
+                .tabItem {
+                    Label("Settings", systemImage: "gear")
+                }
+                .tag(2)
         }
         #else
         // macOS - use NavigationSplitView
@@ -177,28 +138,6 @@ struct ContentView: View {
         SettingsRootView()
     }
     
-    @ViewBuilder
-    private func iPadTabButton(
-        title: String,
-        icon: String,
-        isSelected: Bool,
-        action: @escaping () -> Void
-    ) -> some View {
-        Button(action: action) {
-            VStack(spacing: 4) {
-                Image(systemName: icon)
-                    .font(.system(size: 20))
-                    .foregroundColor(isSelected ? .accentColor : .secondary)
-                
-                Text(title)
-                    .font(.caption)
-                    .foregroundColor(isSelected ? .accentColor : .secondary)
-            }
-            .frame(maxWidth: .infinity)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-    }
 }
 
 /// View shown while waiting for CloudKit sync

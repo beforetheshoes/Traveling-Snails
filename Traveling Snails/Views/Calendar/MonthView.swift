@@ -16,16 +16,20 @@ struct MonthView: View {
     private var calendar: Calendar { Calendar.current }
     
     var body: some View {
-        ScrollView {
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 7), spacing: 1) {
+        ScrollView(.vertical, showsIndicators: false) {
+            LazyVGrid(
+                columns: Array(repeating: GridItem(.flexible(), spacing: 1), count: 7),
+                spacing: 1
+            ) {
                 // Day headers
                 ForEach(calendar.shortWeekdaySymbols, id: \.self) { day in
                     Text(day)
                         .font(.caption)
                         .fontWeight(.semibold)
                         .foregroundColor(.secondary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
+                        .frame(maxWidth: .infinity, minHeight: 30)
+                        .padding(.vertical, 4)
+                        .background(Color(.systemGray6))
                 }
                 
                 // Month days with padding
@@ -38,14 +42,17 @@ struct MonthView: View {
                             isToday: calendar.isDateInToday(date),
                             onTap: { onDayTap(date) }
                         )
+                        .frame(minHeight: 90, maxHeight: 120)
+                        .clipped()
                     } else {
                         Color.clear
                             .frame(height: 90)
                     }
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 8)
         }
+        .background(Color(.systemBackground))
     }
     
     private var monthDaysWithPadding: [Date?] {

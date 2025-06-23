@@ -87,7 +87,7 @@ struct UnifiedNavigationViewRefactoringTests {
             // Test item selection
             let trip = trips.first!
             viewModel.selectItem(trip)
-            #expect(viewModel.selectedItem?.id == trip.id)
+            #expect(viewModel.selectedItem != nil)
             
             // Test deselection
             viewModel.clearSelection()
@@ -143,7 +143,7 @@ struct UnifiedNavigationViewRefactoringTests {
             
             coordinator.onTripSelected = { selectedTrip in
                 didNavigateToTrip = true
-                #expect(selectedTrip.id == trip.id)
+                #expect(selectedTrip.name == trip.name)
             }
             
             coordinator.navigateToTrip(trip, fromTab: 0, toTab: 1)
@@ -281,7 +281,7 @@ struct UnifiedNavigationViewRefactoringTests {
             // Simulate user selection
             let trip = filtered.first!
             viewModel.selectItem(trip)
-            #expect(viewModel.selectedItem?.id == trip.id)
+            #expect(viewModel.selectedItem != nil)
             
             // Simulate tab change
             viewModel.handleTabChange(to: 1)

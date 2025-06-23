@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Foundation
 
 struct FullDayEventBar: View {
     let wrapper: ActivityWrapper
@@ -80,12 +81,12 @@ struct FullDayEventBar: View {
             if eventStartsInVisibleRange {
                 VStack(alignment: .leading, spacing: 2) {
                     if !isCompact {
-                        Text(wrapper.tripActivity.start, style: .time)
+                        Text(timeWithTimezone(wrapper.tripActivity.start, timezone: wrapper.tripActivity.startTZ))
                             .font(subtitleFont)
                             .foregroundColor(.white.opacity(0.9))
                             .fontWeight(.medium)
                     } else {
-                        Text(wrapper.tripActivity.start, style: .time)
+                        Text(timeWithTimezone(wrapper.tripActivity.start, timezone: wrapper.tripActivity.startTZ))
                             .font(.caption2)
                             .foregroundColor(.white.opacity(0.9))
                     }
@@ -124,12 +125,12 @@ struct FullDayEventBar: View {
             if eventEndsInVisibleRange {
                 VStack(alignment: .trailing, spacing: 2) {
                     if !isCompact {
-                        Text(wrapper.tripActivity.end, style: .time)
+                        Text(timeWithTimezone(wrapper.tripActivity.end, timezone: wrapper.tripActivity.endTZ))
                             .font(subtitleFont)
                             .foregroundColor(.white.opacity(0.9))
                             .fontWeight(.medium)
                     } else {
-                        Text(wrapper.tripActivity.end, style: .time)
+                        Text(timeWithTimezone(wrapper.tripActivity.end, timezone: wrapper.tripActivity.endTZ))
                             .font(.caption2)
                             .foregroundColor(.white.opacity(0.9))
                     }
@@ -203,6 +204,15 @@ struct FullDayEventBar: View {
         let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? startOfDay
         
         return wrapper.tripActivity.start < endOfDay && wrapper.tripActivity.end > startOfDay
+    }
+    
+    private func timeWithTimezone(_ date: Date, timezone: TimeZone) -> String {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        formatter.timeZone = timezone
+        let timeString = formatter.string(from: date)
+        let abbreviation = TimeZoneHelper.getAbbreviation(for: timezone)
+        return "\(timeString) \(abbreviation)"
     }
 }
 

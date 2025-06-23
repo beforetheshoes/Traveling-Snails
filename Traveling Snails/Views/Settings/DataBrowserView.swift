@@ -885,6 +885,7 @@ private struct AllIssuesFixerContent: View {
     let isFixing: Bool
     let fixResults: [String]
     let onFixAll: () async -> Void
+    @State private var showingDetails = false
     
     var body: some View {
         VStack(spacing: 20) {
@@ -903,15 +904,71 @@ private struct AllIssuesFixerContent: View {
             }
             
             if !isFixing && fixResults.isEmpty {
-                Button {
-                    Task { await onFixAll() }
-                } label: {
-                    Text("Fix All Issues")
+                VStack(spacing: 12) {
+                    Button {
+                        showingDetails.toggle()
+                    } label: {
+                        HStack {
+                            Text(showingDetails ? "Hide Details" : "Show Details")
+                            Image(systemName: showingDetails ? "chevron.up" : "chevron.down")
+                        }
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(.orange)
-                        .foregroundColor(.white)
+                        .background(Color(.systemGray5))
+                        .foregroundColor(.primary)
                         .cornerRadius(12)
+                    }
+                    
+                    if showingDetails {
+                        ScrollView {
+                            LazyVStack(alignment: .leading, spacing: 16) {
+                                ForEach(DataBrowserView.IssueType.allCases, id: \.self) { issueType in
+                                    let count = results.issueCount(for: issueType)
+                                    if count > 0 {
+                                        VStack(alignment: .leading, spacing: 8) {
+                                            HStack {
+                                                Image(systemName: issueType.icon)
+                                                    .foregroundColor(issueType.color)
+                                                Text(issueType.rawValue)
+                                                    .font(.headline)
+                                                Spacer()
+                                                Text("\(count)")
+                                                    .font(.headline)
+                                                    .foregroundColor(issueType.color)
+                                            }
+                                            
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                ForEach(getDetailedItems(for: issueType), id: \.self) { item in
+                                                    Text("• \(item)")
+                                                        .font(.caption)
+                                                        .foregroundColor(.secondary)
+                                                        .padding(.leading, 24)
+                                                }
+                                            }
+                                        }
+                                        .padding()
+                                        .background(issueType.color.opacity(0.1))
+                                        .cornerRadius(8)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
+                        .frame(maxHeight: 250)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
+                    }
+                    
+                    Button {
+                        Task { await onFixAll() }
+                    } label: {
+                        Text("Fix All Issues")
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(.orange)
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
+                    }
                 }
                 .padding(.horizontal)
             }
@@ -941,5 +998,64 @@ private struct AllIssuesFixerContent: View {
             Spacer()
         }
         .padding()
+    }
+    
+    private func getDetailedItems(for type: DataBrowserView.IssueType) -> [String] {
+        switch type {
+        case .blankEntries:
+            var items: [String] = []
+            items.append(contentsOf: results.blankTransportation.map { "Transportation: \($0.type.rawValue) (no name)" })
+            items.append(contentsOf: results.blankLodging.map { _ in "Lodging: (no name)" })
+            items.append(contentsOf: results.blankActivities.map { _ in "Activity: (no name)" })
+            return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])
+            
+        case .orphanedData:
+            var items: [String] = []
+            items.append(contentsOf: results.orphanedTransportation.map { "Transportation: \($0.name.isEmpty ? $0.type.rawValue : $0.name)" })
+            items.append(contentsOf: results.orphanedLodging.map { "Lodging: \($0.name.isEmpty ? "Unnamed" : $0.name)" })
+            items.append(contentsOf: results.orphanedActivities.map { "Activity: \($0.name.isEmpty ? "Unnamed" : $0.name)" })
+            items.append(contentsOf: results.orphanedAddresses.map { "Address: \($0.displayAddress)" })
+            items.append(contentsOf: results.orphanedAttachments.map { "Attachment: \($0.fileName)" })
+            return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])
+            
+        case .duplicateRelationships:
+            var items: [String] = []
+            for (trip, duplicates) in results.duplicateTransportation {
+                items.append("Trip '\(trip.name)': \(duplicates.count) duplicate transportation entries")
+            }
+            for (trip, duplicates) in results.duplicateLodging {
+                items.append("Trip '\(trip.name)': \(duplicates.count) duplicate lodging entries")
+            }
+            for (trip, duplicates) in results.duplicateActivities {
+                items.append("Trip '\(trip.name)': \(duplicates.count) duplicate activity entries")
+            }
+            return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])
+            
+        case .invalidTimezones:
+            var items: [String] = []
+            items.append(contentsOf: results.invalidTimezoneTransportation.map { "Transportation: \($0.name.isEmpty ? $0.type.rawValue : $0.name) (timezone: \($0.startTZId))" })
+            items.append(contentsOf: results.invalidTimezoneLodging.map { "Lodging: \($0.name.isEmpty ? "Unnamed" : $0.name) (timezone: \($0.checkInTZId))" })
+            items.append(contentsOf: results.invalidTimezoneActivities.map { "Activity: \($0.name.isEmpty ? "Unnamed" : $0.name) (timezone: \($0.startTZId))" })
+            return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])
+            
+        case .invalidDates:
+            var items: [String] = []
+            items.append(contentsOf: results.invalidDateTransportation.map { "Transportation: \($0.name.isEmpty ? $0.type.rawValue : $0.name) (end before start)" })
+            items.append(contentsOf: results.invalidDateLodging.map { "Lodging: \($0.name.isEmpty ? "Unnamed" : $0.name) (end before start)" })
+            items.append(contentsOf: results.invalidDateActivities.map { "Activity: \($0.name.isEmpty ? "Unnamed" : $0.name) (end before start)" })
+            return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])
+            
+        case .missingOrganizations:
+            return Array(results.activitiesWithoutOrganizations.prefix(10)) + 
+                   (results.activitiesWithoutOrganizations.count > 10 ? ["... and \(results.activitiesWithoutOrganizations.count - 10) more"] : [])
+            
+        case .unusedAddresses:
+            let items = results.orphanedAddresses.map { "Address: \($0.displayAddress) - \($0.city)" }
+            return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])
+            
+        case .brokenAttachments:
+            let items = results.brokenAttachments.map { "Attachment: \($0.fileName) (size: \($0.fileSize) bytes)" }
+            return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])
+        }
     }
 }

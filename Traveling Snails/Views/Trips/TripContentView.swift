@@ -16,6 +16,7 @@ struct TripContentView: View {
     // Cache the expensive activities computation
     @State private var cachedActivities: [ActivityWrapper] = []
     @State private var lastTripID: UUID?
+    @State private var showingRemoveProtectionConfirmation: Bool = false
     
     init(trip: Trip, viewMode: Binding<TripDetailView.ViewMode>, navigationPath: Binding<NavigationPath>, showingLodgingSheet: Binding<Bool>, showingTransportationSheet: Binding<Bool>, showingActivitySheet: Binding<Bool>, showingEditTripSheet: Binding<Bool>, showingCalendarView: Binding<Bool>, onLockTrip: @escaping () -> Void = {}) {
         self.trip = trip
@@ -33,14 +34,21 @@ struct TripContentView: View {
     // Update cached activities only when trip changes
     private func updateActivitiesIfNeeded() {
         if lastTripID != trip.id {
-            let lodgingActivities = (trip.lodging).map { ActivityWrapper($0) }
-            let transportationActivities = (trip.transportation).map { ActivityWrapper($0) }
-            let activityActivities = (trip.activity).map { ActivityWrapper($0) }
-            
-            cachedActivities = (lodgingActivities + transportationActivities + activityActivities)
-                .sorted { $0.tripActivity.start < $1.tripActivity.start }
+            updateCachedActivities()
             lastTripID = trip.id
         }
+    }
+    
+    // Force update cached activities (used when activities are added/removed)
+    private func updateCachedActivities() {
+        let lodgingActivities = (trip.lodging).map { ActivityWrapper($0) }
+        let transportationActivities = (trip.transportation).map { ActivityWrapper($0) }
+        let activityActivities = (trip.activity).map { ActivityWrapper($0) }
+        
+        cachedActivities = (lodgingActivities + transportationActivities + activityActivities)
+            .sorted { $0.tripActivity.start < $1.tripActivity.start }
+        
+        Logger.shared.debug("Updated cachedActivities for \(trip.name): \(cachedActivities.count) activities", category: .ui)
     }
     
     var body: some View {
@@ -134,7 +142,13 @@ struct TripContentView: View {
                         }
                         
                         Button {
-                            authManager.toggleProtection(for: trip)
+                            if isProtected {
+                                // Show confirmation dialog for removing protection
+                                showingRemoveProtectionConfirmation = true
+                            } else {
+                                // No confirmation needed for adding protection
+                                authManager.toggleProtection(for: trip)
+                            }
                         } label: {
                             if isProtected {
                                 Label("Remove Protection", systemImage: "lock.open")
@@ -148,17 +162,26 @@ struct TripContentView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingActivitySheet) {
+        .sheet(isPresented: $showingActivitySheet, onDismiss: {
+            // Refresh cached activities when activity sheet is dismissed
+            updateCachedActivities()
+        }) {
             NavigationStack {
                 UniversalAddTripActivityRootView.forActivity(trip: trip)
             }
         }
-        .sheet(isPresented: $showingLodgingSheet) {
+        .sheet(isPresented: $showingLodgingSheet, onDismiss: {
+            // Refresh cached activities when lodging sheet is dismissed
+            updateCachedActivities()
+        }) {
             NavigationStack {
                 UniversalAddTripActivityRootView.forLodging(trip: trip)
             }
         }
-        .sheet(isPresented: $showingTransportationSheet) {
+        .sheet(isPresented: $showingTransportationSheet, onDismiss: {
+            // Refresh cached activities when transportation sheet is dismissed
+            updateCachedActivities()
+        }) {
             NavigationStack {
                 UniversalAddTripActivityRootView.forTransportation(trip: trip)
             }
@@ -170,6 +193,18 @@ struct TripContentView: View {
         }
         .fullScreenCover(isPresented: $showingCalendarView) {
             TripCalendarRootView(trip: trip)
+        }
+        .confirmationDialog(
+            "Remove Protection",
+            isPresented: $showingRemoveProtectionConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Remove Protection", role: .destructive) {
+                authManager.toggleProtection(for: trip)
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("Removing protection means this trip will no longer require \(authManager.biometricType == .faceID ? "Face ID" : "Touch ID") authentication to access. Anyone with access to your device will be able to view trip details, activities, and attachments.")
         }
     }
     
