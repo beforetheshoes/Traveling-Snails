@@ -63,6 +63,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
                     deleteButton
                 }
             }
+            .padding(.horizontal)
         }
         .navigationTitle(isEditing ? "Edit \(activity.activityType.rawValue)" : "\(activity.activityType.rawValue) Details")
         .navigationBarTitleDisplayMode(.inline)
@@ -504,7 +505,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
     
     @ViewBuilder
     private var detailsSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Image(systemName: "note.text")
                     .font(.title3)
@@ -514,8 +515,9 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
                     .font(.headline)
                     .foregroundColor(activity.color)
             }
+            .padding(.bottom, 16)
             
-            VStack(spacing: 16) {
+            VStack(alignment: .leading, spacing: 0) {
                 if !activity.confirmationField.isEmpty || isEditing {
                     if isEditing {
                         VStack(alignment: .leading, spacing: 8) {
@@ -526,16 +528,21 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
                             TextField("Enter \(activity.confirmationLabel.lowercased()) number", text: $editData.confirmationField)
                                 .textFieldStyle(RoundedBorderTextFieldStyle())
                         }
+                        .padding(.bottom, 16)
                     } else {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(activity.confirmationLabel)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                            
-                            Text(activity.confirmationField.isEmpty ? "Not provided" : activity.confirmationField)
-                                .font(.subheadline)
-                                .foregroundColor(activity.confirmationField.isEmpty ? .secondary : .primary)
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(activity.confirmationLabel)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                
+                                Text(activity.confirmationField.isEmpty ? "Not provided" : activity.confirmationField)
+                                    .font(.subheadline)
+                                    .foregroundColor(activity.confirmationField.isEmpty ? .secondary : .primary)
+                            }
+                            Spacer()
                         }
+                        .padding(.bottom, 16)
                     }
                 }
                 
@@ -549,16 +556,21 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .lineLimit(3...6)
                     }
+                    .padding(.bottom, 16)
                 } else {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Notes")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                        
-                        Text(activity.notes.isEmpty ? "No notes" : activity.notes)
-                            .font(.subheadline)
-                            .foregroundColor(activity.notes.isEmpty ? .secondary : .primary)
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Notes")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            
+                            Text(activity.notes.isEmpty ? "No notes" : activity.notes)
+                                .font(.subheadline)
+                                .foregroundColor(activity.notes.isEmpty ? .secondary : .primary)
+                        }
+                        Spacer()
                     }
+                    .padding(.bottom, 16) // Consistent bottom padding whether or not Contact Information section appears
                 }
                 
                 // Organization contact info (if available and not in edit mode)
@@ -567,7 +579,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
                    !organization.isNone &&
                    (activity.supportsCustomLocation ? !activity.hideLocation : true) {
                     Divider()
-                        .padding(.vertical, 8)
+                        .padding(.vertical, 16)
                     
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Contact Information")

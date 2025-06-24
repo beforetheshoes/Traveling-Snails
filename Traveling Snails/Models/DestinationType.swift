@@ -47,6 +47,18 @@ enum DestinationType: Hashable {
             hasher.combine(a.id)
         }
     }
+    
+    // Helper method to create DestinationType from any TripActivityProtocol
+    static func from(_ activity: any TripActivityProtocol) -> DestinationType {
+        switch activity.activityType {
+        case .lodging:
+            return .lodging(activity as! Lodging)
+        case .transportation:
+            return .transportation(activity as! Transportation)
+        case .activity:
+            return .activity(activity as! Activity)
+        }
+    }
 }
 
 // MARK: - Navigation Restoration Support

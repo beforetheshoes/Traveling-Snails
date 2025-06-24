@@ -19,8 +19,18 @@ struct TripCalendarRootView: View {
     }
     
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $viewModel.navigationPath) {
             CalendarContentView(viewModel: viewModel)
+                .navigationDestination(for: DestinationType.self) { destination in
+                    switch destination {
+                    case .lodging(let lodging):
+                        UnifiedTripActivityDetailView<Lodging>(activity: lodging)
+                    case .transportation(let transportation):
+                        UnifiedTripActivityDetailView<Transportation>(activity: transportation)
+                    case .activity(let activity):
+                        UnifiedTripActivityDetailView<Activity>(activity: activity)
+                    }
+                }
         }
     }
 }

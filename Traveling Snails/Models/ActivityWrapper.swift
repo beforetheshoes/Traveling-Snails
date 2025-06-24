@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ActivityWrapper: Identifiable {
+struct ActivityWrapper: Identifiable, Equatable {
     let id = UUID()
     let tripActivity: any TripActivityProtocol
     let type: ActivityType
@@ -47,5 +47,10 @@ struct ActivityWrapper: Identifiable {
         default:
             self.type = .activity
         }
+    }
+    
+    static func == (lhs: ActivityWrapper, rhs: ActivityWrapper) -> Bool {
+        // Use the underlying trip activity ID for equality comparison
+        return lhs.tripActivity.id == rhs.tripActivity.id
     }
 }
