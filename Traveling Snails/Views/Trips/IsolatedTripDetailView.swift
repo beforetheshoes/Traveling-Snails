@@ -1,5 +1,11 @@
 import SwiftUI
 import SwiftData
+import Foundation
+
+// MARK: - Notification Names
+extension Notification.Name {
+    static let tripSelectedFromList = Notification.Name("tripSelectedFromList")
+}
 
 // A completely isolated trip detail view that doesn't depend on @Observable state
 struct IsolatedTripDetailView: View {
@@ -139,6 +145,17 @@ struct IsolatedTripDetailView: View {
             if newPath.count == 0 && oldPath.count > 0 {
                 clearNavigationStates()
                 print("📱 User navigated back to root - clearing navigation states")
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .tripSelectedFromList)) { notification in
+            // Handle trip selection from list while in deep navigation
+            if let selectedTripId = notification.object as? UUID, selectedTripId == trip.id {
+                // Clear navigation path to return to trip root
+                let previousCount = navigationPath.count
+                if previousCount > 0 {
+                    navigationPath = NavigationPath()
+                    print("📱 Trip selected from list - cleared navigation path (was \(previousCount) deep)")
+                }
             }
         }
     }

@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Wiki documentation structure for technical details
 - NSUbiquitousKeyValueStore implementation for user preferences with automatic iCloud sync
 - Comprehensive notification handling for iCloud key-value store changes (server changes, account changes, quota violations)
+- TripListNavigationTests.swift for testing navigation behavior between trip list and activity details
 - UserDefaults fallback when iCloud unavailable for robust settings management
 - Simplified @Observable AppSettings architecture with @State environment object pattern for immediate UI response
 - Cross-device dark/light mode settings sync with real-time updates
@@ -74,6 +75,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Calendar scroll position resetting to 6am during dialog interactions by adding scroll state tracking and removing aggressive lifecycle handlers
 - Overlapping calendar components and layout chaos by fixing dialog state management and view lifecycle interference
 - Issue #20: None organization appearing twice in organization selector by refactoring OrganizationPicker to use single data source instead of manual button + query results
+- Issue #21: Trip list selection doesn't navigate back from activity detail - clicking trip in list while viewing activity detail now properly returns to trip detail root instead of staying on activity screen
 
 ### Security
 - Added NSFaceIDUsageDescription privacy permission for biometric authentication

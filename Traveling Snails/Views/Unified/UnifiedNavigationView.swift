@@ -6,6 +6,7 @@
 
 import SwiftUI
 import SwiftData
+import Foundation
 //import OSLog
 
 // MARK: - Navigation Item Protocol
@@ -246,6 +247,9 @@ struct UnifiedNavigationView<Item: NavigationItem, DetailView: View>: View {
                 // Update selectedTrip if this is a trip
                 if let trip = item as? Trip {
                     selectedTrip = trip
+                    // Notify the detail view to reset navigation path
+                    NotificationCenter.default.post(name: .tripSelectedFromList, object: trip.id)
+                    Logger.shared.debug("Posted tripSelectedFromList notification for trip: \(trip.name)", category: .navigation)
                 }
             }
             .listRowSeparator(.hidden) // Hide separators since we have our own styling
