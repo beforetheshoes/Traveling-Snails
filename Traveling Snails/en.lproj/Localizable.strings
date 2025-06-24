@@ -1,0 +1,230 @@
+// Localizable.strings
+// English localization for Traveling Snails
+
+// General
+"general.cancel" = "Cancel";
+"general.save" = "Save";
+"general.delete" = "Delete";
+"general.edit" = "Edit";
+"general.add" = "Add";
+"general.done" = "Done";
+"general.ok" = "OK";
+"general.yes" = "Yes";
+"general.no" = "No";
+"general.search" = "Search";
+"general.clear" = "Clear";
+"general.loading" = "Loading...";
+"general.error" = "Error";
+"general.warning" = "Warning";
+"general.info" = "Info";
+"general.none" = "None";
+"general.unknown" = "Unknown";
+"general.untitled" = "Untitled";
+
+// Navigation
+"navigation.trips" = "Trips";
+"navigation.organizations" = "Organizations";
+"navigation.files" = "Files";
+"navigation.settings" = "Settings";
+"navigation.debug" = "Debug";
+"navigation.back" = "Back";
+"navigation.close" = "Close";
+
+// Trips
+"trips.title" = "Trips";
+"trips.empty_state" = "No Trips";
+"trips.empty_state_description" = "Create your first trip to get started";
+"trips.add_trip" = "Add Trip";
+"trips.edit_trip" = "Edit Trip";
+"trips.delete_trip" = "Delete Trip";
+"trips.name" = "Trip Name";
+"trips.notes" = "Notes";
+"trips.start_date" = "Start Date";
+"trips.end_date" = "End Date";
+"trips.total_cost" = "Total Cost";
+"trips.total_activities" = "Total Activities";
+"trips.search_placeholder" = "Search trips...";
+"trips.date_range" = "Date Range";
+"trips.no_dates_set" = "No dates set";
+
+// Activities
+"trips.activities.transportation" = "Transportation";
+"trips.activities.lodging" = "Lodging";
+"trips.activities.activities" = "Activities";
+"trips.activities.add_activity" = "Add Activity";
+"trips.activities.no_activities" = "No activities yet";
+
+// Organizations
+"organizations.title" = "Organizations";
+"organizations.empty_state" = "No Organizations";
+"organizations.empty_state_description" = "Add organizations to track your travel services";
+"organizations.add_organization" = "Add Organization";
+"organizations.edit_organization" = "Edit Organization";
+"organizations.delete_organization" = "Delete Organization";
+"organizations.name" = "Organization Name";
+"organizations.phone" = "Phone";
+"organizations.email" = "Email";
+"organizations.website" = "Website";
+"organizations.address" = "Address";
+"organizations.search_placeholder" = "Search organizations...";
+"organizations.cannot_delete_in_use" = "Cannot delete organization: it's being used by %d items";
+"organizations.cannot_delete_none" = "Cannot delete the default 'None' organization";
+
+// File Attachments
+"file_attachments.title" = "Attachments";
+"file_attachments.add_attachment" = "Add Attachment";
+"file_attachments.choose_photo" = "Choose Photo";
+"file_attachments.choose_document" = "Choose Document";
+"file_attachments.no_attachments" = "No attachments yet";
+"file_attachments.no_attachments_description" = "Add files to keep them with this activity";
+"file_attachments.description" = "Description";
+"file_attachments.original_name" = "Original Name";
+"file_attachments.file_type" = "File Type";
+"file_attachments.file_size" = "File Size";
+"file_attachments.created_date" = "Created";
+"file_attachments.edit_attachment" = "Edit Attachment";
+"file_attachments.delete_attachment" = "Delete Attachment";
+
+// File Attachment Settings
+"file_attachments.settings.title" = "Attachment Settings";
+"file_attachments.settings.management" = "Management";
+"file_attachments.settings.storage" = "Storage";
+"file_attachments.settings.file_types" = "File Types";
+"file_attachments.settings.total_files" = "Total Files";
+"file_attachments.settings.total_size" = "Total Size";
+"file_attachments.settings.find_orphaned" = "Find Orphaned Files";
+"file_attachments.settings.cleanup_orphaned" = "Clean Up Orphaned Files";
+"file_attachments.settings.clear_all" = "Clear All Attachments";
+"file_attachments.settings.images" = "Images";
+"file_attachments.settings.documents" = "Documents";
+"file_attachments.settings.other" = "Other";
+
+// File Attachment Errors
+"file_attachments.errors.failed_to_load" = "Failed to load file";
+"file_attachments.errors.failed_to_save" = "Failed to save file";
+"file_attachments.errors.failed_to_delete" = "Failed to delete file";
+"file_attachments.errors.invalid_format" = "Invalid file format";
+"file_attachments.errors.too_large" = "File is too large";
+
+// Activities
+"activities.name" = "Name";
+"activities.start" = "Start";
+"activities.end" = "End";
+"activities.cost" = "Cost";
+"activities.notes" = "Notes";
+"activities.organization" = "Organization";
+"activities.confirmation" = "Confirmation";
+"activities.reservation" = "Reservation";
+"activities.paid" = "Payment Status";
+"activities.duration" = "Duration";
+"activities.location" = "Location";
+"activities.custom_location" = "Custom Location";
+"activities.hide_location" = "Hide Location";
+"activities.attachments" = "Attachments";
+
+// Transportation
+"activities.transportation.title" = "Transportation";
+"activities.transportation.type" = "Type";
+"activities.transportation.plane" = "Plane";
+"activities.transportation.train" = "Train";
+"activities.transportation.bus" = "Bus";
+"activities.transportation.car" = "Car";
+"activities.transportation.ship" = "Ship";
+"activities.transportation.other" = "Other";
+
+// Lodging
+"activities.lodging.title" = "Lodging";
+"activities.lodging.check_in" = "Check-in";
+"activities.lodging.check_out" = "Check-out";
+
+// Activity
+"activities.activity.title" = "Activity";
+
+// Payment
+"activities.payment.none" = "None";
+"activities.payment.partial" = "Partial";
+"activities.payment.full" = "Paid in Full";
+
+// Settings
+"settings.title" = "Settings";
+"settings.appearance" = "Appearance";
+"settings.color_scheme" = "Color Scheme";
+"settings.system_default" = "System Default";
+"settings.light" = "Light";
+"settings.dark" = "Dark";
+"settings.language" = "Language";
+"settings.data_management" = "Data Management";
+"settings.export_data" = "Export Data";
+"settings.import_data" = "Import Data";
+"settings.clear_data" = "Clear Data";
+"settings.about" = "About";
+"settings.version" = "Version";
+"settings.build" = "Build";
+"settings.file_attachment_settings" = "File Attachment Settings";
+"settings.management_description" = "Manage your file attachments and storage";
+
+// Errors
+"errors.title" = "Error";
+"errors.unknown" = "An unexpected error occurred";
+"errors.network_unavailable" = "Network connection unavailable";
+"errors.database_error" = "Database error occurred";
+"errors.file_error" = "File operation failed";
+"errors.validation_error" = "Validation failed";
+"errors.permission_denied" = "Permission denied";
+"errors.disk_space_full" = "Insufficient storage space";
+"errors.operation_cancelled" = "Operation was cancelled";
+"errors.feature_not_available" = "Feature not available";
+
+// Validation
+"validation.required" = "This field is required";
+"validation.invalid_email" = "Invalid email address";
+"validation.invalid_url" = "Invalid URL";
+"validation.invalid_phone" = "Invalid phone number";
+"validation.invalid_date_range" = "Invalid date range";
+"validation.duplicate_entry" = "Duplicate entry";
+"validation.too_long" = "Too long";
+"validation.too_short" = "Too short";
+"validation.invalid_format" = "Invalid format";
+
+// Time and Dates
+"time.now" = "Now";
+"time.today" = "Today";
+"time.yesterday" = "Yesterday";
+"time.tomorrow" = "Tomorrow";
+"time.this_week" = "This Week";
+"time.last_week" = "Last Week";
+"time.next_week" = "Next Week";
+"time.this_month" = "This Month";
+"time.last_month" = "Last Month";
+"time.next_month" = "Next Month";
+"time.duration" = "Duration";
+"time.starts" = "Starts";
+"time.ends" = "Ends";
+
+// Time Units
+"time.units.seconds" = "seconds";
+"time.units.minutes" = "minutes";
+"time.units.hours" = "hours";
+"time.units.days" = "days";
+"time.units.weeks" = "weeks";
+"time.units.months" = "months";
+"time.units.years" = "years";
+
+// Database
+"database.title" = "Database";
+"database.maintenance" = "Maintenance";
+"database.compact" = "Compact";
+"database.rebuild" = "Rebuild";
+"database.validate" = "Validate";
+"database.create_test_data" = "Create Test Data";
+"database.operations" = "Operations";
+"database.browser" = "Browser";
+"database.diagnostics" = "Diagnostics";
+"database.repair" = "Repair";
+
+// Database Status
+"database.status.healthy" = "Healthy";
+"database.status.needs_attention" = "Needs Attention";
+"database.status.corrupted" = "Corrupted";
+"database.status.optimizing" = "Optimizing";
+"database.status.repairing" = "Repairing";

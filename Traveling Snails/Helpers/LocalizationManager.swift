@@ -50,15 +50,51 @@ final class LocalizationManager {
     }
     
     func localizedString(for key: String, defaultValue: String? = nil) -> String {
-        let value = bundle.localizedString(forKey: key, value: defaultValue, table: nil)
+        // Try the loaded bundle first
+        var value = bundle.localizedString(forKey: key, value: nil, table: nil)
         
-        // Return the key itself if no translation found and no default provided
+        // If not found and we're not already using main bundle, try main bundle
+        if value == key && bundle != Bundle.main {
+            value = Bundle.main.localizedString(forKey: key, value: nil, table: nil)
+        }
+        
+        // If still not found, try hardcoded values for file attachments as a fallback
+        if value == key {
+            value = getHardcodedTranslation(for: key) ?? defaultValue ?? key
+        }
+        
+        // Log missing translations for debugging
         if value == key && defaultValue == nil {
             Logger.shared.warning("Missing localization for key: \(key)", category: .app)
-            return key
         }
         
         return value
+    }
+    
+    private func getHardcodedTranslation(for key: String) -> String? {
+        // Hardcoded fallbacks for critical UI text
+        switch key {
+        case "file_attachments.title":
+            return "Attachments"
+        case "file_attachments.no_attachments":
+            return "No attachments yet"
+        case "file_attachments.no_attachments_description":
+            return "Add files to keep them with this activity"
+        case "file_attachments.add_attachment":
+            return "Add Attachment"
+        case "general.cancel":
+            return "Cancel"
+        case "general.save":
+            return "Save"
+        case "general.edit":
+            return "Edit"
+        case "general.delete":
+            return "Delete"
+        case "general.untitled":
+            return "Untitled"
+        default:
+            return nil
+        }
     }
     
     func localizedString(for key: String, arguments: CVarArg...) -> String {

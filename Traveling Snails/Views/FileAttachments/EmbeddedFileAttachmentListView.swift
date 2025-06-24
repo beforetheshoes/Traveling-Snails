@@ -40,15 +40,6 @@ struct EmbeddedFileAttachmentListView: View {
     @ViewBuilder
     private var headerSection: some View {
         HStack {
-            Text(L(L10n.FileAttachments.title))
-                .font(.headline)
-            
-            if !attachments.isEmpty {
-                Text("(\(attachments.count))")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            
             Spacer()
             
             UnifiedFilePicker.allFiles(
@@ -219,10 +210,10 @@ struct EnhancedAttachmentRowView: View {
             // Action buttons
             actionButtons
         }
-        .padding(.vertical, 8)
-        .padding(.horizontal, 12)
+        .padding(.vertical, 12)
+        .padding(.horizontal, 16)
         .background(Color.gray.opacity(0.05))
-        .cornerRadius(8)
+        .cornerRadius(12)
         .swipeActions(edge: .trailing) {
             Button(role: .destructive) {
                 showingDeleteConfirmation = true
@@ -285,50 +276,60 @@ struct EnhancedAttachmentRowView: View {
     
     @ViewBuilder
     private var actionButtons: some View {
-        HStack(spacing: 12) {  // Increased spacing for better mobile UX
+        HStack(spacing: 16) {  // Increased spacing for better mobile UX
             // Preview button - works for all file types
             Button {
                 showingQuickLook = true
             } label: {
                 Image(systemName: "eye")
-                    .font(.caption)
+                    .font(.system(size: 16, weight: .medium))
                     .foregroundColor(.blue)
-                    .frame(minWidth: 24, minHeight: 24)  // Larger tap area
+                    .frame(minWidth: 44, minHeight: 44)  // Apple recommended minimum tap target size
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Preview attachment")
             
             // Edit button - placeholder for now
             Button {
                 showingEditView = true
             } label: {
                 Image(systemName: "pencil")
-                    .font(.caption)
+                    .font(.system(size: 16, weight: .medium))
                     .foregroundColor(.blue)
-                    .frame(minWidth: 24, minHeight: 24)  // Larger tap area
+                    .frame(minWidth: 44, minHeight: 44)  // Apple recommended minimum tap target size
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Edit attachment")
             
             // Delete button
             Button {
                 showingDeleteConfirmation = true
             } label: {
                 Image(systemName: "trash")
-                    .font(.caption)
+                    .font(.system(size: 16, weight: .medium))
                     .foregroundColor(.red)
-                    .frame(minWidth: 24, minHeight: 24)  // Larger tap area
+                    .frame(minWidth: 44, minHeight: 44)  // Apple recommended minimum tap target size
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Delete attachment")
         }
     }
     
     private func loadThumbnail() {
         guard attachment.isImage, let data = attachment.fileData else { return }
         
-        DispatchQueue.global(qos: .userInitiated).async {
-            if let image = UIImage(data: data) {
-                DispatchQueue.main.async {
-                    thumbnailImage = image
+        Task {
+            // Load thumbnail on background thread using async/await
+            let image = await withCheckedContinuation { continuation in
+                DispatchQueue.global(qos: .userInitiated).async {
+                    let result = UIImage(data: data)
+                    continuation.resume(returning: result)
                 }
+            }
+            
+            // Update UI on main thread
+            await MainActor.run {
+                thumbnailImage = image
             }
         }
     }

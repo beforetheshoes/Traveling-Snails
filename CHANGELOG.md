@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- English localization file (en.lproj/Localizable.strings) with comprehensive translations for all UI elements
 - Comprehensive security confirmation tests for Remove Protection functionality
 - Photo permission handling with Info.plist usage descriptions for NSPhotoLibraryUsageDescription and NSCameraUsageDescription
 - PermissionStatusManager.swift for centralized photo library permission management following BiometricAuthManager pattern
@@ -81,6 +82,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Overlapping calendar components and layout chaos by fixing dialog state management and view lifecycle interference
 - Issue #20: None organization appearing twice in organization selector by refactoring OrganizationPicker to use single data source instead of manual button + query results
 - Issue #21: Trip list selection doesn't navigate back from activity detail - clicking trip in list while viewing activity detail now properly returns to trip detail root instead of staying on activity screen
+- Issue #4: Attachments section in trip activity detail has layout issues - fixed localization keys showing instead of proper text, removed duplicate "Attachments" title, improved mobile UX with proper tap targets, completed file picker integration, and optimized thumbnail loading performance
 
 ### Security
 - Added NSFaceIDUsageDescription privacy permission for biometric authentication

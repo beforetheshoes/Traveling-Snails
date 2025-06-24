@@ -74,6 +74,12 @@ class UniversalActivityFormViewModel {
         try? modelContext.save()
     }
     
+    func handleAttachmentError(_ error: String) {
+        // Store the error for UI display
+        saveError = NSError(domain: "AttachmentError", code: 1, userInfo: [NSLocalizedDescriptionKey: error])
+        Logger.shared.error("Attachment error: \(error)", category: .fileAttachment)
+    }
+    
     @MainActor
     func save() async throws {
         guard !isSaving, isFormValid else { return }

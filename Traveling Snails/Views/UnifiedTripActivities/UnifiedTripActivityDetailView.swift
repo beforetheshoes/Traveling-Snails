@@ -52,10 +52,8 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
                 // Details Section
                 detailsSection
                 
-                // File Attachments Section
-                if !isEditing {
-                    attachmentsSection
-                }
+                // File Attachments Section (always visible)
+                attachmentsSection
                 
                 // Delete Button (only in edit mode)
                 if isEditing {
@@ -645,15 +643,72 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
                 }
             }
             
-            EmbeddedFileAttachmentListView(
-                attachments: attachments,
-                onAttachmentAdded: { attachment in
-                    addAttachmentToActivity(attachment)
-                },
-                onAttachmentRemoved: { attachment in
-                    removeAttachmentFromActivity(attachment)
+            if isEditing {
+                // In edit mode, show simplified attachment management
+                VStack(spacing: 12) {
+                    if attachments.isEmpty {
+                        Text("No attachments")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .padding(.vertical, 16)
+                    } else {
+                        ForEach(attachments) { attachment in
+                            HStack {
+                                Image(systemName: attachment.fileSystemIcon)
+                                    .foregroundColor(activity.color)
+                                
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(attachment.displayName)
+                                        .font(.body)
+                                        .lineLimit(1)
+                                    
+                                    Text(attachment.formattedFileSize)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Spacer()
+                                
+                                Button {
+                                    removeAttachmentFromActivity(attachment)
+                                } label: {
+                                    Image(systemName: "trash")
+                                        .foregroundColor(.red)
+                                        .frame(minWidth: 24, minHeight: 24)
+                                }
+                                .buttonStyle(.plain)
+                            }
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 8)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(8)
+                        }
+                    }
+                    
+                    // Add attachment button in edit mode
+                    UnifiedFilePicker.allFiles(
+                        onSelected: { attachment in
+                            addAttachmentToActivity(attachment)
+                        },
+                        onError: { error in
+                            Logger.shared.error("Attachment error in edit mode: \(error)", category: .fileAttachment)
+                        }
+                    )
+                    .buttonStyle(.bordered)
+                    .tint(activity.color)
                 }
-            )
+            } else {
+                // In view mode, show full attachment list view
+                EmbeddedFileAttachmentListView(
+                    attachments: attachments,
+                    onAttachmentAdded: { attachment in
+                        addAttachmentToActivity(attachment)
+                    },
+                    onAttachmentRemoved: { attachment in
+                        removeAttachmentFromActivity(attachment)
+                    }
+                )
+            }
         }
         .padding()
         .background(activity.color.opacity(0.05))

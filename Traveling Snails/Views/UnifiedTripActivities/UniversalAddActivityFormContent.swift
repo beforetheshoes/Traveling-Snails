@@ -264,15 +264,14 @@ struct UniversalAddActivityFormContent: View {
                     }
                 }
                 
-                Button {
-                    // TODO: Implement file picker
-                } label: {
-                    HStack {
-                        Image(systemName: "plus.circle.fill")
-                        Text("Add Attachment")
+                UnifiedFilePicker.allFiles(
+                    onSelected: { attachment in
+                        viewModel.addAttachment(attachment)
+                    },
+                    onError: { error in
+                        viewModel.handleAttachmentError(error)
                     }
-                    .foregroundColor(colorFromString(viewModel.color))
-                }
+                )
                 .buttonStyle(.bordered)
                 .tint(colorFromString(viewModel.color))
             }
