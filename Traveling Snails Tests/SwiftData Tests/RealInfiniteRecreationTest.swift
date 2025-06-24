@@ -2,7 +2,6 @@
 //  RealInfiniteRecreationTest.swift
 //  Traveling Snails
 //
-//  Created by Ryan Williams on 6/21/25.
 //
 
 import SwiftData

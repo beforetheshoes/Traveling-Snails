@@ -2,7 +2,6 @@
 //  SettingsRootView.swift
 //  Traveling Snails
 //
-//  Created by Ryan Williams on 6/2/25.
 //
 
 import SwiftUI

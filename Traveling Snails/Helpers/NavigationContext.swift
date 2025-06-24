@@ -2,7 +2,6 @@
 //  NavigationContext.swift
 //  Traveling Snails
 //
-//  Created by Claude Code on 6/23/25.
 //
 
 import SwiftUI

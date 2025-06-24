@@ -2,7 +2,6 @@
 //  UIPickerAndSearchTests.swift
 //  Traveling SnailsUnitTests
 //
-//  Created by Ryan Williams on 6/1/25.
 //
 
 import Testing

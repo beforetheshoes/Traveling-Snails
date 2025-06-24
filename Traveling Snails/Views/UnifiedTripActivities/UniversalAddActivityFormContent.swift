@@ -2,7 +2,6 @@
 //  UniversalAddActivityFormContent.swift
 //  Traveling Snails
 //
-//  Created by Ryan Williams on 6/18/25.
 //
 
 import SwiftUI

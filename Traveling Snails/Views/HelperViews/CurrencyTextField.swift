@@ -2,7 +2,6 @@
 //  CurrencyTextField.swift
 //  Traveling Snails
 //
-//  Created by Ryan Williams on 5/25/25.
 //
 
 import SwiftUI

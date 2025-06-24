@@ -2,7 +2,6 @@
 //  Organization+Extensions.swift
 //  Traveling Snails
 //
-//  Created by Ryan Williams on 6/11/25.
 //
 
 import SwiftUI

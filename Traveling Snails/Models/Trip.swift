@@ -2,7 +2,6 @@
 //  Trip.swift
 //  Traveling Snails
 //
-//  Created by Ryan Williams on 5/24/25.
 //
 
 import Foundation

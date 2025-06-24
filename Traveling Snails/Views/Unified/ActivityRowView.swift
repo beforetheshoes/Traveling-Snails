@@ -2,7 +2,6 @@
 //  ActivityRowView.swift
 //  Traveling Snails
 //
-//  Created by Ryan Williams on 5/31/25.
 //
 
 import SwiftUI

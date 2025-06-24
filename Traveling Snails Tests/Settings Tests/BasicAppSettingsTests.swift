@@ -2,7 +2,6 @@
 //  BasicAppSettingsTests.swift
 //  Traveling Snails Tests
 //
-//  Created by Ryan Williams on 6/20/25.
 //
 
 import Testing

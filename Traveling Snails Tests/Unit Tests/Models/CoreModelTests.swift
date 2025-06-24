@@ -2,7 +2,6 @@
 //  C.swift
 //  Traveling Snails
 //
-//  Created by Ryan Williams on 6/1/25.
 //
 
 import Foundation

@@ -2,7 +2,6 @@
 //  ImageCacheManager.swift
 //  Traveling Snails
 //
-//  Created by Ryan Williams on 5/26/25.
 //
 
 import SwiftUI

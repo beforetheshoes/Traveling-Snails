@@ -2,7 +2,6 @@
 //  PrefilledAddActivityView.swift
 //  Traveling Snails
 //
-//  Created by Ryan Williams on 6/3/25.
 //
 
 import SwiftUI

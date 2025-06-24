@@ -2,7 +2,6 @@
 //  UnifiedNavigationViewTests.swift
 //  Traveling Snails Tests
 //
-//  Created by Ryan Williams on 6/11/25.
 //
 
 import Testing

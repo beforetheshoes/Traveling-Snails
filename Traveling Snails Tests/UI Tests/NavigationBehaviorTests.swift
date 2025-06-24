@@ -2,7 +2,6 @@
 //  NavigationBehaviorTests.swift
 //  Traveling Snails Tests
 //
-//  Created by Claude Code on 6/23/25.
 //
 
 import Testing
