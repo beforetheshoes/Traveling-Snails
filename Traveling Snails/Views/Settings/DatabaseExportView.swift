@@ -44,6 +44,11 @@ struct DatabaseExportView: View {
         }
     }
     
+    // Responsive padding based on device type
+    private var navigationBarPadding: CGFloat {
+        UIDevice.current.userInterfaceIdiom == .pad ? 80 : 20
+    }
+    
     var body: some View {
         NavigationStack {
             VStack(spacing: 20) {
@@ -166,6 +171,7 @@ struct DatabaseExportView: View {
                 
                 Spacer()
             }
+            .padding(.top, navigationBarPadding)
             .navigationTitle("Export Data")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Migrated all NavigationView instances to NavigationStack for modern iOS 18+ compatibility
 
 ### Fixed
+- Export Data navigation title overlapping with UI elements in DatabaseExportView by adding responsive top padding (80pt on iPad, 20pt on iPhone)
 - SwiftData fatal crashes in AppSettings caused by stale model references and ModelContext lifecycle issues
 - Settings sync reliability issues between devices using proper Apple-provided iCloud Key-Value Store
 - Broken @Observable chain in settings UI that prevented external iCloud changes from updating the interface
