@@ -28,9 +28,9 @@ struct UIPickerAndSearchTests {
             
             let noneOrg = OrganizationManager.shared.ensureNoneOrganization(in: context)
             switch noneOrg {
-            case .success(let org):
-                #expect(org.name == "None")
-                #expect(org.isNone == true)
+            case .success(let result):
+                #expect(result.organization.name == "None")
+                #expect(result.organization.isNone == true)
             case .failure:
                 Issue.record("Failed to get None organization")
             }

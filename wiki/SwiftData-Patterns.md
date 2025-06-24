@@ -78,21 +78,72 @@ struct BadAddActivityView: View {
 
 ## ✅ Correct Patterns (ALWAYS USE THESE)
 
-### 1. Direct @Query in Consuming Views
+### 1. Direct @Query in Consuming Views (Essential for Real-Time UI Updates)
 
-✅ **CORRECT:**
+✅ **CORRECT - Using @Query for Immediate UI Updates:**
 ```swift
-struct TripListView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var trips: [Trip]  // Query directly in the view that needs the data
+struct TripDetailView: View {
+    let trip: Trip
     
-    var body: some View {
-        List(trips) { trip in
-            TripRowView(tripId: trip.id)  // Pass IDs, not models
-        }
+    // FIXED: Use @Query instead of relationship access for real-time updates
+    @Query private var lodgingActivities: [Lodging]
+    @Query private var transportationActivities: [Transportation]
+    @Query private var activityActivities: [Activity]
+    
+    init(trip: Trip) {
+        self.trip = trip
+        
+        // Filter queries by trip ID for proper isolation
+        let tripId = trip.id
+        self._lodgingActivities = Query(
+            filter: #Predicate<Lodging> { $0.trip?.id == tripId },
+            sort: \Lodging.start
+        )
+        self._transportationActivities = Query(
+            filter: #Predicate<Transportation> { $0.trip?.id == tripId },
+            sort: \Transportation.start
+        )
+        self._activityActivities = Query(
+            filter: #Predicate<Activity> { $0.trip?.id == tripId },
+            sort: \Activity.start
+        )
+    }
+    
+    var allActivities: [ActivityWrapper] {
+        let lodgingWrappers = lodgingActivities.map { ActivityWrapper($0) }
+        let transportationWrappers = transportationActivities.map { ActivityWrapper($0) }
+        let activityWrappers = activityActivities.map { ActivityWrapper($0) }
+        
+        return (lodgingWrappers + transportationWrappers + activityWrappers)
+            .sorted { $0.tripActivity.start < $1.tripActivity.start }
     }
 }
 ```
+
+❌ **WRONG - Relationship Access (No UI Updates):**
+```swift
+struct BrokenTripDetailView: View {
+    let trip: Trip
+    
+    var allActivities: [ActivityWrapper] {
+        // BUG: Direct relationship access doesn't trigger UI updates when new activities are saved
+        let lodgingActivities = (trip.lodging).map { ActivityWrapper($0) }
+        let transportationActivities = (trip.transportation).map { ActivityWrapper($0) }
+        let activityActivities = (trip.activity).map { ActivityWrapper($0) }
+        
+        return (lodgingActivities + transportationActivities + activityActivities)
+            .sorted { $0.tripActivity.start < $1.tripActivity.start }
+    }
+}
+```
+
+**Critical Issue Fixed:** This pattern resolves Issue #19 where new trip activities wouldn't appear immediately after saving. The @Query pattern ensures the UI updates in real-time when SwiftData models are inserted/updated, while relationship access can miss these changes.
+
+**Benefits of @Query Pattern:**
+- **Real-Time Updates**: UI immediately reflects database changes
+- **No Manual Refresh**: No need for cache invalidation or manual UI updates  
+- **Automatic Sorting**: Query results are automatically sorted and filtered
+- **Performance**: SwiftData optimizes query execution and caching
 
 ### 2. Pass Model IDs, Fetch in Child Views
 

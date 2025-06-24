@@ -74,15 +74,22 @@ A comprehensive travel planning and management app built with SwiftUI for iOS 18
 
 ### Critical SwiftData Patterns
 
-⚠️ **This app follows strict SwiftData patterns to prevent infinite view recreation bugs:**
+⚠️ **This app follows strict SwiftData patterns to prevent infinite view recreation bugs and ensure real-time UI updates:**
 
 ✅ **CORRECT Pattern (Used Throughout App):**
 
 ```swift
-struct TripListView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var trips: [Trip]  // Query directly in view
-    var body: some View { ... }
+struct TripDetailView: View {
+    let trip: Trip
+    @Query private var activities: [Activity]  // Real-time updates via @Query
+    
+    init(trip: Trip) {
+        self.trip = trip
+        // Filter by trip ID for proper isolation
+        self._activities = Query(
+            filter: #Predicate<Activity> { $0.trip?.id == trip.id }
+        )
+    }
 }
 ```
 
@@ -90,10 +97,15 @@ struct TripListView: View {
 
 ```swift
 struct BadView: View {
-    let trips: [Trip]  // Parameter passing - causes infinite recreation!
-    init(trips: [Trip]) { self.trips = trips }
+    let activities: [Activity]  // Parameter passing - causes infinite recreation!
+    
+    var allActivities: [ActivityWrapper] {
+        trip.activity.map { ActivityWrapper($0) }  // Relationship access - no UI updates!
+    }
 }
 ```
+
+**Why This Matters:** Using `@Query` ensures that when new activities are saved, the UI immediately reflects changes without requiring manual refresh or navigation. Direct relationship access (`trip.activity`) can miss SwiftData updates, leading to stale UI state.
 
 ### Code Organization
 

@@ -14,6 +14,30 @@ struct TripDetailView: View {
     @State private var isAuthenticating: Bool = false
     @State private var isLocallyAuthenticated: Bool = false
     
+    // FIXED: Use @Query instead of relationship access to ensure UI updates immediately
+    @Query private var lodgingActivities: [Lodging]
+    @Query private var transportationActivities: [Transportation]
+    @Query private var activityActivities: [Activity]
+    
+    init(trip: Trip) {
+        self.trip = trip
+        
+        // Filter queries by trip ID for proper isolation
+        let tripId = trip.id
+        self._lodgingActivities = Query(
+            filter: #Predicate<Lodging> { $0.trip?.id == tripId },
+            sort: \Lodging.start
+        )
+        self._transportationActivities = Query(
+            filter: #Predicate<Transportation> { $0.trip?.id == tripId },
+            sort: \Transportation.start
+        )
+        self._activityActivities = Query(
+            filter: #Predicate<Activity> { $0.trip?.id == tripId },
+            sort: \Activity.start
+        )
+    }
+    
     enum ViewMode: String, CaseIterable {
             case list = "List"
             case calendar = "Calendar"
@@ -27,11 +51,11 @@ struct TripDetailView: View {
         }
     
     var allActivities: [ActivityWrapper] {
-        let lodgingActivities = (trip.lodging).map { ActivityWrapper($0) }
-        let transportationActivities = (trip.transportation).map { ActivityWrapper($0) }
-        let activityActivities = (trip.activity).map { ActivityWrapper($0) }
+        let lodgingWrappers = lodgingActivities.map { ActivityWrapper($0) }
+        let transportationWrappers = transportationActivities.map { ActivityWrapper($0) }
+        let activityWrappers = activityActivities.map { ActivityWrapper($0) }
         
-        return (lodgingActivities + transportationActivities + activityActivities)
+        return (lodgingWrappers + transportationWrappers + activityWrappers)
             .sorted { $0.tripActivity.start < $1.tripActivity.start }
     }
     
@@ -49,7 +73,8 @@ struct TripDetailView: View {
                 isLocallyAuthenticated = true
             }
         } else {
-            TripContentView(trip: trip, 
+            TripContentView(trip: trip,
+                          activities: allActivities,
                           viewMode: $viewMode,
                           navigationPath: $navigationPath,
                           showingLodgingSheet: $showingLodgingSheet,
@@ -90,4 +115,5 @@ struct TripDetailView: View {
     NavigationStack {
         TripDetailView(trip: .init(name: "Test Trip"))
     }
+    .modelContainer(for: [Trip.self, Activity.self, Lodging.self, Transportation.self], inMemory: true)
 }

@@ -3,6 +3,7 @@ import SwiftData
 
 struct TripContentView: View {
     let trip: Trip
+    let activities: [ActivityWrapper] // FIXED: Receive activities as parameter instead of relationship access
     @Binding var viewMode: TripDetailView.ViewMode
     @Binding var navigationPath: NavigationPath
     @Binding var showingLodgingSheet: Bool
@@ -13,13 +14,11 @@ struct TripContentView: View {
     private let authManager = BiometricAuthManager.shared
     let onLockTrip: () -> Void
     
-    // Cache the expensive activities computation
-    @State private var cachedActivities: [ActivityWrapper] = []
-    @State private var lastTripID: UUID?
     @State private var showingRemoveProtectionConfirmation: Bool = false
     
-    init(trip: Trip, viewMode: Binding<TripDetailView.ViewMode>, navigationPath: Binding<NavigationPath>, showingLodgingSheet: Binding<Bool>, showingTransportationSheet: Binding<Bool>, showingActivitySheet: Binding<Bool>, showingEditTripSheet: Binding<Bool>, showingCalendarView: Binding<Bool>, onLockTrip: @escaping () -> Void = {}) {
+    init(trip: Trip, activities: [ActivityWrapper], viewMode: Binding<TripDetailView.ViewMode>, navigationPath: Binding<NavigationPath>, showingLodgingSheet: Binding<Bool>, showingTransportationSheet: Binding<Bool>, showingActivitySheet: Binding<Bool>, showingEditTripSheet: Binding<Bool>, showingCalendarView: Binding<Bool>, onLockTrip: @escaping () -> Void = {}) {
         self.trip = trip
+        self.activities = activities
         self._viewMode = viewMode
         self._navigationPath = navigationPath
         self._showingLodgingSheet = showingLodgingSheet
@@ -28,33 +27,13 @@ struct TripContentView: View {
         self._showingEditTripSheet = showingEditTripSheet
         self._showingCalendarView = showingCalendarView
         self.onLockTrip = onLockTrip
-        // print("📋 TripContentView.init() for \(trip.name)")
     }
     
-    // Update cached activities only when trip changes
-    private func updateActivitiesIfNeeded() {
-        if lastTripID != trip.id {
-            updateCachedActivities()
-            lastTripID = trip.id
-        }
-    }
-    
-    // Force update cached activities (used when activities are added/removed)
-    private func updateCachedActivities() {
-        let lodgingActivities = (trip.lodging).map { ActivityWrapper($0) }
-        let transportationActivities = (trip.transportation).map { ActivityWrapper($0) }
-        let activityActivities = (trip.activity).map { ActivityWrapper($0) }
-        
-        cachedActivities = (lodgingActivities + transportationActivities + activityActivities)
-            .sorted { $0.tripActivity.start < $1.tripActivity.start }
-        
-        Logger.shared.debug("Updated cachedActivities for \(trip.name): \(cachedActivities.count) activities", category: .ui)
-    }
     
     var body: some View {
         VStack(spacing: 0) {
             // View mode selector
-            if !cachedActivities.isEmpty {
+            if !activities.isEmpty {
                 VStack(spacing: 12) {
                     Picker("View Mode", selection: $viewMode) {
                         ForEach(TripDetailView.ViewMode.allCases, id: \.self) { mode in
@@ -65,7 +44,7 @@ struct TripContentView: View {
                     .padding(.horizontal)
                     
                     // Trip summary
-                    TripSummaryView(trip: trip, activities: cachedActivities)
+                    TripSummaryView(trip: trip, activities: activities)
                 }
                 .padding(.vertical)
                 .background(Color(.systemGray6))
@@ -83,12 +62,6 @@ struct TripContentView: View {
         }
         .navigationTitle(trip.name)
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear {
-            updateActivitiesIfNeeded()
-        }
-        .onChange(of: trip.id) { _, _ in
-            updateActivitiesIfNeeded()
-        }
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button {
@@ -162,26 +135,17 @@ struct TripContentView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingActivitySheet, onDismiss: {
-            // Refresh cached activities when activity sheet is dismissed
-            updateCachedActivities()
-        }) {
+        .sheet(isPresented: $showingActivitySheet) {
             NavigationStack {
                 UniversalAddTripActivityRootView.forActivity(trip: trip)
             }
         }
-        .sheet(isPresented: $showingLodgingSheet, onDismiss: {
-            // Refresh cached activities when lodging sheet is dismissed
-            updateCachedActivities()
-        }) {
+        .sheet(isPresented: $showingLodgingSheet) {
             NavigationStack {
                 UniversalAddTripActivityRootView.forLodging(trip: trip)
             }
         }
-        .sheet(isPresented: $showingTransportationSheet, onDismiss: {
-            // Refresh cached activities when transportation sheet is dismissed
-            updateCachedActivities()
-        }) {
+        .sheet(isPresented: $showingTransportationSheet) {
             NavigationStack {
                 UniversalAddTripActivityRootView.forTransportation(trip: trip)
             }
@@ -210,7 +174,7 @@ struct TripContentView: View {
     
     @ViewBuilder
     private var listView: some View {
-        if cachedActivities.isEmpty {
+        if activities.isEmpty {
             ContentUnavailableView(
                 "No Activities Yet",
                 systemImage: "calendar.badge.plus",
@@ -218,7 +182,7 @@ struct TripContentView: View {
             )
         } else {
             List {
-                ForEach(cachedActivities) { wrapper in
+                ForEach(activities) { wrapper in
                     Button {
                         switch wrapper.tripActivity {
                         case let lodging as Lodging:
@@ -244,7 +208,7 @@ struct TripContentView: View {
     
     @ViewBuilder
     private var calendarView: some View {
-        CompactCalendarView(trip: trip, activities: cachedActivities) { activity in
+        CompactCalendarView(trip: trip, activities: activities) { activity in
             // Handle activity selection in compact calendar
             switch activity {
             case let lodging as Lodging:

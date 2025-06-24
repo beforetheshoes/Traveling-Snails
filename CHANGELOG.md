@@ -48,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - AppSettings singleton behavior now properly handles external notification changes from other devices
 - Test failures related to singleton caching behavior by implementing reloadFromStorage() debug method
 - Migrated from XCTests to modern Swift Testing framework (@Test, @Suite)
+- Issue #19: New trip activities not appearing immediately after save by replacing SwiftData relationship access with proper @Query patterns in TripDetailView and TripContentView for real-time UI updates
 - Updated README.md with adaptive navigation and database management features
 - User preferences (color scheme, biometric timeout) now sync via iCloud instead of being device-local
 - AppSettings refactored to use SwiftData instead of UserDefaults for CloudKit compatibility
