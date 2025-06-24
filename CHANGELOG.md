@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Photo permission handling with Info.plist usage descriptions for NSPhotoLibraryUsageDescription and NSCameraUsageDescription
+- PermissionStatusManager.swift for centralized photo library permission management following BiometricAuthManager pattern
+- PermissionEducationView.swift for user-friendly permission guidance and Settings navigation
+- Enhanced UnifiedFilePicker with proper permission checking, error handling, and user education alerts
+- Comprehensive PhotoPermissionTests.swift and UnifiedFilePickerTests.swift with TDD approach
 - User feedback for Fix Duplicate Organizations button with clear success/no duplicates messages
 - Database Cleanup Tool in Settings for removing test data and resetting database
 - Custom iPad tab bar for proper bottom navigation without title overlap
@@ -41,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Migrated all NavigationView instances to NavigationStack for modern iOS 18+ compatibility
 
 ### Fixed
+- Photo attachment display issues: thumbnails now show actual images instead of skeleton placeholders, eye/pencil icons are functional with proper preview and edit capabilities, improved mobile icon spacing for better touch interaction
+- Photo permission errors when trying to add photos to trip activities by implementing proper Info.plist permission descriptions and permission status checking
 - Export Data navigation title overlapping with UI elements in DatabaseExportView by adding responsive top padding (80pt on iPad, 20pt on iPhone)
 - SwiftData fatal crashes in AppSettings caused by stale model references and ModelContext lifecycle issues
 - Settings sync reliability issues between devices using proper Apple-provided iCloud Key-Value Store

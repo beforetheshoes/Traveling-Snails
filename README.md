@@ -45,9 +45,12 @@ A comprehensive travel planning and management app built with SwiftUI for iOS 18
 ### 📎 File Attachments
 
 - Embed files directly in the app (PDFs, images, documents)
+- **Photo Library Integration**: Full photo permission handling with user-friendly guidance and real photo thumbnails
 - Smart file organization by trip, activity, or lodging
-- Quick preview and sharing capabilities
+- Quick preview and sharing capabilities with comprehensive file diagnostics
 - Searchable file system across all attachments
+- Mobile-optimized interface with proper touch spacing and functional preview/edit buttons
+- Proper permission management for photo library access
 
 ### 🌐 Modern Features
 

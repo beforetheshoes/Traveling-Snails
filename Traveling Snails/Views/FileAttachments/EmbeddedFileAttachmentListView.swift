@@ -174,6 +174,8 @@ struct EnhancedAttachmentRowView: View {
     
     @State private var showingDeleteConfirmation = false
     @State private var showingEditView = false
+    @State private var showingQuickLook = false
+    @State private var thumbnailImage: UIImage?
     
     var body: some View {
         HStack(spacing: 12) {
@@ -247,43 +249,62 @@ struct EnhancedAttachmentRowView: View {
         } message: {
             Text("This will permanently delete the attachment. This action cannot be undone.")
         }
+        .sheet(isPresented: $showingQuickLook) {
+            CrossDeviceQuickLookView(attachment: attachment)
+        }
+        .sheet(isPresented: $showingEditView) {
+            CrossDeviceEditFileAttachmentView(attachment: attachment)
+        }
+        .onAppear {
+            loadThumbnail()
+        }
     }
     
     @ViewBuilder
     private var fileIcon: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 8)
-                .fill(attachment.fileIconColor.opacity(0.1))
-                .frame(width: 44, height: 44)
-            
-            Image(systemName: attachment.fileSystemIcon)
-                .font(.title2)
-                .foregroundColor(attachment.fileIconColor)
+        Group {
+            if attachment.isImage, let image = thumbnailImage {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 44, height: 44)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+            } else {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(attachment.fileIconColor.opacity(0.1))
+                        .frame(width: 44, height: 44)
+                    
+                    Image(systemName: attachment.fileSystemIcon)
+                        .font(.title2)
+                        .foregroundColor(attachment.fileIconColor)
+                }
+            }
         }
     }
     
     @ViewBuilder
     private var actionButtons: some View {
-        HStack(spacing: 8) {
-            // Quick view button for images
-            if attachment.isImage {
-                Button {
-                    // Could show image preview
-                } label: {
-                    Image(systemName: "eye")
-                        .font(.caption)
-                        .foregroundColor(.blue)
-                }
-                .buttonStyle(.plain)
-            }
-            
-            // Edit button
+        HStack(spacing: 12) {  // Increased spacing for better mobile UX
+            // Preview button - works for all file types
             Button {
-                onEdit()
+                showingQuickLook = true
+            } label: {
+                Image(systemName: "eye")
+                    .font(.caption)
+                    .foregroundColor(.blue)
+                    .frame(minWidth: 24, minHeight: 24)  // Larger tap area
+            }
+            .buttonStyle(.plain)
+            
+            // Edit button - placeholder for now
+            Button {
+                showingEditView = true
             } label: {
                 Image(systemName: "pencil")
                     .font(.caption)
                     .foregroundColor(.blue)
+                    .frame(minWidth: 24, minHeight: 24)  // Larger tap area
             }
             .buttonStyle(.plain)
             
@@ -294,8 +315,21 @@ struct EnhancedAttachmentRowView: View {
                 Image(systemName: "trash")
                     .font(.caption)
                     .foregroundColor(.red)
+                    .frame(minWidth: 24, minHeight: 24)  // Larger tap area
             }
             .buttonStyle(.plain)
+        }
+    }
+    
+    private func loadThumbnail() {
+        guard attachment.isImage, let data = attachment.fileData else { return }
+        
+        DispatchQueue.global(qos: .userInitiated).async {
+            if let image = UIImage(data: data) {
+                DispatchQueue.main.async {
+                    thumbnailImage = image
+                }
+            }
         }
     }
 }

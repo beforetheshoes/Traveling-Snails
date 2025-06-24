@@ -274,8 +274,53 @@ struct AppearanceSection: View {
 - **ActivitySaveService**: Persistence operations
 - **CalendarDateProvider**: Date calculations
 - **DataManagementService**: Import/export operations
+- **PermissionStatusManager**: Photo library permission management and user guidance
 
-### 4. Dependency Injection
+### 4. Manager Patterns
+
+#### Manager Responsibilities:
+- Singleton pattern for app-wide state management
+- System permission and capability checking
+- Cross-cutting concerns that don't fit in ViewModels or Services
+- Hardware feature management (biometrics, camera, photos)
+
+#### Established Manager Pattern:
+```swift
+@Observable
+@MainActor
+class PermissionStatusManager {
+    static let shared = PermissionStatusManager()
+    
+    // MARK: - Permission Status Properties
+    var photoLibraryAuthorizationStatus: PHAuthorizationStatus {
+        PHPhotoLibrary.authorizationStatus(for: .readWrite)
+    }
+    
+    var canUsePhotoLibrary: Bool {
+        switch photoLibraryAuthorizationStatus {
+        case .authorized, .limited: return true
+        default: return false
+        }
+    }
+    
+    // MARK: - Actions
+    nonisolated func requestPhotoLibraryAccess() async -> PHAuthorizationStatus {
+        return await PHPhotoLibrary.requestAuthorization(for: .readWrite)
+    }
+    
+    func openAppSettings() {
+        // Navigate to Settings app
+    }
+    
+    private init() { } // Singleton enforcement
+}
+```
+
+#### Current Managers:
+- **BiometricAuthManager**: Touch ID/Face ID authentication and trip protection
+- **PermissionStatusManager**: Photo library permission checking and user guidance
+
+### 5. Dependency Injection
 
 #### ViewModels receive dependencies through initializers:
 ```swift

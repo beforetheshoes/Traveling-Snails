@@ -18,10 +18,17 @@ class EmbeddedFileAttachmentManager {
     func saveFile(from sourceURL: URL, originalName: String) -> EmbeddedFileAttachment? {
         print("📂 Embedding file from: \(sourceURL.path)")
         
-        // Start accessing security scoped resource
-        let hasAccess = sourceURL.startAccessingSecurityScopedResource()
+        // Check if this is a temporary file (created by us) or a security scoped resource
+        let isTemporaryFile = sourceURL.path.contains(FileManager.default.temporaryDirectory.path)
+        
+        var hasAccess = true
+        if !isTemporaryFile {
+            // Only try to access security scoped resource for external files
+            hasAccess = sourceURL.startAccessingSecurityScopedResource()
+        }
+        
         defer {
-            if hasAccess {
+            if hasAccess && !isTemporaryFile {
                 sourceURL.stopAccessingSecurityScopedResource()
             }
         }
@@ -34,33 +41,48 @@ class EmbeddedFileAttachmentManager {
         do {
             // Read the file data
             let fileData = try Data(contentsOf: sourceURL)
+            print("📊 File data read successfully. Size: \(fileData.count) bytes")
             
             guard !fileData.isEmpty else {
-                print("❌ File data is empty")
+                print("❌ File data is empty for file: \(sourceURL.path)")
                 return nil
             }
             
             // Generate unique filename
             let fileExtension = sourceURL.pathExtension
             let uniqueFileName = "\(UUID().uuidString).\(fileExtension)"
+            let mimeType = getMimeType(for: sourceURL)
             
-            print("✅ File data loaded. Size: \(fileData.count) bytes")
+            print("📄 File details - Extension: \(fileExtension), MIME: \(mimeType), Original: \(originalName)")
             
             // Create file attachment with embedded data
             let attachment = EmbeddedFileAttachment(
                 fileName: uniqueFileName,
                 originalFileName: originalName,
                 fileSize: Int64(fileData.count),
-                mimeType: getMimeType(for: sourceURL),
+                mimeType: mimeType,
                 fileExtension: fileExtension,
                 fileData: fileData
             )
             
-            print("✅ EmbeddedFileAttachment created: \(attachment.fileName)")
+            print("✅ EmbeddedFileAttachment created successfully")
+            print("   - ID: \(attachment.id)")
+            print("   - FileName: \(attachment.fileName)")
+            print("   - OriginalName: \(attachment.originalFileName)")
+            print("   - Size: \(attachment.fileSize) bytes")
+            print("   - MIME: \(attachment.mimeType)")
+            print("   - Extension: \(attachment.fileExtension)")
+            
             return attachment
             
         } catch {
-            print("❌ Failed to read file data: \(error)")
+            print("❌ Failed to read file data from \(sourceURL.path)")
+            print("❌ Error details: \(error)")
+            print("❌ Error type: \(type(of: error))")
+            if let nsError = error as NSError? {
+                print("❌ NSError domain: \(nsError.domain), code: \(nsError.code)")
+                print("❌ NSError userInfo: \(nsError.userInfo)")
+            }
             return nil
         }
     }

@@ -7,6 +7,7 @@
 import SwiftUI
 import PhotosUI
 import UniformTypeIdentifiers
+import Photos
 
 /// Unified file picker that handles both photos and documents with proper cleanup
 struct UnifiedFilePicker: View {
@@ -24,9 +25,13 @@ struct UnifiedFilePicker: View {
     @State private var showingDocumentPicker = false
     @State private var showingPhotosPicker = false
     @State private var isProcessing = false
+    @State private var showingPermissionAlert = false
     
     // Cleanup tracking
     @State private var temporaryFiles: Set<URL> = []
+    
+    // Permission management
+    private let permissionManager = PermissionStatusManager.shared
     
     init(
         allowsPhotos: Bool = true,
@@ -46,7 +51,9 @@ struct UnifiedFilePicker: View {
         Menu {
             if allowsPhotos {
                 Button {
-                    showingPhotosPicker = true
+                    Task {
+                        await handlePhotoButtonTap()
+                    }
                 } label: {
                     Label("Choose Photo", systemImage: "photo")
                 }
@@ -93,6 +100,59 @@ struct UnifiedFilePicker: View {
         .onDisappear {
             cleanupTemporaryFiles()
         }
+        .permissionEducationAlert(
+            isPresented: $showingPermissionAlert,
+            permissionType: .photoLibrary,
+            onSettingsButtonTap: {
+                permissionManager.openAppSettings()
+            }
+        )
+    }
+    
+    // MARK: - Permission Handling
+    
+    @MainActor
+    private func handlePhotoButtonTap() async {
+        let permissionStatus = permissionManager.checkPhotoLibraryPermission()
+        
+        switch permissionStatus {
+        case .granted, .limited:
+            // Permission granted, show photo picker
+            showingPhotosPicker = true
+            
+        case .denied:
+            // Permission denied, show education alert
+            showingPermissionAlert = true
+            
+        case .restricted:
+            // Permission restricted, show error
+            handleError(FilePickerError.permissionRestricted.localizedDescription)
+            
+        case .notDetermined:
+            // Request permission
+            let newStatus = await permissionManager.requestPhotoLibraryAccess()
+            await handlePermissionResult(newStatus)
+            
+        case .unknown:
+            // Handle unknown future cases
+            handleError(FilePickerError.permissionNotDetermined.localizedDescription)
+        }
+    }
+    
+    @MainActor
+    private func handlePermissionResult(_ status: PHAuthorizationStatus) async {
+        switch status {
+        case .authorized, .limited:
+            showingPhotosPicker = true
+        case .denied:
+            handleError(FilePickerError.permissionDenied.localizedDescription)
+        case .restricted:
+            handleError(FilePickerError.permissionRestricted.localizedDescription)
+        case .notDetermined:
+            handleError(FilePickerError.permissionNotDetermined.localizedDescription)
+        @unknown default:
+            handleError(FilePickerError.permissionNotDetermined.localizedDescription)
+        }
     }
     
     // MARK: - Photo Handling
@@ -108,17 +168,33 @@ struct UnifiedFilePicker: View {
         }
         
         do {
+            // Try to get the photo's original file extension/type
+            var fileExtension = "jpg" // Default fallback
+            var originalName = item.itemIdentifier ?? generatePhotoName()
+            
+            // Try to load as transferable to get type information
+            if let supportedContentTypes = item.supportedContentTypes.first {
+                if let preferredExtension = supportedContentTypes.preferredFilenameExtension {
+                    fileExtension = preferredExtension
+                    print("📸 Photo type detected: \(fileExtension)")
+                }
+            }
+            
             guard let data = try await item.loadTransferable(type: Data.self) else {
                 throw FilePickerError.failedToLoadPhotoData
             }
             
-            print("✅ Photo data loaded: \(data.count) bytes") // Temporary until Logger is available
+            print("✅ Photo data loaded: \(data.count) bytes, extension: \(fileExtension)") // Temporary until Logger is available
             
-            let tempURL = createTemporaryFile(extension: "jpg")
+            // Update original name to use correct extension
+            if !originalName.contains(".") {
+                originalName = "\(originalName).\(fileExtension)"
+            }
+            
+            let tempURL = createTemporaryFile(extension: fileExtension)
             try data.write(to: tempURL)
             temporaryFiles.insert(tempURL)
             
-            let originalName = item.itemIdentifier ?? generatePhotoName()
             try await processFile(url: tempURL, originalName: originalName)
             
         } catch {
@@ -216,6 +292,9 @@ enum FilePickerError: LocalizedError {
     case failedToLoadPhotoData
     case failedToCreateAttachment
     case failedToSaveToDatabase(Error)
+    case permissionDenied
+    case permissionRestricted
+    case permissionNotDetermined
     
     var errorDescription: String? {
         switch self {
@@ -225,6 +304,12 @@ enum FilePickerError: LocalizedError {
             return "Failed to create file attachment"
         case .failedToSaveToDatabase(let error):
             return "Failed to save to database: \(error.localizedDescription)"
+        case .permissionDenied:
+            return "Photo library access denied. Please enable photo access in Settings to add photos to your trips."
+        case .permissionRestricted:
+            return "Photo library access is restricted. Please check your device restrictions."
+        case .permissionNotDetermined:
+            return "Photo library permission is required to add photos to your trips."
         }
     }
 }
