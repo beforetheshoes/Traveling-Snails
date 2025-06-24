@@ -32,6 +32,9 @@ class CalendarViewModel {
     var showingDayDetail = false
     var selectedDayActivities: [ActivityWrapper] = []
     
+    // Navigation state
+    var navigationPath = NavigationPath()
+    
     // Drag state
     var dragStartTime: Date?
     var dragEndTime: Date?
@@ -113,6 +116,11 @@ class CalendarViewModel {
         )
     }
     
+    func handleActivityTap(_ activity: any TripActivityProtocol) {
+        let destination = DestinationType.from(activity)
+        navigationPath.append(destination)
+    }
+    
     func handleDragStart(at point: CGPoint, time: Date) {
         eventHandler.handleDragStart(
             at: point,
@@ -173,6 +181,7 @@ class CalendarViewModel {
     
     func selectActivityType(_ type: ActivityTypeOption) {
         selectedActivityType = type
+        showingActivityTypeSelector = false // Close the type selector first
         showingActivityCreation = true
     }
     

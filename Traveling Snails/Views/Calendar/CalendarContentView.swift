@@ -33,7 +33,8 @@ struct CalendarContentView: View {
                                 activities: viewModel.activitiesForCurrentPeriod,
                                 onDragStart: viewModel.handleDragStart,
                                 onDragUpdate: viewModel.handleDragUpdate,
-                                onDragEnd: viewModel.handleDragEnd
+                                onDragEnd: viewModel.handleDragEnd,
+                                onActivityTap: viewModel.handleActivityTap
                             )
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                         case .week:
@@ -41,7 +42,8 @@ struct CalendarContentView: View {
                                 currentWeek: viewModel.currentWeek,
                                 activities: viewModel.allActivities,
                                 onDayTap: viewModel.handleDayTap,
-                                onLongPress: viewModel.handleLongPress
+                                onLongPress: viewModel.handleLongPress,
+                                onActivityTap: viewModel.handleActivityTap
                             )
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                         case .month:
@@ -79,8 +81,29 @@ struct CalendarContentView: View {
         .sheet(isPresented: $viewModel.showingActivityCreation) {
             ActivityCreationSheet(viewModel: viewModel)
         }
-        .actionSheet(isPresented: $viewModel.showingActivityTypeSelector) {
-            createActivityTypeActionSheet(viewModel: viewModel)
+        .confirmationDialog(
+            "Choose Activity Type",
+            isPresented: $viewModel.showingActivityTypeSelector,
+            titleVisibility: .visible
+        ) {
+            Button("🚗 Transportation") {
+                viewModel.selectActivityType(.transportation)
+            }
+            Button("🏨 Lodging") {
+                viewModel.selectActivityType(.lodging)
+            }
+            Button("🎟️ Activity") {
+                viewModel.selectActivityType(.activity)
+            }
+            Button("Cancel", role: .cancel) {
+                viewModel.cancelActivityCreation()
+            }
+        } message: {
+            if let startTime = viewModel.pendingActivityData?.startTime {
+                Text("Create activity for \(startTime.formatted(date: .abbreviated, time: .shortened))")
+            } else {
+                Text("What type of activity would you like to add?")
+            }
         }
         .sheet(isPresented: $viewModel.showingDayDetail) {
             NavigationStack {
@@ -91,9 +114,7 @@ struct CalendarContentView: View {
                 )
             }
         }
-        .onDisappear {
-            viewModel.cancelActivityCreation()
-        }
+        // Removed onDisappear cancelActivityCreation() to prevent interference with dialog interactions
     }
 }
 
@@ -177,30 +198,6 @@ struct ActivityCreationSheet: View {
     }
 }
 
-// MARK: - Activity Type Action Sheet
-
-private func createActivityTypeActionSheet(viewModel: CalendarViewModel) -> ActionSheet {
-    ActionSheet(
-        title: Text("Choose Activity Type"),
-        message: viewModel.pendingActivityData?.startTime != nil ?
-            Text("Create activity for \(viewModel.pendingActivityData?.startTime.formatted(date: .abbreviated, time: .shortened) ?? "")") :
-            Text("What type of activity would you like to add?"),
-        buttons: [
-            .default(Text("🚗 Transportation")) {
-                viewModel.selectActivityType(.transportation)
-            },
-            .default(Text("🏨 Lodging")) {
-                viewModel.selectActivityType(.lodging)
-            },
-            .default(Text("🎟️ Activity")) {
-                viewModel.selectActivityType(.activity)
-            },
-            .cancel {
-                viewModel.cancelActivityCreation()
-            }
-        ]
-    )
-}
 
 // MARK: - Drag Preview Component
 
