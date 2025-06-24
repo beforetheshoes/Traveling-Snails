@@ -512,10 +512,16 @@ extension UnifiedNavigationView where Item == Organization, DetailView == AnyVie
             selectedTrip: selectedTrip,
             tabIndex: tabIndex,
             detailViewBuilder: { organization in
-                AnyView(Text(NSLocalizedString("organizationDetail.placeholder", value: "Organization Detail - \(organization.displayName)", comment: "Organization detail placeholder")))
+                AnyView(OrganizationDetailView(
+                    selectedTab: selectedTab,
+                    selectedTrip: selectedTrip,
+                    organization: organization
+                ))
             },
             addViewBuilder: {
-                AnyView(Text(NSLocalizedString("addOrganization.placeholder", value: "Add Organization View - To Be Implemented", comment: "Add organization placeholder")))
+                AnyView(AddOrganizationForm { _ in
+                    // Organization added, dismiss handled by the form itself
+                })
             },
             onItemSelected: onOrganizationSelected
         )
