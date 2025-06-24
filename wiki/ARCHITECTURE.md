@@ -517,4 +517,89 @@ Models/                 # Data models and extensions
 3. **File Renaming**: Clear naming conventions (Root/Content suffixes)
 4. **Service Extraction**: Move remaining business logic to services
 
+## Calendar Architecture Patterns
+
+### Calendar View Hierarchy
+The calendar system follows the Root View + Content View pattern:
+
+#### CalendarRootView (Coordinator)
+- Manages CalendarViewModel lifecycle
+- Handles navigation between calendar modes (day, week, month)
+- Coordinates with trip data and activity management
+
+#### CalendarContentView (UI Layer)
+- Renders calendar interface without business logic
+- Delegates user interactions to ViewModel
+- Manages sheet presentations and confirmation dialogs
+
+### Calendar-Specific Patterns
+
+#### Timezone Conversion Pattern
+```swift
+// Extract time components from original timezone
+var calendar = Calendar.current
+calendar.timeZone = sourceTimeZone
+let components = calendar.dateComponents([.year, .month, .day, .hour, .minute, .second], from: date)
+
+// Create new date in local timezone
+calendar.timeZone = TimeZone.current
+return calendar.date(from: components) ?? date
+```
+
+**Benefits:**
+- Consistent "what time will this be for me" display
+- Preserves original timezone data for accuracy
+- Improves user experience for multi-timezone trips
+
+#### Scroll State Management
+```swift
+@State private var hasAutoScrolled = false
+
+.onAppear {
+    if !hasAutoScrolled {
+        scrollToOptimalStartTime(proxy: proxy)
+        hasAutoScrolled = true
+    }
+}
+.onChange(of: date) { _, _ in
+    hasAutoScrolled = false // Reset for new dates
+}
+```
+
+**Purpose:**
+- Prevents unwanted scroll resets during dialog interactions
+- Maintains user scroll position during sheet presentations
+- Allows proper auto-scroll when navigating to new dates
+
+#### Dialog State Management Anti-Pattern
+```swift
+// ❌ WRONG - Aggressive lifecycle management
+.onDisappear {
+    viewModel.cancelActivityCreation() // Interferes with dialogs
+}
+
+// ✅ CORRECT - Let dialogs manage their own lifecycle
+.confirmationDialog(...) {
+    Button("Cancel", role: .cancel) {
+        viewModel.cancelActivityCreation() // User-initiated only
+    }
+}
+```
+
+### Calendar Performance Optimizations
+
+#### ActivityWrapper Equatable Conformance
+```swift
+struct ActivityWrapper: Identifiable, Equatable {
+    static func == (lhs: ActivityWrapper, rhs: ActivityWrapper) -> Bool {
+        return lhs.tripActivity.id == rhs.tripActivity.id
+    }
+}
+```
+
+**Benefits:**
+- Reduces unnecessary SwiftUI view updates
+- Improves calendar rendering performance
+- Better diff algorithms for large activity lists
+
 This architecture ensures scalable, maintainable, and testable SwiftUI applications following established best practices.

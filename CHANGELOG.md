@@ -25,6 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - UserDefaults fallback when iCloud unavailable for robust settings management
 - Simplified @Observable AppSettings architecture with @State environment object pattern for immediate UI response
 - Cross-device dark/light mode settings sync with real-time updates
+- Timezone conversion helpers for consistent calendar time display
+- Scroll state tracking to prevent unwanted calendar resets during user interactions
+- Equatable conformance to ActivityWrapper for improved SwiftUI performance
 
 ### Changed
 - iPad navigation now uses custom tab bar instead of NavigationSplitView for consistent UI
@@ -56,6 +59,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Swift 6 Sendable compliance errors in BiometricAuthManager
 - iOS NavigationSplitView compatibility issues in ContentView
 - **Critical infinite recreation bug** in UniversalAddTripActivityRootView where @Observable view models were created directly in view body causing constant recreation and performance issues
+- Activity creation dialog dismissing immediately after selecting activity type by properly closing type selector in selectActivityType()
+- Calendar timezone display showing incorrect time stretching for events across different timezones - now displays consistent local time
+- Calendar scroll position resetting to 6am during dialog interactions by adding scroll state tracking and removing aggressive lifecycle handlers
+- Overlapping calendar components and layout chaos by fixing dialog state management and view lifecycle interference
 
 ### Security
 - Added NSFaceIDUsageDescription privacy permission for biometric authentication

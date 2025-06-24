@@ -18,12 +18,21 @@ A comprehensive travel planning and management app built with SwiftUI for iOS 18
 - Automatic organization linking to trips and activities
 - Smart organization suggestions based on past usage
 
+### 📅 Calendar & Timeline Views
+
+- Interactive calendar views (day, week, month) for trip visualization
+- Smooth activity creation workflow with intuitive type selection
+- Smart timezone conversion showing local time across all activities
+- Stable scroll positioning without jarring resets during interactions
+- Visual activity scheduling with drag-and-drop interface
+
 ### 🎯 Activity Tracking
 
 - Schedule activities with precise start/end times and timezones
 - Cost tracking with multiple currency support
 - Organization and location linking
 - File attachments for tickets, confirmations, and photos
+- Calendar integration for visual planning and timeline management
 
 ### 🚗 Transportation & 🏨 Lodging
 
