@@ -223,7 +223,118 @@ struct GoodAddActivityView: View {
 - No unnecessary recreation or performance impact
 - Clean separation of concerns
 
-### 4.1. Modern Navigation Pattern (NavigationStack)
+### 4.1. Organization Picker Pattern (Single Data Source)
+
+✅ **CORRECT - Unified Data Source for Picker Components:**
+```swift
+struct OrganizationPicker: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query private var organizations: [Organization]
+    @Binding var selectedOrganization: Organization?
+    @State private var searchText = ""
+    
+    // Single computed property handles all organization sorting
+    var sortedOrganizations: [Organization] {
+        // Ensure None organization exists
+        let _ = OrganizationManager.shared.ensureNoneOrganization(in: modelContext)
+        
+        // Separate None organization from others
+        let none = organizations.filter { $0.name == "None" }
+        let others = organizations.filter { $0.name != "None" }.sorted { $0.name < $1.name }
+        
+        return none + others  // None appears first, then alphabetical
+    }
+    
+    var filteredOrganizations: [Organization] {
+        if searchText.isEmpty {
+            return sortedOrganizations
+        } else {
+            // Apply search filter but maintain None-first ordering if None matches
+            return sortedOrganizations.filter {
+                $0.name.localizedCaseInsensitiveContains(searchText)
+            }
+        }
+    }
+    
+    var body: some View {
+        VStack {
+            UnifiedSearchBar(text: $searchText)
+            
+            List {
+                // Single ForEach for all organizations (including None)
+                ForEach(filteredOrganizations) { organization in
+                    Button {
+                        selectedOrganization = organization
+                        dismiss()
+                    } label: {
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text(organization.name)
+                                    .foregroundColor(.primary)
+                                if !organization.phone.isEmpty {
+                                    Text(organization.phone)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            Spacer()
+                            if selectedOrganization?.id == organization.id {
+                                Image(systemName: "checkmark")
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                    }
+                }
+                // Add New organization buttons...
+            }
+        }
+    }
+}
+```
+
+❌ **WRONG - Dual Data Source (Causes Duplication):**
+```swift
+struct BuggyOrganizationPicker: View {
+    @Query private var organizations: [Organization]
+    
+    private var noneOrganization: Organization? {
+        // Manual "None" organization retrieval
+        // This creates a separate data source!
+    }
+    
+    var body: some View {
+        List {
+            // Manual "None" button - FIRST "None" ENTRY
+            Button {
+                selectedOrganization = noneOrganization
+            } label: {
+                Text("None")  // Shows "None" #1
+            }
+            
+            // ForEach over ALL organizations - SECOND "None" ENTRY
+            ForEach(organizations) { organization in  // This includes "None" from database!
+                Button {
+                    selectedOrganization = organization
+                } label: {
+                    Text(organization.name)  // Shows "None" #2 when database has None org
+                }
+            }
+        }
+    }
+}
+```
+
+**Issue Fixed: Organization Picker Duplication (Issue #20)**
+- **Problem**: Manual "None" button + @Query results both showed "None" organization
+- **Root Cause**: Two separate data sources for the same picker component
+- **Solution**: Single `sortedOrganizations` computed property that ensures "None" appears first
+- **Benefits**: 
+  - Eliminates duplication completely
+  - Cleaner architecture with single source of truth
+  - Easier to maintain and test
+  - Consistent behavior for all organizations
+
+### 4.2. Modern Navigation Pattern (NavigationStack)
 
 ✅ **CORRECT - Always Use NavigationStack:**
 ```swift

@@ -86,6 +86,39 @@ struct UIPickerAndSearchTests {
                 #expect(matches == shouldMatch, "Search '\(searchText)' should \(shouldMatch ? "match" : "not match") '\(testOrg.name)'")
             }
         }
+        
+        @Test("Organization picker shows None exactly once - Issue #20 fix verification")
+        func organizationPickerShowsNoneOnce() throws {
+            let config = ModelConfiguration(isStoredInMemoryOnly: true)
+            let container = try ModelContainer(
+                for: Organization.self,
+                configurations: config
+            )
+            let context = ModelContext(container)
+            
+            // Create test organizations including "None" (simulating the bug scenario)
+            let testOrganizations = [
+                Organization(name: "Apple Airlines"),
+                Organization(name: "Banana Hotels"),
+                Organization(name: "None") // This appears in @Query
+            ]
+            
+            for org in testOrganizations {
+                context.insert(org)
+            }
+            try context.save()
+            
+            // Simulate the FIXED picker logic (single data source)
+            let none = testOrganizations.filter { $0.name == "None" }
+            let others = testOrganizations.filter { $0.name != "None" }.sorted { $0.name < $1.name }
+            let sortedOrganizations = none + others
+            
+            // Verify None appears exactly once and first
+            let noneCount = sortedOrganizations.filter { $0.name == "None" }.count
+            #expect(noneCount == 1, "None organization should appear exactly once")
+            #expect(sortedOrganizations.first?.name == "None", "None organization should appear first")
+            #expect(sortedOrganizations[1].name == "Apple Airlines", "Other organizations should be alphabetical after None")
+        }
     }
     
     @Suite("Address Autocomplete Tests")

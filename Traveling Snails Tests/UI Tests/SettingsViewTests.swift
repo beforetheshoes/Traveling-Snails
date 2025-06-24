@@ -156,7 +156,7 @@ struct SettingsViewTests {
             try context.save()
             
             // Test cleanup operation
-            Organization.cleanupDuplicateNoneOrganizations(in: context)
+            let _ = Organization.cleanupDuplicateNoneOrganizations(in: context)
             
             // Verify the cleanup worked
             let fetchDescriptor = FetchDescriptor<Organization>()

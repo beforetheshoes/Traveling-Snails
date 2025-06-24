@@ -16,19 +16,21 @@ struct OrganizationPicker: View {
     @State private var showingAddOrganization = false
     @State private var searchText = ""
     
-    // Get the actual persisted "None" organization
-    private var noneOrganization: Organization? {
-        switch OrganizationManager.shared.ensureNoneOrganization(in: modelContext) {
-        case .success(let result): return result.organization
-        case .failure: return nil
-        }
+    // Get sorted organizations with None first, then alphabetical
+    var sortedOrganizations: [Organization] {
+        // Separate None organization from others
+        let none = organizations.filter { $0.name == "None" }
+        let others = organizations.filter { $0.name != "None" }.sorted { $0.name < $1.name }
+        
+        return none + others
     }
     
     var filteredOrganizations: [Organization] {
         if searchText.isEmpty {
-            return organizations
+            return sortedOrganizations
         } else {
-            return organizations.filter {
+            // Apply search filter but maintain None-first ordering if None matches
+            return sortedOrganizations.filter {
                 $0.name.localizedCaseInsensitiveContains(searchText)
             }
         }
@@ -40,23 +42,7 @@ struct OrganizationPicker: View {
             UnifiedSearchBar(text: $searchText)
             
             List {
-                // None option
-                Button {
-                    selectedOrganization = noneOrganization
-                    dismiss()
-                } label: {
-                    HStack {
-                        Text("None")
-                            .foregroundColor(.primary)
-                        Spacer()
-                        if let noneOrg = noneOrganization, selectedOrganization?.id == noneOrg.id {
-                            Image(systemName: "checkmark")
-                                .foregroundColor(.blue)
-                        }
-                    }
-                }
-                
-                // Existing organizations
+                // All organizations (including None first, then alphabetical)
                 ForEach(filteredOrganizations) { organization in
                     Button {
                         selectedOrganization = organization

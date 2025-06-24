@@ -66,6 +66,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Calendar timezone display showing incorrect time stretching for events across different timezones - now displays consistent local time
 - Calendar scroll position resetting to 6am during dialog interactions by adding scroll state tracking and removing aggressive lifecycle handlers
 - Overlapping calendar components and layout chaos by fixing dialog state management and view lifecycle interference
+- Issue #20: None organization appearing twice in organization selector by refactoring OrganizationPicker to use single data source instead of manual button + query results
 
 ### Security
 - Added NSFaceIDUsageDescription privacy permission for biometric authentication

@@ -17,6 +17,7 @@ A comprehensive travel planning and management app built with SwiftUI for iOS 18
 - Store contact information, websites, and logos
 - Automatic organization linking to trips and activities
 - Smart organization suggestions based on past usage
+- Clean organization picker interface with proper "None" option handling
 
 ### 📅 Calendar & Timeline Views
 
