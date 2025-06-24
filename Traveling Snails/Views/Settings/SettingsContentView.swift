@@ -163,6 +163,11 @@ struct DataManagementSection: View {
             }
             .foregroundColor(.primary)
         }
+        .alert("Organization Cleanup", isPresented: $viewModel.showingOrganizationCleanupAlert) {
+            Button("OK") { }
+        } message: {
+            Text(viewModel.organizationCleanupMessage)
+        }
     }
 }
 

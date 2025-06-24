@@ -29,6 +29,10 @@ class SettingsViewModel {
     var importManager = DatabaseImportManager()
     var importResult: DatabaseImportManager.ImportResult?
     
+    // Organization cleanup feedback
+    var showingOrganizationCleanupAlert = false
+    var organizationCleanupMessage = ""
+    
     // MARK: - Initialization
     
     init(modelContext: ModelContext) {
@@ -107,7 +111,15 @@ class SettingsViewModel {
     }
     
     func cleanupNoneOrganizations() {
-        DataManagementService.cleanupNoneOrganizations(in: modelContext)
+        let duplicatesRemoved = DataManagementService.cleanupNoneOrganizations(in: modelContext)
+        
+        if duplicatesRemoved > 0 {
+            organizationCleanupMessage = "Successfully removed \(duplicatesRemoved) duplicate organization\(duplicatesRemoved == 1 ? "" : "s")"
+        } else {
+            organizationCleanupMessage = "No duplicate organizations found"
+        }
+        
+        showingOrganizationCleanupAlert = true
     }
     
     func handleImportResult(_ result: Result<[URL], Error>) {
@@ -170,10 +182,11 @@ extension SettingsViewModel {
 // MARK: - DataManagementService
 
 class DataManagementService {
-    static func cleanupNoneOrganizations(in modelContext: ModelContext) {
+    static func cleanupNoneOrganizations(in modelContext: ModelContext) -> Int {
         print("🧹 Starting cleanup of None organizations...")
-        Organization.cleanupDuplicateNoneOrganizations(in: modelContext)
+        let duplicatesRemoved = Organization.cleanupDuplicateNoneOrganizations(in: modelContext)
         print("✅ None organization cleanup completed")
+        return duplicatesRemoved
     }
     
     static func importDatabase(

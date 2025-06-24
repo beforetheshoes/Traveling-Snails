@@ -55,7 +55,7 @@ A comprehensive travel planning and management app built with SwiftUI for iOS 18
 - **Settings Sync**: Dark/light mode preferences and app settings automatically sync across all your devices in real-time
 - **Biometric Security**: Touch ID/Face ID protection for individual trips
 - **Adaptive Navigation**: Custom tab bar for iPad, native TabView for iPhone
-- **Database Management**: Built-in cleanup tools for data maintenance
+- **Database Management**: Built-in cleanup tools with user feedback for data maintenance
 - **Internationalization**: Support for 10+ languages
 - **Accessibility**: Full VoiceOver and accessibility support
 - **Dark Mode**: Full dark/light mode support with system integration and user preference persistence

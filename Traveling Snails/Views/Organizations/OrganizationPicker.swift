@@ -19,7 +19,7 @@ struct OrganizationPicker: View {
     // Get the actual persisted "None" organization
     private var noneOrganization: Organization? {
         switch OrganizationManager.shared.ensureNoneOrganization(in: modelContext) {
-        case .success(let org): return org
+        case .success(let result): return result.organization
         case .failure: return nil
         }
     }

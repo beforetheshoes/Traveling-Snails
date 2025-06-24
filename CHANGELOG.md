@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- User feedback for Fix Duplicate Organizations button with clear success/no duplicates messages
 - Database Cleanup Tool in Settings for removing test data and resetting database
 - Custom iPad tab bar for proper bottom navigation without title overlap
 - Enhanced test isolation with TestConfiguration.swift and TestGuard

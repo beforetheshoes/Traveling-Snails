@@ -17,7 +17,7 @@ final class OrganizationManager {
     // MARK: - None Organization Management
     
     /// Get or create the unique "None" organization
-    func ensureNoneOrganization(in context: ModelContext) -> AppResult<Organization> {
+    func ensureNoneOrganization(in context: ModelContext) -> AppResult<(organization: Organization, duplicatesRemoved: Int)> {
         do {
             let predicate = #Predicate<Organization> { org in
                 org.name == "None"
@@ -27,10 +27,10 @@ final class OrganizationManager {
             
             if noneOrganizations.isEmpty {
                 Logger.shared.logDatabase("Creating None organization", success: true)
-                return createNoneOrganization(in: context)
+                return createNoneOrganization(in: context).map { (organization: $0, duplicatesRemoved: 0) }
             } else if noneOrganizations.count == 1 {
                 Logger.shared.logDatabase("Found existing None organization", success: true)
-                return .success(noneOrganizations[0])
+                return .success((organization: noneOrganizations[0], duplicatesRemoved: 0))
             } else {
                 Logger.shared.warning("Found multiple None organizations, consolidating", category: .organization)
                 return consolidateNoneOrganizations(noneOrganizations, in: context)
@@ -52,7 +52,7 @@ final class OrganizationManager {
     private func consolidateNoneOrganizations(
         _ noneOrganizations: [Organization],
         in context: ModelContext
-    ) -> AppResult<Organization> {
+    ) -> AppResult<(organization: Organization, duplicatesRemoved: Int)> {
         guard let primaryNone = noneOrganizations.first else {
             return .failure(.organizationNotFound("None organization"))
         }
@@ -78,8 +78,10 @@ final class OrganizationManager {
             context.delete(duplicate)
         }
         
+        let duplicatesRemoved = noneOrganizations.count - 1
+        
         return context.safeSave(context: "Consolidating None organizations")
-            .map { primaryNone }
+            .map { (organization: primaryNone, duplicatesRemoved: duplicatesRemoved) }
     }
     
     // MARK: - Organization Validation
@@ -429,8 +431,8 @@ extension Organization {
     /// Convenience method to get the None organization
     static func getNoneOrganization(in context: ModelContext) -> Organization? {
         switch OrganizationManager.shared.ensureNoneOrganization(in: context) {
-        case .success(let org):
-            return org
+        case .success(let result):
+            return result.organization
         case .failure(let error):
             Logger.shared.logError(error, message: "Failed to get None organization", category: .organization)
             return nil

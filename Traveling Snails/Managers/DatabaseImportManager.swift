@@ -318,7 +318,7 @@ class DatabaseImportManager {
                 importProgress = 0.95
             }
             
-            Organization.cleanupDuplicateNoneOrganizations(in: modelContext)
+            _ = Organization.cleanupDuplicateNoneOrganizations(in: modelContext)
             
             // Save all changes
             await MainActor.run {
