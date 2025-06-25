@@ -8,7 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Logo URL and address fields in organization creation form with real-time security validation using SecureURLHandler
 - Comprehensive organization address picker tests (OrganizationAddressPickerTests.swift) with TDD approach
+
+### Fixed
+- Address picker in organization creation form now properly creates and saves address data when selected
+- Empty logo URL input no longer incorrectly triggers security validation blocking (empty URLs are now properly handled as acceptable)
 - Comprehensive organization navigation tests (OrganizationNavigationTests.swift) with TDD approach
 - English localization file (en.lproj/Localizable.strings) with comprehensive translations for all UI elements
 - Comprehensive security confirmation tests for Remove Protection functionality

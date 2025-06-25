@@ -129,6 +129,12 @@ struct AddOrganizationForm: View {
     @State private var phone = ""
     @State private var email = ""
     @State private var website = ""
+    @State private var logoURL = ""
+    @State private var logoURLSecurityLevel: SecureURLHandler.URLSecurityLevel = .safe
+    @State private var selectedAddress: Address?
+    @State private var showBlockedURLAlert = false
+    @State private var showSuspiciousURLAlert = false
+    @State private var errorMessage = ""
     
     init(prefilledName: String? = nil, onSave: @escaping (Organization) -> Void) {
         self.prefilledName = prefilledName
@@ -146,6 +152,30 @@ struct AddOrganizationForm: View {
                         .keyboardType(.emailAddress)
                     TextField("Website", text: $website)
                         .keyboardType(.URL)
+                    
+                    HStack {
+                        TextField("Logo URL", text: $logoURL)
+                            .keyboardType(.URL)
+                            .autocapitalization(.none)
+                            .onChange(of: logoURL) { _, newValue in
+                                let trimmedValue = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                                if trimmedValue.isEmpty {
+                                    logoURLSecurityLevel = .safe
+                                } else {
+                                    logoURLSecurityLevel = SecureURLHandler.evaluateURL(trimmedValue)
+                                }
+                            }
+                        
+                        // Security indicator
+                        securityIndicator(for: logoURLSecurityLevel)
+                    }
+                }
+                
+                Section("Address") {
+                    AddressAutocompleteView(
+                        selectedAddress: $selectedAddress,
+                        placeholder: "Enter organization address"
+                    )
                 }
             }
             .navigationTitle("Add Organization")
@@ -159,23 +189,7 @@ struct AddOrganizationForm: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
-                        let organization = Organization(
-                            name: name.trimmingCharacters(in: .whitespacesAndNewlines),
-                            phone: phone.trimmingCharacters(in: .whitespacesAndNewlines),
-                            email: email.trimmingCharacters(in: .whitespacesAndNewlines),
-                            website: website.trimmingCharacters(in: .whitespacesAndNewlines)
-                        )
-                        
-                        modelContext.insert(organization)
-                        
-                        do {
-                            try modelContext.save()
-                            onSave(organization)
-                            dismiss()
-                        } catch {
-                            // Handle error appropriately
-                            print("Failed to save organization: \(error)")
-                        }
+                        saveOrganization()
                     }
                     .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 }
@@ -185,6 +199,99 @@ struct AddOrganizationForm: View {
                     name = prefilledName
                 }
             }
+            .alert("Invalid URL", isPresented: $showBlockedURLAlert) {
+                Button("OK") { }
+            } message: {
+                Text(errorMessage)
+            }
+            .alert("Suspicious URL", isPresented: $showSuspiciousURLAlert) {
+                Button("Cancel") { }
+                Button("Save Anyway") {
+                    performSave()
+                }
+            } message: {
+                Text(errorMessage)
+            }
+        }
+    }
+    
+    private func securityIndicator(for level: SecureURLHandler.URLSecurityLevel) -> some View {
+        Group {
+            switch level {
+            case .safe:
+                if !logoURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                }
+            case .suspicious:
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .foregroundColor(.orange)
+            case .blocked:
+                Image(systemName: "xmark.circle.fill")
+                    .foregroundColor(.red)
+            }
+        }
+        .frame(width: 24, height: 24)
+    }
+    
+    private func saveOrganization() {
+        let trimmedLogoURL = logoURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Empty URL is acceptable - just save without validation
+        if trimmedLogoURL.isEmpty {
+            performSave()
+            return
+        }
+        
+        // Only validate non-empty URLs
+        let urlSecurityLevel = SecureURLHandler.evaluateURL(trimmedLogoURL)
+        
+        switch urlSecurityLevel {
+        case .blocked:
+            errorMessage = SecureURLHandler.alertMessage(for: .blocked, action: .cache, url: trimmedLogoURL)
+            showBlockedURLAlert = true
+        case .suspicious:
+            errorMessage = SecureURLHandler.alertMessage(for: .suspicious, action: .cache, url: trimmedLogoURL)
+            showSuspiciousURLAlert = true
+        case .safe:
+            performSave()
+        }
+    }
+    
+    private func performSave() {
+        let organization = Organization(
+            name: name.trimmingCharacters(in: .whitespacesAndNewlines),
+            phone: phone.trimmingCharacters(in: .whitespacesAndNewlines),
+            email: email.trimmingCharacters(in: .whitespacesAndNewlines),
+            website: website.trimmingCharacters(in: .whitespacesAndNewlines),
+            logoURL: logoURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        )
+        
+        // Handle address if selected
+        if let selectedAddress = selectedAddress {
+            // Ensure organization has an address object to update
+            if organization.address == nil {
+                organization.address = Address()
+            }
+            organization.address?.street = selectedAddress.street
+            organization.address?.city = selectedAddress.city
+            organization.address?.state = selectedAddress.state
+            organization.address?.country = selectedAddress.country
+            organization.address?.postalCode = selectedAddress.postalCode
+            organization.address?.latitude = selectedAddress.latitude
+            organization.address?.longitude = selectedAddress.longitude
+            organization.address?.formattedAddress = selectedAddress.formattedAddress
+        }
+        
+        modelContext.insert(organization)
+        
+        do {
+            try modelContext.save()
+            onSave(organization)
+            dismiss()
+        } catch {
+            // Handle error appropriately
+            print("Failed to save organization: \(error)")
         }
     }
 }
