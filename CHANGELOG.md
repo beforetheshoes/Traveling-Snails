@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Logo URL and address fields in organization creation form with real-time security validation using SecureURLHandler
 - Comprehensive organization address picker tests (OrganizationAddressPickerTests.swift) with TDD approach
+- Detailed issue diagnostics in DataBrowserView Issues tab showing specific problematic items instead of just counts
+- Expandable issue details with "Show/Hide" toggles for each issue type in database diagnostics
+- Smart truncation for large issue lists (first 10 items + "... and X more" indicator)
+- Enhanced DataBrowserIssueDetailsTests.swift with comprehensive TDD coverage for issue detail display functionality
 
 ### Fixed
 - Address picker in organization creation form now properly creates and saves address data when selected

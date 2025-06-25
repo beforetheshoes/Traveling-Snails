@@ -462,6 +462,8 @@ private struct DataBrowserIssuesTab: View {
     let results: DataBrowserView.DiagnosticResults
     let onSelectIssue: (DataBrowserView.IssueType) -> Void
     
+    @State private var expandedIssues: Set<DataBrowserView.IssueType> = []
+    
     var body: some View {
         List {
             if !results.hasIssues {
@@ -488,17 +490,38 @@ private struct DataBrowserIssuesTab: View {
                 ForEach(DataBrowserView.IssueType.allCases, id: \.self) { issueType in
                     let count = results.issueCount(for: issueType)
                     if count > 0 {
+                        let isExpanded = expandedIssues.contains(issueType)
                         Section {
-                            Button {
-                                onSelectIssue(issueType)
-                            } label: {
-                                IssueRowView(
+                            VStack(alignment: .leading, spacing: 0) {
+                                // Main issue row with expand/collapse functionality
+                                IssueRowWithDetailsView(
                                     type: issueType,
                                     count: count,
-                                    description: getIssueDescription(for: issueType, results: results)
+                                    description: getIssueDescription(for: issueType, results: results),
+                                    isExpanded: isExpanded,
+                                    onToggleExpanded: {
+                                        withAnimation(.easeInOut(duration: 0.3)) {
+                                            if isExpanded {
+                                                expandedIssues.remove(issueType)
+                                            } else {
+                                                expandedIssues.insert(issueType)
+                                            }
+                                        }
+                                    },
+                                    onSelectIssue: {
+                                        onSelectIssue(issueType)
+                                    }
                                 )
+                                
+                                // Expandable detailed items list
+                                if isExpanded {
+                                    IssueDetailsList(
+                                        issueType: issueType,
+                                        results: results
+                                    )
+                                    .padding(.top, 8)
+                                }
                             }
-                            .foregroundColor(.primary)
                         }
                     }
                 }
@@ -997,6 +1020,174 @@ private struct AllIssuesFixerContent: View {
             Spacer()
         }
         .padding()
+    }
+    
+    private func getDetailedItems(for type: DataBrowserView.IssueType) -> [String] {
+        switch type {
+        case .blankEntries:
+            var items: [String] = []
+            items.append(contentsOf: results.blankTransportation.map { "Transportation: \($0.type.rawValue) (no name)" })
+            items.append(contentsOf: results.blankLodging.map { _ in "Lodging: (no name)" })
+            items.append(contentsOf: results.blankActivities.map { _ in "Activity: (no name)" })
+            return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])
+            
+        case .orphanedData:
+            var items: [String] = []
+            items.append(contentsOf: results.orphanedTransportation.map { "Transportation: \($0.name.isEmpty ? $0.type.rawValue : $0.name)" })
+            items.append(contentsOf: results.orphanedLodging.map { "Lodging: \($0.name.isEmpty ? "Unnamed" : $0.name)" })
+            items.append(contentsOf: results.orphanedActivities.map { "Activity: \($0.name.isEmpty ? "Unnamed" : $0.name)" })
+            items.append(contentsOf: results.orphanedAddresses.map { "Address: \($0.displayAddress)" })
+            items.append(contentsOf: results.orphanedAttachments.map { "Attachment: \($0.fileName)" })
+            return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])
+            
+        case .duplicateRelationships:
+            var items: [String] = []
+            for (trip, duplicates) in results.duplicateTransportation {
+                items.append("Trip '\(trip.name)': \(duplicates.count) duplicate transportation entries")
+            }
+            for (trip, duplicates) in results.duplicateLodging {
+                items.append("Trip '\(trip.name)': \(duplicates.count) duplicate lodging entries")
+            }
+            for (trip, duplicates) in results.duplicateActivities {
+                items.append("Trip '\(trip.name)': \(duplicates.count) duplicate activity entries")
+            }
+            return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])
+            
+        case .invalidTimezones:
+            var items: [String] = []
+            items.append(contentsOf: results.invalidTimezoneTransportation.map { "Transportation: \($0.name.isEmpty ? $0.type.rawValue : $0.name) (timezone: \($0.startTZId))" })
+            items.append(contentsOf: results.invalidTimezoneLodging.map { "Lodging: \($0.name.isEmpty ? "Unnamed" : $0.name) (timezone: \($0.checkInTZId))" })
+            items.append(contentsOf: results.invalidTimezoneActivities.map { "Activity: \($0.name.isEmpty ? "Unnamed" : $0.name) (timezone: \($0.startTZId))" })
+            return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])
+            
+        case .invalidDates:
+            var items: [String] = []
+            items.append(contentsOf: results.invalidDateTransportation.map { "Transportation: \($0.name.isEmpty ? $0.type.rawValue : $0.name) (end before start)" })
+            items.append(contentsOf: results.invalidDateLodging.map { "Lodging: \($0.name.isEmpty ? "Unnamed" : $0.name) (end before start)" })
+            items.append(contentsOf: results.invalidDateActivities.map { "Activity: \($0.name.isEmpty ? "Unnamed" : $0.name) (end before start)" })
+            return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])
+            
+        case .missingOrganizations:
+            return Array(results.activitiesWithoutOrganizations.prefix(10)) + 
+                   (results.activitiesWithoutOrganizations.count > 10 ? ["... and \(results.activitiesWithoutOrganizations.count - 10) more"] : [])
+            
+        case .unusedAddresses:
+            let items = results.orphanedAddresses.map { "Address: \($0.displayAddress) - \($0.city)" }
+            return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])
+            
+        case .brokenAttachments:
+            let items = results.brokenAttachments.map { "Attachment: \($0.fileName) (size: \($0.fileSize) bytes)" }
+            return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])
+        }
+    }
+}
+
+// MARK: - Enhanced Issue Detail Components
+
+private struct IssueRowWithDetailsView: View {
+    let type: DataBrowserView.IssueType
+    let count: Int
+    let description: String
+    let isExpanded: Bool
+    let onToggleExpanded: () -> Void
+    let onSelectIssue: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Main issue header
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Image(systemName: type.icon)
+                            .foregroundColor(type.color)
+                            .font(.headline)
+                        
+                        Text(type.rawValue)
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                        
+                        Spacer()
+                        
+                        Text("\(count)")
+                            .font(.headline)
+                            .fontWeight(.bold)
+                            .foregroundColor(type.color)
+                    }
+                    
+                    Text(description)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.leading)
+                }
+                
+                Spacer()
+                
+                // Toggle details button
+                Button(action: onToggleExpanded) {
+                    HStack(spacing: 4) {
+                        Text(isExpanded ? "Hide" : "Show")
+                            .font(.caption)
+                        Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                            .font(.caption)
+                    }
+                    .foregroundColor(.blue)
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+            .padding(.vertical, 8)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                onToggleExpanded()
+            }
+            
+            // Fix button
+            HStack {
+                Spacer()
+                Button("Fix Issues") {
+                    onSelectIssue()
+                }
+                .font(.caption)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(type.color.opacity(0.2))
+                .foregroundColor(type.color)
+                .cornerRadius(8)
+            }
+            .padding(.top, 4)
+        }
+    }
+}
+
+private struct IssueDetailsList: View {
+    let issueType: DataBrowserView.IssueType
+    let results: DataBrowserView.DiagnosticResults
+    
+    var body: some View {
+        let detailedItems = getDetailedItems(for: issueType)
+        
+        if !detailedItems.isEmpty {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Affected Items:")
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+                    .padding(.leading, 24)
+                
+                VStack(alignment: .leading, spacing: 3) {
+                    ForEach(detailedItems, id: \.self) { item in
+                        Text("• \(item)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .padding(.leading, 32)
+                            .multilineTextAlignment(.leading)
+                    }
+                }
+            }
+            .padding(.vertical, 8)
+            .padding(.horizontal, 12)
+            .background(issueType.color.opacity(0.05))
+            .cornerRadius(8)
+        }
     }
     
     private func getDetailedItems(for type: DataBrowserView.IssueType) -> [String] {
