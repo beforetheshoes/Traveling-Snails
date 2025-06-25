@@ -141,8 +141,8 @@ struct AddressAutocompleteView: View {
         }
         .onAppear {
             setupSearchCompleter()
-            // Check if we already have a selected address
-            if selectedAddress != nil {
+            // Check if we already have a selected address (but not if it's empty)
+            if selectedAddress != nil && selectedAddress?.isEmpty == false {
                 hasSelectedAddress = true
                 if let address = selectedAddress {
                     searchText = address.displayAddress
@@ -151,12 +151,12 @@ struct AddressAutocompleteView: View {
         }
         .onChange(of: selectedAddress) { oldValue, newValue in
             // Handle external changes to selectedAddress
-            if newValue == nil && hasSelectedAddress {
-                // Address was cleared externally
+            if newValue == nil || newValue?.isEmpty == true {
+                // Address was cleared externally or is empty
                 hasSelectedAddress = false
                 searchText = ""
-            } else if newValue != nil && !hasSelectedAddress {
-                // Address was set externally
+            } else if newValue != nil && newValue?.isEmpty == false && !hasSelectedAddress {
+                // Address was set externally with valid data
                 hasSelectedAddress = true
                 if let address = newValue {
                     searchText = address.displayAddress

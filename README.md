@@ -14,7 +14,8 @@ A comprehensive travel planning and management app built with SwiftUI for iOS 18
 ### 🏢 Organization Management
 
 - Manage airlines, hotels, tour companies, and other travel organizations
-- Store contact information, websites, and logos
+- Store contact information, websites, logos, and addresses
+- Intelligent address picker with autocomplete and map integration
 - Automatic organization linking to trips and activities
 - Smart organization suggestions based on past usage
 - Clean organization picker interface with proper "None" option handling

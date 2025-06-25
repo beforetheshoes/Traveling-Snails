@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Comprehensive organization address picker tests (OrganizationAddressPickerTests.swift) with TDD approach
 - Comprehensive organization navigation tests (OrganizationNavigationTests.swift) with TDD approach
 - English localization file (en.lproj/Localizable.strings) with comprehensive translations for all UI elements
 - Comprehensive security confirmation tests for Remove Protection functionality
@@ -86,6 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Issue #21: Trip list selection doesn't navigate back from activity detail - clicking trip in list while viewing activity detail now properly returns to trip detail root instead of staying on activity screen
 - Issue #4: Attachments section in trip activity detail has layout issues - fixed localization keys showing instead of proper text, removed duplicate "Attachments" title, improved mobile UX with proper tap targets, completed file picker integration, and optimized thumbnail loading performance
 - Issue #17: Organization detail view no longer exists - only shows org title by connecting existing OrganizationDetailView and AddOrganizationForm to UnifiedNavigationView.organizations() instead of placeholder text
+- Issue #24: Organization address picker phantom "Selected Address:" display appearing for empty addresses, requiring clear action before adding new addresses, and address selections not saving properly
 
 ### Security
 - Added NSFaceIDUsageDescription privacy permission for biometric authentication

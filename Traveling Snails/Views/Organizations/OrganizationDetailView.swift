@@ -204,7 +204,7 @@ struct OrganizationDetailView: View {
         editedEmail = organization.email
         editedWebsite = organization.website
         editedLogoURL = organization.logoURL
-        editedAddress = organization.address
+        editedAddress = (organization.address?.isEmpty == false) ? organization.address : nil
         isEditing = true
     }
      
@@ -241,6 +241,10 @@ struct OrganizationDetailView: View {
         organization.logoURL = editedLogoURL
         
         if let newAddress = editedAddress {
+            // Ensure organization has an address object to update
+            if organization.address == nil {
+                organization.address = Address()
+            }
             organization.address?.street = newAddress.street
             organization.address?.city = newAddress.city
             organization.address?.state = newAddress.state
