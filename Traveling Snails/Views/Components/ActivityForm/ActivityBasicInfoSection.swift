@@ -52,41 +52,52 @@ struct ActivityBasicInfoSection<T: TripActivityProtocol>: View {
                 }
             }
         }
+        .frame(maxWidth: .infinity)  // Force container to take full width
     }
     
     // MARK: - Header Content
     
     private var headerContent: some View {
         VStack(spacing: 16) {
-            // Activity Icon
-            ActivityHeaderView(
-                icon: icon,
-                color: color,
-                title: ""
-            )
+            // Activity Icon (centered, prominent)
+            Image(systemName: icon)
+                .font(.system(size: 50))
+                .foregroundColor(color)
+                .padding(12)
+                .background(color.opacity(0.1))
+                .clipShape(Circle())
             
-            // Name Field
-            if isEditing {
-                ActivityFormField(
-                    label: "Name",
-                    text: $editData.name,
-                    placeholder: activityTypeName + " Name"
-                )
-            } else {
-                HStack {
-                    Text(editData.name.isEmpty ? "Unnamed Activity" : editData.name)
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                    
-                    // Show attachment indicator if attachments exist
-                    if attachmentCount > 0 {
-                        Image(systemName: "paperclip")
+            // Name content (centered like the icon)
+            VStack(spacing: 12) {
+                if isEditing {
+                    ActivityFormField(
+                        label: "Name",
+                        text: $editData.name,
+                        placeholder: activityTypeName + " Name"
+                    )
+                } else {
+                    VStack(spacing: 8) {
+                        Text("Name")
                             .font(.caption)
                             .foregroundColor(.secondary)
+                        
+                        HStack {
+                            Text(editData.name.isEmpty ? "Unnamed Activity" : editData.name)
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                            
+                            // Show attachment indicator if attachments exist
+                            if attachmentCount > 0 {
+                                Image(systemName: "paperclip")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
                     }
                 }
             }
         }
+        .frame(maxWidth: .infinity)  // Force content to take full width
     }
     
     // MARK: - Transportation Type Picker

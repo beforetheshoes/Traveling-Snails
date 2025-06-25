@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Real-time Icon Updates**: Transportation type changes in forms immediately update icons without requiring save
 
 ### Fixed
+- **Basic Information section horizontal margin inconsistency**: Fixed ActivityBasicInfoSection container auto-sizing issue by applying Double Frame Pattern (.frame(maxWidth: .infinity) on both content and container), ensuring section takes full width while maintaining centered content design. Resolves Issue #27 alignment inconsistency across all activity view modes (view, edit, add) on both iOS and iPadOS
 - Address picker in organization creation form now properly creates and saves address data when selected
 - Empty logo URL input no longer incorrectly triggers security validation blocking (empty URLs are now properly handled as acceptable)
 - Comprehensive organization navigation tests (OrganizationNavigationTests.swift) with TDD approach

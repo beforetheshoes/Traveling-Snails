@@ -110,7 +110,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
                     deleteButton
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 16)
         }
         .navigationTitle(isEditing ? "Edit \(activity.activityType.rawValue)" : "\(activity.activityType.rawValue) Details")
         .navigationBarTitleDisplayMode(.inline)
