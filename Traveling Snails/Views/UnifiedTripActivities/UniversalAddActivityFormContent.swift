@@ -35,7 +35,7 @@ struct UniversalAddActivityFormContent: View {
     
     private var headerSection: some View {
         ActivityHeaderView(
-            icon: viewModel.icon,
+            icon: viewModel.currentIcon,
             color: colorFromString(viewModel.color),
             title: viewModel.activityType.displayName
         )
@@ -117,7 +117,7 @@ struct UniversalAddActivityFormContent: View {
     private var scheduleSection: some View {
         ActivitySectionCard(
             headerIcon: viewModel.activityType == .lodging ? "calendar.badge.plus" :
-                        viewModel.activityType == .transportation ? "airplane" : "clock.fill",
+                        viewModel.activityType == .transportation ? viewModel.currentIcon : "clock.fill",
             headerTitle: "Schedule",
             headerColor: colorFromString(viewModel.color)
         ) {

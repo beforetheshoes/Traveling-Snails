@@ -32,6 +32,18 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
         }
     }
     
+    /// Dynamic icon that updates based on current transportation type selection in edit mode
+    private var currentIcon: String {
+        // In edit mode for transportation activities, use the selected transportation type icon
+        if isEditing,
+           case .transportation = activity.activityType,
+           let transportationType = editData.transportationType {
+            return transportationType.systemImage
+        }
+        // Otherwise, use the activity's default icon
+        return activity.icon
+    }
+    
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
@@ -41,7 +53,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
                     editData: $editData,
                     isEditing: isEditing,
                     color: activity.color,
-                    icon: activity.icon,
+                    icon: currentIcon,
                     attachmentCount: attachments.count
                 )
                 

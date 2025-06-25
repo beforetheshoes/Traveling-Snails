@@ -39,7 +39,7 @@ struct ActivityRowView: View {
         HStack(spacing: 12) {
             // Icon
             ZStack {
-                Image(systemName: wrapper.type.icon)
+                Image(systemName: wrapper.tripActivity.icon)
                     .font(.title3)
                     .foregroundColor(.white)
                     .frame(width: 44, height: 44)

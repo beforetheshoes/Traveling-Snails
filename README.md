@@ -37,10 +37,13 @@ A comprehensive travel planning and management app built with SwiftUI for iOS 18
 - Organization and location linking
 - File attachments for tickets, confirmations, and photos
 - Calendar integration for visual planning and timeline management
+- **Reusable Component Architecture**: Modular activity form sections providing consistent UI patterns across add/edit/detail views with 63% code reduction
 
 ### 🚗 Transportation & 🏨 Lodging
 
 - Dedicated sections for flights, trains, rental cars, and accommodations
+- **Smart transportation type icons** that display specific icons (✈️ airplane, 🚂 train, ⛴️ ferry, 🚗 car, 🚲 bicycle, 🚶 walking) in activity lists and forms
+- **Real-time icon updates** when changing transportation types during activity creation and editing
 - Confirmation number tracking
 - Integration with organizations and trip timelines
 - Cost analysis across all transportation and lodging
@@ -137,6 +140,8 @@ Traveling Snails/
 │   ├── Organizations/      # Organization management
 │   ├── FileAttachments/    # File management views
 │   ├── Settings/           # App settings and configuration
+│   ├── Components/         # Reusable UI components
+│   │   └── ActivityForm/   # Modular activity section components
 │   └── Unified/            # Shared navigation and utility views
 ├── ViewModels/             # @Observable view models
 ├── Managers/               # Business logic and data management
@@ -147,6 +152,7 @@ Traveling Snails/
 ### Key Architectural Components
 
 - **Unified Navigation System**: Consistent navigation patterns across all sections
+- **Reusable Component System**: Modular activity form sections that eliminate code duplication and ensure UI consistency
 - **Error Handling**: Centralized error management with user-friendly messages
 - **Logging System**: Comprehensive logging using native Logger framework
 - **Localization Manager**: Dynamic language switching with 10+ language support

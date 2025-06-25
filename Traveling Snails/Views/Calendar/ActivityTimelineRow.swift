@@ -30,7 +30,7 @@ struct ActivityTimelineRow: View {
             // Activity content
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
-                    Image(systemName: wrapper.type.icon)
+                    Image(systemName: wrapper.tripActivity.icon)
                         .foregroundColor(wrapper.type.color)
                         .font(.caption)
                     

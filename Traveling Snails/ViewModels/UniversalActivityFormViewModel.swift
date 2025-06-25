@@ -91,6 +91,17 @@ class UniversalActivityFormViewModel {
     var activityType: ActivityType { activitySaver.activityType }
     var icon: String { activitySaver.icon }
     var color: String { activitySaver.color }
+    
+    /// Dynamic icon that updates based on current transportation type selection
+    var currentIcon: String {
+        // For transportation activities, use the selected transportation type icon
+        if case .transportation = activityType,
+           let transportationType = editData.transportationType {
+            return transportationType.systemImage
+        }
+        // For other activity types, use the default icon
+        return icon
+    }
     var startLabel: String { activitySaver.startLabel }
     var endLabel: String { activitySaver.endLabel }
     var confirmationLabel: String { activitySaver.confirmationLabel }

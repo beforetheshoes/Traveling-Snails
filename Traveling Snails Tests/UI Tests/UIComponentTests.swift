@@ -192,6 +192,11 @@ struct UIComponentTests {
             
             #expect(activityWrapper.type.icon == "ticket.fill")
             #expect(activityWrapper.type.color == .purple)
+            
+            // Test specific transportation activity icon (default is plane)
+            // Generic type icon should be "car.fill", but specific activity icon should be "airplane"
+            #expect(transportationWrapper.tripActivity.icon == "airplane", "Transportation with default plane type should show airplane icon")
+            #expect(transportationWrapper.type.icon != transportationWrapper.tripActivity.icon, "Generic type icon should differ from specific transportation icon")
         }
     }
     
