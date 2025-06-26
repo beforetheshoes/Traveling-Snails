@@ -63,6 +63,7 @@ A comprehensive travel planning and management app built with SwiftUI for iOS 18
 - **iOS 18+ Native**: Built with latest SwiftUI and SwiftData
 - **Cross-Device Sync**: iCloud integration for seamless device synchronization of all travel data (trips, activities, organizations) plus automatic settings sync using iCloud Key-Value Store
 - **Settings Sync**: Dark/light mode preferences and app settings automatically sync across all your devices in real-time
+- **Import/Export with Enhanced Data Integrity**: Comprehensive data backup and restore functionality with robust file access permission management, complete file attachment relationship preservation, trip protection status retention, user-friendly error messages, and graceful handling of permission failures, security-scoped resources, and large files
 - **Biometric Security**: Touch ID/Face ID protection for individual trips
 - **Adaptive Navigation**: Custom tab bar for iPad, native TabView for iPhone with intelligent deep navigation handling - trip selection from list properly returns to trip root when viewing activity details
 - **Database Management**: Built-in cleanup tools with user feedback for data maintenance and detailed issue diagnostics showing specific problematic items

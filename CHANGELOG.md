@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Import Permission Handling**: Comprehensive file access permission management for data import operations with pre-validation, user-friendly error messages, and graceful failure handling
+- Enhanced DatabaseImportManager with file accessibility checks, security-scoped resource validation, and 100MB file size limits
+- EmbeddedFileAttachmentManager.saveFileWithResult() method returning Result<EmbeddedFileAttachment, FileAttachmentError> for detailed error handling
+- SettingsViewModel error state management with importError and showingImportError properties for user feedback
+- FileAttachmentError enum with specific error types (securityScopedResourceAccessDenied, fileDataEmpty, fileReadError, unknownError)
+- ImportPermissionError enum with localized descriptions and recovery suggestions for various import failure scenarios
+- Comprehensive ImportPermissionTests.swift following TDD methodology with test cases for permission failures, file accessibility, and error message quality
+- **Export Protection Warning**: Enhanced DatabaseExportView with visual warning for users with protected trips, explaining that trip protection status is preserved in exports but data is stored in plain text format
+- **Comprehensive Export/Import Test Suite**: ImportExportFixesTests.swift with validation for trip protection preservation and file attachment relationship restoration
 - Logo URL and address fields in organization creation form with real-time security validation using SecureURLHandler
 - Comprehensive organization address picker tests (OrganizationAddressPickerTests.swift) with TDD approach
 - Detailed issue diagnostics in DataBrowserView Issues tab showing specific problematic items instead of just counts
@@ -21,6 +30,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Real-time Icon Updates**: Transportation type changes in forms immediately update icons without requiring save
 
 ### Fixed
+- **Import data permission failures (Issue #13)**: Comprehensive fix for file access permission issues during data import operations. Enhanced DatabaseImportManager with pre-validation checks, proper security-scoped resource handling in EmbeddedFileAttachmentManager, and user-friendly error messages replacing technical error codes. Import operations now gracefully handle permission denials, missing files, corrupted data, and large file sizes with clear guidance for users on how to resolve issues
+- **File attachment restoration during import**: Fixed critical bug where file attachments were imported but not linked to their parent activities, lodging, or transportation. Enhanced export format to include parentType and parentId fields, and updated import process to restore attachment relationships correctly
+- **Trip protection status lost during export/import**: Fixed bug where protected trip status (isProtected) was not preserved during export/import cycles. Added isProtected field to both JSON and CSV exports, and enhanced import process to restore protection status correctly. Legacy imports without protection field default to unprotected for safety
 - **Basic Information section horizontal margin inconsistency**: Fixed ActivityBasicInfoSection container auto-sizing issue by applying Double Frame Pattern (.frame(maxWidth: .infinity) on both content and container), ensuring section takes full width while maintaining centered content design. Resolves Issue #27 alignment inconsistency across all activity view modes (view, edit, add) on both iOS and iPadOS
 - Address picker in organization creation form now properly creates and saves address data when selected
 - Empty logo URL input no longer incorrectly triggers security validation blocking (empty URLs are now properly handled as acceptable)

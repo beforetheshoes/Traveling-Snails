@@ -49,6 +49,15 @@ struct DatabaseExportView: View {
         UIDevice.current.userInterfaceIdiom == .pad ? 80 : 20
     }
     
+    // Check for protected trips
+    private var hasProtectedTrips: Bool {
+        allTrips.contains { $0.isProtected }
+    }
+    
+    private var protectedTripsCount: Int {
+        allTrips.filter { $0.isProtected }.count
+    }
+    
     var body: some View {
         NavigationStack {
             VStack(spacing: 20) {
@@ -151,6 +160,35 @@ struct DatabaseExportView: View {
                             .padding()
                             .background(Color(.systemGray6))
                             .cornerRadius(12)
+                        }
+                        
+                        // Protection Status Warning
+                        if hasProtectedTrips {
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack {
+                                    Image(systemName: "lock.trianglebadge.exclamationmark")
+                                        .foregroundColor(.orange)
+                                    Text("Protected Trips Notice")
+                                        .font(.headline)
+                                        .foregroundColor(.orange)
+                                }
+                                
+                                Text("You have \(protectedTripsCount) protected trip\(protectedTripsCount == 1 ? "" : "s"). Trip protection status will be preserved in the export and restored during import.")
+                                    .font(.callout)
+                                    .foregroundColor(.secondary)
+                                
+                                Text("⚠️ Important: External export files contain trip data in plain text format. For maximum security, consider using internal app backups for protected trips.")
+                                    .font(.caption)
+                                    .foregroundColor(.orange)
+                                    .padding(.top, 4)
+                            }
+                            .padding()
+                            .background(Color.orange.opacity(0.1))
+                            .cornerRadius(12)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                            )
                         }
                         
                         VStack(spacing: 12) {
@@ -257,9 +295,9 @@ struct DatabaseExportView: View {
         
         // Trips CSV
         csv += "=== TRIPS ===\n"
-        csv += "ID,Name,Notes,Start Date,End Date,Has Start Date,Has End Date,Total Cost\n"
+        csv += "ID,Name,Notes,Start Date,End Date,Has Start Date,Has End Date,Total Cost,Is Protected\n"
         for trip in allTrips {
-            csv += "\"\(trip.id)\",\"\(trip.name)\",\"\(trip.notes)\",\"\(trip.startDate)\",\"\(trip.endDate)\",\(trip.hasStartDate),\(trip.hasEndDate),\(trip.totalCost)\n"
+            csv += "\"\(trip.id)\",\"\(trip.name)\",\"\(trip.notes)\",\"\(trip.startDate)\",\"\(trip.endDate)\",\(trip.hasStartDate),\(trip.hasEndDate),\(trip.totalCost),\(trip.isProtected)\n"
         }
         
         // Transportation CSV
@@ -305,6 +343,7 @@ struct DatabaseExportView: View {
             "hasStartDate": trip.hasStartDate,
             "hasEndDate": trip.hasEndDate,
             "totalCost": NSDecimalNumber(decimal: trip.totalCost).doubleValue,
+            "isProtected": trip.isProtected,
             "transportation": trip.transportation.map { $0.id.uuidString },
             "lodging": trip.lodging.map { $0.id.uuidString },
             "activities": trip.activity.map { $0.id.uuidString }
@@ -409,6 +448,18 @@ struct DatabaseExportView: View {
             "createdDate": ISO8601DateFormatter().string(from: attachment.createdDate),
             "fileDescription": attachment.fileDescription
         ]
+        
+        // Include parent relationship information for proper restoration
+        if let activity = attachment.activity {
+            dict["parentType"] = "activity"
+            dict["parentId"] = activity.id.uuidString
+        } else if let lodging = attachment.lodging {
+            dict["parentType"] = "lodging"
+            dict["parentId"] = lodging.id.uuidString
+        } else if let transportation = attachment.transportation {
+            dict["parentType"] = "transportation"
+            dict["parentId"] = transportation.id.uuidString
+        }
         
         if includeAttachments, let fileData = attachment.fileData {
             dict["fileData"] = fileData.base64EncodedString()
