@@ -10,6 +10,7 @@ import SwiftData
 /// Root view for settings - coordinates ViewModel and handles dependencies
 struct SettingsRootView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.serviceContainer) private var serviceContainer
     
     @State private var viewModel: SettingsViewModel?
     
@@ -21,7 +22,8 @@ struct SettingsRootView: View {
                 } else {
                     ProgressView("Loading Settings...")
                         .onAppear {
-                            viewModel = SettingsViewModel(modelContext: modelContext)
+                            let authService = serviceContainer.resolve(AuthenticationService.self)
+                            viewModel = SettingsViewModel(modelContext: modelContext, authService: authService)
                         }
                 }
             }

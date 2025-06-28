@@ -4,7 +4,20 @@ import SwiftUI
 @Observable
 @MainActor
 class BiometricAuthManager {
-    static let shared = BiometricAuthManager()
+    static let shared: BiometricAuthManager = {
+        // Add runtime validation to warn about singleton access during tests
+        #if DEBUG
+        let isRunningTests = UserDefaults.standard.bool(forKey: "isRunningTests") ||
+                           NSClassFromString("XCTestCase") != nil ||
+                           ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        if isRunningTests {
+            Logger.shared.warning("⚠️ BiometricAuthManager.shared accessed during test execution! This bypasses dependency injection and may cause hanging. Use injected AuthenticationService instead.")
+            // Print stack trace for debugging
+            Thread.callStackSymbols.forEach { Logger.shared.debug("  \($0)") }
+        }
+        #endif
+        return BiometricAuthManager()
+    }()
     
     // Simple session tracking - which trips are authenticated this session
     private var authenticatedTripIDs: Set<UUID> = []
@@ -55,7 +68,7 @@ class BiometricAuthManager {
         #else
         // THIRD: Real device, non-test - safe to use LAContext
         let context = LAContext()
-        context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil)
+        context.canEvaluatePolicy(.deviceOwnerAuthentication, error: nil)
         switch context.biometryType {
         case .faceID:
             return .faceID
@@ -92,7 +105,7 @@ class BiometricAuthManager {
         #else
         // THIRD: Real device, non-test - safe to use LAContext
         let context = LAContext()
-        return context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil)
+        return context.canEvaluatePolicy(.deviceOwnerAuthentication, error: nil)
         #endif
     }
     
@@ -143,17 +156,6 @@ class BiometricAuthManager {
         }
         #endif
         
-        #if targetEnvironment(simulator)
-        // On simulator, ALWAYS skip biometric authentication to prevent hanging
-        #if DEBUG
-        Logger.shared.debug("Simulator environment detected, skipping biometric authentication")
-        #endif
-        let _ = await MainActor.run {
-            self.authenticatedTripIDs.insert(tripId)
-        }
-        return true
-        #endif
-        
         // Check if trip is protected on main actor
         let effectivelyProtected = await MainActor.run {
             self.isEnabled && tripIsProtected
@@ -179,6 +181,17 @@ class BiometricAuthManager {
             return true
         }
         
+        // Perform authentication (platform-specific behavior)
+        #if targetEnvironment(simulator)
+        // On simulator, ALWAYS skip biometric authentication to prevent hanging
+        #if DEBUG
+        Logger.shared.debug("Simulator environment detected, skipping biometric authentication")
+        #endif
+        let _ = await MainActor.run {
+            self.authenticatedTripIDs.insert(tripId)
+        }
+        return true
+        #else
         // Real device - perform actual biometric authentication
         #if DEBUG
         Logger.shared.debug("Real device detected, proceeding with actual biometric authentication")
@@ -189,7 +202,7 @@ class BiometricAuthManager {
         
         // Check if biometrics are available before attempting authentication
         var error: NSError?
-        guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) else {
+        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
             #if DEBUG
             if let error = error {
                 Logger.shared.debug("Biometrics not available: \(error.localizedDescription)")
@@ -213,7 +226,7 @@ class BiometricAuthManager {
             group.addTask {
                 do {
                     let result = try await context.evaluatePolicy(
-                        .deviceOwnerAuthenticationWithBiometrics,
+                        .deviceOwnerAuthentication,
                         localizedReason: "Authenticate to access protected content"
                     )
                     
@@ -302,6 +315,7 @@ class BiometricAuthManager {
             group.cancelAll()
             return result
         }
+        #endif
     }
     
     func lockTrip(_ trip: Trip) {
@@ -344,6 +358,15 @@ class BiometricAuthManager {
     }
     
     var allTripsLocked: Bool {
+        // Add runtime validation to warn about singleton access during tests
+        #if DEBUG
+        let isRunningTests = UserDefaults.standard.bool(forKey: "isRunningTests") ||
+                           NSClassFromString("XCTestCase") != nil ||
+                           ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+        if isRunningTests {
+            Logger.shared.warning("⚠️ BiometricAuthManager.allTripsLocked accessed during test execution! This bypasses dependency injection and may cause hanging. Use injected AuthenticationService instead.")
+        }
+        #endif
         return authenticatedTripIDs.isEmpty
     }
     

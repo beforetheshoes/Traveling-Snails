@@ -150,7 +150,8 @@ struct ImportPermissionTests {
             // This test will FAIL initially - permission failures are not handled gracefully
             
             let testBase = SwiftDataTestBase()
-            let viewModel = SettingsViewModel(modelContext: testBase.modelContext)
+            let mockAuthService = MockAuthenticationService()
+            let viewModel = SettingsViewModel(modelContext: testBase.modelContext, authService: mockAuthService)
             
             // Simulate a file import result with permission failure
             let permissionFailureResult: Result<[URL], Error> = .failure(
