@@ -14,8 +14,9 @@ struct ImportExportFixesTests {
     struct TripProtectionTests {
         
         @Test("Trip protection status should be included in export data structure")
+        @MainActor
         func testTripProtectionInExportData() async {
-            let testBase = await SwiftDataTestBase()
+            let testBase = SwiftDataTestBase()
             
             // Create a protected trip
             let originalTrip = Trip(name: "Protected Test Trip", isProtected: true)
@@ -41,8 +42,9 @@ struct ImportExportFixesTests {
         }
         
         @Test("Unprotected trip export data should include false protection status")
+        @MainActor
         func testUnprotectedTripExportData() async {
-            let testBase = await SwiftDataTestBase()
+            let testBase = SwiftDataTestBase()
             
             // Create an unprotected trip
             let originalTrip = Trip(name: "Regular Test Trip", isProtected: false)
@@ -66,8 +68,9 @@ struct ImportExportFixesTests {
         }
         
         @Test("Trip model correctly stores protection status")
+        @MainActor
         func testTripProtectionProperty() async {
-            let testBase = await SwiftDataTestBase()
+            _ = SwiftDataTestBase()
             
             // Test protected trip creation
             let protectedTrip = Trip(name: "Protected Trip", isProtected: true)
@@ -87,8 +90,9 @@ struct ImportExportFixesTests {
     struct AttachmentRelationshipTests {
         
         @Test("Attachment parent relationship should be preserved in export data")
+        @MainActor
         func testAttachmentExportRelationship() async {
-            let testBase = await SwiftDataTestBase()
+            let testBase = SwiftDataTestBase()
             
             // Create test data
             let trip = Trip(name: "Test Trip")
@@ -131,14 +135,15 @@ struct ImportExportFixesTests {
         }
         
         @Test("Attachment model should support all three parent relationship types")
+        @MainActor
         func testAttachmentRelationshipTypes() async {
-            let testBase = await SwiftDataTestBase()
+            let testBase = SwiftDataTestBase()
             
             // Create test entities
             let trip = Trip(name: "Test Trip")
             let activity = Activity(name: "Test Activity", trip: trip)
             let lodging = Lodging(name: "Test Hotel", trip: trip)
-            let transportation = Transportation(name: "Test Flight", type: .airplane, trip: trip)
+            let transportation = Transportation(name: "Test Flight", type: .plane, trip: trip)
             
             testBase.modelContext.insert(trip)
             testBase.modelContext.insert(activity)
@@ -162,8 +167,9 @@ struct ImportExportFixesTests {
         }
         
         @Test("Export data should include parent relationship information")
+        @MainActor
         func testAttachmentExportDataStructure() async {
-            let testBase = await SwiftDataTestBase()
+            _ = SwiftDataTestBase()
             
             // Create test data
             let trip = Trip(name: "Test Trip")

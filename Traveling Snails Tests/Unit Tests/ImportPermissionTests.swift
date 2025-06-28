@@ -16,9 +16,10 @@ struct ImportPermissionTests {
     struct DatabaseImportPermissionTests {
         
         @Test("Database import should handle file access permission failures gracefully")
+        @MainActor
         func testDatabaseImportFileAccessFailure() async {
             // This test will FAIL initially - no proper permission error handling exists
-            let testBase = await SwiftDataTestBase()
+            let testBase = SwiftDataTestBase()
             let importManager = DatabaseImportManager()
             
             // Create a file URL that will fail permission checks
@@ -35,9 +36,10 @@ struct ImportPermissionTests {
         }
         
         @Test("Database import should validate file readability before processing")
+        @MainActor
         func testDatabaseImportFileReadabilityCheck() async {
             // This test will FAIL initially - no pre-validation exists
-            let testBase = await SwiftDataTestBase()
+            let testBase = SwiftDataTestBase()
             let importManager = DatabaseImportManager()
             
             // Create a non-existent file URL
@@ -53,9 +55,10 @@ struct ImportPermissionTests {
         }
         
         @Test("Database import should provide user-friendly error messages for permission failures")
+        @MainActor
         func testDatabaseImportUserFriendlyErrors() async {
             // This test will FAIL initially - errors are not user-friendly
-            let testBase = await SwiftDataTestBase()
+            let testBase = SwiftDataTestBase()
             let importManager = DatabaseImportManager()
             
             // Test with a restricted system file
@@ -79,6 +82,7 @@ struct ImportPermissionTests {
     struct SecurityScopedResourceTests {
         
         @Test("EmbeddedFileAttachmentManager should handle security-scoped resource failures")
+        @MainActor
         func testSecurityScopedResourceFailure() {
             // This test will FAIL initially - no proper error handling for security-scoped resources
             let manager = EmbeddedFileAttachmentManager.shared
@@ -93,6 +97,7 @@ struct ImportPermissionTests {
         }
         
         @Test("EmbeddedFileAttachmentManager should provide detailed error information for access failures")
+        @MainActor
         func testDetailedErrorInformationForAccessFailures() {
             // This test will FAIL initially - no detailed error reporting exists
             let manager = EmbeddedFileAttachmentManager.shared
@@ -111,6 +116,7 @@ struct ImportPermissionTests {
         }
         
         @Test("File access validation should distinguish between different failure types")
+        @MainActor
         func testFileAccessFailureTypes() {
             // This test will FAIL initially - no distinction between failure types
             
@@ -139,11 +145,12 @@ struct ImportPermissionTests {
     struct FileImporterPermissionTests {
         
         @Test("Settings file import should handle permission failures gracefully")
+        @MainActor
         func testSettingsFileImportPermissionFailure() async {
             // This test will FAIL initially - permission failures are not handled gracefully
             
-            let testBase = await SwiftDataTestBase()
-            let viewModel = await SettingsViewModel(modelContext: testBase.modelContext)
+            let testBase = SwiftDataTestBase()
+            let viewModel = SettingsViewModel(modelContext: testBase.modelContext)
             
             // Simulate a file import result with permission failure
             let permissionFailureResult: Result<[URL], Error> = .failure(
@@ -153,7 +160,7 @@ struct ImportPermissionTests {
             )
             
             // This should be handled gracefully - currently it just prints the error
-            await viewModel.handleImportResult(permissionFailureResult)
+            viewModel.handleImportResult(permissionFailureResult)
             
             // The test documents that we need better error handling
             // Currently, errors are only printed to console
@@ -161,6 +168,7 @@ struct ImportPermissionTests {
         }
         
         @Test("File importer should handle document access scope properly")
+        @MainActor
         func testDocumentAccessScopeHandling() async {
             // This test will FAIL initially - no proper document access scope handling
             
@@ -168,7 +176,7 @@ struct ImportPermissionTests {
             // the security-scoped resource is handled properly
             
             // Create a mock URL that would come from document picker
-            let documentURL = URL(fileURLWithPath: "/tmp/test_import.json")
+            let documentURL = FileManager.default.temporaryDirectory.appendingPathComponent("test_import.json")
             
             // Create test JSON data
             let testJSON = """
@@ -199,7 +207,7 @@ struct ImportPermissionTests {
             }
             
             // Test import process
-            let testBase = await SwiftDataTestBase()
+            let testBase = SwiftDataTestBase()
             let importManager = DatabaseImportManager()
             
             let result = await importManager.importDatabase(from: documentURL, into: testBase.modelContext)
@@ -216,6 +224,7 @@ struct ImportPermissionTests {
     struct ErrorMessageQualityTests {
         
         @Test("Permission error messages should guide users to solutions")
+        @MainActor
         func testPermissionErrorGuidance() {
             // This test will FAIL initially - error messages don't provide guidance
             
@@ -232,6 +241,7 @@ struct ImportPermissionTests {
         }
         
         @Test("Import errors should distinguish between different permission types")
+        @MainActor
         func testPermissionErrorTypes() {
             // This test will FAIL initially - we don't have specific permission error types
             
@@ -266,13 +276,13 @@ enum ImportPermissionError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .fileNotFound(let filename):
-            return "The file '\(filename)' could not be found. Please check that the file exists and try again."
+            return "The file '\(filename)' was not found. Please check that the file exists and try again."
         case .fileAccessDenied(let filename):
-            return "Access to '\(filename)' was denied. Please ensure the app has permission to access this file location, or try selecting the file again."
+            return "Access to '\(filename)' was denied. Please go to Settings to allow file access, or try selecting the file again."
         case .securityScopedResourceFailure(let filename):
             return "Unable to access '\(filename)' due to security restrictions. Please try selecting the file through the document picker again."
         case .invalidFileFormat(let reason):
-            return "The selected file is not a valid import file. \(reason)"
+            return "The selected file has an invalid format. \(reason)"
         case .unknownError(let underlying):
             return "An unexpected error occurred while importing: \(underlying.localizedDescription)"
         }

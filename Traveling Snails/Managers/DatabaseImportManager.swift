@@ -7,6 +7,67 @@
 import Foundation
 import SwiftData
 
+/// Timeout utility for async operations in DatabaseImportManager
+extension DatabaseImportManager {
+    private func withTimeout<T>(
+        seconds: TimeInterval,
+        operation: @escaping () throws -> T
+    ) async throws -> T {
+        return try await withThrowingTaskGroup(of: T.self) { group in
+            group.addTask {
+                return try operation()
+            }
+            
+            group.addTask {
+                try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+                throw ImportError.operationTimeout
+            }
+            
+            let result = try await group.next()!
+            group.cancelAll()
+            return result
+        }
+    }
+    
+    private func withAsyncTimeout<T>(
+        seconds: TimeInterval,
+        operation: @escaping () async -> T
+    ) async throws -> T {
+        return try await withThrowingTaskGroup(of: T.self) { group in
+            group.addTask {
+                return await operation()
+            }
+            
+            group.addTask {
+                try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+                throw ImportError.operationTimeout
+            }
+            
+            let result = try await group.next()!
+            group.cancelAll()
+            return result
+        }
+    }
+}
+
+/// Import-specific error types
+enum ImportError: Error, LocalizedError {
+    case operationTimeout
+    case fileAccessDenied
+    case invalidFormat
+    
+    var errorDescription: String? {
+        switch self {
+        case .operationTimeout:
+            return "Import operation timed out"
+        case .fileAccessDenied:
+            return "Access to the file was denied"
+        case .invalidFormat:
+            return "Invalid file format"
+        }
+    }
+}
+
 @Observable
 class DatabaseImportManager {
     var importProgress: Double = 0.0
@@ -33,6 +94,26 @@ class DatabaseImportManager {
     }
     
     func importDatabase(from url: URL, into modelContext: ModelContext) async -> ImportResult {
+        // Add overall timeout to prevent hanging
+        do {
+            return try await withAsyncTimeout(seconds: 120.0) {
+                return await self.performImport(from: url, into: modelContext)
+            }
+        } catch {
+            await MainActor.run {
+                self.importError = "Import operation timed out after 2 minutes"
+                self.isImporting = false
+            }
+            return ImportResult(
+                tripsImported: 0, organizationsImported: 0, addressesImported: 0,
+                attachmentsImported: 0, transportationImported: 0, lodgingImported: 0,
+                activitiesImported: 0, organizationsMerged: 0,
+                errors: ["Import operation timed out after 2 minutes"]
+            )
+        }
+    }
+    
+    private func performImport(from url: URL, into modelContext: ModelContext) async -> ImportResult {
         await MainActor.run {
             isImporting = true
             importProgress = 0.0
@@ -74,7 +155,7 @@ class DatabaseImportManager {
                     tripsImported: 0, organizationsImported: 0, addressesImported: 0,
                     attachmentsImported: 0, transportationImported: 0, lodgingImported: 0,
                     activitiesImported: 0, organizationsMerged: 0,
-                    errors: ["File not found: The selected file does not exist at the specified location."]
+                    errors: ["File access denied: The selected file could not be found or does not exist at the specified location."]
                 )
                 return result
             }
@@ -119,17 +200,27 @@ class DatabaseImportManager {
             
             let data: Data
             do {
-                data = try Data(contentsOf: url)
+                // Use async file reading with timeout
+                data = try await withTimeout(seconds: 30.0) {
+                    return try Data(contentsOf: url)
+                }
             } catch {
+                let errorMessage: String
+                if error is ImportError {
+                    errorMessage = "Import operation timed out. The file may be too large or the system may be busy."
+                } else {
+                    errorMessage = "Failed to read the selected file. \(self.getUserFriendlyErrorMessage(from: error))"
+                }
+                
                 await MainActor.run {
-                    importError = "Failed to read the selected file. \(self.getUserFriendlyErrorMessage(from: error))"
+                    importError = errorMessage
                     isImporting = false
                 }
                 result = ImportResult(
                     tripsImported: 0, organizationsImported: 0, addressesImported: 0,
                     attachmentsImported: 0, transportationImported: 0, lodgingImported: 0,
                     activitiesImported: 0, organizationsMerged: 0,
-                    errors: ["Read error: \(self.getUserFriendlyErrorMessage(from: error))"]
+                    errors: ["Read error: \(errorMessage)"]
                 )
                 return result
             }
@@ -497,7 +588,7 @@ class DatabaseImportManager {
                 return (existingOrg, true)
             }
         } catch {
-            print("❌ Error checking for existing organization: \(error)")
+            Logger.shared.error("Error checking for existing organization: \(error)")
         }
         
         // Create new organization
@@ -715,7 +806,7 @@ class DatabaseImportManager {
                     attachment.transportation = transportation
                 }
             default:
-                print("⚠️ Unknown attachment parent type: \(parentType)")
+                Logger.shared.warning("Unknown attachment parent type: \(parentType)")
             }
         }
         

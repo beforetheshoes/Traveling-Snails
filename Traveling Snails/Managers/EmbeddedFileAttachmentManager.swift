@@ -21,13 +21,15 @@ class EmbeddedFileAttachmentManager {
         case .success(let attachment):
             return attachment
         case .failure(let error):
-            print("❌ File save failed: \(error.localizedDescription)")
+            Logger.shared.error("File save failed: \(error.localizedDescription)")
             return nil
         }
     }
     
     func saveFileWithResult(from sourceURL: URL, originalName: String) -> Result<EmbeddedFileAttachment, FileAttachmentError> {
-        print("📂 Embedding file from: \(sourceURL.path)")
+        #if DEBUG
+        Logger.shared.debug("Embedding file from: \(sourceURL.path)")
+        #endif
         
         // Check if this is a temporary file (created by us) or a security scoped resource
         let isTemporaryFile = sourceURL.path.contains(FileManager.default.temporaryDirectory.path)
@@ -45,19 +47,21 @@ class EmbeddedFileAttachmentManager {
         }
         
         guard hasAccess else {
-            print("❌ Failed to access security scoped resource for file: \(sourceURL.path)")
-            print("❌ This typically happens when the file was selected through a file picker but the security scope has expired")
-            print("❌ User should try selecting the file again through the document picker")
+            Logger.shared.error("Failed to access security scoped resource for file: \(sourceURL.path)")
+            Logger.shared.error("This typically happens when the file was selected through a file picker but the security scope has expired")
+            Logger.shared.error("User should try selecting the file again through the document picker")
             return .failure(.securityScopedResourceAccessDenied(filename: originalName))
         }
         
         do {
             // Read the file data
             let fileData = try Data(contentsOf: sourceURL)
-            print("📊 File data read successfully. Size: \(fileData.count) bytes")
+            #if DEBUG
+            Logger.shared.debug("File data read successfully. Size: \(fileData.count) bytes")
+            #endif
             
             guard !fileData.isEmpty else {
-                print("❌ File data is empty for file: \(sourceURL.path)")
+                Logger.shared.error("File data is empty for file: \(sourceURL.path)")
                 return .failure(.fileDataEmpty(filename: originalName))
             }
             
@@ -66,7 +70,9 @@ class EmbeddedFileAttachmentManager {
             let uniqueFileName = "\(UUID().uuidString).\(fileExtension)"
             let mimeType = getMimeType(for: sourceURL)
             
-            print("📄 File details - Extension: \(fileExtension), MIME: \(mimeType), Original: \(originalName)")
+            #if DEBUG
+            Logger.shared.debug("File details - Extension: \(fileExtension), MIME: \(mimeType), Original: \(originalName)")
+            #endif
             
             // Create file attachment with embedded data
             let attachment = EmbeddedFileAttachment(
@@ -78,8 +84,10 @@ class EmbeddedFileAttachmentManager {
                 fileData: fileData
             )
             
-            print("✅ EmbeddedFileAttachment created successfully")
-            print("   - ID: \(attachment.id)")
+            #if DEBUG
+            Logger.shared.debug("EmbeddedFileAttachment created successfully")
+            Logger.shared.debug("ID: \(attachment.id)")
+            #endif
             print("   - FileName: \(attachment.fileName)")
             print("   - OriginalName: \(attachment.originalFileName)")
             print("   - Size: \(attachment.fileSize) bytes")

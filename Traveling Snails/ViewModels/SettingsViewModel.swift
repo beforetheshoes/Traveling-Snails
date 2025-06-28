@@ -150,7 +150,7 @@ class SettingsViewModel {
                 }
             }
         case .failure(let error):
-            print("❌ Import failed: \(error)")
+            Logger.shared.error("Import failed: \(error)")
             
             // Provide user-friendly error message
             let userFriendlyError = getUserFriendlyImportError(from: error)
@@ -233,9 +233,13 @@ extension SettingsViewModel {
 
 class DataManagementService {
     static func cleanupNoneOrganizations(in modelContext: ModelContext) -> Int {
-        print("🧹 Starting cleanup of None organizations...")
+        #if DEBUG
+        Logger.shared.debug("Starting cleanup of None organizations...")
+        #endif
         let duplicatesRemoved = Organization.cleanupDuplicateNoneOrganizations(in: modelContext)
-        print("✅ None organization cleanup completed")
+        #if DEBUG
+        Logger.shared.debug("None organization cleanup completed")
+        #endif
         return duplicatesRemoved
     }
     
@@ -246,19 +250,14 @@ class DataManagementService {
     ) async -> DatabaseImportManager.ImportResult {
         let result = await importManager.importDatabase(from: url, into: modelContext)
         
-        print("✅ Import completed with results:")
-        print("  - Trips: \(result.tripsImported)")
-        print("  - Organizations: \(result.organizationsImported)")
-        print("  - Organizations merged: \(result.organizationsMerged)")
-        print("  - Transportation: \(result.transportationImported)")
-        print("  - Lodging: \(result.lodgingImported)")
-        print("  - Activities: \(result.activitiesImported)")
-        print("  - Attachments: \(result.attachmentsImported)")
+        #if DEBUG
+        Logger.shared.debug("Import completed - Trips: \(result.tripsImported), Organizations: \(result.organizationsImported), Merged: \(result.organizationsMerged), Transportation: \(result.transportationImported), Lodging: \(result.lodgingImported), Activities: \(result.activitiesImported), Attachments: \(result.attachmentsImported)")
+        #endif
         
         if !result.errors.isEmpty {
-            print("⚠️ Errors during import:")
+            Logger.shared.warning("Errors during import:")
             for error in result.errors {
-                print("  - \(error)")
+                Logger.shared.warning("Import error: \(error)")
             }
         }
         
