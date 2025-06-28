@@ -354,8 +354,9 @@ struct OrganizationAddressPickerTests {
             logoURL: "https://example.com/logo.png"
         )
         
-        // Initially, organization should have nil address
-        #expect(organization.address == nil, "New organization should have nil address")
+        // Initially, organization should have empty address (not nil, as per Organization init)
+        #expect(organization.address != nil, "New organization should have an address object")
+        #expect(organization.address?.isEmpty == true, "New organization should have empty address")
         
         // Simulate address selection and assignment (what the fixed code does)
         let selectedAddress = Address(
@@ -369,10 +370,7 @@ struct OrganizationAddressPickerTests {
             formattedAddress: "123 Business Ave, Business City, CA 12345, USA"
         )
         
-        // Ensure organization has an address object to update (THE FIX)
-        if organization.address == nil {
-            organization.address = Address()
-        }
+        // Organization already has an address object (no need to create new one)
         organization.address?.street = selectedAddress.street
         organization.address?.city = selectedAddress.city
         organization.address?.state = selectedAddress.state

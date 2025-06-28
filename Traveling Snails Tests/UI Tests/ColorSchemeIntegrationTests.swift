@@ -9,8 +9,25 @@ import SwiftUI
 import SwiftData
 @testable import Traveling_Snails
 
-@Suite("Color Scheme Integration Tests")
+@Suite("Color Scheme Integration Tests") 
 struct ColorSchemeIntegrationTests {
+    
+    // MARK: - Test Isolation Helpers
+    
+    /// Clean up shared state to prevent test contamination
+    static func cleanupSharedState() {
+        // Clear AppSettings related UserDefaults keys
+        let testKeys = ["colorScheme", "isRunningTests", "biometricTimeoutMinutes"]
+        for key in testKeys {
+            UserDefaults.standard.removeObject(forKey: key)
+        }
+        
+        // Clear NSUbiquitousKeyValueStore keys (safe during tests)
+        NSUbiquitousKeyValueStore.default.removeObject(forKey: "colorScheme")
+        
+        // Ensure test environment is properly detected
+        UserDefaults.standard.set(true, forKey: "isRunningTests")
+    }
     
     // MARK: - NSUbiquitousKeyValueStore Tests
     
@@ -19,6 +36,9 @@ struct ColorSchemeIntegrationTests {
         
         @Test("AppSettings iCloud and UserDefaults dual storage")
         @MainActor func testDualStoragePattern() throws {
+            // Clean up state before test
+            ColorSchemeIntegrationTests.cleanupSharedState()
+            defer { ColorSchemeIntegrationTests.cleanupSharedState() }
             let appSettings = AppSettings.shared
             
             // Clear existing values for clean test
@@ -39,6 +59,9 @@ struct ColorSchemeIntegrationTests {
         
         @Test("iCloud priority over UserDefaults")
         @MainActor func testCloudPriorityOverDefaults() throws {
+            // Clean up state before test
+            ColorSchemeIntegrationTests.cleanupSharedState()
+            defer { ColorSchemeIntegrationTests.cleanupSharedState() }
             let appSettings = AppSettings.shared
             
             // Set different values in each store
@@ -66,6 +89,9 @@ struct ColorSchemeIntegrationTests {
         
         @Test("Notification handling setup")
         @MainActor func testNotificationHandlingSetup() {
+            // Clean up state before test
+            ColorSchemeIntegrationTests.cleanupSharedState()
+            defer { ColorSchemeIntegrationTests.cleanupSharedState() }
             let appSettings = AppSettings.shared
             
             // Test that the singleton pattern works correctly
@@ -88,6 +114,9 @@ struct ColorSchemeIntegrationTests {
         
         @Test("AppSettings without ModelContext dependency")
         @MainActor func testAppSettingsWithoutModelContext() {
+            // Clean up state before test
+            ColorSchemeIntegrationTests.cleanupSharedState()
+            defer { ColorSchemeIntegrationTests.cleanupSharedState() }
             let appSettings = AppSettings.shared
             
             // AppSettings should work immediately without any setup
@@ -101,6 +130,9 @@ struct ColorSchemeIntegrationTests {
         
         @Test("Rapid setting changes performance")
         @MainActor func testRapidSettingChangesPerformance() {
+            // Clean up state before test
+            ColorSchemeIntegrationTests.cleanupSharedState()
+            defer { ColorSchemeIntegrationTests.cleanupSharedState() }
             let appSettings = AppSettings.shared
             
             let startTime = CFAbsoluteTimeGetCurrent()
@@ -119,6 +151,9 @@ struct ColorSchemeIntegrationTests {
         
         @Test("Settings persistence after app restart simulation")
         @MainActor func testSettingsPersistenceAfterRestart() {
+            // Clean up state before test
+            ColorSchemeIntegrationTests.cleanupSharedState()
+            defer { ColorSchemeIntegrationTests.cleanupSharedState() }
             // Clear stores
             NSUbiquitousKeyValueStore.default.removeObject(forKey: "colorScheme")
             UserDefaults.standard.removeObject(forKey: "colorScheme")

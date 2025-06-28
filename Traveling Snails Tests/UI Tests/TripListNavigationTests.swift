@@ -158,11 +158,11 @@ struct TripListNavigationTests {
         // Verify navigation context can still be used for tab restoration
         let navigationContext = NavigationContext.shared
         
-        // Simulate tab switch
-        navigationContext.markTabSwitch(to: 1, from: 0) // Away from trips tab
+        // Simulate tab switch TO trips tab (which should trigger navigation restoration)
+        navigationContext.markTabSwitch(to: 0, from: 1) // To trips tab
         let isRecentSwitch = navigationContext.isRecentTabSwitch(within: 3.0)
         
-        #expect(isRecentSwitch, "Tab switch should be detected")
+        #expect(isRecentSwitch, "Tab switch to trips tab should be detected")
         
         // Our fix should not interfere with this tab restoration mechanism
         

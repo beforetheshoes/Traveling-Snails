@@ -106,10 +106,16 @@ struct TestGuard {
         let isInTests = NSClassFromString("XCTestCase") != nil || ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
         
         if isInTests {
-            print("🧪 Test environment detected - ensuring data isolation")
+            // Test environment logging suppressed to prevent hanging
             
             // Set a flag that other parts of the app can check
             UserDefaults.standard.set(true, forKey: "isRunningTests")
+            
+            // Force disable any CloudKit-related initialization
+            UserDefaults.standard.set(true, forKey: "disableCloudKit")
+            
+            // Debug log to verify this is being called
+            print("🧪 TestGuard: Test environment detected and configured")
         }
         #endif
     }

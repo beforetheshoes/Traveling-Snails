@@ -13,30 +13,39 @@ import SwiftData
 @Suite("Quick Verification Tests")
 struct QuickVerificationTests {
     
-    static let modelContainer: ModelContainer = {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        return try! ModelContainer(for: Trip.self, Lodging.self, Transportation.self, Activity.self, configurations: config)
-    }()
+    // FIXED: Remove static initialization to prevent hanging during test bundle loading
+    @MainActor
+    private func createTestContainer() -> ModelContainer {
+        let schema = Schema([Trip.self, Lodging.self, Transportation.self, Activity.self, Organization.self, Address.self, EmbeddedFileAttachment.self])
+        let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+        return try! ModelContainer(for: schema, configurations: [config])
+    }
     
-    static var modelContext: ModelContext {
-        modelContainer.mainContext
+    @MainActor
+    private func createTestEnvironment() -> (container: ModelContainer, context: ModelContext) {
+        let container = createTestContainer()
+        let context = container.mainContext
+        return (container, context)
     }
     
     @Test("Basic SwiftData functionality works")
     func testBasicSwiftDataFunctionality() throws {
+        let env = createTestEnvironment()
+        let modelContext = env.context
+        
         // Create a trip
         let trip = Trip(name: "Test Trip")
-        Self.modelContext.insert(trip)
-        try Self.modelContext.save()
+        modelContext.insert(trip)
+        try modelContext.save()
         
         // Verify it was saved
-        let trips = try Self.modelContext.fetch(FetchDescriptor<Trip>())
+        let trips = try modelContext.fetch(FetchDescriptor<Trip>())
         #expect(trips.contains { $0.name == "Test Trip" })
         
         // Add a lodging
         let lodging = Lodging(name: "Test Hotel", trip: trip)
-        Self.modelContext.insert(lodging)
-        try Self.modelContext.save()
+        modelContext.insert(lodging)
+        try modelContext.save()
         
         // Verify relationship works
         #expect(trip.totalActivities >= 1)
@@ -45,17 +54,22 @@ struct QuickVerificationTests {
     
     @Test("Test framework setup works")
     func testFrameworkSetup() {
+        let env = createTestEnvironment()
+        
         // Test that our test setup is working correctly
-        #expect(Self.modelContainer.configurations.count > 0)
-        #expect(Self.modelContext.container === Self.modelContainer)
+        #expect(env.container.configurations.count > 0)
+        #expect(env.context.container === env.container)
     }
     
     @Test("SwiftData patterns prevent infinite recreation")
     func testInfiniteRecreationPrevention() throws {
+        let env = createTestEnvironment()
+        let modelContext = env.context
+        
         // Create test data
         let trip = Trip(name: "Infinite Recreation Test")
-        Self.modelContext.insert(trip)
-        try Self.modelContext.save()
+        modelContext.insert(trip)
+        try modelContext.save()
         
         let startTime = Date()
         
