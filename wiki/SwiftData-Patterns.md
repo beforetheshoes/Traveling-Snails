@@ -825,4 +825,19 @@ class AppSettings {
 
 ---
 
+## 📖 Related Wiki Pages
+
+### Integration and Implementation
+- **[INTEGRATION_PATTERNS_GUIDE.md](INTEGRATION_PATTERNS_GUIDE.md)** - Complete integration guide with these SwiftData patterns
+- **[TECHNOLOGY_REFERENCE.md](TECHNOLOGY_REFERENCE.md)** - Detailed SwiftData API reference and debugging tools
+
+### Architecture and Testing
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - How these patterns fit into overall app architecture
+- **[Development-Workflow.md](Development-Workflow.md)** - Testing methodology and SwiftDataTestBase usage
+
+### Quick Navigation
+- **[Home.md](Home.md)** - Wiki overview and quick start guide
+
+---
+
 Following these patterns ensures stable, performant SwiftData operations throughout the Traveling Snails app while maintaining robust test isolation and seamless cross-device sync for user preferences.

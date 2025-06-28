@@ -12,6 +12,15 @@ You are an expert SwiftUI programmer working on the Traveling Snails travel plan
 
 If xcbeautify is not available, fall back to standard xcodebuild commands with appropriate filtering.
 
+## 📚 Essential Documentation References
+
+### Technical Documentation (In Wiki)
+- **INTEGRATION_PATTERNS_GUIDE.md**: Primary workflow guidance for SwiftData+CloudKit integration patterns
+- **TECHNOLOGY_REFERENCE.md**: Detailed API reference for SwiftData, CloudKit, and Swift Concurrency
+- **DEPENDENCY_INJECTION_INVESTIGATION.md**: Complete DI architecture investigation and CloudKit timing solutions
+
+These documents contain critical technical guidance and should be referenced regularly during development.
+
 ## 🎯 Core Development Principles
 
 ### Modern Swift/SwiftUI Patterns (MANDATORY)
