@@ -25,6 +25,11 @@ struct SettingsContentView: View {
             
             // About Section
             AboutSection(viewModel: viewModel)
+
+            #if DEBUG
+            // Developer Section
+            DeveloperSection()
+            #endif
             
             // Import Result Display
             if let result = viewModel.importResult {
@@ -326,6 +331,28 @@ struct ImportResultSection: View {
         }
     }
 }
+
+// MARK: - Developer Section
+
+#if DEBUG
+struct DeveloperSection: View {
+    var body: some View {
+        Section("Developer") {
+            NavigationLink {
+                SyncDiagnosticView()
+            } label: {
+                SettingsRow(
+                    icon: "ladybug",
+                    iconColor: .red,
+                    title: "Sync Diagnostics",
+                    subtitle: "Debug and diagnose CloudKit sync issues"
+                )
+            }
+            .foregroundColor(.primary)
+        }
+    }
+}
+#endif
 
 // MARK: - Reusable Settings Row
 

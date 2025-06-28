@@ -91,7 +91,7 @@ class EmbeddedFileAttachment: Identifiable {
             try data.write(to: tempFile)
             return tempFile
         } catch {
-            print("❌ Failed to create temporary file: \(error)")
+            Logger.shared.error("Failed to create temporary file: \(error)")
             return nil
         }
     }

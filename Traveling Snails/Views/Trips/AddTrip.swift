@@ -26,7 +26,14 @@ struct AddTrip: View {
             endDate: hasEndDate ? endDate : nil
         )
         modelContext.insert(trip)
-        presentationMode.wrappedValue.dismiss()
+        
+        do {
+            try modelContext.save()
+            presentationMode.wrappedValue.dismiss()
+        } catch {
+            // Handle save error - for now just print, could add error state
+            print("Failed to save trip: \(error)")
+        }
     }
     
     var body: some View {

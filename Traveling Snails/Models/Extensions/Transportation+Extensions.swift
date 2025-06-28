@@ -69,8 +69,9 @@ extension Transportation: TripActivityProtocol {
     }
     
     func applyEdits(from data: TripActivityEditData) {
-        print("=== DEBUG: Transportation.applyEdits called ===")
-        print("Current cost: \(cost), New cost: \(data.cost)")
+        #if DEBUG
+        Logger.shared.debug("Transportation.applyEdits called - Current cost: \(cost), New cost: \(data.cost)")
+        #endif
         
         name = data.name
         start = data.start
@@ -86,7 +87,9 @@ extension Transportation: TripActivityProtocol {
             type = newType
         }
         
-        print("After update cost: \(cost)")
+        #if DEBUG
+        Logger.shared.debug("Transportation cost updated to: \(cost)")
+        #endif
     }
 }
 

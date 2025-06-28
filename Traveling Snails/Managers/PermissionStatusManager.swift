@@ -51,6 +51,12 @@ class PermissionStatusManager {
     // MARK: - Permission Request Methods
     
     nonisolated func requestPhotoLibraryAccess() async -> PHAuthorizationStatus {
+        // Skip photo permission prompts during testing to prevent hanging
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
+            // Return .authorized in test environment to avoid blocking tests
+            return .authorized
+        }
+        
         return await PHPhotoLibrary.requestAuthorization(for: .readWrite)
     }
     
@@ -68,7 +74,7 @@ class PermissionStatusManager {
     
     // MARK: - Permission Status Checking
     
-    func checkPhotoLibraryPermission() -> PermissionStatus {
+    func checkPhotoLibraryPermission() -> LegacyPermissionStatus {
         switch photoLibraryAuthorizationStatus {
         case .authorized:
             return .granted
@@ -88,7 +94,7 @@ class PermissionStatusManager {
 
 // MARK: - Supporting Types
 
-enum PermissionStatus {
+enum LegacyPermissionStatus {
     case granted
     case limited
     case denied

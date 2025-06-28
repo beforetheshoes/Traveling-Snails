@@ -106,6 +106,8 @@ struct ActivitySaverImpl: ActivitySaver {
         }
         
         try modelContext.save()
+        
+        // REMOVED: Custom sync triggers - let SwiftData+CloudKit handle automatically
     }
 }
 
@@ -177,6 +179,8 @@ struct LodgingSaverImpl: ActivitySaver {
         }
         
         try modelContext.save()
+        
+        // REMOVED: Custom sync triggers - let SwiftData+CloudKit handle automatically
     }
 }
 
@@ -240,6 +244,8 @@ struct TransportationSaverImpl: ActivitySaver {
         }
         
         try modelContext.save()
+        
+        // REMOVED: Custom sync triggers - let SwiftData+CloudKit handle automatically
     }
 }
 

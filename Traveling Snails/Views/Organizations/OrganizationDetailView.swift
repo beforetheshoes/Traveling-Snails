@@ -258,6 +258,8 @@ struct OrganizationDetailView: View {
         do {
             try modelContext.save()
             isEditing = false
+            
+            // REMOVED: Custom sync triggers - let SwiftData+CloudKit handle automatically
         } catch {
             saveErrorMessage = "Failed to save changes: \(error.localizedDescription)"
             showingSaveError = true
@@ -276,6 +278,8 @@ struct OrganizationDetailView: View {
             do {
                 try modelContext.save()
                 dismiss()
+                
+                // REMOVED: Custom sync triggers - let SwiftData+CloudKit handle automatically
             } catch {
                 saveErrorMessage = "Failed to delete organization: \(error.localizedDescription)"
                 showingSaveError = true
