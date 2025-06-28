@@ -44,8 +44,9 @@ extension Activity: TripActivityProtocol {
     }
     
     func applyEdits(from data: TripActivityEditData) {
-        print("=== DEBUG: Activity.applyEdits called ===")
-        print("Current cost: \(cost), New cost: \(data.cost)")
+        #if DEBUG
+        Logger.shared.debug("Activity.applyEdits called - Current cost: \(cost), New cost: \(data.cost)")
+        #endif
         
         name = data.name
         start = data.start
@@ -61,7 +62,9 @@ extension Activity: TripActivityProtocol {
         customAddresss = data.customAddress
         hideLocation = data.hideLocation
         
-        print("After update cost: \(cost)")
+        #if DEBUG
+        Logger.shared.debug("Activity cost updated to: \(cost)")
+        #endif
     }
 }
 

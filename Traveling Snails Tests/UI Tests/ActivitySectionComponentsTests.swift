@@ -297,8 +297,8 @@ struct SectionComponentIntegrationTests {
         
         // Verify all section components can work with this edit data
         #expect(editData.name == "Test Activity")
-        #expect(editData.start != nil)
-        #expect(editData.end != nil)
+        #expect(editData.start == activity.start)
+        #expect(editData.end == activity.end)
     }
     
     @Test("Should preserve data through component lifecycle")

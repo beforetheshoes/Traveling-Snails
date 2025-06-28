@@ -8,7 +8,7 @@ import SwiftUI
 
 /// A view that educates users about photo permissions and guides them to enable access
 struct PermissionEducationView: View {
-    let permissionType: PermissionType
+    let permissionType: EducationPermissionType
     let onSettingsButtonTap: () -> Void
     let onDismiss: () -> Void
     
@@ -53,7 +53,7 @@ struct PermissionEducationView: View {
 
 // MARK: - Supporting Types
 
-enum PermissionType {
+enum EducationPermissionType {
     case photoLibrary
     case camera
     
@@ -90,7 +90,7 @@ enum PermissionType {
 extension View {
     func permissionEducationAlert(
         isPresented: Binding<Bool>,
-        permissionType: PermissionType,
+        permissionType: EducationPermissionType,
         onSettingsButtonTap: @escaping () -> Void
     ) -> some View {
         self.alert(permissionType.title, isPresented: isPresented) {

@@ -7,6 +7,67 @@
 import Foundation
 import SwiftData
 
+/// Timeout utility for async operations in DatabaseImportManager
+extension DatabaseImportManager {
+    private func withTimeout<T>(
+        seconds: TimeInterval,
+        operation: @escaping () throws -> T
+    ) async throws -> T {
+        return try await withThrowingTaskGroup(of: T.self) { group in
+            group.addTask {
+                return try operation()
+            }
+            
+            group.addTask {
+                try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+                throw ImportError.operationTimeout
+            }
+            
+            let result = try await group.next()!
+            group.cancelAll()
+            return result
+        }
+    }
+    
+    private func withAsyncTimeout<T>(
+        seconds: TimeInterval,
+        operation: @escaping () async -> T
+    ) async throws -> T {
+        return try await withThrowingTaskGroup(of: T.self) { group in
+            group.addTask {
+                return await operation()
+            }
+            
+            group.addTask {
+                try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+                throw ImportError.operationTimeout
+            }
+            
+            let result = try await group.next()!
+            group.cancelAll()
+            return result
+        }
+    }
+}
+
+/// Import-specific error types
+enum ImportError: Error, LocalizedError {
+    case operationTimeout
+    case fileAccessDenied
+    case invalidFormat
+    
+    var errorDescription: String? {
+        switch self {
+        case .operationTimeout:
+            return "Import operation timed out"
+        case .fileAccessDenied:
+            return "Access to the file was denied"
+        case .invalidFormat:
+            return "Invalid file format"
+        }
+    }
+}
+
 @Observable
 class DatabaseImportManager {
     var importProgress: Double = 0.0
@@ -33,6 +94,26 @@ class DatabaseImportManager {
     }
     
     func importDatabase(from url: URL, into modelContext: ModelContext) async -> ImportResult {
+        // Add overall timeout to prevent hanging
+        do {
+            return try await withAsyncTimeout(seconds: 120.0) {
+                return await self.performImport(from: url, into: modelContext)
+            }
+        } catch {
+            await MainActor.run {
+                self.importError = "Import operation timed out after 2 minutes"
+                self.isImporting = false
+            }
+            return ImportResult(
+                tripsImported: 0, organizationsImported: 0, addressesImported: 0,
+                attachmentsImported: 0, transportationImported: 0, lodgingImported: 0,
+                activitiesImported: 0, organizationsMerged: 0,
+                errors: ["Import operation timed out after 2 minutes"]
+            )
+        }
+    }
+    
+    private func performImport(from url: URL, into modelContext: ModelContext) async -> ImportResult {
         await MainActor.run {
             isImporting = true
             importProgress = 0.0
@@ -59,8 +140,90 @@ class DatabaseImportManager {
         )
         
         do {
-            // Read the file
-            let data = try Data(contentsOf: url)
+            // Pre-validate file accessibility before attempting read
+            await MainActor.run {
+                importStatus = "Checking file accessibility..."
+            }
+            
+            // Check if file exists and is readable
+            guard FileManager.default.fileExists(atPath: url.path) else {
+                await MainActor.run {
+                    importError = "The selected file could not be found. Please ensure the file still exists and try selecting it again."
+                    isImporting = false
+                }
+                result = ImportResult(
+                    tripsImported: 0, organizationsImported: 0, addressesImported: 0,
+                    attachmentsImported: 0, transportationImported: 0, lodgingImported: 0,
+                    activitiesImported: 0, organizationsMerged: 0,
+                    errors: ["File access denied: The selected file could not be found or does not exist at the specified location."]
+                )
+                return result
+            }
+            
+            // Check file accessibility (important for security-scoped resources)
+            let fileAttributes: [FileAttributeKey: Any]
+            do {
+                fileAttributes = try FileManager.default.attributesOfItem(atPath: url.path)
+            } catch {
+                await MainActor.run {
+                    importError = "Unable to access the selected file. Please ensure you have permission to read this file and try selecting it again through the file picker."
+                    isImporting = false
+                }
+                result = ImportResult(
+                    tripsImported: 0, organizationsImported: 0, addressesImported: 0,
+                    attachmentsImported: 0, transportationImported: 0, lodgingImported: 0,
+                    activitiesImported: 0, organizationsMerged: 0,
+                    errors: ["Permission denied: Unable to access the selected file. \(self.getUserFriendlyErrorMessage(from: error))"]
+                )
+                return result
+            }
+            
+            // Validate file size (prevent extremely large files from causing issues)
+            if let fileSize = fileAttributes[FileAttributeKey.size] as? Int64, fileSize > 100 * 1024 * 1024 {
+                await MainActor.run {
+                    importError = "The selected file is too large (over 100MB). Please select a smaller backup file."
+                    isImporting = false
+                }
+                result = ImportResult(
+                    tripsImported: 0, organizationsImported: 0, addressesImported: 0,
+                    attachmentsImported: 0, transportationImported: 0, lodgingImported: 0,
+                    activitiesImported: 0, organizationsMerged: 0,
+                    errors: ["File too large: The selected file exceeds the maximum allowed size of 100MB."]
+                )
+                return result
+            }
+            
+            // Read the file with proper error handling
+            await MainActor.run {
+                importStatus = "Reading import file..."
+            }
+            
+            let data: Data
+            do {
+                // Use async file reading with timeout
+                data = try await withTimeout(seconds: 30.0) {
+                    return try Data(contentsOf: url)
+                }
+            } catch {
+                let errorMessage: String
+                if error is ImportError {
+                    errorMessage = "Import operation timed out. The file may be too large or the system may be busy."
+                } else {
+                    errorMessage = "Failed to read the selected file. \(self.getUserFriendlyErrorMessage(from: error))"
+                }
+                
+                await MainActor.run {
+                    importError = errorMessage
+                    isImporting = false
+                }
+                result = ImportResult(
+                    tripsImported: 0, organizationsImported: 0, addressesImported: 0,
+                    attachmentsImported: 0, transportationImported: 0, lodgingImported: 0,
+                    activitiesImported: 0, organizationsMerged: 0,
+                    errors: ["Read error: \(errorMessage)"]
+                )
+                return result
+            }
             
             await MainActor.run {
                 importProgress = 0.1
@@ -425,7 +588,7 @@ class DatabaseImportManager {
                 return (existingOrg, true)
             }
         } catch {
-            print("❌ Error checking for existing organization: \(error)")
+            Logger.shared.error("Error checking for existing organization: \(error)")
         }
         
         // Create new organization
@@ -490,6 +653,11 @@ class DatabaseImportManager {
            let endDateString = data["endDate"] as? String,
            let endDate = ISO8601DateFormatter().date(from: endDateString) {
             trip.setEndDate(endDate)
+        }
+        
+        // Restore protection status if present
+        if let isProtected = data["isProtected"] as? Bool {
+            trip.isProtected = isProtected
         }
         
         modelContext.insert(trip)
@@ -618,7 +786,75 @@ class DatabaseImportManager {
             attachment.createdDate = createdDate
         }
         
+        // Restore parent relationship if present
+        if let parentType = data["parentType"] as? String,
+           let parentId = data["parentId"] as? String {
+            switch parentType {
+            case "activity":
+                // Find the imported activity by ID
+                if let activity = importedTrips.values.flatMap({ $0.activity }).first(where: { $0.id.uuidString == parentId }) {
+                    attachment.activity = activity
+                }
+            case "lodging":
+                // Find the imported lodging by ID
+                if let lodging = importedTrips.values.flatMap({ $0.lodging }).first(where: { $0.id.uuidString == parentId }) {
+                    attachment.lodging = lodging
+                }
+            case "transportation":
+                // Find the imported transportation by ID
+                if let transportation = importedTrips.values.flatMap({ $0.transportation }).first(where: { $0.id.uuidString == parentId }) {
+                    attachment.transportation = transportation
+                }
+            default:
+                Logger.shared.warning("Unknown attachment parent type: \(parentType)")
+            }
+        }
+        
         modelContext.insert(attachment)
         return attachment
+    }
+    
+    // MARK: - Error Handling Helpers
+    
+    private func getUserFriendlyErrorMessage(from error: Error) -> String {
+        // Convert technical errors to user-friendly messages
+        let nsError = error as NSError
+        
+        switch nsError.domain {
+        case NSCocoaErrorDomain:
+            switch nsError.code {
+            case NSFileReadNoPermissionError:
+                return "Permission denied - please try selecting the file again through the import dialog."
+            case NSFileReadNoSuchFileError:
+                return "The file could not be found - it may have been moved or deleted."
+            case NSFileReadCorruptFileError:
+                return "The file appears to be corrupted and cannot be read."
+            case NSFileReadUnknownError:
+                return "An unknown error occurred while reading the file."
+            default:
+                return "Unable to read the file. Please ensure you have permission to access it."
+            }
+        case NSPOSIXErrorDomain:
+            switch nsError.code {
+            case Int(EACCES): // Permission denied
+                return "Access denied - please check file permissions."
+            case Int(ENOENT): // No such file or directory
+                return "File not found - please ensure the file exists."
+            case Int(EISDIR): // Is a directory
+                return "Selected item is a folder, not a file. Please select a backup file."
+            default:
+                return "System error accessing the file."
+            }
+        default:
+            // For other error domains, provide a generic but helpful message
+            let description = error.localizedDescription
+            if description.contains("permission") || description.contains("denied") {
+                return "Permission denied - please ensure you have access to the selected file."
+            } else if description.contains("not found") || description.contains("does not exist") {
+                return "File not found - please ensure the file still exists."
+            } else {
+                return "Unable to access the file. Please try selecting it again."
+            }
+        }
     }
 }

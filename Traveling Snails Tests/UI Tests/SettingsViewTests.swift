@@ -12,6 +12,21 @@ import SwiftData
 @Suite("SettingsView Tests")
 struct SettingsViewTests {
     
+    // MARK: - Test Isolation Helpers
+    
+    /// Clean up shared state to prevent test contamination
+    @MainActor
+    static func cleanupSharedState() {
+        // Reset any UserDefaults keys that tests might modify
+        let testKeys = ["testBiometricTimeout", "colorScheme", "isRunningTests"]
+        for key in testKeys {
+            UserDefaults.standard.removeObject(forKey: key)
+        }
+        
+        // Reset AppSettings to default state
+        AppSettings.shared.colorScheme = .system
+    }
+    
     // MARK: - Settings State Management Tests
     
     @Suite("Settings State Management")
@@ -68,7 +83,10 @@ struct SettingsViewTests {
     struct AppearanceSettingsTests {
         
         @Test("Color scheme preference handling")
-        func testColorSchemePreferenceHandling() {
+        @MainActor func testColorSchemePreferenceHandling() {
+            // Clean up state before test
+            SettingsViewTests.cleanupSharedState()
+            
             // Test the logic that should be in SettingsViewModel
             let appSettings = AppSettings.shared
             
@@ -87,6 +105,9 @@ struct SettingsViewTests {
             
             // Restore original setting to avoid affecting other tests
             appSettings.colorScheme = originalColorScheme
+            
+            // Clean up state after test
+            SettingsViewTests.cleanupSharedState()
         }
     }
     
@@ -172,17 +193,14 @@ struct SettingsViewTests {
     @Suite("Security Settings")
     struct SecuritySettingsTests {
         
-        // TEMPORARILY DISABLED - AppSettings hanging issue
-        // @Test("Biometric authentication settings")
-        @MainActor func testBiometricAuthenticationSettings() {
+        @Test("Biometric authentication settings")
+        @MainActor func testBiometricAuthenticationSettings() async {
             let authManager = BiometricAuthManager.shared
-            // _ = AppSettings.shared // AppSettings exists but no longer has biometric settings
+            _ = AppSettings.shared // AppSettings exists but no longer has biometric settings
             
-            // Test biometric availability check (async)
-            Task {
-                let canUseBiometrics = authManager.canUseBiometrics()
-                #expect(canUseBiometrics == true || canUseBiometrics == false) // Should return a boolean
-            }
+            // Test biometric availability check (properly awaited)
+            let canUseBiometrics = authManager.canUseBiometrics()
+            #expect(canUseBiometrics == true || canUseBiometrics == false) // Should return a boolean
             
             // Biometric authentication is now always enabled when available
             #expect(authManager.isEnabled == authManager.canUseBiometrics())
@@ -366,17 +384,21 @@ struct SettingsViewTests {
     
     @Suite("Settings Integration")
     struct SettingsIntegrationTests {
-        
-        // TEMPORARILY DISABLED - AppSettings hanging issue
-        // @Test("Complete settings flow")
-        @MainActor func testCompleteSettingsFlow() {
+        @Test("Complete settings flow")
+        @MainActor func testCompleteSettingsFlow() async {
+            // Clean up state before test
+            SettingsViewTests.cleanupSharedState()
+            
             // Test a complete settings interaction flow
-            // let appSettings = AppSettings.shared
+            let appSettings = AppSettings.shared
             
             // 1. Change appearance setting
-            // let originalScheme = appSettings.colorScheme
-            // appSettings.colorScheme = .dark
-            // #expect(appSettings.colorScheme == .dark)
+            let originalScheme = appSettings.colorScheme
+            appSettings.colorScheme = .dark
+            #expect(appSettings.colorScheme == .dark)
+            
+            // Restore original setting immediately to avoid affecting other tests
+            appSettings.colorScheme = originalScheme
             
             // 2. Biometric authentication is now always enabled when available
             let authManager = BiometricAuthManager.shared
@@ -387,9 +409,8 @@ struct SettingsViewTests {
             dataManagementAction = true // Simulate triggering data browser
             #expect(dataManagementAction == true)
             
-            // Restore original settings
-            // appSettings.colorScheme = originalScheme
-            // Biometric setting no longer exists - always enabled when available
+            // Clean up state after test
+            SettingsViewTests.cleanupSharedState()
         }
     }
 }

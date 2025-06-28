@@ -29,6 +29,10 @@ class SettingsViewModel {
     var importManager = DatabaseImportManager()
     var importResult: DatabaseImportManager.ImportResult?
     
+    // Error handling
+    var importError: String?
+    var showingImportError = false
+    
     // Organization cleanup feedback
     var showingOrganizationCleanupAlert = false
     var organizationCleanupMessage = ""
@@ -146,7 +150,53 @@ class SettingsViewModel {
                 }
             }
         case .failure(let error):
-            print("❌ Import failed: \(error)")
+            Logger.shared.error("Import failed: \(error)")
+            
+            // Provide user-friendly error message
+            let userFriendlyError = getUserFriendlyImportError(from: error)
+            
+            Task { @MainActor in
+                self.importError = userFriendlyError
+                self.showingImportError = true
+            }
+        }
+    }
+    
+    // MARK: - Error Handling Helpers
+    
+    private func getUserFriendlyImportError(from error: Error) -> String {
+        let nsError = error as NSError
+        
+        switch nsError.domain {
+        case NSCocoaErrorDomain:
+            switch nsError.code {
+            case NSFileReadNoPermissionError:
+                return "Permission denied. Please try selecting the file again through the import dialog."
+            case NSFileReadNoSuchFileError:
+                return "The selected file could not be found. It may have been moved or deleted."
+            case NSFileReadCorruptFileError:
+                return "The selected file appears to be corrupted and cannot be read."
+            default:
+                return "Unable to read the selected file. Please ensure you have permission to access it and try again."
+            }
+        case NSPOSIXErrorDomain:
+            switch nsError.code {
+            case Int(EACCES):
+                return "Access denied. Please check that you have permission to read the selected file."
+            case Int(ENOENT):
+                return "File not found. Please ensure the file still exists at the selected location."
+            default:
+                return "A system error occurred while trying to access the file."
+            }
+        default:
+            let description = error.localizedDescription.lowercased()
+            if description.contains("permission") || description.contains("denied") {
+                return "Permission denied. Please ensure you have access to the selected file and try again."
+            } else if description.contains("not found") || description.contains("does not exist") {
+                return "The selected file could not be found. Please try selecting it again."
+            } else {
+                return "An error occurred while importing: \(error.localizedDescription)"
+            }
         }
     }
 }
@@ -183,9 +233,13 @@ extension SettingsViewModel {
 
 class DataManagementService {
     static func cleanupNoneOrganizations(in modelContext: ModelContext) -> Int {
-        print("🧹 Starting cleanup of None organizations...")
+        #if DEBUG
+        Logger.shared.debug("Starting cleanup of None organizations...")
+        #endif
         let duplicatesRemoved = Organization.cleanupDuplicateNoneOrganizations(in: modelContext)
-        print("✅ None organization cleanup completed")
+        #if DEBUG
+        Logger.shared.debug("None organization cleanup completed")
+        #endif
         return duplicatesRemoved
     }
     
@@ -196,19 +250,14 @@ class DataManagementService {
     ) async -> DatabaseImportManager.ImportResult {
         let result = await importManager.importDatabase(from: url, into: modelContext)
         
-        print("✅ Import completed with results:")
-        print("  - Trips: \(result.tripsImported)")
-        print("  - Organizations: \(result.organizationsImported)")
-        print("  - Organizations merged: \(result.organizationsMerged)")
-        print("  - Transportation: \(result.transportationImported)")
-        print("  - Lodging: \(result.lodgingImported)")
-        print("  - Activities: \(result.activitiesImported)")
-        print("  - Attachments: \(result.attachmentsImported)")
+        #if DEBUG
+        Logger.shared.debug("Import completed - Trips: \(result.tripsImported), Organizations: \(result.organizationsImported), Merged: \(result.organizationsMerged), Transportation: \(result.transportationImported), Lodging: \(result.lodgingImported), Activities: \(result.activitiesImported), Attachments: \(result.attachmentsImported)")
+        #endif
         
         if !result.errors.isEmpty {
-            print("⚠️ Errors during import:")
+            Logger.shared.warning("Errors during import:")
             for error in result.errors {
-                print("  - \(error)")
+                Logger.shared.warning("Import error: \(error)")
             }
         }
         

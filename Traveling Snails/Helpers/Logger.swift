@@ -53,6 +53,7 @@ final class Logger {
         case debug = "Debug"
         case userPrefs = "UserPreferences"
         case fileManagement = "FileManagement"
+        case sync = "Sync"
         
         var emoji: String {
             switch self {
@@ -72,6 +73,7 @@ final class Logger {
             case .debug: return "🐛"
             case .userPrefs: return "🔑"
             case .fileManagement: return "📂"
+            case .sync: return "🔄"
             }
         }
     }
@@ -95,15 +97,20 @@ final class Logger {
         let formattedMessage = formatMessage(message, category: category, level: level, file: fileName, function: function, line: line)
         
         guard let logger = loggers[category] else {
-            print("⚠️ No logger found for category: \(category)")
+            // Only print logger errors if not in test environment
+            if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
+                print("⚠️ No logger found for category: \(category)")
+            }
             return
         }
         
         logger.log(level: level.osLogType, "\(formattedMessage)")
         
-        // Also print to console in debug builds
+        // Only print to console in debug builds and not during testing
         #if DEBUG
-        print(formattedMessage)
+        if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
+            print(formattedMessage)
+        }
         #endif
     }
     

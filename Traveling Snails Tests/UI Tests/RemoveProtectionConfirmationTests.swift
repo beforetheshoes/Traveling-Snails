@@ -15,7 +15,7 @@ struct RemoveProtectionConfirmationTests {
     @Test("IsolatedTripDetailView should show confirmation dialog with warning message")
     func testIsolatedTripDetailViewConfirmationDialog() {
         let trip = Trip(name: "Test Trip", isProtected: true)
-        let view = IsolatedTripDetailView(trip: trip)
+        _ = IsolatedTripDetailView(trip: trip)
         
         // This test will verify that IsolatedTripDetailView has the proper confirmation dialog
         // with the detailed warning message about consequences

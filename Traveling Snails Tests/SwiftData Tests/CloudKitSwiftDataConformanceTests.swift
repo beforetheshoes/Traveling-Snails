@@ -1,3 +1,4 @@
+
 //
 //  CloudKitSwiftDataConformanceTests.swift
 //  Traveling Snails
@@ -12,14 +13,18 @@ import SwiftData
 @testable import Traveling_Snails
 
 @Suite("CloudKit & SwiftData Conformance Tests")
-struct CloudKitSwiftDataConformanceTests {
+@MainActor
+class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
     
     @Suite("Relationship Safety Tests")
-    struct RelationshipSafetyTests {
+    @MainActor
+    class RelationshipSafetyTests: SwiftDataTestBase {
         
         @Test("Trip relationships never return nil")
-        func tripRelationshipsNeverReturnNil() {
+        func tripRelationshipsNeverReturnNil() async throws {
             let trip = Trip(name: "Test Trip")
+            modelContext.insert(trip)
+            try modelContext.save()
             
             // Even with no data, accessors should return empty arrays, not nil
             #expect(trip.lodging.isEmpty)
@@ -37,8 +42,10 @@ struct CloudKitSwiftDataConformanceTests {
         }
         
         @Test("Organization relationships never return nil")
-        func organizationRelationshipsNeverReturnNil() {
+        func organizationRelationshipsNeverReturnNil() async throws {
             let org = Organization(name: "Test Org")
+            modelContext.insert(org)
+            try modelContext.save()
             
             // Even with no data, accessors should return empty arrays
             #expect(org.transportation.isEmpty)
@@ -53,9 +60,12 @@ struct CloudKitSwiftDataConformanceTests {
         }
         
         @Test("File attachment relationships never return nil")
-        func fileAttachmentRelationshipsNeverReturnNil() {
+        func fileAttachmentRelationshipsNeverReturnNil() async throws {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")
+            modelContext.insert(trip)
+            modelContext.insert(org)
+            try modelContext.save()
             
             let activity = Activity(
                 name: "Test Activity",
@@ -64,6 +74,7 @@ struct CloudKitSwiftDataConformanceTests {
                 trip: trip,
                 organization: org
             )
+            modelContext.insert(activity)
             
             let lodging = Lodging(
                 name: "Test Hotel",
@@ -74,6 +85,7 @@ struct CloudKitSwiftDataConformanceTests {
                 trip: trip,
                 organization: org
             )
+            modelContext.insert(lodging)
             
             let transportation = Transportation(
                 name: "Test Flight",
@@ -82,6 +94,8 @@ struct CloudKitSwiftDataConformanceTests {
                 trip: trip,
                 organization: org
             )
+            modelContext.insert(transportation)
+            try modelContext.save()
             
             // All should return empty arrays initially
             #expect(activity.fileAttachments.isEmpty)
@@ -100,12 +114,16 @@ struct CloudKitSwiftDataConformanceTests {
     }
     
     @Suite("Relationship Append/Remove Safety Tests")
-    struct RelationshipAppendRemoveSafetyTests {
+    @MainActor
+    class RelationshipAppendRemoveSafetyTests: SwiftDataTestBase {
         
         @Test("Trip relationship mutations work safely")
-        func tripRelationshipMutationsWorkSafely() {
+        func tripRelationshipMutationsWorkSafely() async throws {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")
+            modelContext.insert(trip)
+            modelContext.insert(org)
+            try modelContext.save()
             
             // Should be able to append to empty arrays
             let lodging = Lodging(
@@ -117,22 +135,29 @@ struct CloudKitSwiftDataConformanceTests {
                 trip: trip,
                 organization: org
             )
+            modelContext.insert(lodging)
+            try modelContext.save()
             
             // This should work without crashes
             trip.lodging.append(lodging)
+            try modelContext.save()
             #expect(trip.lodging.count == 1)
             #expect(trip.totalActivities == 1)
             
             // Should be able to remove
             trip.lodging.removeAll()
+            try modelContext.save()
             #expect(trip.lodging.isEmpty)
             #expect(trip.totalActivities == 0)
         }
         
         @Test("Organization relationship mutations work safely")
-        func organizationRelationshipMutationsWorkSafely() {
+        func organizationRelationshipMutationsWorkSafely() async throws {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")
+            modelContext.insert(trip)
+            modelContext.insert(org)
+            try modelContext.save()
             
             let transportation = Transportation(
                 name: "Flight",
@@ -141,9 +166,12 @@ struct CloudKitSwiftDataConformanceTests {
                 trip: trip,
                 organization: org
             )
+            modelContext.insert(transportation)
+            try modelContext.save()
             
             // Setting relationship should work
             transportation.organization = org
+            try modelContext.save()
             
             // Organization should reflect the relationship
             #expect(org.transportation.contains { $0.id == transportation.id })
@@ -152,9 +180,13 @@ struct CloudKitSwiftDataConformanceTests {
         }
         
         @Test("File attachment mutations work safely")
-        func fileAttachmentMutationsWorkSafely() {
+        func fileAttachmentMutationsWorkSafely() async throws {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")
+            modelContext.insert(trip)
+            modelContext.insert(org)
+            try modelContext.save()
+            
             let activity = Activity(
                 name: "Test Activity",
                 start: Date(),
@@ -162,43 +194,57 @@ struct CloudKitSwiftDataConformanceTests {
                 trip: trip,
                 organization: org
             )
+            modelContext.insert(activity)
+            try modelContext.save()
             
             let attachment = EmbeddedFileAttachment(
                 fileName: "test.pdf",
                 originalFileName: "Test.pdf"
             )
+            modelContext.insert(attachment)
+            try modelContext.save()
             
             // Should be able to append
             activity.fileAttachments.append(attachment)
+            try modelContext.save()
             #expect(activity.hasAttachments == true)
             #expect(activity.attachmentCount == 1)
             
             // Should be able to remove
             activity.fileAttachments.removeAll()
+            try modelContext.save()
             #expect(activity.hasAttachments == false)
             #expect(activity.attachmentCount == 0)
         }
     }
     
     @Suite("None Organization Safety Tests")
-    struct NoneOrganizationSafetyTests {
+    @MainActor
+    class NoneOrganizationSafetyTests: SwiftDataTestBase {
         
         @Test("None organization creation is safe")
-        func noneOrganizationCreationIsSafe() {
+        func noneOrganizationCreationIsSafe() async throws {
             // Should not crash when accessing isNone property
             let noneOrg = Organization(name: "None")
+            modelContext.insert(noneOrg)
+            try modelContext.save()
             #expect(noneOrg.isNone == true)
             #expect(noneOrg.canBeDeleted == false)
             
             let regularOrg = Organization(name: "Regular")
+            modelContext.insert(regularOrg)
+            try modelContext.save()
             #expect(regularOrg.isNone == false)
             #expect(regularOrg.canBeDeleted == true)
         }
         
         @Test("None organization relationship handling")
-        func noneOrganizationRelationshipHandling() {
+        func noneOrganizationRelationshipHandling() async throws {
             let trip = Trip(name: "Test Trip")
             let noneOrg = Organization(name: "None")
+            modelContext.insert(trip)
+            modelContext.insert(noneOrg)
+            try modelContext.save()
             
             let activity = Activity(
                 name: "Test Activity",
@@ -207,6 +253,8 @@ struct CloudKitSwiftDataConformanceTests {
                 trip: trip,
                 organization: noneOrg
             )
+            modelContext.insert(activity)
+            try modelContext.save()
             
             // Should handle None organization relationships safely
             #expect(activity.organization?.isNone == true)
@@ -215,17 +263,21 @@ struct CloudKitSwiftDataConformanceTests {
     }
     
     @Suite("CloudKit Compatibility Tests")
-    struct CloudKitCompatibilityTests {
+    @MainActor
+    class CloudKitCompatibilityTests: SwiftDataTestBase {
         
         @Test("Empty relationships are efficiently stored")
-        func emptyRelationshipsAreEfficientlyStored() {
+        func emptyRelationshipsAreEfficientlyStored() async throws {
             let trip = Trip(name: "Empty Trip")
+            modelContext.insert(trip)
+            try modelContext.save()
             
             // Empty arrays should not waste CloudKit storage
             // Our setter should convert empty arrays to nil
             trip.lodging = []
             trip.transportation = []
             trip.activity = []
+            try modelContext.save()
             
             // But getters should still return empty arrays
             #expect(trip.lodging.isEmpty)
@@ -234,9 +286,12 @@ struct CloudKitSwiftDataConformanceTests {
         }
         
         @Test("Relationships handle CloudKit sync scenarios")
-        func relationshipsHandleCloudKitSyncScenarios() {
+        func relationshipsHandleCloudKitSyncScenarios() async throws {
             let trip = Trip(name: "Sync Test Trip")
             let org = Organization(name: "Sync Test Org")
+            modelContext.insert(trip)
+            modelContext.insert(org)
+            try modelContext.save()
             
             // Simulate CloudKit sync: relationships might be nil initially
             // Our accessors should handle this gracefully
@@ -253,20 +308,27 @@ struct CloudKitSwiftDataConformanceTests {
                 trip: trip,
                 organization: org
             )
+            modelContext.insert(lodging)
+            try modelContext.save()
             
             trip.lodging.append(lodging)
+            try modelContext.save()
             #expect(trip.lodging.count == 1)
             #expect(trip.totalActivities == 1)
         }
     }
     
     @Suite("Data Consistency Tests")
-    struct DataConsistencyTests {
+    @MainActor
+    class DataConsistencyTests: SwiftDataTestBase {
         
         @Test("Relationship bidirectionality is maintained")
-        func relationshipBidirectionalityIsMaintained() {
+        func relationshipBidirectionalityIsMaintained() async throws {
             let trip = Trip(name: "Bidirectional Test")
             let org = Organization(name: "Test Org")
+            modelContext.insert(trip)
+            modelContext.insert(org)
+            try modelContext.save()
             
             let activity = Activity(
                 name: "Test Activity",
@@ -275,10 +337,13 @@ struct CloudKitSwiftDataConformanceTests {
                 trip: trip,
                 organization: org
             )
+            modelContext.insert(activity)
+            try modelContext.save()
             
             // Set the "to-one" relationships
             activity.trip = trip
             activity.organization = org
+            try modelContext.save()
             
             // The "to-many" relationships should be updated automatically by SwiftData
             // Note: In real SwiftData, this happens automatically with inverse relationships
@@ -288,10 +353,14 @@ struct CloudKitSwiftDataConformanceTests {
         }
         
         @Test("Complex relationship scenarios work")
-        func complexRelationshipScenariosWork() {
+        func complexRelationshipScenariosWork() async throws {
             let trip = Trip(name: "Complex Trip")
             let org1 = Organization(name: "Airline")
             let org2 = Organization(name: "Hotel")
+            modelContext.insert(trip)
+            modelContext.insert(org1)
+            modelContext.insert(org2)
+            try modelContext.save()
             
             // Multiple activities with different organizations
             let flight = Transportation(
@@ -301,6 +370,7 @@ struct CloudKitSwiftDataConformanceTests {
                 trip: trip,
                 organization: org1
             )
+            modelContext.insert(flight)
             
             let hotel = Lodging(
                 name: "Hotel Stay",
@@ -311,6 +381,7 @@ struct CloudKitSwiftDataConformanceTests {
                 trip: trip,
                 organization: org2
             )
+            modelContext.insert(hotel)
             
             let activity = Activity(
                 name: "Sightseeing",
@@ -320,11 +391,14 @@ struct CloudKitSwiftDataConformanceTests {
                 trip: trip,
                 organization: org2
             )
+            modelContext.insert(activity)
+            try modelContext.save()
             
             // Manually set up relationships for testing
             trip.transportation.append(flight)
             trip.lodging.append(hotel)
             trip.activity.append(activity)
+            try modelContext.save()
             
             // Should calculate totals correctly
             #expect(trip.totalActivities == 3)
@@ -334,6 +408,7 @@ struct CloudKitSwiftDataConformanceTests {
             org1.transportation.append(flight)
             org2.lodging.append(hotel)
             org2.activity.append(activity)
+            try modelContext.save()
             
             #expect(org1.hasTransportation == true)
             #expect(org1.canBeDeleted == false)
@@ -344,12 +419,16 @@ struct CloudKitSwiftDataConformanceTests {
     }
     
     @Suite("Performance and Memory Tests")
-    struct PerformanceAndMemoryTests {
+    @MainActor
+    class PerformanceAndMemoryTests: SwiftDataTestBase {
         
         @Test("Large relationship collections perform well")
-        func largeRelationshipCollectionsPerformWell() {
+        func largeRelationshipCollectionsPerformWell() async throws {
             let trip = Trip(name: "Large Trip")
             let org = Organization(name: "Large Org")
+            modelContext.insert(trip)
+            modelContext.insert(org)
+            try modelContext.save()
             
             let startTime = Date()
             
@@ -363,10 +442,12 @@ struct CloudKitSwiftDataConformanceTests {
                     trip: trip,
                     organization: org
                 )
+                modelContext.insert(activity)
                 
                 trip.activity.append(activity)
                 org.activity.append(activity)
             }
+            try modelContext.save()
             
             let creationTime = Date().timeIntervalSince(startTime)
             #expect(creationTime < 6.0, "Creating 100 activities took \(creationTime) seconds")
@@ -379,7 +460,7 @@ struct CloudKitSwiftDataConformanceTests {
         }
         
         @Test("Memory usage is efficient with empty relationships")
-        func memoryUsageIsEfficientWithEmptyRelationships() {
+        func memoryUsageIsEfficientWithEmptyRelationships() async throws {
             // Create many objects with no relationships
             var trips: [Trip] = []
             var orgs: [Organization] = []
@@ -387,10 +468,13 @@ struct CloudKitSwiftDataConformanceTests {
             for i in 0..<50 {
                 let trip = Trip(name: "Trip \(i)")
                 let org = Organization(name: "Org \(i)")
+                modelContext.insert(trip)
+                modelContext.insert(org)
                 
                 trips.append(trip)
                 orgs.append(org)
             }
+            try modelContext.save()
             
             // All should have empty relationships without memory bloat
             for trip in trips {

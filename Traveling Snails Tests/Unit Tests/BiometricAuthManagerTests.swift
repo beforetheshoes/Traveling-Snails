@@ -346,8 +346,20 @@ struct BiometricAuthManagerIntegrationTests {
             
             // Race between timeout and auth
             let result = await withTaskGroup(of: Bool.self) { group in
-                group.addTask { await timeoutTask.value }
-                group.addTask { await authTask.value }
+                group.addTask { 
+                    do {
+                        return try await timeoutTask.value
+                    } catch {
+                        return false
+                    }
+                }
+                group.addTask { 
+                    do {
+                        return try await authTask.value
+                    } catch {
+                        return false
+                    }
+                }
                 
                 guard let first = await group.next() else { return false }
                 group.cancelAll()

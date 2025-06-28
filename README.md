@@ -61,8 +61,9 @@ A comprehensive travel planning and management app built with SwiftUI for iOS 18
 ### 🌐 Modern Features
 
 - **iOS 18+ Native**: Built with latest SwiftUI and SwiftData
-- **Cross-Device Sync**: iCloud integration for seamless device synchronization of all travel data (trips, activities, organizations) plus automatic settings sync using iCloud Key-Value Store
+- **Enhanced Data Sync Reliability**: Robust CloudKit synchronization with comprehensive conflict resolution, exponential backoff for network failures, batch processing for large datasets, and protected trip sync controls with real-time diagnostic tools
 - **Settings Sync**: Dark/light mode preferences and app settings automatically sync across all your devices in real-time
+- **Import/Export with Enhanced Data Integrity**: Comprehensive data backup and restore functionality with robust file access permission management, complete file attachment relationship preservation, trip protection status retention, user-friendly error messages, and graceful handling of permission failures, security-scoped resources, and large files
 - **Biometric Security**: Touch ID/Face ID protection for individual trips
 - **Adaptive Navigation**: Custom tab bar for iPad, native TabView for iPhone with intelligent deep navigation handling - trip selection from list properly returns to trip root when viewing activity details
 - **Database Management**: Built-in cleanup tools with user feedback for data maintenance and detailed issue diagnostics showing specific problematic items
@@ -395,7 +396,13 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### Getting Help
 
-- **Documentation**: Check this README and CLAUDE.md for development guidelines
+- **User Documentation**: This README for features and setup instructions
+- **Developer Documentation**: See [wiki](https://github.com/beforetheshoes/Traveling-Snails.wiki.git) for comprehensive technical guides
+  - **[INTEGRATION_PATTERNS_GUIDE.md](https://github.com/beforetheshoes/Traveling-Snails.wiki.git/blob/main/INTEGRATION_PATTERNS_GUIDE.md)** - Primary technical reference
+  - **[SwiftData-Patterns.md](https://github.com/beforetheshoes/Traveling-Snails.wiki.git/blob/main/SwiftData-Patterns.md)** - Critical anti-patterns and best practices
+  - **[Development-Workflow.md](https://github.com/beforetheshoes/Traveling-Snails.wiki.git/blob/main/Development-Workflow.md)** - Testing and contribution guidelines
+  - **[ARCHITECTURE.md](https://github.com/beforetheshoes/Traveling-Snails.wiki.git/blob/main/ARCHITECTURE.md)** - App structure and MVVM patterns
+- **Development Guidelines**: CLAUDE.md for critical SwiftData patterns and testing rules
 - **Issues**: Report bugs via GitHub Issues
 - **Discussions**: Join GitHub Discussions for questions and ideas
 

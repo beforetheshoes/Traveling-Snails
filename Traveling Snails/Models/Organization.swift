@@ -85,10 +85,10 @@ class Organization: Identifiable {
     static func cleanupDuplicateNoneOrganizations(in context: ModelContext) -> Int {
         switch OrganizationManager.shared.ensureNoneOrganization(in: context) {
         case .success(let result):
-            print("✅ Successfully ensured None organization consistency, removed \(result.duplicatesRemoved) duplicates")
+            Logger.shared.info("Successfully ensured None organization consistency, removed \(result.duplicatesRemoved) duplicates")
             return result.duplicatesRemoved
         case .failure(let error):
-            print("❌ Error cleaning up duplicate 'None' organizations: \(error.localizedDescription)")
+            Logger.shared.error("Error cleaning up duplicate 'None' organizations: \(error.localizedDescription)")
             return 0
         }
     }
@@ -97,10 +97,10 @@ class Organization: Identifiable {
     static func ensureUniqueNoneOrganization(in context: ModelContext) -> Organization {
         switch OrganizationManager.shared.ensureNoneOrganization(in: context) {
         case .success(let result):
-            print("✅ Successfully ensured unique None organization")
+            Logger.shared.info("Successfully ensured unique None organization")
             return result.organization
         case .failure(let error):
-            print("❌ Error ensuring unique None organization: \(error.localizedDescription)")
+            Logger.shared.error("Error ensuring unique None organization: \(error.localizedDescription)")
             // Fallback: try to create one the old way
             return Organization(name: "None")
         }

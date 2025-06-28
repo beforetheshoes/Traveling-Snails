@@ -16,7 +16,20 @@ class EmbeddedFileAttachmentManager {
     private init() {}
     
     func saveFile(from sourceURL: URL, originalName: String) -> EmbeddedFileAttachment? {
-        print("📂 Embedding file from: \(sourceURL.path)")
+        // This is the existing method - keeping for compatibility
+        switch saveFileWithResult(from: sourceURL, originalName: originalName) {
+        case .success(let attachment):
+            return attachment
+        case .failure(let error):
+            Logger.shared.error("File save failed: \(error.localizedDescription)")
+            return nil
+        }
+    }
+    
+    func saveFileWithResult(from sourceURL: URL, originalName: String) -> Result<EmbeddedFileAttachment, FileAttachmentError> {
+        #if DEBUG
+        Logger.shared.debug("Embedding file from: \(sourceURL.path)")
+        #endif
         
         // Check if this is a temporary file (created by us) or a security scoped resource
         let isTemporaryFile = sourceURL.path.contains(FileManager.default.temporaryDirectory.path)
@@ -34,18 +47,22 @@ class EmbeddedFileAttachmentManager {
         }
         
         guard hasAccess else {
-            print("❌ Failed to access security scoped resource")
-            return nil
+            Logger.shared.error("Failed to access security scoped resource for file: \(sourceURL.path)")
+            Logger.shared.error("This typically happens when the file was selected through a file picker but the security scope has expired")
+            Logger.shared.error("User should try selecting the file again through the document picker")
+            return .failure(.securityScopedResourceAccessDenied(filename: originalName))
         }
         
         do {
             // Read the file data
             let fileData = try Data(contentsOf: sourceURL)
-            print("📊 File data read successfully. Size: \(fileData.count) bytes")
+            #if DEBUG
+            Logger.shared.debug("File data read successfully. Size: \(fileData.count) bytes")
+            #endif
             
             guard !fileData.isEmpty else {
-                print("❌ File data is empty for file: \(sourceURL.path)")
-                return nil
+                Logger.shared.error("File data is empty for file: \(sourceURL.path)")
+                return .failure(.fileDataEmpty(filename: originalName))
             }
             
             // Generate unique filename
@@ -53,7 +70,9 @@ class EmbeddedFileAttachmentManager {
             let uniqueFileName = "\(UUID().uuidString).\(fileExtension)"
             let mimeType = getMimeType(for: sourceURL)
             
-            print("📄 File details - Extension: \(fileExtension), MIME: \(mimeType), Original: \(originalName)")
+            #if DEBUG
+            Logger.shared.debug("File details - Extension: \(fileExtension), MIME: \(mimeType), Original: \(originalName)")
+            #endif
             
             // Create file attachment with embedded data
             let attachment = EmbeddedFileAttachment(
@@ -65,15 +84,17 @@ class EmbeddedFileAttachmentManager {
                 fileData: fileData
             )
             
-            print("✅ EmbeddedFileAttachment created successfully")
-            print("   - ID: \(attachment.id)")
+            #if DEBUG
+            Logger.shared.debug("EmbeddedFileAttachment created successfully")
+            Logger.shared.debug("ID: \(attachment.id)")
+            #endif
             print("   - FileName: \(attachment.fileName)")
             print("   - OriginalName: \(attachment.originalFileName)")
             print("   - Size: \(attachment.fileSize) bytes")
             print("   - MIME: \(attachment.mimeType)")
             print("   - Extension: \(attachment.fileExtension)")
             
-            return attachment
+            return .success(attachment)
             
         } catch {
             print("❌ Failed to read file data from \(sourceURL.path)")
@@ -83,7 +104,7 @@ class EmbeddedFileAttachmentManager {
                 print("❌ NSError domain: \(nsError.domain), code: \(nsError.code)")
                 print("❌ NSError userInfo: \(nsError.userInfo)")
             }
-            return nil
+            return .failure(.fileReadError(filename: originalName, underlying: error))
         }
     }
     
@@ -122,5 +143,40 @@ class EmbeddedFileAttachmentManager {
             return uti.preferredMIMEType ?? "application/octet-stream"
         }
         return "application/octet-stream"
+    }
+}
+
+// MARK: - File Attachment Error Types
+
+enum FileAttachmentError: LocalizedError {
+    case securityScopedResourceAccessDenied(filename: String)
+    case fileDataEmpty(filename: String)
+    case fileReadError(filename: String, underlying: Error)
+    case unknownError(underlying: Error)
+    
+    var errorDescription: String? {
+        switch self {
+        case .securityScopedResourceAccessDenied(let filename):
+            return "Unable to access '\(filename)'. Please try selecting the file again through the file picker."
+        case .fileDataEmpty(let filename):
+            return "The file '\(filename)' appears to be empty and cannot be attached."
+        case .fileReadError(let filename, let underlying):
+            return "Failed to read '\(filename)': \(underlying.localizedDescription)"
+        case .unknownError(let underlying):
+            return "An unexpected error occurred: \(underlying.localizedDescription)"
+        }
+    }
+    
+    var recoverySuggestion: String? {
+        switch self {
+        case .securityScopedResourceAccessDenied:
+            return "Use the file picker to select the file again. This grants the app temporary access to read the file."
+        case .fileDataEmpty:
+            return "Please check that the file contains data and try selecting a different file."
+        case .fileReadError:
+            return "Ensure the file exists and you have permission to read it, then try again."
+        case .unknownError:
+            return "Please try the operation again. If the problem persists, contact support."
+        }
     }
 }
