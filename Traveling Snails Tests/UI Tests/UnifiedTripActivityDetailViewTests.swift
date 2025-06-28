@@ -27,7 +27,7 @@ final class UnifiedTripActivityDetailViewTests: SwiftDataTestBase {
         modelContext.insert(existingTransportation)
         
         // Create detail view (simulating how it would be created in the app)
-        let detailView = UnifiedTripActivityDetailView(activity: existingTransportation)
+        _ = UnifiedTripActivityDetailView(activity: existingTransportation)
         
         // We can't easily test SwiftUI views directly, but we can test the logic
         // by creating a similar computed property and testing its behavior
