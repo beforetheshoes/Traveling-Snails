@@ -10,7 +10,7 @@ struct FileAttachmentSearchResultView: View {
     let attachment: EmbeddedFileAttachment
     @State private var showingQuickLook = false
     @State private var thumbnailImage: UIImage?
-    
+
     private var associatedActivity: String {
         if let activity = attachment.activity {
             return "Activity: \(activity.name)"
@@ -21,7 +21,7 @@ struct FileAttachmentSearchResultView: View {
         }
         return "Unknown"
     }
-    
+
     var body: some View {
         Button {
             showingQuickLook = true
@@ -44,18 +44,18 @@ struct FileAttachmentSearchResultView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
                 }
-                
+
                 // File info
                 VStack(alignment: .leading, spacing: 4) {
                     Text(attachment.displayName)
                         .font(.headline)
                         .foregroundColor(.primary)
                         .lineLimit(2)
-                    
+
                     Text(associatedActivity)
                         .font(.subheadline)
                         .foregroundColor(.blue)
-                    
+
                     HStack {
                         Text(attachment.fileExtension.uppercased())
                             .font(.caption)
@@ -63,21 +63,21 @@ struct FileAttachmentSearchResultView: View {
                             .padding(.vertical, 2)
                             .background(Color.secondary.opacity(0.2))
                             .cornerRadius(4)
-                        
+
                         Text(attachment.formattedFileSize)
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        
+
                         Spacer()
-                        
+
                         Text(attachment.createdDate, style: .date)
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
                 }
-                
+
                 Spacer()
-                
+
                 Image(systemName: "chevron.right")
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -92,10 +92,10 @@ struct FileAttachmentSearchResultView: View {
             CrossDeviceQuickLookView(attachment: attachment)
         }
     }
-    
+
     private func loadThumbnail() {
         guard attachment.isImage, let data = attachment.fileData else { return }
-        
+
         DispatchQueue.global(qos: .userInitiated).async {
             if let image = UIImage(data: data) {
                 DispatchQueue.main.async {

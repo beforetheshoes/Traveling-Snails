@@ -1,5 +1,5 @@
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct TripContentView: View {
     let trip: Trip
@@ -13,9 +13,9 @@ struct TripContentView: View {
     @Binding var showingCalendarView: Bool
     private let authManager = BiometricAuthManager.shared
     let onLockTrip: () -> Void
-    
+
     @State private var showingRemoveProtectionConfirmation: Bool = false
-    
+
     init(trip: Trip, activities: [ActivityWrapper], viewMode: Binding<TripDetailView.ViewMode>, navigationPath: Binding<NavigationPath>, showingLodgingSheet: Binding<Bool>, showingTransportationSheet: Binding<Bool>, showingActivitySheet: Binding<Bool>, showingEditTripSheet: Binding<Bool>, showingCalendarView: Binding<Bool>, onLockTrip: @escaping () -> Void = {}) {
         self.trip = trip
         self.activities = activities
@@ -28,8 +28,8 @@ struct TripContentView: View {
         self._showingCalendarView = showingCalendarView
         self.onLockTrip = onLockTrip
     }
-    
-    
+
+
     var body: some View {
         VStack(spacing: 0) {
             // View mode selector
@@ -42,14 +42,14 @@ struct TripContentView: View {
                     }
                     .pickerStyle(.segmented)
                     .padding(.horizontal)
-                    
+
                     // Trip summary
                     TripSummaryView(trip: trip, activities: activities)
                 }
                 .padding(.vertical)
                 .background(Color(.systemGray6))
             }
-            
+
             // Content based on view mode
             Group {
                 switch viewMode {
@@ -70,7 +70,7 @@ struct TripContentView: View {
                     Image(systemName: "pencil")
                 }
             }
-            
+
             ToolbarItem(placement: .navigationBarTrailing) {
                 Menu {
                     Button {
@@ -83,28 +83,28 @@ struct TripContentView: View {
                     } label: {
                         Label("Add Lodging", systemImage: "bed.double")
                     }
-                    
+
                     Button {
                         showingTransportationSheet = true
                     } label: {
                         Label("Add Transportation", systemImage: "airplane")
                     }
-                    
+
                     Divider()
-                    
+
                     Button {
                         showingCalendarView = true
                     } label: {
                         Label("Full Calendar View", systemImage: "calendar.badge.plus")
                     }
-                    
+
                     Divider()
-                    
+
                     // Biometric protection controls
                     if authManager.canUseBiometrics() && authManager.isEnabled {
                         let isProtected = authManager.isProtected(trip)
                         let isAuthenticated = authManager.isAuthenticated(for: trip)
-                        
+
                         if isProtected && isAuthenticated {
                             Button {
                                 authManager.lockTrip(trip)
@@ -113,7 +113,7 @@ struct TripContentView: View {
                                 Label("Lock Trip Now", systemImage: "lock.fill")
                             }
                         }
-                        
+
                         Button {
                             if isProtected {
                                 // Show confirmation dialog for removing protection
@@ -171,7 +171,7 @@ struct TripContentView: View {
             Text("Removing protection means this trip will no longer require \(authManager.biometricType == .faceID ? "Face ID" : "Touch ID") authentication to access. Anyone with access to your device will be able to view trip details, activities, and attachments.")
         }
     }
-    
+
     @ViewBuilder
     private var listView: some View {
         if activities.isEmpty {
@@ -205,7 +205,7 @@ struct TripContentView: View {
             .listStyle(.plain)
         }
     }
-    
+
     @ViewBuilder
     private var calendarView: some View {
         CompactCalendarView(trip: trip, activities: activities) { activity in

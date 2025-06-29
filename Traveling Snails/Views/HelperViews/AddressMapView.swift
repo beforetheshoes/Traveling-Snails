@@ -4,13 +4,13 @@
 //
 //
 
-import SwiftUI
 import MapKit
+import SwiftUI
 
 struct AddressMapView: View {
     let address: Address
     @State private var position: MapCameraPosition
-    
+
     init(address: Address) {
         self.address = address
         if let coordinate = address.coordinate {
@@ -25,7 +25,7 @@ struct AddressMapView: View {
             )))
         }
     }
-    
+
     var body: some View {
         Map(position: $position) {
             if let coordinate = address.coordinate {

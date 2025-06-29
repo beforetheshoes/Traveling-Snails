@@ -14,7 +14,7 @@ struct ActivitySubmitButton: View {
     let color: Color
     let saveError: Error?
     let action: () -> Void
-    
+
     var body: some View {
         VStack(spacing: 12) {
             Button(action: action) {
@@ -24,7 +24,7 @@ struct ActivitySubmitButton: View {
                             .scaleEffect(0.8)
                             .padding(.trailing, 4)
                     }
-                    
+
                     Text(isSaving ? "Saving..." : title)
                         .font(.headline)
                         .fontWeight(.semibold)
@@ -36,12 +36,12 @@ struct ActivitySubmitButton: View {
                 .cornerRadius(12)
             }
             .disabled(!isValid || isSaving)
-            
+
             if let error = saveError {
                 HStack {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundColor(.red)
-                    
+
                     Text("Error: \(error.localizedDescription)")
                         .foregroundColor(.red)
                         .font(.caption)
@@ -63,36 +63,32 @@ struct ActivitySubmitButton: View {
             isValid: true,
             isSaving: false,
             color: .blue,
-            saveError: nil,
-            action: {}
-        )
-        
+            saveError: nil
+        )            {}
+
         ActivitySubmitButton(
             title: "Save Lodging",
             isValid: false,
             isSaving: false,
             color: .green,
-            saveError: nil,
-            action: {}
-        )
-        
+            saveError: nil
+        )            {}
+
         ActivitySubmitButton(
             title: "Save Transportation",
             isValid: true,
             isSaving: true,
             color: .orange,
-            saveError: nil,
-            action: {}
-        )
-        
+            saveError: nil
+        )            {}
+
         ActivitySubmitButton(
             title: "Save Activity",
             isValid: true,
             isSaving: false,
             color: .blue,
-            saveError: NSError(domain: "Test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error message"]),
-            action: {}
-        )
+            saveError: NSError(domain: "Test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error message"])
+        )            {}
     }
     .padding()
 }

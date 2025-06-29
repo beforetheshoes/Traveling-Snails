@@ -10,12 +10,12 @@ import SwiftUI
 struct CrossDeviceEditFileAttachmentView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    
+
     @Bindable var attachment: EmbeddedFileAttachment
     @State private var editedDescription: String = ""
     @State private var isSaving = false
     @State private var saveError: String?
-    
+
     var body: some View {
         NavigationStack {
             Form {
@@ -25,13 +25,13 @@ struct CrossDeviceEditFileAttachmentView: View {
                     LabeledContent("Size", value: attachment.formattedFileSize)
                     LabeledContent("Created", value: attachment.createdDate.formatted(date: .abbreviated, time: .shortened))
                 }
-                
+
                 Section("Description") {
                     TextField("Add a description", text: $editedDescription, axis: .vertical)
                         .lineLimit(3...6)
                         .disabled(isSaving)
                 }
-                
+
                 if attachment.isImage, let data = attachment.fileData, let image = UIImage(data: data) {
                     Section("Preview") {
                         Image(uiImage: image)
@@ -43,7 +43,7 @@ struct CrossDeviceEditFileAttachmentView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
                 }
-                
+
                 if let saveError = saveError {
                     Section {
                         Text(saveError)
@@ -61,7 +61,7 @@ struct CrossDeviceEditFileAttachmentView: View {
                     }
                     .disabled(isSaving)
                 }
-                
+
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Save") {
                         Task {
@@ -76,11 +76,11 @@ struct CrossDeviceEditFileAttachmentView: View {
             }
         }
     }
-    
+
     private func saveChanges() async {
         isSaving = true
         saveError = nil
-        
+
         do {
             attachment.fileDescription = editedDescription
             try modelContext.save()

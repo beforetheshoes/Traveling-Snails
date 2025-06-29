@@ -5,8 +5,8 @@
 //
 
 import Foundation
-import SwiftData
 import Observation
+import SwiftData
 
 /// Modern SettingsViewModel using dependency injection
 /// Replaces singleton-based SettingsViewModel for better testability
@@ -14,13 +14,13 @@ import Observation
 @MainActor
 class ModernSettingsViewModel {
     // MARK: - Properties
-    
+
     private let modelContext: ModelContext
     private let appSettings: ModernAppSettings
     private let authManager: ModernBiometricAuthManager
     private let authService: AuthenticationService
     private let cloudStorageService: CloudStorageService?
-    
+
     // UI State
     var showingDataBrowser = false
     var showingExportView = false
@@ -28,21 +28,21 @@ class ModernSettingsViewModel {
     var showingFileAttachmentSettings = false
     var showingImportProgress = false
     var showingDatabaseCleanup = false
-    
+
     // Data management
     var importManager = DatabaseImportManager()
     var importResult: DatabaseImportManager.ImportResult?
-    
+
     // Error handling
     var importError: String?
     var showingImportError = false
-    
+
     // Organization cleanup feedback
     var showingOrganizationCleanupAlert = false
     var organizationCleanupMessage = ""
-    
+
     // MARK: - Initialization
-    
+
     /// Initialize with injected dependencies
     /// - Parameters:
     ///   - modelContext: The SwiftData model context
@@ -63,22 +63,22 @@ class ModernSettingsViewModel {
         self.authService = authService
         self.cloudStorageService = cloudStorageService
     }
-    
+
     // MARK: - Computed Properties
-    
+
     var allTripsLocked: Bool {
         authService.allTripsLocked
     }
-    
+
     var colorScheme: ColorSchemePreference {
         get { appSettings.colorScheme }
         set { appSettings.colorScheme = newValue }
     }
-    
+
     var canUseBiometrics: Bool {
         authService.canUseBiometrics()
     }
-    
+
     var biometricType: String {
         switch authService.biometricType {
         case .faceID:
@@ -89,80 +89,80 @@ class ModernSettingsViewModel {
             return "None"
         }
     }
-    
+
     var currentBiometricTimeout: TimeoutOption {
         let minutes = appSettings.biometricTimeoutMinutes
         let seconds = TimeInterval(minutes * 60)
         return TimeoutOption.from(seconds)
     }
-    
+
     var appVersion: String {
         Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
     }
-    
+
     var buildNumber: String {
         Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "Unknown"
     }
-    
+
     // MARK: - Actions
-    
+
     func openDataBrowser() {
         showingDataBrowser = true
     }
-    
+
     func openExportView() {
         showingExportView = true
     }
-    
+
     func openImportPicker() {
         showingImportPicker = true
     }
-    
+
     func openFileAttachmentSettings() {
         showingFileAttachmentSettings = true
     }
-    
+
     func openDatabaseCleanup() {
         showingDatabaseCleanup = true
     }
-    
+
     func setBiometricTimeout(_ timeout: TimeoutOption) {
         let minutes = Int(timeout.rawValue / 60)
         appSettings.biometricTimeoutMinutes = minutes
     }
-    
+
     func lockAllProtectedTrips() {
         authService.lockAllTrips()
     }
-    
+
     func cleanupNoneOrganizations() {
         let duplicatesRemoved = DataManagementService.cleanupNoneOrganizations(in: modelContext)
-        
+
         if duplicatesRemoved > 0 {
             organizationCleanupMessage = "Successfully removed \(duplicatesRemoved) duplicate organization\(duplicatesRemoved == 1 ? "" : "s")"
         } else {
             organizationCleanupMessage = "No duplicate organizations found"
         }
-        
+
         showingOrganizationCleanupAlert = true
     }
-    
+
     func handleImportResult(_ result: Result<[URL], Error>) {
         switch result {
         case .success(let urls):
             guard let url = urls.first else { return }
             showingImportProgress = true
-            
+
             Task {
                 let result = await DataManagementService.importDatabase(
                     from: url,
                     using: importManager,
                     into: modelContext
                 )
-                
+
                 await MainActor.run {
                     self.importResult = result
-                    
+
                     // Post notification for progress view
                     NotificationCenter.default.post(
                         name: .importCompleted,
@@ -172,22 +172,22 @@ class ModernSettingsViewModel {
             }
         case .failure(let error):
             Logger.shared.error("Import failed: \(error)")
-            
+
             // Provide user-friendly error message
             let userFriendlyError = getUserFriendlyImportError(from: error)
-            
+
             Task { @MainActor in
                 self.importError = userFriendlyError
                 self.showingImportError = true
             }
         }
     }
-    
+
     // MARK: - Error Handling Helpers
-    
+
     private func getUserFriendlyImportError(from error: Error) -> String {
         let nsError = error as NSError
-        
+
         switch nsError.domain {
         case NSCocoaErrorDomain:
             switch nsError.code {
@@ -232,7 +232,7 @@ extension ModernSettingsViewModel {
         case thirtyMinutes = 1800
         case oneHour = 3600
         case never = -1
-        
+
         var displayName: String {
             switch self {
             case .immediately: return "Immediately"
@@ -243,9 +243,9 @@ extension ModernSettingsViewModel {
             case .never: return "Never"
             }
         }
-        
+
         static func from(_ timeInterval: TimeInterval) -> TimeoutOption {
-            return allCases.first { $0.rawValue == timeInterval } ?? .fifteenMinutes
+            allCases.first { $0.rawValue == timeInterval } ?? .fifteenMinutes
         }
     }
 }
@@ -253,7 +253,6 @@ extension ModernSettingsViewModel {
 // MARK: - Convenience Factory Methods
 
 extension ModernSettingsViewModel {
-    
     /// Create a ModernSettingsViewModel with production services
     /// - Parameter modelContext: The SwiftData model context
     /// - Returns: Configured view model with production services
@@ -262,7 +261,7 @@ extension ModernSettingsViewModel {
         let cloudStorageService = iCloudStorageService()
         let appSettings = ModernAppSettings(cloudStorageService: cloudStorageService)
         let authManager = ModernBiometricAuthManager(authService: authService)
-        
+
         return ModernSettingsViewModel(
             modelContext: modelContext,
             appSettings: appSettings,
@@ -271,7 +270,7 @@ extension ModernSettingsViewModel {
             cloudStorageService: cloudStorageService
         )
     }
-    
+
     /// Create a ModernSettingsViewModel from a service container
     /// - Parameters:
     ///   - container: The service container to resolve from
@@ -282,7 +281,7 @@ extension ModernSettingsViewModel {
         let cloudStorageService = container.tryResolve(CloudStorageService.self)
         let appSettings = ModernAppSettings(cloudStorageService: cloudStorageService)
         let authManager = ModernBiometricAuthManager(authService: authService)
-        
+
         return ModernSettingsViewModel(
             modelContext: modelContext,
             appSettings: appSettings,
@@ -291,7 +290,7 @@ extension ModernSettingsViewModel {
             cloudStorageService: cloudStorageService
         )
     }
-    
+
     /// Create a ModernSettingsViewModel for testing
     /// - Parameters:
     ///   - modelContext: The SwiftData model context
@@ -305,7 +304,7 @@ extension ModernSettingsViewModel {
     ) -> ModernSettingsViewModel {
         let appSettings = ModernAppSettings(cloudStorageService: cloudStorageService)
         let authManager = ModernBiometricAuthManager(authService: authService)
-        
+
         return ModernSettingsViewModel(
             modelContext: modelContext,
             appSettings: appSettings,

@@ -10,38 +10,38 @@ struct TimeZonePicker: View {
     @Binding var selectedTimeZoneId: String
     let address: Address?
     let label: String
-    
+
     @State private var detectedTimeZone: TimeZone?
     @State private var isDetectingTimeZone = false
     @State private var showingAllTimeZones = false
     @State private var hasDetectedFromAddress = false
     @State private var hasUserMadeManualSelection = false // Track manual selections
-    
+
     var selectedTimeZone: TimeZone {
         TimeZone(identifier: selectedTimeZoneId) ?? TimeZone.current
     }
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text(label)
                     .font(.caption)
                     .foregroundColor(.secondary)
-                
+
                 Spacer()
-                
+
                 if isDetectingTimeZone {
                     ProgressView()
                         .scaleEffect(0.8)
                 }
             }
-            
+
             // Current selection display
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(TimeZoneHelper.formatTimeZone(selectedTimeZone))
                         .font(.body)
-                    
+
                     // Only show detected timezone suggestion if user hasn't made manual selection
                     if let detectedTZ = detectedTimeZone,
                        detectedTZ.identifier != selectedTimeZoneId,
@@ -55,9 +55,9 @@ struct TimeZonePicker: View {
                         .foregroundColor(.blue)
                     }
                 }
-                
+
                 Spacer()
-                
+
                 Button("Change") {
                     showingAllTimeZones = true
                 }
@@ -98,19 +98,19 @@ struct TimeZonePicker: View {
             }
         }
     }
-    
+
     private func detectTimeZoneFromAddress() {
         guard let address = address, !hasDetectedFromAddress, !hasUserMadeManualSelection else { return }
-        
+
         isDetectingTimeZone = true
-        
+
         Task {
             let timeZone = await TimeZoneHelper.getTimeZone(from: address)
-            
+
             await MainActor.run {
                 isDetectingTimeZone = false
                 detectedTimeZone = timeZone
-                
+
                 // Auto-apply detected timezone only if user hasn't manually selected one
                 // and we're still using the default timezone
                 if let detectedTZ = timeZone,

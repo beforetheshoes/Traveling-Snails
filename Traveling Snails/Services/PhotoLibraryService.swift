@@ -16,23 +16,23 @@ protocol PhotoLibraryService: Sendable {
     /// - Parameter accessLevel: The level of access requested (.addOnly or .readWrite)
     /// - Returns: The current authorization status
     func authorizationStatus(for accessLevel: PHAccessLevel) -> PHAuthorizationStatus
-    
+
     /// Request authorization for photo library access
     /// - Parameter accessLevel: The level of access to request
     /// - Returns: The authorization status after the request
     func requestAuthorization(for accessLevel: PHAccessLevel) async -> PHAuthorizationStatus
-    
+
     /// Present the limited library picker (iOS 14+)
     /// - Parameter viewController: The view controller to present from
     func presentLimitedLibraryPicker(from viewController: UIViewController?)
-    
+
     /// Whether the app should prevent automatic limited access alerts
     var preventsAutomaticLimitedAccessAlert: Bool { get set }
-    
+
     /// Register for photo library change notifications
     /// - Parameter observer: The observer to register
     func register(_ observer: PHPhotoLibraryChangeObserver)
-    
+
     /// Unregister from photo library change notifications
     /// - Parameter observer: The observer to unregister
     func unregister(_ observer: PHPhotoLibraryChangeObserver)
@@ -45,7 +45,7 @@ enum PhotoLibraryError: LocalizedError {
     case limitedAccess
     case notDetermined
     case unknown
-    
+
     var errorDescription: String? {
         switch self {
         case .accessDenied:
@@ -75,7 +75,7 @@ extension PHAuthorizationStatus {
             return false
         }
     }
-    
+
     /// Whether the current status allows adding photos
     var allowsAddingPhotos: Bool {
         switch self {
@@ -87,7 +87,7 @@ extension PHAuthorizationStatus {
             return false
         }
     }
-    
+
     /// User-friendly description of the authorization status
     var userFriendlyDescription: String {
         switch self {

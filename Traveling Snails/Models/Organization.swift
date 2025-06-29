@@ -5,8 +5,8 @@
 //
 
 import Foundation
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 @Model
 class Organization: Identifiable {
@@ -17,31 +17,31 @@ class Organization: Identifiable {
     var website: String = ""
     var logoURL: String = ""
     var cachedLogoFilename: String = ""
-    
+
     @Relationship(deleteRule: .cascade, inverse: \Address.organizations)
-    var address: Address? = nil
-    
+    var address: Address?
+
     // CLOUDKIT REQUIRED: Optional relationships with SAFE accessors
     @Relationship(deleteRule: .nullify, inverse: \Transportation.organization)
-    private var _transportation: [Transportation]? = nil
+    private var _transportation: [Transportation]?
 
     @Relationship(deleteRule: .nullify, inverse: \Lodging.organization)
-    private var _lodging: [Lodging]? = nil
+    private var _lodging: [Lodging]?
 
     @Relationship(deleteRule: .nullify, inverse: \Activity.organization)
-    private var _activity: [Activity]? = nil
-   
+    private var _activity: [Activity]?
+
     // SAFE ACCESSORS: Never return nil
     var transportation: [Transportation] {
         get { _transportation ?? [] }
         set { _transportation = newValue.isEmpty ? nil : newValue }
     }
-   
+
     var lodging: [Lodging] {
         get { _lodging ?? [] }
         set { _lodging = newValue.isEmpty ? nil : newValue }
     }
-   
+
     var activity: [Activity] {
         get { _activity ?? [] }
         set { _activity = newValue.isEmpty ? nil : newValue }
@@ -64,7 +64,7 @@ class Organization: Identifiable {
         self.cachedLogoFilename = cachedLogoFilename
         self.address = address ?? Address()
     }
-    
+
     var isNone: Bool { name == "None" }
     var hasPhone: Bool { !phone.isEmpty }
     var hasEmail: Bool { !email.isEmpty }
@@ -92,7 +92,7 @@ class Organization: Identifiable {
             return 0
         }
     }
-    
+
 /// Ensure there's exactly one None organization - delegates to OrganizationManager
     static func ensureUniqueNoneOrganization(in context: ModelContext) -> Organization {
         switch OrganizationManager.shared.ensureNoneOrganization(in: context) {
@@ -105,8 +105,8 @@ class Organization: Identifiable {
             return Organization(name: "None")
         }
     }
-    
+
     static func createNoneOrganization(in context: ModelContext) -> Organization? {
-        return getNoneOrganization(in: context)
+        getNoneOrganization(in: context)
     }
 }

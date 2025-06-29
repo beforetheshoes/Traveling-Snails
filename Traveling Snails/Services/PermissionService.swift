@@ -15,40 +15,40 @@ protocol PermissionService: Sendable {
     /// - Parameter accessLevel: The level of access to request
     /// - Returns: The authorization status after the request
     func requestPhotoLibraryAccess(for accessLevel: PHAccessLevel) async -> PHAuthorizationStatus
-    
+
     /// Get current photo library authorization status
     /// - Parameter accessLevel: The level of access to check
     /// - Returns: The current authorization status
     func getPhotoLibraryAuthorizationStatus(for accessLevel: PHAccessLevel) -> PHAuthorizationStatus
-    
+
     /// Request camera access permission
     /// - Returns: True if camera access is granted
     func requestCameraAccess() async -> Bool
-    
+
     /// Get current camera authorization status
     /// - Returns: True if camera access is available
     func getCameraAuthorizationStatus() -> Bool
-    
+
     /// Request microphone access permission
     /// - Returns: True if microphone access is granted
     func requestMicrophoneAccess() async -> Bool
-    
+
     /// Get current microphone authorization status
     /// - Returns: True if microphone access is available
     func getMicrophoneAuthorizationStatus() -> Bool
-    
+
     /// Request location access permission
     /// - Parameter usage: The type of location usage
     /// - Returns: The location authorization status
     func requestLocationAccess(for usage: LocationUsage) async -> LocationAuthorizationStatus
-    
+
     /// Get current location authorization status
     /// - Returns: The current location authorization status
     func getLocationAuthorizationStatus() -> LocationAuthorizationStatus
-    
+
     /// Open the app's settings page
     func openAppSettings()
-    
+
     /// Check if a specific permission is required by the app
     /// - Parameter permission: The permission type to check
     /// - Returns: True if the permission is required
@@ -63,7 +63,7 @@ enum PermissionType: CaseIterable {
     case microphone
     case locationWhenInUse
     case locationAlways
-    
+
     var displayName: String {
         switch self {
         case .photoLibraryRead:
@@ -80,7 +80,7 @@ enum PermissionType: CaseIterable {
             return "Location (Always)"
         }
     }
-    
+
     var description: String {
         switch self {
         case .photoLibraryRead:
@@ -112,7 +112,7 @@ enum LocationAuthorizationStatus {
     case restricted
     case authorizedWhenInUse
     case authorizedAlways
-    
+
     var isAuthorized: Bool {
         switch self {
         case .authorizedWhenInUse, .authorizedAlways:
@@ -121,7 +121,7 @@ enum LocationAuthorizationStatus {
             return false
         }
     }
-    
+
     var userFriendlyDescription: String {
         switch self {
         case .notDetermined:
@@ -154,7 +154,7 @@ enum PermissionError: LocalizedError {
     case restricted
     case temporarilyUnavailable
     case unknown(Error)
-    
+
     var errorDescription: String? {
         switch self {
         case .notSupported:
@@ -181,20 +181,20 @@ protocol AdvancedPermissionService: PermissionService {
     /// Get status for all permissions
     /// - Returns: Array of permission statuses
     func getAllPermissionStatuses() async -> [PermissionStatus]
-    
+
     /// Add an observer for permission changes
     /// - Parameter observer: The observer to add
     func addObserver(_ observer: PermissionServiceObserver)
-    
+
     /// Remove an observer for permission changes
     /// - Parameter observer: The observer to remove
     func removeObserver(_ observer: PermissionServiceObserver)
-    
+
     /// Check if the app should show permission rationale
     /// - Parameter permission: The permission to check
     /// - Returns: True if rationale should be shown
     func shouldShowPermissionRationale(for permission: PermissionType) -> Bool
-    
+
     /// Request multiple permissions at once
     /// - Parameter permissions: Array of permissions to request
     /// - Returns: Dictionary of permission results

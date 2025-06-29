@@ -1,5 +1,5 @@
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct TripDetailView: View {
     let trip: Trip
@@ -13,15 +13,15 @@ struct TripDetailView: View {
     @State private var viewMode: ViewMode = .list
     @State private var isAuthenticating: Bool = false
     @State private var isLocallyAuthenticated: Bool = false
-    
+
     // FIXED: Use @Query instead of relationship access to ensure UI updates immediately
     @Query private var lodgingActivities: [Lodging]
     @Query private var transportationActivities: [Transportation]
     @Query private var activityActivities: [Activity]
-    
+
     init(trip: Trip) {
         self.trip = trip
-        
+
         // Filter queries by trip ID for proper isolation
         let tripId = trip.id
         self._lodgingActivities = Query(
@@ -37,11 +37,11 @@ struct TripDetailView: View {
             sort: \Activity.start
         )
     }
-    
+
     enum ViewMode: String, CaseIterable {
             case list = "List"
             case calendar = "Calendar"
-            
+
             var icon: String {
                 switch self {
                 case .list: return "list.bullet"
@@ -49,26 +49,26 @@ struct TripDetailView: View {
                 }
             }
         }
-    
+
     var allActivities: [ActivityWrapper] {
         let lodgingWrappers = lodgingActivities.map { ActivityWrapper($0) }
         let transportationWrappers = transportationActivities.map { ActivityWrapper($0) }
         let activityWrappers = activityActivities.map { ActivityWrapper($0) }
-        
+
         return (lodgingWrappers + transportationWrappers + activityWrappers)
             .sorted { $0.tripActivity.start < $1.tripActivity.start }
     }
-    
+
     // Check if we need to show lock screen
     private var needsLockScreen: Bool {
-        return authManager.isProtected(trip) && !isLocallyAuthenticated
+        authManager.isProtected(trip) && !isLocallyAuthenticated
     }
-    
+
     // Main content view with stable identity to prevent flickering
     @ViewBuilder
     private var contentView: some View {
         if needsLockScreen {
-            BiometricLockView(trip: trip, isAuthenticating: $isAuthenticating) { 
+            BiometricLockView(trip: trip, isAuthenticating: $isAuthenticating) {
                 // Callback when authentication succeeds
                 isLocallyAuthenticated = true
             }
@@ -87,7 +87,7 @@ struct TripDetailView: View {
             }
         }
     }
-    
+
     var body: some View {
         NavigationStack(path: $navigationPath) {
             contentView
@@ -107,8 +107,6 @@ struct TripDetailView: View {
             }
         }
     }
-    
-    
 }
 
 #Preview {

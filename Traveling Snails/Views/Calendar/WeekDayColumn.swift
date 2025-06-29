@@ -11,15 +11,15 @@ struct WeekDayColumn: View {
     let activities: [ActivityWrapper]
     let onDayTap: () -> Void
     let onLongPress: (CGPoint, Date) -> Void
-    
+
     private var calendar: Calendar { Calendar.current }
     private var isToday: Bool { calendar.isDateInToday(date) }
-    
+
     var body: some View {
         VStack(spacing: 0) {
             // Day header
             dayHeaderView
-            
+
             // Hours
             ForEach(0..<24, id: \.self) { hour in
                 Rectangle()
@@ -57,14 +57,14 @@ struct WeekDayColumn: View {
         }
         .frame(maxWidth: .infinity)
     }
-    
+
     private var dayHeaderView: some View {
         Button(action: onDayTap) {
             VStack(spacing: 4) {
                 Text(dayFormatter.string(from: date))
                     .font(.caption)
                     .foregroundColor(.secondary)
-                
+
                 Text("\(calendar.component(.day, from: date))")
                     .font(.headline)
                     .fontWeight(isToday ? .bold : .medium)
@@ -72,7 +72,7 @@ struct WeekDayColumn: View {
                     .frame(width: 32, height: 32)
                     .background(isToday ? Color.blue : Color.clear)
                     .clipShape(Circle())
-                
+
                 if !activities.isEmpty {
                     Text("\(activities.count)")
                         .font(.caption2)
@@ -85,18 +85,18 @@ struct WeekDayColumn: View {
         }
         .frame(height: 50)
     }
-    
+
     private func activitiesForHour(_ hour: Int) -> [ActivityWrapper] {
         let startOfHour = calendar.date(bySettingHour: hour, minute: 0, second: 0, of: date) ?? date
         let endOfHour = calendar.date(byAdding: .hour, value: 1, to: startOfHour) ?? startOfHour
-        
+
         return activities.filter { wrapper in
             let activityStart = wrapper.tripActivity.start
             let activityEnd = wrapper.tripActivity.end
             return activityStart < endOfHour && activityEnd > startOfHour
         }
     }
-    
+
     private var dayFormatter: DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = "EEE"

@@ -4,36 +4,36 @@
 //
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 @Model
 class Transportation: Identifiable {
     var id = UUID()
     var name: String = ""
-    var type: TransportationType = TransportationType.plane
-    var start: Date = Date()
+    var type = TransportationType.plane
+    var start = Date()
     var startTZId: String = ""
-    var end: Date = Date()
+    var end = Date()
     var endTZId: String = ""
     var cost: Decimal = 0
-    var paid: PaidStatus = PaidStatus.none
+    var paid = PaidStatus.none
     var confirmation: String = ""
     var notes: String = ""
-    
-    var trip: Trip? = nil
-    var organization: Organization? = nil
-    
+
+    var trip: Trip?
+    var organization: Organization?
+
     // CLOUDKIT REQUIRED: Optional file attachments with SAFE accessor
     @Relationship(deleteRule: .cascade, inverse: \EmbeddedFileAttachment.transportation)
-    private var _fileAttachments: [EmbeddedFileAttachment]? = nil
-    
+    private var _fileAttachments: [EmbeddedFileAttachment]?
+
     // SAFE ACCESSOR: Never return nil
     var fileAttachments: [EmbeddedFileAttachment] {
         get { _fileAttachments ?? [] }
         set { _fileAttachments = newValue.isEmpty ? nil : newValue }
     }
-    
+
     init(
         name: String = "",
         type: TransportationType = TransportationType.plane,
@@ -61,11 +61,11 @@ class Transportation: Identifiable {
         self.trip = trip
         self.organization = organization
     }
-    
+
     // MARK: - Computed Properties
     var startTZ: TimeZone { TimeZone(identifier: startTZId) ?? TimeZone.current }
     var endTZ: TimeZone { TimeZone(identifier: endTZId) ?? TimeZone.current }
-    
+
     var startFormatted: String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
@@ -73,7 +73,7 @@ class Transportation: Identifiable {
         formatter.timeZone = startTZ
         return formatter.string(from: start)
     }
-    
+
     var endFormatted: String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
@@ -81,7 +81,7 @@ class Transportation: Identifiable {
         formatter.timeZone = endTZ
         return formatter.string(from: end)
     }
-    
+
     var departureFormatted: String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
@@ -89,7 +89,7 @@ class Transportation: Identifiable {
         formatter.timeZone = startTZ
         return formatter.string(from: start)
     }
-    
+
     var arrivalFormatted: String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
@@ -97,7 +97,7 @@ class Transportation: Identifiable {
         formatter.timeZone = endTZ
         return formatter.string(from: end)
     }
-    
+
     // File attachment support
     var hasAttachments: Bool { !fileAttachments.isEmpty }
     var attachmentCount: Int { fileAttachments.count }
@@ -110,11 +110,11 @@ enum TransportationType: String, CaseIterable, Codable {
     case car
     case bicycle
     case walking
-    
+
     var displayName: String {
         rawValue.capitalized
     }
-    
+
     var systemImage: String {
         switch self {
         case .train: return "train.side.front.car"

@@ -4,8 +4,8 @@
 //
 //
 
-import SwiftUI
 import QuickLook
+import SwiftUI
 
 @available(iOS 18.0, *)
 struct ImprovedQuickLookView: View {
@@ -13,7 +13,7 @@ struct ImprovedQuickLookView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var isLoading = true
     @State private var loadError: String?
-    
+
     var body: some View {
         NavigationStack {
             Group {
@@ -26,9 +26,9 @@ struct ImprovedQuickLookView: View {
                 } else if isLoading {
                     ProgressView("Loading preview...")
                 } else {
-                    ModernQuickLookContainer(url: url, onError: { error in
+                    ModernQuickLookContainer(url: url) { error in
                         loadError = error
-                    })
+                    }
                 }
             }
             .navigationTitle("Preview")
@@ -39,7 +39,7 @@ struct ImprovedQuickLookView: View {
                         dismiss()
                     }
                 }
-                
+
                 ToolbarItem(placement: .topBarTrailing) {
                     ShareLink(item: url) {
                         Image(systemName: "square.and.arrow.up")
@@ -51,35 +51,34 @@ struct ImprovedQuickLookView: View {
             await validateFile()
         }
     }
-    
+
     private func validateFile() async {
         do {
             // Use modern async file operations
             let resourceValues = try url.resourceValues(forKeys: [
                 .isReadableKey,
                 .fileSizeKey,
-                .contentTypeKey
+                .contentTypeKey,
             ])
-            
+
             guard resourceValues.isReadable == true else {
                 loadError = "File is not readable"
                 return
             }
-            
+
             guard let fileSize = resourceValues.fileSize, fileSize > 0 else {
                 loadError = "File appears to be empty"
                 return
             }
-            
+
             // Check if QuickLook can handle this file type using the URL
             let canPreview = QLPreviewController.canPreview(url as QLPreviewItem)
             if !canPreview {
                 loadError = "This file type cannot be previewed"
                 return
             }
-            
+
             isLoading = false
-            
         } catch {
             loadError = "Error accessing file: \(error.localizedDescription)"
         }
@@ -90,49 +89,49 @@ struct ImprovedQuickLookView: View {
 struct ModernQuickLookContainer: UIViewControllerRepresentable {
     let url: URL
     let onError: (String) -> Void
-    
+
     func makeUIViewController(context: Context) -> QLPreviewController {
         let controller = QLPreviewController()
         controller.dataSource = context.coordinator
         controller.delegate = context.coordinator
-        
+
         // Modern iOS 18 configurations
         controller.modalPresentationStyle = .fullScreen
         controller.view.backgroundColor = .systemBackground
-        
+
         return controller
     }
-    
+
     func updateUIViewController(_ uiViewController: QLPreviewController, context: Context) {
         uiViewController.reloadData()
     }
-    
+
     func makeCoordinator() -> Coordinator {
         Coordinator(url: url, onError: onError)
     }
-    
+
     class Coordinator: NSObject, QLPreviewControllerDataSource, QLPreviewControllerDelegate {
         let url: URL
         let onError: (String) -> Void
-        
+
         init(url: URL, onError: @escaping (String) -> Void) {
             self.url = url
             self.onError = onError
             super.init()
         }
-        
+
         func numberOfPreviewItems(in controller: QLPreviewController) -> Int {
-            return 1
+            1
         }
-        
+
         func previewController(_ controller: QLPreviewController, previewItemAt index: Int) -> QLPreviewItem {
-            return url as QLPreviewItem
+            url as QLPreviewItem
         }
-        
+
         func previewController(_ controller: QLPreviewController, editingModeFor previewItem: QLPreviewItem) -> QLPreviewItemEditingMode {
-            return .disabled
+            .disabled
         }
-        
+
         func previewControllerDidDismiss(_ controller: QLPreviewController) {
             // Handle dismissal
         }

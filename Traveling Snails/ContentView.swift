@@ -4,31 +4,31 @@
 //
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var trips: [Trip]
     @Query private var organizations: [Organization]
-    
+
     // App settings for color scheme
     @Environment(AppSettings.self) private var appSettings
-    
+
     // Navigation state
     @State private var selectedTab = 0
     @State private var selectedTrip: Trip?
     private let navigationContext = NavigationContext.shared
-    
+
     // CloudKit sync state
     @State private var isInitialSyncComplete = false
     @State private var showingSyncIndicator = false
-    
+
     // Remote change detection
     @State private var syncTimer: Timer?
     @Environment(SyncManager.self) private var syncManager
     @Environment(\.scenePhase) private var scenePhase
-    
+
     var body: some View {
         Group {
             if !isInitialSyncComplete && trips.isEmpty {
@@ -83,7 +83,7 @@ struct ContentView: View {
             }
         }
     }
-    
+
     @ViewBuilder
     private var mainContent: some View {
         #if os(iOS)
@@ -94,13 +94,13 @@ struct ContentView: View {
                     Label("Trips", systemImage: "airplane")
                 }
                 .tag(0)
-            
+
             organizationsTab
                 .tabItem {
                     Label("Organizations", systemImage: "building.2")
                 }
                 .tag(1)
-            
+
             settingsTab
                 .tabItem {
                     Label("Settings", systemImage: "gear")
@@ -115,12 +115,12 @@ struct ContentView: View {
                     selectedTab = 0
                 }
                 .listRowBackground(selectedTab == 0 ? Color.blue.opacity(0.2) : Color.clear)
-                
+
                 Button("Organizations") {
                     selectedTab = 1
                 }
                 .listRowBackground(selectedTab == 1 ? Color.blue.opacity(0.2) : Color.clear)
-                
+
                 Button("Settings") {
                     selectedTab = 2
                 }
@@ -141,7 +141,7 @@ struct ContentView: View {
         }
         #endif
     }
-    
+
     private var tripsTab: some View {
         TripsNavigationView(
             selectedTab: $selectedTab,
@@ -149,7 +149,7 @@ struct ContentView: View {
             tabIndex: 0
         )
     }
-    
+
     private var organizationsTab: some View {
         OrganizationsNavigationView(
             selectedTab: $selectedTab,
@@ -157,19 +157,19 @@ struct ContentView: View {
             tabIndex: 1
         )
     }
-    
+
     private var settingsTab: some View {
         SettingsRootView()
     }
-    
+
     // MARK: - Periodic Sync Check
-    
+
     private func startPeriodicSyncCheck() {
         // Enable periodic sync check on both iPad and iPhone to ensure reliable sync
         #if os(iOS)
         let deviceType = UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone"
         let interval: TimeInterval = UIDevice.current.userInterfaceIdiom == .pad ? 30.0 : 45.0 // iPad syncs more frequently
-        
+
         print("📱 ContentView: Starting periodic sync check on \(deviceType) (every \(interval)s)")
         syncTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
             print("📱 ContentView: Periodic sync check triggered on \(deviceType)")
@@ -177,38 +177,37 @@ struct ContentView: View {
         }
         #endif
     }
-    
+
     private func stopPeriodicSyncCheck() {
         syncTimer?.invalidate()
         syncTimer = nil
         print("📱 ContentView: Stopped periodic sync check")
     }
-    
 }
 
 /// View shown while waiting for CloudKit sync
 struct CloudKitSyncIndicatorView: View {
     @Binding var isVisible: Bool
-    
+
     var body: some View {
         VStack(spacing: 20) {
             Image(systemName: "icloud.and.arrow.down")
                 .font(.system(size: 60))
                 .foregroundColor(.blue)
                 .symbolEffect(.bounce, options: .repeating)
-            
+
             VStack(spacing: 8) {
                 Text("Syncing with iCloud")
                     .font(.title2)
                     .fontWeight(.semibold)
-                
+
                 Text("Your trips and data are being synchronized from iCloud. This may take a moment.")
                     .font(.body)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
             }
-            
+
             ProgressView()
                 .scaleEffect(1.2)
         }
@@ -225,13 +224,13 @@ struct TripsNavigationView: View {
     @Binding var selectedTab: Int
     @Binding var selectedTrip: Trip?
     let tabIndex: Int
-    
+
     init(selectedTab: Binding<Int>, selectedTrip: Binding<Trip?>, tabIndex: Int) {
         self._selectedTab = selectedTab
         self._selectedTrip = selectedTrip
         self.tabIndex = tabIndex
     }
-    
+
     var body: some View {
         UnifiedNavigationView.trips(
             trips: trips,
@@ -248,13 +247,13 @@ struct OrganizationsNavigationView: View {
     @Binding var selectedTab: Int
     @Binding var selectedTrip: Trip?
     let tabIndex: Int
-    
+
     init(selectedTab: Binding<Int>, selectedTrip: Binding<Trip?>, tabIndex: Int) {
         self._selectedTab = selectedTab
         self._selectedTrip = selectedTrip
         self.tabIndex = tabIndex
     }
-    
+
     var body: some View {
         UnifiedNavigationView.organizations(
             organizations: organizations,

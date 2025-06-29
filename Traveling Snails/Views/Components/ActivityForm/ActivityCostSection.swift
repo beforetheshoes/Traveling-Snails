@@ -12,7 +12,7 @@ struct ActivityCostSection<T: TripActivityProtocol>: View {
     @Binding var editData: TripActivityEditData
     let isEditing: Bool
     let color: Color
-    
+
     init(
         activity: T? = nil,
         editData: Binding<TripActivityEditData>,
@@ -24,7 +24,7 @@ struct ActivityCostSection<T: TripActivityProtocol>: View {
         self.isEditing = isEditing
         self.color = color
     }
-    
+
     var body: some View {
         ActivitySectionCard(
             headerIcon: "dollarsign.circle.fill",
@@ -40,9 +40,9 @@ struct ActivityCostSection<T: TripActivityProtocol>: View {
             }
         }
     }
-    
+
     // MARK: - Edit Mode Content
-    
+
     private var editModeContent: some View {
         VStack(spacing: 16) {
             // Cost input field
@@ -50,7 +50,7 @@ struct ActivityCostSection<T: TripActivityProtocol>: View {
                 Text("Cost")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                
+
                 CurrencyTextField(value: $editData.cost, color: color)
                     .onChange(of: editData.cost) { _, newValue in
                         #if DEBUG
@@ -58,13 +58,13 @@ struct ActivityCostSection<T: TripActivityProtocol>: View {
                         #endif
                     }
             }
-            
+
             // Payment status picker
             VStack(alignment: .leading, spacing: 8) {
                 Text("Payment Status")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                
+
                 Picker("Payment Status", selection: $editData.paid) {
                     ForEach(PaidStatus.allCases, id: \.self) { status in
                         Text(status.displayName).tag(status)
@@ -74,20 +74,20 @@ struct ActivityCostSection<T: TripActivityProtocol>: View {
             }
         }
     }
-    
+
     // MARK: - View Mode Content
-    
+
     private var viewModeContent: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
                 Text(costLabel)
                     .font(.caption)
                     .foregroundColor(.secondary)
-                
+
                 Text(displayCost, format: .currency(code: "USD"))
                     .font(.title2)
                     .fontWeight(.semibold)
-                
+
                 // Show per-night cost for lodging
                 if showPerNightCost {
                     Text(perNightText)
@@ -95,19 +95,19 @@ struct ActivityCostSection<T: TripActivityProtocol>: View {
                         .foregroundColor(.secondary)
                 }
             }
-            
+
             Spacer()
-            
+
             VStack(alignment: .trailing, spacing: 4) {
                 Text("Payment Status")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                
+
                 HStack {
                     Text(displayPaidStatus.displayName)
                         .font(.subheadline)
                         .fontWeight(.medium)
-                    
+
                     Circle()
                         .fill(paidStatusColor)
                         .frame(width: 12, height: 12)
@@ -115,30 +115,30 @@ struct ActivityCostSection<T: TripActivityProtocol>: View {
             }
         }
     }
-    
+
     // MARK: - Computed Properties
-    
+
     private var costLabel: String {
         if activityType == .lodging {
             return "Total Cost"
         }
         return "Cost"
     }
-    
+
     private var displayCost: Decimal {
         if let activity = activity {
             return activity.cost
         }
         return editData.cost
     }
-    
+
     private var displayPaidStatus: PaidStatus {
         if let activity = activity {
             return activity.paid
         }
         return editData.paid
     }
-    
+
     private var activityType: ActivityWrapper.ActivityType {
         if let activity = activity {
             return activity.activityType
@@ -148,17 +148,17 @@ struct ActivityCostSection<T: TripActivityProtocol>: View {
         }
         return .activity
     }
-    
+
     private var showPerNightCost: Bool {
         activityType == .lodging && displayCost > 0
     }
-    
+
     private var perNightText: String {
         guard showPerNightCost else { return "" }
-        
+
         let startDate: Date
         let endDate: Date
-        
+
         if let activity = activity {
             startDate = activity.start
             endDate = activity.end
@@ -166,18 +166,18 @@ struct ActivityCostSection<T: TripActivityProtocol>: View {
             startDate = editData.start
             endDate = editData.end
         }
-        
+
         let nights = max(1, Calendar.current.dateComponents([.day], from: startDate, to: endDate).day ?? 1)
         let perNight = displayCost / Decimal(nights)
-        
+
         let formatter = NumberFormatter()
         formatter.numberStyle = .currency
         formatter.currencyCode = "USD"
         let formattedAmount = formatter.string(from: perNight as NSDecimalNumber) ?? "$0.00"
-        
+
         return "\(formattedAmount) per night"
     }
-    
+
     private var paidStatusColor: Color {
         switch displayPaidStatus {
         case .infull:
@@ -205,7 +205,7 @@ struct ActivityCostSection<T: TripActivityProtocol>: View {
             isEditing: true,
             color: .green
         )
-        
+
         // View mode preview for lodging with per-night calculation
         ActivityCostSection<Activity>(
             editData: .constant({

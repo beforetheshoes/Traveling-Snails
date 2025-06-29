@@ -12,15 +12,14 @@ import SwiftUI
 /// Thread-safe with proper synchronization
 @Observable
 class ServiceContainer {
-    
     // MARK: - Service Storage
-    
+
     private var services: [String: Any] = [:]
     private var factories: [String: () -> Any] = [:]
     private let lock = NSLock()
-    
+
     // MARK: - Service Registration
-    
+
     /// Register a singleton service instance
     /// - Parameters:
     ///   - service: The service instance to register
@@ -31,7 +30,7 @@ class ServiceContainer {
             services[key] = service
         }
     }
-    
+
     /// Register a singleton service instance asynchronously (for background services)
     /// - Parameters:
     ///   - service: The service instance to register
@@ -42,7 +41,7 @@ class ServiceContainer {
             services[key] = service
         }
     }
-    
+
     /// Register a service factory
     /// - Parameters:
     ///   - factory: Factory closure that creates the service
@@ -53,7 +52,7 @@ class ServiceContainer {
             factories[key] = factory
         }
     }
-    
+
     /// Register a service factory with async initialization
     /// - Parameters:
     ///   - factory: Async factory closure that creates the service
@@ -67,14 +66,14 @@ class ServiceContainer {
         }
         // Store async factory separately if needed for future async resolution
     }
-    
+
     /// Register a service with lazy initialization
     /// - Parameters:
     ///   - factory: Factory closure that creates the service (called only once)
     ///   - type: The service type to register as
     func registerLazy<T>(_ factory: @escaping () -> T, as type: T.Type) {
         let key = String(describing: type)
-        
+
         // Create a wrapper that ensures the factory is only called once
         var instance: T?
         let lazyFactory = {
@@ -85,70 +84,70 @@ class ServiceContainer {
             instance = newInstance
             return newInstance
         }
-        
+
         lock.withLock {
             factories[key] = lazyFactory
         }
     }
-    
+
     // MARK: - Service Resolution
-    
+
     /// Resolve a service instance
     /// - Parameter type: The service type to resolve
     /// - Returns: The service instance
     func resolve<T>(_ type: T.Type) -> T {
         let key = String(describing: type)
-        
+
         return lock.withLock {
             // First check for existing singleton instance
             if let service = services[key] as? T {
                 return service
             }
-            
+
             // Then check for factory
             if let factory = factories[key] {
                 if let service = factory() as? T {
                     return service
                 }
             }
-            
+
             fatalError("Service of type \(type) is not registered in the container")
         }
     }
-    
+
     /// Safely resolve a service instance
     /// - Parameter type: The service type to resolve
     /// - Returns: The service instance, or nil if not registered
     func tryResolve<T>(_ type: T.Type) -> T? {
         let key = String(describing: type)
-        
+
         return lock.withLock {
             // First check for existing singleton instance
             if let service = services[key] as? T {
                 return service
             }
-            
+
             // Then check for factory
             if let factory = factories[key] {
                 return factory() as? T
             }
-            
+
             return nil
         }
     }
-    
+
     /// Check if a service is registered
     /// - Parameter type: The service type to check
     /// - Returns: True if the service is registered
     func isRegistered<T>(_ type: T.Type) -> Bool {
         let key = String(describing: type)
         return lock.withLock {
-            return services[key] != nil || factories[key] != nil
+            services[key] != nil || factories[key] != nil
         }
     }
-    
+
     // MARK: - Container Management
-    
+
     /// Clear all registered services (useful for testing)
     func clear() {
         lock.withLock {
@@ -156,10 +155,10 @@ class ServiceContainer {
             factories.removeAll()
         }
     }
-    
+
     /// Get all registered service types
     var registeredServiceTypes: [String] {
-        return lock.withLock {
+        lock.withLock {
             let serviceKeys = services.keys
             let factoryKeys = factories.keys
             return Array(Set(serviceKeys).union(Set(factoryKeys))).sorted()
@@ -215,25 +214,25 @@ extension EnvironmentValues {
         get { self[AuthenticationServiceKey.self] }
         set { self[AuthenticationServiceKey.self] = newValue }
     }
-    
+
     /// Direct access to CloudStorageService from environment
     var cloudStorageService: CloudStorageService? {
         get { self[CloudStorageServiceKey.self] }
         set { self[CloudStorageServiceKey.self] = newValue }
     }
-    
+
     /// Direct access to PhotoLibraryService from environment
     var photoLibraryService: PhotoLibraryService? {
         get { self[PhotoLibraryServiceKey.self] }
         set { self[PhotoLibraryServiceKey.self] = newValue }
     }
-    
+
     /// Direct access to SyncService from environment
     var syncService: SyncService? {
         get { self[SyncServiceKey.self] }
         set { self[SyncServiceKey.self] = newValue }
     }
-    
+
     /// Direct access to PermissionService from environment
     var permissionService: PermissionService? {
         get { self[PermissionServiceKey.self] }
@@ -250,7 +249,7 @@ extension View {
     func serviceContainer(_ container: ServiceContainer) -> some View {
         environment(\.serviceContainer, container)
     }
-    
+
     /// Inject services directly into the environment
     /// - Parameters:
     ///   - authService: Authentication service
@@ -281,10 +280,10 @@ extension View {
 protocol ServiceContainerFactory {
     /// Create a service container with production services
     static func createProductionContainer() -> ServiceContainer
-    
+
     /// Create a service container with test/mock services
     static func createTestContainer() -> ServiceContainer
-    
+
     /// Create a service container for SwiftUI previews
     static func createPreviewContainer() -> ServiceContainer
 }
@@ -293,56 +292,55 @@ protocol ServiceContainerFactory {
 
 /// Default implementation of service container factory
 struct DefaultServiceContainerFactory: ServiceContainerFactory {
-    
     static func createProductionContainer() -> ServiceContainer {
         let container = ServiceContainer()
-        
+
         // Register production services using factory methods to avoid @MainActor issues
         container.registerLazy({
             ProductionAuthenticationService()
         }, as: AuthenticationService.self)
-        
+
         container.registerLazy({
             iCloudStorageService()
         }, as: CloudStorageService.self)
-        
+
         container.registerLazy({
             SystemPhotoLibraryService()
         }, as: PhotoLibraryService.self)
-        
+
         container.registerLazy({
             SystemPermissionService()
         }, as: PermissionService.self)
-        
+
         // SyncService requires ModelContainer, so we'll register it as a factory
         // that will be configured when the container is available
-        
+
         return container
     }
-    
+
     static func createTestContainer() -> ServiceContainer {
         let container = ServiceContainer()
-        
+
         // Register mock services for testing
         container.register(MockAuthenticationService(), as: AuthenticationService.self)
         container.register(MockCloudStorageService(), as: CloudStorageService.self)
         container.register(MockPhotoLibraryService(), as: PhotoLibraryService.self)
         container.register(MockSyncService(), as: SyncService.self)
         container.register(MockPermissionService(), as: PermissionService.self)
-        
+
         return container
     }
-    
+
     static func createPreviewContainer() -> ServiceContainer {
         let container = ServiceContainer()
-        
+
         // Register preview-friendly services (will be implemented in Phase 4)
         // container.register(PreviewAuthenticationService(), as: AuthenticationService.self)
         // container.register(PreviewCloudStorageService(), as: CloudStorageService.self)
         // container.register(PreviewPhotoLibraryService(), as: PhotoLibraryService.self)
         // container.register(PreviewSyncService(), as: SyncService.self)
         // container.register(PreviewPermissionService(), as: PermissionService.self)
-        
+
         return container
     }
 }

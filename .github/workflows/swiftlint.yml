@@ -1,0 +1,139 @@
+name: SwiftLint Security and Code Quality
+
+on:
+  push:
+    branches: [ main, develop, 'feature/*', 'fix/*' ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  swiftlint:
+    runs-on: macos-latest
+    name: SwiftLint Security Analysis
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: '16.2'
+        
+    - name: Cache Swift Package Manager
+      uses: actions/cache@v4
+      with:
+        path: |
+          .build
+          SourcePackages
+        key: ${{ runner.os }}-spm-${{ hashFiles('Package.swift', 'Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-spm-
+          
+    - name: Resolve Swift Package Dependencies
+      run: swift package resolve
+      
+    - name: Run SwiftLint Security Analysis
+      run: |
+        echo "🔍 Running SwiftLint with security-focused rules..."
+        swift run swiftlint lint --config .swiftlint.yml --reporter github-actions-logging
+        
+    - name: Check for Critical Security Violations
+      run: |
+        echo "🚨 Checking for critical security violations..."
+        
+        # Run SwiftLint and capture output
+        VIOLATIONS=$(swift run swiftlint lint --config .swiftlint.yml --quiet 2>&1 || true)
+        
+        # Check for critical security issues
+        PRINT_VIOLATIONS=$(echo "$VIOLATIONS" | grep -E "(print|Print).*error.*no_print_statements" || true)
+        SENSITIVE_VIOLATIONS=$(echo "$VIOLATIONS" | grep -E "sensitive.*logging" || true)
+        
+        # Report findings
+        if [ ! -z "$PRINT_VIOLATIONS" ]; then
+          echo "❌ CRITICAL: Print statement security violations found:"
+          echo "$PRINT_VIOLATIONS"
+          echo "::error::Critical security violation: print statements detected. Use Logger.shared instead."
+          exit 1
+        fi
+        
+        if [ ! -z "$SENSITIVE_VIOLATIONS" ]; then
+          echo "⚠️  WARNING: Potential sensitive data logging detected:"
+          echo "$SENSITIVE_VIOLATIONS"
+          echo "::warning::Potential sensitive data in logging detected. Please review."
+        fi
+        
+        # Count total violations
+        VIOLATION_COUNT=$(echo "$VIOLATIONS" | wc -l | tr -d ' ')
+        if [ "$VIOLATION_COUNT" -gt 50 ]; then
+          echo "::warning::High number of violations detected ($VIOLATION_COUNT). Consider addressing these for better code quality."
+        fi
+        
+        echo "✅ Security check completed. Found $VIOLATION_COUNT total violations."
+        
+    - name: Run SwiftLint Autocorrect (Safe Changes Only)
+      run: |
+        echo "🔧 Running SwiftLint autocorrect for safe style fixes..."
+        swift run swiftlint --autocorrect --config .swiftlint.yml || true
+        
+        # Check if any files were modified
+        if [ -n "$(git status --porcelain)" ]; then
+          echo "📝 SwiftLint made automatic style corrections:"
+          git diff --name-only
+          echo "::notice::SwiftLint made automatic style corrections. Consider committing these changes."
+        else
+          echo "✅ No automatic corrections needed."
+        fi
+        
+    - name: Generate SwiftLint Report
+      if: always()
+      run: |
+        echo "📊 Generating SwiftLint report..."
+        swift run swiftlint lint --config .swiftlint.yml --reporter json > swiftlint-report.json || true
+        
+        # Create a summary
+        echo "## SwiftLint Analysis Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Count violations by severity
+        ERRORS=$(jq -r '.[] | select(.severity == "error")' swiftlint-report.json 2>/dev/null | wc -l | tr -d ' ')
+        WARNINGS=$(jq -r '.[] | select(.severity == "warning")' swiftlint-report.json 2>/dev/null | wc -l | tr -d ' ')
+        
+        echo "- **Errors:** $ERRORS" >> $GITHUB_STEP_SUMMARY
+        echo "- **Warnings:** $WARNINGS" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Add security-specific summary
+        SECURITY_ISSUES=$(swift run swiftlint lint --config .swiftlint.yml --quiet 2>&1 | grep -E "(no_print_statements|no_sensitive_logging|safe_error_messages)" | wc -l | tr -d ' ')
+        echo "- **Security Issues:** $SECURITY_ISSUES" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [ "$ERRORS" -eq 0 ] && [ "$SECURITY_ISSUES" -eq 0 ]; then
+          echo "✅ **No critical issues found!**" >> $GITHUB_STEP_SUMMARY
+        elif [ "$SECURITY_ISSUES" -gt 0 ]; then
+          echo "🚨 **Security issues detected - please review**" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "⚠️ **Code quality issues detected**" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+    - name: Upload SwiftLint Report
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: swiftlint-report
+        path: swiftlint-report.json
+        retention-days: 30
+
+  security-summary:
+    runs-on: ubuntu-latest
+    needs: swiftlint
+    if: always()
+    name: Security Summary
+    
+    steps:
+    - name: Security Analysis Complete
+      run: |
+        echo "🛡️ SwiftLint security analysis completed"
+        echo "📋 Review the SwiftLint report for any security or code quality issues"
+        echo "🔧 Use 'swift run swiftlint --autocorrect' locally to fix style issues"
+        echo "📚 See project documentation for SwiftLint configuration details"

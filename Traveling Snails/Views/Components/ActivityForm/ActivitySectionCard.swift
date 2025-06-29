@@ -12,7 +12,7 @@ struct ActivitySectionCard<Content: View>: View {
     let headerTitle: String
     let headerColor: Color
     let content: Content
-    
+
     init(
         headerIcon: String,
         headerTitle: String,
@@ -24,7 +24,7 @@ struct ActivitySectionCard<Content: View>: View {
         self.headerColor = headerColor
         self.content = content()
     }
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             // Section Header
@@ -32,12 +32,12 @@ struct ActivitySectionCard<Content: View>: View {
                 Image(systemName: headerIcon)
                     .font(.title3)
                     .foregroundColor(headerColor)
-                
+
                 Text(headerTitle)
                     .font(.headline)
                     .foregroundColor(headerColor)
             }
-            
+
             // Content inside card background
             content
         }
@@ -59,13 +59,13 @@ struct ActivitySectionCard<Content: View>: View {
                     Text("Name")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    
+
                     TextField("Activity Name", text: .constant("Test Activity"))
                         .textFieldStyle(RoundedBorderTextFieldStyle())
                 }
             }
         }
-        
+
         ActivitySectionCard(
             headerIcon: "dollarsign.circle.fill",
             headerTitle: "Cost & Payment",
@@ -78,7 +78,7 @@ struct ActivitySectionCard<Content: View>: View {
                     Text("$150.00")
                         .fontWeight(.semibold)
                 }
-                
+
                 Text("Payment Status: Paid")
                     .font(.caption)
                     .foregroundColor(.secondary)

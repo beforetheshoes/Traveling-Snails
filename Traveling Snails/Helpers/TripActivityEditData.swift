@@ -21,7 +21,7 @@ struct TripActivityEditData {
     var customAddress: Address?
     var hideLocation: Bool
     var transportationType: TransportationType?
-    
+
     init(from activity: any TripActivityProtocol) {
         self.name = activity.name
         self.start = activity.start

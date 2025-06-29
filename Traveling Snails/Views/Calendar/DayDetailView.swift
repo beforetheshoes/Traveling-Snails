@@ -10,15 +10,15 @@ struct DayDetailView: View {
     let date: Date
     let activities: [ActivityWrapper]
     let trip: Trip
-    
+
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @State private var showingActivityCreation = false
-    
+
     private var sortedActivities: [ActivityWrapper] {
         activities.sorted { $0.tripActivity.start < $1.tripActivity.start }
     }
-    
+
     var body: some View {
         NavigationStack {
             List {
@@ -28,9 +28,9 @@ struct DayDetailView: View {
                             Text(date, style: .date)
                                 .font(.title2)
                                 .fontWeight(.semibold)
-                            
+
                             Spacer()
-                            
+
                             Button {
                                 showingActivityCreation = true
                             } label: {
@@ -39,19 +39,19 @@ struct DayDetailView: View {
                                     .foregroundColor(.blue)
                             }
                         }
-                        
+
                         HStack {
                             Text("\(activities.count) activities")
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
-                            
+
                             Spacer()
-                            
+
                             if !activities.isEmpty {
                                 let totalDuration = activities.reduce(0) { $0 + $1.tripActivity.duration() }
                                 let hours = Int(totalDuration) / 3600
                                 let minutes = (Int(totalDuration) % 3600) / 60
-                                
+
                                 Text("\(hours)h \(minutes)m total")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
@@ -59,7 +59,7 @@ struct DayDetailView: View {
                         }
                     }
                 }
-                
+
                 if activities.isEmpty {
                     Section {
                         ContentUnavailableView(

@@ -4,20 +4,20 @@
 //
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct AddTrip: View {
     @Environment(\.presentationMode) var presentationMode
     @Environment(\.modelContext) var modelContext
-    
+
     @State var name: String = ""
     @State var notes: String = ""
-    @State var startDate: Date = Date()
-    @State var endDate: Date = Date().addingTimeInterval(7 * 24 * 3600) // Default to 1 week later
+    @State var startDate = Date()
+    @State var endDate = Date().addingTimeInterval(7 * 24 * 3600) // Default to 1 week later
     @State var hasStartDate: Bool = false
     @State var hasEndDate: Bool = false
-    
+
     func saveTrip() {
         let trip = Trip(
             name: name,
@@ -26,7 +26,7 @@ struct AddTrip: View {
             endDate: hasEndDate ? endDate : nil
         )
         modelContext.insert(trip)
-        
+
         do {
             try modelContext.save()
             presentationMode.wrappedValue.dismiss()
@@ -35,7 +35,7 @@ struct AddTrip: View {
             print("Failed to save trip: \(error)")
         }
     }
-    
+
     var body: some View {
         NavigationStack {
             Form {
@@ -43,10 +43,10 @@ struct AddTrip: View {
                     TextField("Name", text: $name)
                     TextField("Notes", text: $notes, axis: .vertical)
                 }
-                
+
                 Section("Trip Dates (Optional)") {
                     Toggle("Set start date", isOn: $hasStartDate)
-                    
+
                     if hasStartDate {
                         DatePicker("Start Date", selection: $startDate, displayedComponents: .date)
                             .onChange(of: startDate) { _, newValue in
@@ -56,9 +56,9 @@ struct AddTrip: View {
                                 }
                             }
                     }
-                    
+
                     Toggle("Set end date", isOn: $hasEndDate)
-                    
+
                     if hasEndDate {
                         DatePicker("End Date", selection: $endDate, displayedComponents: .date)
                             .onChange(of: endDate) { _, newValue in
@@ -68,12 +68,12 @@ struct AddTrip: View {
                                 }
                             }
                     }
-                    
+
                     Text("Setting trip dates will limit date picker ranges when adding activities. You can always change these later.")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                
+
                 Button(action: saveTrip) {
                     Text("Add Trip")
                         .frame(maxWidth: .infinity)

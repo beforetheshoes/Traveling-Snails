@@ -4,10 +4,10 @@
 //
 //
 
-import SwiftUI
-import SwiftData
 import Foundation
-//import OSLog
+import SwiftData
+import SwiftUI
+// import OSLog
 
 // MARK: - Navigation Item Protocol
 
@@ -32,7 +32,7 @@ struct NavigationConfiguration<Item: NavigationItem> {
     let searchPlaceholder: String
     let allowsSearch: Bool
     let allowsSelection: Bool
-    
+
     init(
         title: String,
         emptyStateTitle: String = "No Items",
@@ -62,30 +62,30 @@ struct UnifiedNavigationView<Item: NavigationItem, DetailView: View>: View {
     // Data
     let items: [Item]
     let configuration: NavigationConfiguration<Item>
-    
+
     // Navigation
     @State private var selectedItem: Item?
     @State private var navigationPath = NavigationPath()
     @Binding var selectedTab: Int
     @Binding var selectedTrip: Trip?
     let tabIndex: Int
-    
+
     // UI State
     @State private var searchText = ""
     @State private var showingAddView = false
-    
+
     // Content builders
     let detailViewBuilder: (Item) -> DetailView
     let addViewBuilder: () -> AnyView
     let rowContentBuilder: ((Item) -> AnyView)?
-    
+
     // Search filtering
     let searchFilter: ((Item, String) -> Bool)?
-    
+
     // Actions
     let onItemSelected: ((Item) -> Void)?
     let onAddItem: (() -> Void)?
-    
+
     init(
         items: [Item],
         configuration: NavigationConfiguration<Item>,
@@ -111,21 +111,21 @@ struct UnifiedNavigationView<Item: NavigationItem, DetailView: View>: View {
         self.onItemSelected = onItemSelected
         self.onAddItem = onAddItem
     }
-    
+
     private var filteredItems: [Item] {
         guard !searchText.isEmpty else { return items }
-        
+
         if let customFilter = searchFilter {
             return items.filter { customFilter($0, searchText) }
         }
-        
+
         // Default search implementation
         return items.filter { item in
             item.displayName.localizedCaseInsensitiveContains(searchText) ||
             (item.displaySubtitle?.localizedCaseInsensitiveContains(searchText) ?? false)
         }
     }
-    
+
     var body: some View {
         NavigationSplitView {
             VStack(spacing: 0) {
@@ -137,7 +137,7 @@ struct UnifiedNavigationView<Item: NavigationItem, DetailView: View>: View {
                     )
                     .padding(.top, 8)
                 }
-                
+
                 // Content
                 if filteredItems.isEmpty {
                     emptyStateView
@@ -217,7 +217,7 @@ struct UnifiedNavigationView<Item: NavigationItem, DetailView: View>: View {
             print("📱 UnifiedNavigationView: Cleared selectedItem and navigationPath for trip deletion navigation")
         }
     }
-    
+
     @ViewBuilder
     private var emptyStateView: some View {
         ContentUnavailableView(
@@ -227,7 +227,7 @@ struct UnifiedNavigationView<Item: NavigationItem, DetailView: View>: View {
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-    
+
     @ViewBuilder
     private var itemsList: some View {
         List(
@@ -251,7 +251,7 @@ struct UnifiedNavigationView<Item: NavigationItem, DetailView: View>: View {
                 Logger.shared.debug("Item tapped: \(item.displayName)", category: .navigation)
                 selectedItem = item
                 onItemSelected?(item)
-                
+
                 // Update selectedTrip if this is a trip
                 if let trip = item as? Trip {
                     selectedTrip = trip
@@ -276,7 +276,7 @@ struct EnhancedItemRowView<Item: NavigationItem>: View {
     let isSelected: Bool
     @Environment(\.colorScheme) private var colorScheme
     private let authManager = BiometricAuthManager.shared
-    
+
     var body: some View {
         HStack(spacing: 16) {
             // Icon with background
@@ -288,19 +288,19 @@ struct EnhancedItemRowView<Item: NavigationItem>: View {
                         Circle()
                             .stroke(item.displayColor, lineWidth: isSelected ? 2 : 0)
                     )
-                
+
                 Image(systemName: item.displayIcon)
                     .foregroundStyle(item.displayColor)
                     .font(.system(size: 20, weight: isSelected ? .semibold : .medium))
             }
-            
+
             // Content
             VStack(alignment: .leading, spacing: 4) {
                 Text(item.displayName)
                     .font(.headline)
                     .lineLimit(1)
                     .foregroundStyle(.primary)
-                
+
                 if let subtitle = item.displaySubtitle {
                     Text(subtitle)
                         .font(.subheadline)
@@ -310,18 +310,18 @@ struct EnhancedItemRowView<Item: NavigationItem>: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            
+
             // Badge and chevron
             HStack(spacing: 8) {
                 // Biometric protection indicator
-                if let trip = item as? Trip, 
+                if let trip = item as? Trip,
                    authManager.isEnabled && authManager.isProtected(trip) {
                     Image(systemName: "lock.fill")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .accessibilityLabel("Protected with biometric authentication")
                 }
-                
+
                 if let badgeCount = item.displayBadgeCount, badgeCount > 0 {
                     Text("\(badgeCount)")
                         .font(.caption.weight(.semibold))
@@ -331,7 +331,7 @@ struct EnhancedItemRowView<Item: NavigationItem>: View {
                         .background(item.displayColor, in: Capsule())
                         .accessibilityLabel("\(badgeCount) items")
                 }
-                
+
                 Image(systemName: "chevron.right")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.tertiary)
@@ -360,16 +360,16 @@ extension Trip: NavigationItem, Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
-    
+
     static func == (lhs: Trip, rhs: Trip) -> Bool {
         lhs.id == rhs.id
     }
     var displayName: String { name.isEmpty ? NSLocalizedString("trip.untitled", value: "Untitled Trip", comment: "Default trip name") : name }
-    
+
     var displaySubtitle: String? {
         let formatter = DateFormatter()
         formatter.dateStyle = .short
-        
+
         if hasDateRange {
             let start = formatter.string(from: startDate)
             let end = formatter.string(from: endDate)
@@ -382,10 +382,10 @@ extension Trip: NavigationItem, Hashable {
             return NSLocalizedString("trip.noDates", value: "No dates set", comment: "Trip with no dates")
         }
     }
-    
+
     var displayIcon: String { "airplane" }
     var displayColor: Color { .blue }
-    
+
     var displayBadgeCount: Int? {
         let count = totalActivities
         return count > 0 ? count : nil
@@ -396,23 +396,23 @@ extension Organization: NavigationItem, Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
-    
+
     static func == (lhs: Organization, rhs: Organization) -> Bool {
         lhs.id == rhs.id
     }
     var displayName: String { name.isEmpty ? NSLocalizedString("organization.unnamed", value: "Unnamed Organization", comment: "Default organization name") : name }
-    
+
     var displaySubtitle: String? {
         let parts = [phone, email].filter { !$0.isEmpty }
         if !parts.isEmpty {
             return parts.joined(separator: " • ")
         }
-        
+
         let transportCount = transportation.count
         let lodgingCount = lodging.count
         let activityCount = activity.count
         let totalCount = transportCount + lodgingCount + activityCount
-        
+
         if totalCount > 0 {
             var components: [String] = []
             if transportCount > 0 {
@@ -426,13 +426,13 @@ extension Organization: NavigationItem, Hashable {
             }
             return components.joined(separator: ", ")
         }
-        
+
         return nil
     }
-    
+
     var displayIcon: String { "building.2" }
     var displayColor: Color { .orange }
-    
+
     var displayBadgeCount: Int? {
         let count = transportation.count + lodging.count + activity.count
         return count > 0 ? count : nil
@@ -444,17 +444,17 @@ extension Organization: NavigationItem, Hashable {
 // Wrapper view to ensure stable identity
 struct TripDetailWrapper: View {
     let trip: Trip
-    
+
     // Cache the trip ID to avoid SwiftData reactivity
     private let tripID: UUID
     private let tripName: String
-    
+
     init(trip: Trip) {
         self.trip = trip
         self.tripID = trip.id
         self.tripName = trip.name
     }
-    
+
     var body: some View {
         IsolatedTripDetailView(trip: trip)
     }
@@ -477,7 +477,7 @@ extension UnifiedNavigationView where Item == Trip, DetailView == AnyView {
             addButtonIcon: "plus",
             searchPlaceholder: NSLocalizedString("navigation.trips.search", value: "Search trips...", comment: "Trips search placeholder")
         )
-        
+
         return UnifiedNavigationView(
             items: trips,
             configuration: config,
@@ -512,7 +512,7 @@ extension UnifiedNavigationView where Item == Organization, DetailView == AnyVie
             addButtonIcon: "plus",
             searchPlaceholder: NSLocalizedString("navigation.organizations.search", value: "Search organizations...", comment: "Organizations search placeholder")
         )
-        
+
         return UnifiedNavigationView(
             items: organizations,
             configuration: config,

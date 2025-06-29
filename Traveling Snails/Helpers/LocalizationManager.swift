@@ -4,18 +4,18 @@
 //
 //
 
-import SwiftUI
 import Combine
+import SwiftUI
 
 // MARK: - Localization Manager
 
 @Observable
 final class LocalizationManager {
     static let shared = LocalizationManager()
-    
+
     private(set) var currentLanguage: String
     private var bundle: Bundle
-    
+
     private init() {
         // Get the current language from user defaults or system
         let initialLanguage: String
@@ -24,12 +24,12 @@ final class LocalizationManager {
         } else {
             initialLanguage = Locale.current.language.languageCode?.identifier ?? "en"
         }
-        
+
         // Initialize all stored properties
         self.currentLanguage = initialLanguage
         self.bundle = Self.loadBundle(for: initialLanguage)
     }
-    
+
     private static func loadBundle(for language: String) -> Bundle {
         guard let path = Bundle.main.path(forResource: language, ofType: "lproj"),
               let bundle = Bundle(path: path) else {
@@ -37,40 +37,40 @@ final class LocalizationManager {
         }
         return bundle
     }
-    
+
     func setLanguage(_ language: String) {
         guard language != currentLanguage else { return }
-        
+
         currentLanguage = language
         bundle = Self.loadBundle(for: language)
         UserDefaults.standard.set(language, forKey: "app_language")
-        
+
         // Post notification for app-wide language change
         NotificationCenter.default.post(name: .languageChanged, object: language)
     }
-    
+
     func localizedString(for key: String, defaultValue: String? = nil) -> String {
         // Try the loaded bundle first
         var value = bundle.localizedString(forKey: key, value: nil, table: nil)
-        
+
         // If not found and we're not already using main bundle, try main bundle
         if value == key && bundle != Bundle.main {
             value = Bundle.main.localizedString(forKey: key, value: nil, table: nil)
         }
-        
+
         // If still not found, try hardcoded values for file attachments as a fallback
         if value == key {
             value = getHardcodedTranslation(for: key) ?? defaultValue ?? key
         }
-        
+
         // Log missing translations for debugging
         if value == key && defaultValue == nil {
             Logger.shared.warning("Missing localization for key: \(key)", category: .app)
         }
-        
+
         return value
     }
-    
+
     private func getHardcodedTranslation(for key: String) -> String? {
         // Hardcoded fallbacks for critical UI text
         switch key {
@@ -96,7 +96,7 @@ final class LocalizationManager {
             return nil
         }
     }
-    
+
     func localizedString(for key: String, arguments: CVarArg...) -> String {
         let format = localizedString(for: key)
         return String(format: format, arguments: arguments)
@@ -127,7 +127,7 @@ enum L10n {
         static let unknown = "general.unknown"
         static let untitled = "general.untitled"
     }
-    
+
     // MARK: - Navigation
     enum Navigation {
         static let trips = "navigation.trips"
@@ -138,7 +138,7 @@ enum L10n {
         static let back = "navigation.back"
         static let close = "navigation.close"
     }
-    
+
     // MARK: - Trips
     enum Trips {
         static let title = "trips.title"
@@ -156,7 +156,7 @@ enum L10n {
         static let searchPlaceholder = "trips.search_placeholder"
         static let dateRange = "trips.date_range"
         static let noDatesSet = "trips.no_dates_set"
-        
+
         enum Activities {
             static let transportation = "trips.activities.transportation"
             static let lodging = "trips.activities.lodging"
@@ -165,7 +165,7 @@ enum L10n {
             static let noActivities = "trips.activities.no_activities"
         }
     }
-    
+
     // MARK: - Organizations
     enum Organizations {
         static let title = "organizations.title"
@@ -182,7 +182,7 @@ enum L10n {
         static let searchPlaceholder = "organizations.search_placeholder"
         static let cannotDeleteInUse = "organizations.cannot_delete_in_use"
         static let cannotDeleteNone = "organizations.cannot_delete_none"
-        
+
         enum Usage {
             static let usedBy = "organizations.usage.used_by"
             static let transportCount = "organizations.usage.transport_count"
@@ -190,7 +190,7 @@ enum L10n {
             static let activityCount = "organizations.usage.activity_count"
         }
     }
-    
+
     // MARK: - Activities
     enum Activities {
         static let name = "activities.name"
@@ -207,7 +207,7 @@ enum L10n {
         static let customLocation = "activities.custom_location"
         static let hideLocation = "activities.hide_location"
         static let attachments = "activities.attachments"
-        
+
         enum Transportation {
             static let title = "activities.transportation.title"
             static let type = "activities.transportation.type"
@@ -218,24 +218,24 @@ enum L10n {
             static let ship = "activities.transportation.ship"
             static let other = "activities.transportation.other"
         }
-        
+
         enum Lodging {
             static let title = "activities.lodging.title"
             static let checkIn = "activities.lodging.check_in"
             static let checkOut = "activities.lodging.check_out"
         }
-        
+
         enum Activity {
             static let title = "activities.activity.title"
         }
-        
+
         enum Payment {
             static let none = "activities.payment.none"
             static let partial = "activities.payment.partial"
             static let full = "activities.payment.full"
         }
     }
-    
+
     // MARK: - File Attachments
     enum FileAttachments {
         static let title = "file_attachments.title"
@@ -251,7 +251,7 @@ enum L10n {
         static let createdDate = "file_attachments.created_date"
         static let editAttachment = "file_attachments.edit_attachment"
         static let deleteAttachment = "file_attachments.delete_attachment"
-        
+
         enum Settings {
             static let title = "file_attachments.settings.title"
             static let management = "file_attachments.settings.management"
@@ -266,7 +266,7 @@ enum L10n {
             static let documents = "file_attachments.settings.documents"
             static let other = "file_attachments.settings.other"
         }
-        
+
         enum Errors {
             static let failedToLoad = "file_attachments.errors.failed_to_load"
             static let failedToSave = "file_attachments.errors.failed_to_save"
@@ -275,7 +275,7 @@ enum L10n {
             static let tooLarge = "file_attachments.errors.too_large"
         }
     }
-    
+
     // MARK: - Settings
     enum Settings {
         static let title = "settings.title"
@@ -294,7 +294,7 @@ enum L10n {
         static let build = "settings.build"
         static let fileAttachmentSettings = "settings.file_attachment_settings"
         static let managementDescription = "settings.management_description"
-        
+
         enum Import {
             static let title = "settings.import.title"
             static let selectFile = "settings.import.select_file"
@@ -304,7 +304,7 @@ enum L10n {
             static let invalidFile = "settings.import.invalid_file"
             static let progress = "settings.import.progress"
         }
-        
+
         enum Export {
             static let title = "settings.export.title"
             static let exporting = "settings.export.exporting"
@@ -315,7 +315,7 @@ enum L10n {
             static let csv = "settings.export.csv"
         }
     }
-    
+
     // MARK: - Errors
     enum Errors {
         static let title = "errors.title"
@@ -328,14 +328,14 @@ enum L10n {
         static let diskSpaceFull = "errors.disk_space_full"
         static let operationCancelled = "errors.operation_cancelled"
         static let featureNotAvailable = "errors.feature_not_available"
-        
+
         enum CloudKit {
             static let unavailable = "errors.cloudkit.unavailable"
             static let quotaExceeded = "errors.cloudkit.quota_exceeded"
             static let syncFailed = "errors.cloudkit.sync_failed"
             static let authenticationFailed = "errors.cloudkit.authentication_failed"
         }
-        
+
         enum Recovery {
             static let restartApp = "errors.recovery.restart_app"
             static let checkConnection = "errors.recovery.check_connection"
@@ -345,7 +345,7 @@ enum L10n {
             static let tryAgain = "errors.recovery.try_again"
         }
     }
-    
+
     // MARK: - Validation
     enum Validation {
         static let required = "validation.required"
@@ -358,7 +358,7 @@ enum L10n {
         static let tooShort = "validation.too_short"
         static let invalidFormat = "validation.invalid_format"
     }
-    
+
     // MARK: - Time and Dates
     enum Time {
         static let now = "time.now"
@@ -374,7 +374,7 @@ enum L10n {
         static let duration = "time.duration"
         static let starts = "time.starts"
         static let ends = "time.ends"
-        
+
         enum Units {
             static let seconds = "time.units.seconds"
             static let minutes = "time.units.minutes"
@@ -385,7 +385,7 @@ enum L10n {
             static let years = "time.units.years"
         }
     }
-    
+
     // MARK: - Database and Tools
     enum Database {
         static let title = "database.title"
@@ -398,7 +398,7 @@ enum L10n {
         static let browser = "database.browser"
         static let diagnostics = "database.diagnostics"
         static let repair = "database.repair"
-        
+
         enum Status {
             static let healthy = "database.status.healthy"
             static let needsAttention = "database.status.needs_attention"
@@ -428,7 +428,7 @@ extension Text {
     init(localized key: String, defaultValue: String? = nil) {
         self.init(L(key, defaultValue: defaultValue))
     }
-    
+
     /// Create a Text view with localized content and format arguments
     init(localized key: String, _ arguments: CVarArg...) {
         self.init(L(key, arguments))
@@ -440,7 +440,7 @@ extension String {
     var localized: String {
         L(self)
     }
-    
+
     /// Get the localized version with format arguments
     func localized(_ arguments: CVarArg...) -> String {
         L(self, arguments)
@@ -452,7 +452,7 @@ extension String {
 struct LocalizationModifier: ViewModifier {
     @State private var localizationManager = LocalizationManager.shared
     @State private var languageChangeToken: AnyCancellable?
-    
+
     func body(content: Content) -> some View {
         content
             .onAppear {
@@ -486,7 +486,7 @@ extension Notification.Name {
 
 struct LanguagePicker: View {
     @State private var localizationManager = LocalizationManager.shared
-    
+
     private let supportedLanguages = [
         ("en", "English"),
         ("es", "Español"),
@@ -497,9 +497,9 @@ struct LanguagePicker: View {
         ("ja", "日本語"),
         ("ko", "한국어"),
         ("zh-Hans", "简体中文"),
-        ("zh-Hant", "繁體中文")
+        ("zh-Hant", "繁體中文"),
     ]
-    
+
     var body: some View {
         Section {
             Picker(L(L10n.Settings.language), selection: Binding(
@@ -529,12 +529,12 @@ struct LanguagePicker: View {
 extension LocalizationManager {
     /// Generate a template Localizable.strings file with all keys
     func generateLocalizableStringsTemplate() -> String {
-        let _ = Mirror(reflecting: L10n.self) // Acknowledge unused mirror
+        _ = Mirror(reflecting: L10n.self) // Acknowledge unused mirror
         var output = "// Localizable.strings\n// Generated template\n\n"
-        
+
         // This would need to be expanded to recursively traverse the nested enums
         // For now, here are some example entries:
-        
+
         let keys = [
             // General
             ("general.cancel", "Cancel"),
@@ -555,7 +555,7 @@ extension LocalizationManager {
             ("general.none", "None"),
             ("general.unknown", "Unknown"),
             ("general.untitled", "Untitled"),
-            
+
             // Navigation
             ("navigation.trips", "Trips"),
             ("navigation.organizations", "Organizations"),
@@ -564,7 +564,7 @@ extension LocalizationManager {
             ("navigation.debug", "Debug"),
             ("navigation.back", "Back"),
             ("navigation.close", "Close"),
-            
+
             // Trips
             ("trips.title", "Trips"),
             ("trips.empty_state", "No Trips"),
@@ -581,14 +581,14 @@ extension LocalizationManager {
             ("trips.search_placeholder", "Search trips..."),
             ("trips.date_range", "Date Range"),
             ("trips.no_dates_set", "No dates set"),
-            
+
             // Activities
             ("trips.activities.transportation", "Transportation"),
             ("trips.activities.lodging", "Lodging"),
             ("trips.activities.activities", "Activities"),
             ("trips.activities.add_activity", "Add Activity"),
             ("trips.activities.no_activities", "No activities yet"),
-            
+
             // Organizations
             ("organizations.title", "Organizations"),
             ("organizations.empty_state", "No Organizations"),
@@ -604,7 +604,7 @@ extension LocalizationManager {
             ("organizations.search_placeholder", "Search organizations..."),
             ("organizations.cannot_delete_in_use", "Cannot delete organization: it's being used by %d items"),
             ("organizations.cannot_delete_none", "Cannot delete the default 'None' organization"),
-            
+
             // File Attachments
             ("file_attachments.title", "Attachments"),
             ("file_attachments.add_attachment", "Add Attachment"),
@@ -619,7 +619,7 @@ extension LocalizationManager {
             ("file_attachments.created_date", "Created"),
             ("file_attachments.edit_attachment", "Edit Attachment"),
             ("file_attachments.delete_attachment", "Delete Attachment"),
-            
+
             // Errors
             ("errors.title", "Error"),
             ("errors.unknown", "An unexpected error occurred"),
@@ -632,11 +632,11 @@ extension LocalizationManager {
             ("errors.operation_cancelled", "Operation was cancelled"),
             ("errors.feature_not_available", "Feature not available"),
         ]
-        
+
         for (key, value) in keys {
             output += "\"\(key)\" = \"\(value)\";\n"
         }
-        
+
         return output
     }
 }

@@ -12,14 +12,14 @@ struct EditableFieldView<Content: View, EditContent: View>: View {
     let isEditing: Bool
     @ViewBuilder let content: () -> Content
     @ViewBuilder let editContent: () -> EditContent
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: systemImage)
                     .foregroundColor(.blue)
                     .frame(width: 24, height: 24)
-                
+
                 if isEditing {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(label)
@@ -30,7 +30,7 @@ struct EditableFieldView<Content: View, EditContent: View>: View {
                 } else {
                     content()
                 }
-                
+
                 Spacer()
             }
         }
@@ -42,13 +42,13 @@ struct EditableSection: View {
     let title: String
     let isEditing: Bool
     let content: () -> AnyView
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
                 .font(.headline)
                 .padding(.horizontal)
-            
+
             VStack(alignment: .leading, spacing: 8) {
                 content()
             }
@@ -63,7 +63,7 @@ struct EditableSection: View {
 // Animated transition wrapper
 struct EditTransition: ViewModifier {
     let isEditing: Bool
-    
+
     func body(content: Content) -> some View {
         content
             .animation(.easeInOut(duration: 0.2), value: isEditing)

@@ -4,8 +4,8 @@
 //
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct DebugDataView: View {
     @Environment(\.modelContext) private var modelContext
@@ -14,7 +14,7 @@ struct DebugDataView: View {
     @Query private var allActivities: [Activity]
     @Query private var allLodging: [Lodging]
     @Query private var allTransportation: [Transportation]
-    
+
     var body: some View {
         NavigationStack {
             List {
@@ -25,7 +25,7 @@ struct DebugDataView: View {
                     Text("Lodging: \(allLodging.count)")
                     Text("Transportation: \(allTransportation.count)")
                 }
-                
+
                 Section("Trips") {
                     ForEach(allTrips, id: \.id) { trip in
                         VStack(alignment: .leading) {
@@ -36,7 +36,7 @@ struct DebugDataView: View {
                         }
                     }
                 }
-                
+
                 Section("Organizations") {
                     ForEach(allOrganizations, id: \.id) { org in
                         VStack(alignment: .leading) {
@@ -48,11 +48,11 @@ struct DebugDataView: View {
                         }
                     }
                 }
-                
+
                 Button("Create Test Data") {
                     createTestData()
                 }
-                
+
                 Button("Fix None Organizations") {
                     _ = Organization.ensureUniqueNoneOrganization(in: modelContext)
                 }
@@ -60,13 +60,13 @@ struct DebugDataView: View {
             .navigationTitle("Debug Data")
         }
     }
-    
+
     private func createTestData() {
         let trip = Trip(name: "Debug Test Trip")
         modelContext.insert(trip)
-        
+
         let org = Organization.ensureUniqueNoneOrganization(in: modelContext)
-        
+
         let activity = Activity(
             name: "Debug Test Activity",
             start: Date(),
@@ -74,9 +74,9 @@ struct DebugDataView: View {
             trip: trip,
             organization: org
         )
-        
+
         modelContext.insert(activity)
-        
+
         do {
             try modelContext.save()
             print("✅ Created test data")

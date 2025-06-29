@@ -11,23 +11,23 @@ struct CrossDeviceFileAttachmentRowView: View {
     let attachment: EmbeddedFileAttachment
     let onEdit: () -> Void
     let onDelete: () -> Void
-    
+
     @State private var showingDeleteConfirmation = false
     @State private var showingQuickLook = false
     @State private var showingEditSheet = false
     @State private var thumbnailImage: UIImage?
-    
+
     var body: some View {
         HStack(spacing: 12) {
             // File icon with thumbnail for images
             fileIcon
-            
+
             // File info
             VStack(alignment: .leading, spacing: 4) {
                 Text(attachment.displayName)
                     .font(.headline)
                     .lineLimit(2)
-                
+
                 HStack {
                     Text(attachment.fileExtension.uppercased())
                         .font(.caption)
@@ -35,21 +35,21 @@ struct CrossDeviceFileAttachmentRowView: View {
                         .padding(.vertical, 2)
                         .background(.secondary.opacity(0.2))
                         .clipShape(RoundedRectangle(cornerRadius: 4))
-                    
+
                     Text(attachment.formattedFileSize)
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    
+
                     Spacer()
-                    
+
                     Text(attachment.createdDate, style: .date)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }
-            
+
             Spacer()
-            
+
             // Actions menu
             Menu {
                 Button {
@@ -57,21 +57,21 @@ struct CrossDeviceFileAttachmentRowView: View {
                 } label: {
                     Label("View", systemImage: "eye")
                 }
-                
+
                 Button {
                     showingEditSheet = true
                 } label: {
                     Label("Edit Info", systemImage: "pencil")
                 }
-                
+
                 if let data = attachment.fileData {
                     ShareLink(item: data, preview: SharePreview(attachment.originalFileName)) {
                         Label("Share", systemImage: "square.and.arrow.up")
                     }
                 }
-                
+
                 Divider()
-                
+
                 Button(role: .destructive) {
                     showingDeleteConfirmation = true
                 } label: {
@@ -110,7 +110,7 @@ struct CrossDeviceFileAttachmentRowView: View {
             loadThumbnail()
         }
     }
-    
+
     @ViewBuilder
     private var fileIcon: some View {
         Group {
@@ -130,10 +130,10 @@ struct CrossDeviceFileAttachmentRowView: View {
             }
         }
     }
-    
+
     private func loadThumbnail() {
         guard attachment.isImage, let data = attachment.fileData else { return }
-        
+
         DispatchQueue.global(qos: .userInitiated).async {
             if let image = UIImage(data: data) {
                 DispatchQueue.main.async {

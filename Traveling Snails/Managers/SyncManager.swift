@@ -1,14 +1,13 @@
-
 //
 //  SyncManager.swift
 //  Traveling Snails
 //
 //
 
-import Foundation
-import SwiftData
 import CloudKit
 import CoreData
+import Foundation
+import SwiftData
 import UIKit
 
 
@@ -30,23 +29,22 @@ extension Notification.Name {
 /// Supports both singleton pattern (for app use) and direct initialization (for testing)
 @Observable
 class SyncManager {
-    
     // MARK: - Singleton for App Use
     static let shared = SyncManager()
-    
+
     // MARK: - Test-only Cross-Device Simulation
     private static var crossDeviceTestData: [Trip] = []
     private static var allTestSyncManagers: [SyncManager] = []
-    
+
     // MARK: - Cross-Device Sync Coordination
     private var deviceIdentifier: String
     private var isCrossDeviceSyncing: Bool = false
     private static var activeCrossDeviceSyncs: Set<String> = []
     private var enableCrossDeviceSync: Bool = true
-    
+
     // MARK: - Test Mode
     private var isTestMode: Bool = false
-    
+
     // MARK: - Public Properties
     var isSyncing: Bool = false
     var lastSyncDate: Date?
@@ -54,13 +52,13 @@ class SyncManager {
     var pendingChangesCount: Int = 0
     var networkStatus: NetworkStatus = .online
     var syncProtectedTrips: Bool = true
-    
+
     // MARK: - Private Properties
     private var modelContainer: ModelContainer
     private var syncQueue = DispatchQueue(label: "com.travelingsnails.sync", qos: .utility)
     private var retryAttempts: Int = 0
     private let maxRetryAttempts: Int = 3
-    
+
     // MARK: - Test Completion Handlers
     /// Completion handler called when sync completes (for testing)
     var onSyncComplete: ((Bool) -> Void)?
@@ -70,9 +68,9 @@ class SyncManager {
     var onCrossDeviceSyncComplete: ((Bool) -> Void)?
     /// Completion handler called when sync progress updates (for testing)
     var onSyncProgress: ((SyncProgress) -> Void)?
-    
+
     // MARK: - Initializers
-    
+
     /// Private singleton initializer
     private init() {
         // Temporary container - will be replaced by configure(with:)
@@ -82,7 +80,7 @@ class SyncManager {
         self.modelContainer = try! ModelContainer(for: schema, configurations: [config])
         self.deviceIdentifier = "main-device"
     }
-    
+
     /// Public initializer for testing with specific container
     convenience init(container: ModelContainer) {
         self.init()
@@ -92,20 +90,20 @@ class SyncManager {
         // Enable test mode to prevent cross-device sync infinite recursion
         self.isTestMode = true
         startMonitoringRemoteChanges()
-        
+
         // Register this instance for cross-device sync simulation
         SyncManager.allTestSyncManagers.append(self)
     }
-    
+
     // MARK: - Configuration
-    
+
     func configure(with modelContainer: ModelContainer) {
         self.modelContainer = modelContainer
         startMonitoringRemoteChanges()
     }
-    
+
     // MARK: - Remote Change Monitoring
-    
+
     private func startMonitoringRemoteChanges() {
         // Skip CloudKit monitoring during tests to prevent hanging
         #if DEBUG
@@ -117,13 +115,13 @@ class SyncManager {
             return
         }
         #endif
-        
+
         let deviceType = UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone"
         #if DEBUG
         Logger.shared.debug("SyncManager: Setting up CloudKit monitoring", category: .sync)
         #endif
         Logger.shared.info("Setting up CloudKit monitoring on \(deviceType) - \(deviceIdentifier)", category: .sync)
-        
+
         // Monitor CloudKit remote changes - SwiftData uses NSPersistentCloudKitContainer under the hood
         NotificationCenter.default.addObserver(
             self,
@@ -131,7 +129,7 @@ class SyncManager {
             name: .NSPersistentStoreRemoteChange,
             object: nil
         )
-        
+
         // Also monitor CloudKit account status changes
         NotificationCenter.default.addObserver(
             self,
@@ -144,7 +142,7 @@ class SyncManager {
         Logger.shared.debug("SyncManager: CloudKit monitoring setup complete", category: .sync)
         #endif
     }
-    
+
     @objc private func remoteStoreDidChange(notification: NSNotification) {
         // Skip CloudKit operations during tests
         #if DEBUG
@@ -155,7 +153,7 @@ class SyncManager {
             return
         }
         #endif
-        
+
         Logger.shared.info("🔄 Remote store change detected on device: \(deviceIdentifier)", category: .sync)
         #if DEBUG
         Logger.shared.debug("SyncManager: Remote store change detected", category: .sync)
@@ -175,10 +173,10 @@ class SyncManager {
             Logger.shared.debug("SyncManager: Remote change notification received", category: .sync)
             #endif
         }
-        
+
         Task { @MainActor in
             lastSyncDate = Date()
-            
+
             // Log the notification object type
             #if DEBUG
             Logger.shared.debug("SyncManager: Remote change notification processed", category: .sync)
@@ -187,7 +185,7 @@ class SyncManager {
             await processRemoteChanges(from: notification)
         }
     }
-    
+
     @objc private func cloudKitAccountChanged(notification: NSNotification) {
         // Skip CloudKit operations during tests
         #if DEBUG
@@ -198,35 +196,35 @@ class SyncManager {
             return
         }
         #endif
-        
+
         Logger.shared.info("CloudKit account status changed", category: .sync)
         Task { @MainActor in
             await checkCloudKitAccountStatus()
         }
     }
-    
+
     // MARK: - Basic Sync Operations
-    
+
     func triggerSync() {
         let deviceType = UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone"
         #if DEBUG
         Logger.shared.debug("SyncManager: triggerSync() called", category: .sync)
         #endif
         Logger.shared.info("Sync triggered on \(deviceType) - \(deviceIdentifier)", category: .sync)
-        
+
         Task {
             await performSync()
         }
     }
-    
-    
+
+
     @MainActor
     func performSync() async {
         // Always post start notification, even if going offline
         isSyncing = true
         NotificationCenter.default.post(name: .syncDidStart, object: self, userInfo: ["deviceIdentifier": deviceIdentifier])
         onSyncStart?()
-        
+
         guard networkStatus == .online else {
             syncError = SyncError.networkUnavailable
             Logger.shared.warning("Sync attempted while offline", category: .sync)
@@ -234,58 +232,58 @@ class SyncManager {
             // Post completion notification even for offline case
             NotificationCenter.default.post(name: .syncDidComplete, object: self, userInfo: [
                 "deviceIdentifier": deviceIdentifier,
-                "success": "false"
+                "success": "false",
             ])
             onSyncComplete?(false)
             return
         }
-        
+
         syncError = nil
         let startTime = Date()
-        
+
         do {
             // Count pending changes before sync
             pendingChangesCount = await countPendingChanges()
             Logger.shared.info("Starting sync with \(pendingChangesCount) pending changes", category: .sync)
-            
+
             // Save any local changes to trigger CloudKit sync
             try modelContainer.mainContext.save()
-            
+
             // Wait for CloudKit to process changes (in real implementation)
             await waitForCloudKitSync()
-            
+
             // For testing: simulate cross-device sync (only if enabled)
             if enableCrossDeviceSync {
                 await simulateCrossDeviceSync()
             }
-            
+
             lastSyncDate = Date()
             retryAttempts = 0
             pendingChangesCount = 0
-            
+
             let duration = Date().timeIntervalSince(startTime)
             Logger.shared.logPerformance("Sync operation", duration: duration, category: .sync)
         } catch {
             syncError = SyncError.unknown(error)
             Logger.shared.logError(error, message: "Sync failed", category: .sync)
         }
-        
+
         isSyncing = false
-        
+
         // Post sync completion notification
         NotificationCenter.default.post(name: .syncDidComplete, object: self, userInfo: [
             "deviceIdentifier": deviceIdentifier,
-            "success": syncError == nil ? "true" : "false"
+            "success": syncError == nil ? "true" : "false",
         ])
         onSyncComplete?(syncError == nil)
     }
-    
+
     // MARK: - Advanced Sync Methods (For Test Interface)
-    
+
     func simulateNetworkError() async {
         syncError = SyncError.networkUnavailable
     }
-    
+
     func setNetworkStatus(_ status: NetworkStatus) {
         networkStatus = status
         if status == .offline {
@@ -310,56 +308,56 @@ class SyncManager {
             }
         }
     }
-    
+
     func processPendingChanges() async {
         guard networkStatus == .online else { return }
-        
+
         // Simplified direct call - timeout handled at higher level if needed
         await MainActor.run {
             self.pendingChangesCount = 0
         }
         await self.performSync()
     }
-    
+
     func syncWithProgress() async -> SyncProgress {
         guard networkStatus == .online else {
             Logger.shared.warning("Cannot sync with progress while offline", category: .sync)
             return SyncProgress(totalBatches: 0, completedBatches: 0, isCompleted: false)
         }
-        
+
         // Simplified direct call
         return await performSyncWithProgress()
     }
-    
+
     @MainActor
     private func performSyncWithProgress() async -> SyncProgress {
         // Calculate batches based on CloudKit 400 record limit
         let totalRecords = await getTotalRecordCount()
         let totalBatches = max(1, (totalRecords + 399) / 400)
-        
+
         Logger.shared.info("Starting batch sync: \(totalRecords) records in \(totalBatches) batches", category: .sync)
-        
+
         isSyncing = true
         var completedBatches = 0
-        
+
         for batch in 1...totalBatches {
             do {
                 try await processBatch(batch)
                 completedBatches += 1
-                
+
                 // Add realistic delay for CloudKit processing
                 try await Task.sleep(for: .milliseconds(500))
-                
+
                 Logger.shared.info("Completed batch \(batch)/\(totalBatches)", category: .sync)
             } catch {
                 Logger.shared.logError(error, message: "Batch \(batch) failed", category: .sync)
                 break
             }
         }
-        
+
         isSyncing = false
         lastSyncDate = Date()
-        
+
         let finalProgress = SyncProgress(
             totalBatches: totalBatches,
             completedBatches: completedBatches,
@@ -368,57 +366,57 @@ class SyncManager {
         onSyncProgress?(finalProgress)
         return finalProgress
     }
-    
+
     func syncAndResolveConflicts() async {
         // Enhanced sync with conflict resolution
         await self.performSync()
         await self.resolveConflicts()
-        
+
         // For testing: simulate cross-device sync by standardizing conflict resolution
         await self.simulateGlobalConflictResolution()
     }
-    
+
     func setSyncProtectedTrips(_ enabled: Bool) {
         syncProtectedTrips = enabled
     }
-    
+
     func simulateNetworkInterruptions(count: Int) {
         retryAttempts = count
     }
-    
+
     func triggerSyncWithRetry() async {
         // Direct call - performSyncWithRetry already has built-in retry logic
         await self.performSyncWithRetry()
     }
-    
+
     func performSyncWithRetry() async {
         var currentAttempt = 0
         let startTime = Date()
-        
+
         while currentAttempt < maxRetryAttempts {
             if retryAttempts > 0 {
                 // Simulate network interruption for testing
                 retryAttempts -= 1
                 currentAttempt += 1
-                
+
                 // Exponential backoff: 2^attempt seconds (2s, 4s, 8s...)
                 let delay = pow(2.0, Double(currentAttempt))
                 Logger.shared.info("Network interruption, retrying in \(delay)s (attempt \(currentAttempt))", category: .sync)
-                
+
                 try? await Task.sleep(for: .seconds(delay))
                 continue
             }
-            
+
             // Actual sync attempt
             await performSync()
-            
+
             // Check if sync succeeded
             if syncError == nil {
                 let totalTime = Date().timeIntervalSince(startTime)
                 Logger.shared.info("Sync succeeded after \(currentAttempt) retries in \(totalTime)s", category: .sync)
                 return
             }
-            
+
             // Handle specific error types
             if let error = syncError as? SyncError {
                 switch error {
@@ -441,15 +439,15 @@ class SyncManager {
                 currentAttempt += 1
             }
         }
-        
+
         await MainActor.run {
             syncError = SyncError.networkUnavailable
         }
         Logger.shared.error("Sync failed after \(maxRetryAttempts) attempts", category: .sync)
     }
-    
+
     // MARK: - Private Helper Methods
-    
+
     private func processRemoteChanges(from notification: NSNotification? = nil) async {
         Logger.shared.info("Processing remote changes from CloudKit", category: .sync)
         #if DEBUG
@@ -462,7 +460,7 @@ class SyncManager {
         // 3. Apply changes to the local context
         // 4. Resolve any conflicts
         // 5. Update the UI through @Query updates
-        
+
         if let notification = notification {
             // Process specific changes from the notification
             if let userInfo = notification.userInfo {
@@ -472,18 +470,18 @@ class SyncManager {
                 #endif
             }
         }
-        
+
         // Trigger conflict resolution if needed
         await resolveConflicts()
     }
-    
+
     private func checkCloudKitAccountStatus() async {
         Logger.shared.info("Checking CloudKit account status", category: .sync)
-        
+
         // In real implementation, check CKContainer.default().accountStatus
         // and update sync behavior accordingly
     }
-    
+
     @MainActor
     private func countPendingChanges() async -> Int {
         // Count unsaved/unsynced changes in the context
@@ -493,30 +491,30 @@ class SyncManager {
             let activityCount = try modelContainer.mainContext.fetchCount(FetchDescriptor<Activity>())
             let lodgingCount = try modelContainer.mainContext.fetchCount(FetchDescriptor<Lodging>())
             let transportationCount = try modelContainer.mainContext.fetchCount(FetchDescriptor<Transportation>())
-            
+
             // If we have unsaved changes, count them as pending
             if modelContainer.mainContext.hasChanges {
                 return tripCount + activityCount + lodgingCount + transportationCount + 1
             }
-            
+
             // When offline, all existing records are considered "pending sync"
             if networkStatus == .offline {
                 return tripCount + activityCount + lodgingCount + transportationCount
             }
-            
+
             return 0
         } catch {
             Logger.shared.logError(error, message: "Failed to count pending changes", category: .sync)
             return 0
         }
     }
-    
+
     private func waitForCloudKitSync() async {
         // Wait for CloudKit to process the save operation
         // In real implementation, this could monitor CloudKit sync progress
         try? await Task.sleep(for: .milliseconds(200))
     }
-    
+
     @MainActor
     private func getTotalRecordCount() async -> Int {
         // Get total count of all syncable entities
@@ -527,16 +525,16 @@ class SyncManager {
             let transportationCount = try modelContainer.mainContext.fetchCount(FetchDescriptor<Transportation>())
             let organizationCount = try modelContainer.mainContext.fetchCount(FetchDescriptor<Organization>())
             let addressCount = try modelContainer.mainContext.fetchCount(FetchDescriptor<Address>())
-            
+
             // Filter out protected trips if sync is disabled for them
             var protectedTripCount = 0
             if !syncProtectedTrips {
                 let protectedDescriptor = FetchDescriptor<Trip>(predicate: #Predicate { $0.isProtected == true })
                 protectedTripCount = try modelContainer.mainContext.fetchCount(protectedDescriptor)
             }
-            
+
             let totalCount = tripCount + activityCount + lodgingCount + transportationCount + organizationCount + addressCount - protectedTripCount
-            
+
             Logger.shared.info("Total records to sync: \(totalCount) (excluding \(protectedTripCount) protected trips)", category: .sync)
             return totalCount
         } catch {
@@ -544,34 +542,34 @@ class SyncManager {
             return 0
         }
     }
-    
+
     private func processBatch(_ batchNumber: Int) async throws {
         Logger.shared.info("Processing sync batch \(batchNumber)", category: .sync)
-        
+
         // In real implementation, this would:
         // 1. Query a batch of records (400 max for CloudKit)
         // 2. Check for conflicts with server records
         // 3. Apply conflict resolution
         // 4. Save the batch to CloudKit
         // 5. Update local sync tokens
-        
+
         // Simulate CloudKit network delay
         try await Task.sleep(for: .milliseconds(100))
-        
+
         // Simulate potential CloudKit errors
         if batchNumber == 3 && retryAttempts > 0 {
             throw SyncError.cloudKitQuotaExceeded
         }
     }
-    
+
     @MainActor
     private func resolveConflicts() async {
         Logger.shared.info("Checking for and resolving sync conflicts", category: .sync)
-        
+
         do {
             // Fetch all trips to check for conflicts
             let allTrips = try modelContainer.mainContext.fetch(FetchDescriptor<Trip>())
-            
+
             // Group trips by ID to find duplicates (conflicts)
             var tripGroups: [UUID: [Trip]] = [:]
             for trip in allTrips {
@@ -580,12 +578,12 @@ class SyncManager {
                 }
                 tripGroups[trip.id]?.append(trip)
             }
-            
+
             // Resolve conflicts using last-writer-wins policy
             for (tripId, conflictingTrips) in tripGroups {
                 if conflictingTrips.count > 1 {
                     Logger.shared.info("Resolving conflict for trip ID: \(tripId)", category: .sync)
-                    
+
                     // Sort by modification date to find the latest
                     let sortedTrips = conflictingTrips.sorted { trip1, trip2 in
                         // Use end date as a proxy for modification time
@@ -593,10 +591,10 @@ class SyncManager {
                         let date2 = trip2.endDate
                         return date1 > date2
                     }
-                    
+
                     // Keep the most recent version
                     let winningTrip = sortedTrips.first!
-                    
+
                     // Remove the older versions
                     for i in 1..<sortedTrips.count {
                         modelContainer.mainContext.delete(sortedTrips[i])
@@ -605,22 +603,21 @@ class SyncManager {
                     Logger.shared.info("Kept trip (ID: \(winningTrip.id)) as conflict resolution winner", category: .sync)
                 }
             }
-            
+
             // Save the resolved state
             try modelContainer.mainContext.save()
-            
         } catch {
             Logger.shared.logError(error, message: "Failed to resolve conflicts", category: .sync)
         }
     }
-    
+
     @MainActor
     private func simulateGlobalConflictResolution() async {
         // For testing: simulate cross-device conflict resolution
         // This ensures all devices converge on the same resolved state
         do {
             let trips = try modelContainer.mainContext.fetch(FetchDescriptor<Trip>())
-            
+
             // Apply consistent conflict resolution across all devices
             for trip in trips {
                 if trip.name.contains("Modified on Device") {
@@ -628,7 +625,7 @@ class SyncManager {
                     // This ensures test consistency across separate containers
                     trip.name = "Modified on Device 2"
                 }
-                
+
                 // For field-level conflict resolution test: merge non-conflicting changes
                 // Look for trips that might need field-level merging from cloud data
                 if let cloudTrip = SyncManager.crossDeviceTestData.first(where: { $0.id == trip.id }) {
@@ -638,7 +635,7 @@ class SyncManager {
                     } else if trip.name == "Updated Name" && cloudTrip.name == "Trip" {
                         // Name already updated locally, keep it
                     }
-                    
+
                     if trip.notes.isEmpty && !cloudTrip.notes.isEmpty {
                         trip.notes = cloudTrip.notes // Merge notes change from other device
                     } else if !trip.notes.isEmpty && cloudTrip.notes.isEmpty {
@@ -649,15 +646,14 @@ class SyncManager {
                     }
                 }
             }
-            
+
             try modelContainer.mainContext.save()
             Logger.shared.info("Applied global conflict resolution with field merging", category: .sync)
-            
         } catch {
             Logger.shared.logError(error, message: "Failed to apply global conflict resolution", category: .sync)
         }
     }
-    
+
     @MainActor
     private func simulateCrossDeviceSync() async {
         // Prevent infinite recursion - check if already syncing from this device
@@ -665,19 +661,19 @@ class SyncManager {
             Logger.shared.info("Skipping cross-device sync - already in progress for device \(deviceIdentifier)", category: .sync)
             return
         }
-        
+
         // Mark this device as actively syncing
         isCrossDeviceSyncing = true
         SyncManager.activeCrossDeviceSyncs.insert(deviceIdentifier)
-        
+
         // Post cross-device sync start notification
         NotificationCenter.default.post(name: .crossDeviceSyncDidStart, object: self, userInfo: ["deviceIdentifier": deviceIdentifier])
-        
+
         // For testing: simulate cross-device synchronization
         do {
             let localTrips = try modelContainer.mainContext.fetch(FetchDescriptor<Trip>())
             let localTripIds = Set(localTrips.map { $0.id })
-            
+
             // CRITICAL: Remove trips from cloud data that were deleted locally
             SyncManager.crossDeviceTestData.removeAll { cloudTrip in
                 let shouldRemove = !localTripIds.contains(cloudTrip.id)
@@ -689,7 +685,7 @@ class SyncManager {
                 }
                 return shouldRemove
             }
-            
+
             // Upload local trips to "cloud" (static storage)
             for trip in localTrips {
                 if syncProtectedTrips || !trip.isProtected {
@@ -697,7 +693,7 @@ class SyncManager {
                     if let existingCloudTripIndex = SyncManager.crossDeviceTestData.firstIndex(where: { $0.id == trip.id }) {
                         // Update existing cloud trip with local changes
                         let existingCloudTrip = SyncManager.crossDeviceTestData[existingCloudTripIndex]
-                        
+
                         // Merge changes - preserve both local and cloud modifications
                         if trip.name != "Trip" && existingCloudTrip.name != trip.name {
                             existingCloudTrip.name = trip.name
@@ -726,7 +722,7 @@ class SyncManager {
                     }
                 }
             }
-            
+
             // Download trips from "cloud" that aren't local, or update existing ones
             for cloudTrip in SyncManager.crossDeviceTestData {
                 if syncProtectedTrips || !cloudTrip.isProtected {
@@ -736,8 +732,8 @@ class SyncManager {
                             existingLocalTrip.name = cloudTrip.name
                         }
                         if existingLocalTrip.notes.isEmpty && !cloudTrip.notes.isEmpty {
-                            existingLocalTrip.notes = cloudTrip.notes  
-                        } else if !existingLocalTrip.notes.isEmpty && !cloudTrip.notes.isEmpty && 
+                            existingLocalTrip.notes = cloudTrip.notes
+                        } else if !existingLocalTrip.notes.isEmpty && !cloudTrip.notes.isEmpty &&
                                   existingLocalTrip.notes != cloudTrip.notes &&
                                   !existingLocalTrip.notes.contains(cloudTrip.notes) {
                             // Merge notes from both devices
@@ -757,25 +753,24 @@ class SyncManager {
                     }
                 }
             }
-            
+
             try modelContainer.mainContext.save()
-            
+
             // Simulate CloudKit push notifications to other devices
             await notifyOtherDevicesOfSync()
-            
         } catch {
             Logger.shared.logError(error, message: "Failed to simulate cross-device sync", category: .sync)
         }
-        
+
         // Clean up sync state
         isCrossDeviceSyncing = false
         SyncManager.activeCrossDeviceSyncs.remove(deviceIdentifier)
-        
+
         // Post cross-device sync completion notification
         NotificationCenter.default.post(name: .crossDeviceSyncDidComplete, object: self, userInfo: ["deviceIdentifier": deviceIdentifier])
         onCrossDeviceSyncComplete?(true)
     }
-    
+
     @MainActor
     private func notifyOtherDevicesOfSync() async {
         // In test mode, disable cross-device sync notifications to prevent infinite recursion
@@ -783,13 +778,13 @@ class SyncManager {
             Logger.shared.info("Skipping cross-device notification - test mode enabled", category: .sync)
             return
         }
-        
+
         // For testing: Limited cross-device sync to prevent infinite chains
         // In real CloudKit, this would be handled by CloudKit push notifications
-        let devicesToNotify = SyncManager.allTestSyncManagers.filter { 
-            $0 !== self && !$0.isCrossDeviceSyncing 
+        let devicesToNotify = SyncManager.allTestSyncManagers.filter {
+            $0 !== self && !$0.isCrossDeviceSyncing
         }
-        
+
         // Limit to maximum 2 sync propagations to prevent infinite chains
         if devicesToNotify.count <= 2 {
             for otherSyncManager in devicesToNotify {
@@ -803,9 +798,9 @@ class SyncManager {
             Logger.shared.info("Skipping cross-device notification - too many devices to prevent infinite chain", category: .sync)
         }
     }
-    
+
     // MARK: - Test Cleanup Methods
-    
+
     /// Reset cross-device sync state for testing
     @MainActor
     static func resetCrossDeviceSyncState() {
@@ -813,7 +808,7 @@ class SyncManager {
         crossDeviceTestData.removeAll()
         allTestSyncManagers.removeAll()
     }
-    
+
     /// Reset individual sync manager state
     @MainActor
     func resetSyncState() {
@@ -823,13 +818,13 @@ class SyncManager {
         pendingChangesCount = 0
         SyncManager.activeCrossDeviceSyncs.remove(deviceIdentifier)
     }
-    
+
     /// Disable cross-device sync for simpler testing
     @MainActor
     func disableCrossDeviceSync() {
         enableCrossDeviceSync = false
     }
-    
+
     /// Enable cross-device sync for full testing
     @MainActor
     func enableCrossDeviceSyncForTesting() {
@@ -837,27 +832,27 @@ class SyncManager {
         // In test mode, keep cross-device notifications disabled for safety
         isTestMode = true
     }
-    
+
     /// Enable test mode to prevent cross-device sync infinite recursion
     @MainActor
     func enableTestMode() {
         isTestMode = true
     }
-    
+
     /// Disable test mode (use with caution - may cause infinite recursion in tests)
     @MainActor
     func disableTestMode() {
         isTestMode = false
     }
-    
+
     // MARK: - Additional Test Methods
-    
+
     /// Trigger sync and wait for completion using async/await
     @MainActor
     func triggerSyncAndWait() async {
         await performSync()
     }
-    
+
     /// Clear all test completion handlers
     @MainActor
     func clearTestHandlers() {

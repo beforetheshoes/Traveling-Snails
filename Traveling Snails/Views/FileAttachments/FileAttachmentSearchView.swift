@@ -4,24 +4,24 @@
 //
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct FileAttachmentSearchView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var allAttachments: [EmbeddedFileAttachment]
-    
+
     @State private var searchText = ""
     @State private var selectedFileType: FileType = .all
     @State private var showingExportView = false
-    
+
     enum FileType: String, CaseIterable {
         case all = "All"
         case images = "Images"
         case documents = "Documents"
         case pdfs = "PDFs"
         case other = "Other"
-        
+
         var icon: String {
             switch self {
             case .all: return "doc.on.doc"
@@ -32,10 +32,10 @@ struct FileAttachmentSearchView: View {
             }
         }
     }
-    
+
     var filteredAttachments: [EmbeddedFileAttachment] {
         var filtered = allAttachments
-        
+
         // Filter by search text
         if !searchText.isEmpty {
             filtered = filtered.filter { attachment in
@@ -44,7 +44,7 @@ struct FileAttachmentSearchView: View {
                 attachment.fileDescription.localizedCaseInsensitiveContains(searchText)
             }
         }
-        
+
         // Filter by file type
         switch selectedFileType {
         case .all:
@@ -58,17 +58,17 @@ struct FileAttachmentSearchView: View {
         case .other:
             filtered = filtered.filter { !$0.isImage && !$0.isDocument && !$0.isPDF }
         }
-        
+
         return filtered.sorted { $0.createdDate > $1.createdDate }
     }
-    
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 // Search and filters
                 VStack(spacing: 12) {
                     UnifiedSearchBar(text: $searchText)
-                    
+
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
                             ForEach(FileType.allCases, id: \.self) { type in
@@ -86,7 +86,7 @@ struct FileAttachmentSearchView: View {
                 }
                 .padding(.vertical)
                 .background(Color(.systemGroupedBackground))
-                
+
                 // Results
                 if filteredAttachments.isEmpty {
                     ContentUnavailableView(

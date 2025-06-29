@@ -4,19 +4,19 @@
 //
 //
 
-import SwiftUI
 import SwiftData
-//import OSLog
+import SwiftUI
+// import OSLog
 
 /// Root view for unified navigation - coordinates ViewModels and handles external dependencies
 struct UnifiedNavigationRootView<Item: NavigationItem, DetailView: View>: View {
     // Dependencies
     @Binding var selectedTab: Int
     @Binding var selectedTrip: Trip?
-    
+
     // ViewModel
     @State private var viewModel: NavigationViewModel<Item>
-    
+
     // Configuration
     private let detailViewBuilder: (Item) -> DetailView
     private let addViewBuilder: () -> AnyView
@@ -24,7 +24,7 @@ struct UnifiedNavigationRootView<Item: NavigationItem, DetailView: View>: View {
     private let searchFilter: ((Item, String) -> Bool)?
     private let onItemSelected: ((Item) -> Void)?
     private let onAddItem: (() -> Void)?
-    
+
     init(
         items: [Item],
         configuration: NavigationConfiguration<Item>,
@@ -54,7 +54,7 @@ struct UnifiedNavigationRootView<Item: NavigationItem, DetailView: View>: View {
         self.onItemSelected = onItemSelected
         self.onAddItem = onAddItem
     }
-    
+
     var body: some View {
         NavigationSplitView {
             NavigationContentView(
@@ -70,7 +70,7 @@ struct UnifiedNavigationRootView<Item: NavigationItem, DetailView: View>: View {
                         if let item = item {
                             viewModel.selectItem(item)
                             onItemSelected?(item)
-                            
+
                             // Handle trip selection for coordination
                             if let trip = item as? Trip {
                                 selectedTrip = trip
@@ -82,7 +82,7 @@ struct UnifiedNavigationRootView<Item: NavigationItem, DetailView: View>: View {
                     Logger.shared.debug("Item tapped: \(item.displayName)", category: .navigation)
                     viewModel.selectItem(item)
                     onItemSelected?(item)
-                    
+
                     // Handle trip selection for coordination
                     if let trip = item as? Trip {
                         selectedTrip = trip
@@ -133,9 +133,9 @@ struct UnifiedNavigationRootView<Item: NavigationItem, DetailView: View>: View {
             }
         }
     }
-    
+
     // MARK: - Private Computed Properties
-    
+
     private var filteredItems: [Item] {
         if let customFilter = searchFilter {
             return viewModel.items.filter { customFilter($0, viewModel.searchText) }
@@ -163,7 +163,7 @@ extension UnifiedNavigationRootView where Item == Trip, DetailView == AnyView {
             addButtonIcon: "plus",
             searchPlaceholder: NSLocalizedString("navigation.trips.search", value: "Search trips...", comment: "Trips search placeholder")
         )
-        
+
         return UnifiedNavigationRootView(
             items: trips,
             configuration: config,
@@ -198,7 +198,7 @@ extension UnifiedNavigationRootView where Item == Organization, DetailView == An
             addButtonIcon: "plus",
             searchPlaceholder: NSLocalizedString("navigation.organizations.search", value: "Search organizations...", comment: "Organizations search placeholder")
         )
-        
+
         return UnifiedNavigationRootView(
             items: organizations,
             configuration: config,

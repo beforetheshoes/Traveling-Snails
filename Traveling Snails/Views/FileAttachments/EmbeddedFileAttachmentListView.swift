@@ -9,26 +9,26 @@ import SwiftUI
 /// Unified file attachment list view with enhanced UI components and error handling
 struct EmbeddedFileAttachmentListView: View {
     @Environment(\.modelContext) private var modelContext
-    
+
     let attachments: [EmbeddedFileAttachment]
     let onAttachmentAdded: (EmbeddedFileAttachment) -> Void
     let onAttachmentRemoved: (EmbeddedFileAttachment) -> Void
-    
+
     @State private var errorMessage: String?
     @State private var isProcessing = false
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             // Header with attachment count and add button
             headerSection
-            
+
             // Attachments content
             if attachments.isEmpty {
                 emptyStateView
             } else {
                 attachmentsList
             }
-            
+
             // Error display
             if let errorMessage = errorMessage {
                 errorView(errorMessage)
@@ -36,12 +36,12 @@ struct EmbeddedFileAttachmentListView: View {
         }
         .handleErrors()
     }
-    
+
     @ViewBuilder
     private var headerSection: some View {
         HStack {
             Spacer()
-            
+
             UnifiedFilePicker.allFiles(
                 onSelected: handleAttachmentAdded,
                 onError: handleError
@@ -49,7 +49,7 @@ struct EmbeddedFileAttachmentListView: View {
             .disabled(isProcessing)
         }
     }
-    
+
     @ViewBuilder
     private var emptyStateView: some View {
         ContentUnavailableView(
@@ -59,7 +59,7 @@ struct EmbeddedFileAttachmentListView: View {
         )
         .frame(maxHeight: 100)
     }
-    
+
     @ViewBuilder
     private var attachmentsList: some View {
         LazyVStack(spacing: 12) {
@@ -77,19 +77,19 @@ struct EmbeddedFileAttachmentListView: View {
             }
         }
     }
-    
+
     @ViewBuilder
     private func errorView(_ message: String) -> some View {
         HStack {
             Image(systemName: "exclamationmark.triangle.fill")
                 .foregroundColor(.orange)
-            
+
             Text(message)
                 .font(.caption)
                 .foregroundColor(.orange)
-            
+
             Spacer()
-            
+
             Button("Dismiss") {
                 errorMessage = nil
             }
@@ -101,31 +101,31 @@ struct EmbeddedFileAttachmentListView: View {
         .background(Color.orange.opacity(0.1))
         .cornerRadius(8)
     }
-    
+
     // MARK: - Actions
-    
+
     private func handleAttachmentAdded(_ attachment: EmbeddedFileAttachment) {
         Logger.shared.info("Attachment added: \(attachment.displayName)", category: .fileAttachment)
         onAttachmentAdded(attachment)
-        
+
         // Post success notification
         NotificationCenter.default.post(
             name: .fileAttachmentAdded,
             object: attachment
         )
     }
-    
+
     private func handleAttachmentRemoved(_ attachment: EmbeddedFileAttachment) {
         Logger.shared.info("Removing attachment: \(attachment.displayName)", category: .fileAttachment)
-        
+
         isProcessing = true
-        
+
         // Remove from callback first
         onAttachmentRemoved(attachment)
-        
+
         // Delete from database
         modelContext.delete(attachment)
-        
+
         // Save context
         modelContext.safeSave(context: "Removing file attachment").handleResult(
             context: "File attachment removal",
@@ -142,11 +142,11 @@ struct EmbeddedFileAttachmentListView: View {
             }
         )
     }
-    
+
     private func handleError(_ message: String) {
         Logger.shared.error("File attachment error: \(message)", category: .fileAttachment)
         errorMessage = message
-        
+
         // Auto-dismiss error after 5 seconds
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [errorMessage] in
             if self.errorMessage == errorMessage {
@@ -162,23 +162,23 @@ struct EnhancedAttachmentRowView: View {
     let attachment: EmbeddedFileAttachment
     let onEdit: () -> Void
     let onDelete: () -> Void
-    
+
     @State private var showingDeleteConfirmation = false
     @State private var showingEditView = false
     @State private var showingQuickLook = false
     @State private var thumbnailImage: UIImage?
-    
+
     var body: some View {
         HStack(spacing: 12) {
             // File icon
             fileIcon
-            
+
             // File information
             VStack(alignment: .leading, spacing: 4) {
                 Text(attachment.displayName.isEmpty ? L(L10n.General.untitled) : attachment.displayName)
                     .font(.headline)
                     .lineLimit(1)
-                
+
                 HStack(spacing: 8) {
                     // File type badge
                     Text(attachment.fileExtension.uppercased())
@@ -188,25 +188,25 @@ struct EnhancedAttachmentRowView: View {
                         .background(.brown.opacity(0.1))
                         .foregroundColor(.brown)
                         .cornerRadius(4)
-                    
+
                     // File size
                     Text(attachment.formattedFileSize)
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    
+
                     // Creation date
                     Text("•")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    
+
                     Text(attachment.createdDate, style: .date)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
             }
-            
+
             Spacer()
-            
+
             // Action buttons
             actionButtons
         }
@@ -220,7 +220,7 @@ struct EnhancedAttachmentRowView: View {
             } label: {
                 Label(L(L10n.General.delete), systemImage: "trash")
             }
-            
+
             Button {
                 onEdit()
             } label: {
@@ -250,7 +250,7 @@ struct EnhancedAttachmentRowView: View {
             loadThumbnail()
         }
     }
-    
+
     @ViewBuilder
     private var fileIcon: some View {
         Group {
@@ -265,7 +265,7 @@ struct EnhancedAttachmentRowView: View {
                     RoundedRectangle(cornerRadius: 8)
                         .fill(attachment.fileIconColor.opacity(0.1))
                         .frame(width: 44, height: 44)
-                    
+
                     Image(systemName: attachment.fileSystemIcon)
                         .font(.title2)
                         .foregroundColor(attachment.fileIconColor)
@@ -273,7 +273,7 @@ struct EnhancedAttachmentRowView: View {
             }
         }
     }
-    
+
     @ViewBuilder
     private var actionButtons: some View {
         HStack(spacing: 16) {  // Increased spacing for better mobile UX
@@ -288,7 +288,7 @@ struct EnhancedAttachmentRowView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Preview attachment")
-            
+
             // Edit button - placeholder for now
             Button {
                 showingEditView = true
@@ -300,7 +300,7 @@ struct EnhancedAttachmentRowView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Edit attachment")
-            
+
             // Delete button
             Button {
                 showingDeleteConfirmation = true
@@ -314,10 +314,10 @@ struct EnhancedAttachmentRowView: View {
             .accessibilityLabel("Delete attachment")
         }
     }
-    
+
     private func loadThumbnail() {
         guard attachment.isImage, let data = attachment.fileData else { return }
-        
+
         Task {
             // Load thumbnail on background thread using async/await
             let image = await withCheckedContinuation { continuation in
@@ -326,7 +326,7 @@ struct EnhancedAttachmentRowView: View {
                     continuation.resume(returning: result)
                 }
             }
-            
+
             // Update UI on main thread
             await MainActor.run {
                 thumbnailImage = image
@@ -356,7 +356,7 @@ extension EmbeddedFileAttachment {
             return .brown
         }
     }
-    
+
     var fileSystemIcon: String {
         switch fileExtension.lowercased() {
         case "pdf":

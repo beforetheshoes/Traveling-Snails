@@ -16,17 +16,17 @@ class EmbeddedFileAttachment: Identifiable {
     var fileSize: Int64 = 0
     var mimeType: String = ""
     var fileExtension: String = ""
-    var createdDate: Date = Date()
+    var createdDate = Date()
     var fileDescription: String = ""
-    
+
     // Store the actual file data in the database for cross-device sync
     @Attribute(.externalStorage) var fileData: Data?
-    
+
     // Relationships
     var activity: Activity?
     var lodging: Lodging?
     var transportation: Transportation?
-    
+
     init(
         fileName: String = "",
         originalFileName: String = "",
@@ -45,25 +45,25 @@ class EmbeddedFileAttachment: Identifiable {
         self.createdDate = Date()
         self.fileData = fileData
     }
-    
+
     // MARK: - Computed Properties
-    
+
     var formattedFileSize: String {
         ByteCountFormatter.string(fromByteCount: fileSize, countStyle: .file)
     }
-    
+
     var isImage: Bool {
         ["jpg", "jpeg", "png", "gif", "heic", "webp"].contains(fileExtension.lowercased())
     }
-    
+
     var isPDF: Bool {
         fileExtension.lowercased() == "pdf"
     }
-    
+
     var isDocument: Bool {
         ["doc", "docx", "txt", "rtf", "pages"].contains(fileExtension.lowercased())
     }
-    
+
     var systemIcon: String {
         if isImage {
             return "photo"
@@ -75,18 +75,18 @@ class EmbeddedFileAttachment: Identifiable {
             return "doc"
         }
     }
-    
+
     var displayName: String {
         fileDescription.isEmpty ? originalFileName : fileDescription
     }
-    
+
     // Create a temporary file URL for QuickLook
     var temporaryFileURL: URL? {
         guard let data = fileData else { return nil }
-        
+
         let tempDir = FileManager.default.temporaryDirectory
         let tempFile = tempDir.appendingPathComponent("\(id.uuidString).\(fileExtension)")
-        
+
         do {
             try data.write(to: tempFile)
             return tempFile

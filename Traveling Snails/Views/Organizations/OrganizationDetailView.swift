@@ -12,7 +12,7 @@ struct OrganizationDetailView: View {
     @Binding var selectedTab: Int
     @Binding var selectedTrip: Trip?
     let organization: Organization
-    
+
     @State private var isEditing = false
     @State private var editedName: String = ""
     @State private var editedPhone: String = ""
@@ -23,30 +23,30 @@ struct OrganizationDetailView: View {
     @State private var showingSaveError = false
     @State private var saveErrorMessage = ""
     @State private var showDeleteConfirmation = false
-    
+
     var relatedTrips: [Trip] {
         var trips = Set<Trip>()
-        
+
 
         trips.formUnion(organization.transportation.compactMap { $0.trip })
         trips.formUnion(organization.lodging.compactMap { $0.trip })
         trips.formUnion(organization.activity.compactMap { $0.trip })
-        
+
         return Array(trips)
     }
-    
+
     var canDeleteOrganization: Bool {
         // Can't delete the sentinel "None" organization
         if organization.isNone {
             return false
         }
-        
+
         // Can't delete if it has any references
         return (organization.transportation.isEmpty) &&
         (organization.lodging.isEmpty) &&
         (organization.activity.isEmpty)
     }
-    
+
     var deleteButtonTitle: String {
         if organization.isNone {
             return "Cannot Delete System Organization"
@@ -56,22 +56,22 @@ struct OrganizationDetailView: View {
             return "Delete Organization"
         }
     }
-    
+
     var totalActivityCount: Int {
         (organization.transportation.count) +
         (organization.lodging.count) +
         (organization.activity.count)
     }
-    
+
     var body: some View {
         VStack(alignment: .leading) {
             Spacer()
-            
+
             HStack {
                 CachedAsyncImage(url: organization.logoURL, organizationId: organization.id)
                     .frame(width: 60, height: 60)
                     .clipShape(RoundedRectangle(cornerRadius: 8))
-                
+
                 VStack(alignment: .leading) {
                     if isEditing {
                         TextField("Organization Name", text: $editedName)
@@ -83,18 +83,18 @@ struct OrganizationDetailView: View {
                             .font(.title2)
                             .fontWeight(.semibold)
                     }
-                    
+
                     Text("\(totalActivityCount) activities")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                
+
                 Spacer()
             }
             .padding()
-            
+
             Spacer()
-            
+
             List {
                 ContactInfoSection(
                     isEditing: $isEditing,
@@ -105,10 +105,10 @@ struct OrganizationDetailView: View {
                     editedAddress: $editedAddress,
                     organization: organization
                 )
-                
+
                 if !relatedTrips.isEmpty {
                     Section(header: Text("Related Trips")) {
-                        ForEach(relatedTrips.sorted(by: { $0.name < $1.name })) { trip in
+                        ForEach(relatedTrips.sorted { $0.name < $1.name }) { trip in
                             Button {
                                 selectedTrip = trip
                                 selectedTab = 0  // Switch to Trips tab
@@ -117,7 +117,7 @@ struct OrganizationDetailView: View {
                                 VStack(alignment: .leading) {
                                     Text(trip.name)
                                         .font(.headline)
-                                    
+
                                     Text("\(countActivities(in: trip)) activities")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
@@ -128,7 +128,7 @@ struct OrganizationDetailView: View {
                         }
                     }
                 }
-                
+
                 // Delete Button (show when editing and organization can be deleted)
                 if isEditing {
                     Button(role: canDeleteOrganization ? .destructive : .cancel) {
@@ -156,7 +156,7 @@ struct OrganizationDetailView: View {
                         Button("Cancel") {
                             cancelEditing()
                         }
-                        
+
                         Button("Save") {
                             saveChanges()
                         }
@@ -184,7 +184,7 @@ struct OrganizationDetailView: View {
             Text(saveErrorMessage)
         }
     }
-    
+
     private func getDeleteConfirmationMessage() -> String {
         if organization.isNone {
             return "The system 'None' organization cannot be deleted."
@@ -197,7 +197,7 @@ struct OrganizationDetailView: View {
             return "Are you sure you want to delete '\(organization.name)'? This action cannot be undone."
         }
     }
-    
+
     private func startEditing() {
         editedName = organization.name
         editedPhone = organization.phone
@@ -207,10 +207,10 @@ struct OrganizationDetailView: View {
         editedAddress = (organization.address?.isEmpty == false) ? organization.address : nil
         isEditing = true
     }
-     
+
     private func cancelEditing() {
         isEditing = false
-        
+
         editedName = ""
         editedPhone = ""
         editedEmail = ""
@@ -218,7 +218,7 @@ struct OrganizationDetailView: View {
         editedLogoURL = ""
         editedAddress = nil
     }
-    
+
     private func saveChanges() {
         // Prevent changing name to "None" for non-sentinel organizations
         if !organization.isNone && editedName.lowercased() == "none" {
@@ -226,20 +226,20 @@ struct OrganizationDetailView: View {
             showingSaveError = true
             return
         }
-        
+
         // Prevent changing sentinel organization name to something else
         if organization.isNone && editedName.lowercased() != "none" {
             saveErrorMessage = "Cannot rename the system 'None' organization."
             showingSaveError = true
             return
         }
-        
+
         organization.name = editedName
         organization.phone = editedPhone
         organization.email = editedEmail
         organization.website = editedWebsite
         organization.logoURL = editedLogoURL
-        
+
         if let newAddress = editedAddress {
             // Ensure organization has an address object to update
             if organization.address == nil {
@@ -254,31 +254,31 @@ struct OrganizationDetailView: View {
             organization.address?.longitude = newAddress.longitude
             organization.address?.formattedAddress = newAddress.formattedAddress
         }
-        
+
         do {
             try modelContext.save()
             isEditing = false
-            
+
             // REMOVED: Custom sync triggers - let SwiftData+CloudKit handle automatically
         } catch {
             saveErrorMessage = "Failed to save changes: \(error.localizedDescription)"
             showingSaveError = true
         }
     }
-    
+
     private func deleteOrganization() {
         if organization.isNone {
             saveErrorMessage = "Cannot delete the system 'None' organization."
             showingSaveError = true
             return
         }
-        
+
         if canDeleteOrganization {
             modelContext.delete(organization)
             do {
                 try modelContext.save()
                 dismiss()
-                
+
                 // REMOVED: Custom sync triggers - let SwiftData+CloudKit handle automatically
             } catch {
                 saveErrorMessage = "Failed to delete organization: \(error.localizedDescription)"
@@ -292,7 +292,7 @@ struct OrganizationDetailView: View {
             showingSaveError = true
         }
     }
-    
+
     private func countActivities(in trip: Trip) -> Int {
         let lodgingCount = (trip.lodging).filter { $0.organization?.id == organization.id }.count
         let transportationCount = (trip.transportation).filter { $0.organization?.id == organization.id }.count

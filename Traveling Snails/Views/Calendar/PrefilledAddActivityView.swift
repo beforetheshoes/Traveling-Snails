@@ -11,29 +11,29 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
     let activityType: T.Type
     let startTime: Date
     let endTime: Date
-    
+
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    
+
     @State private var editData: TripActivityEditData
     @State private var showingOrganizationPicker = false
     @State private var attachments: [EmbeddedFileAttachment] = []
     @State private var isSaving = false
-    
+
     init(trip: Trip, activityType: T.Type, startTime: Date, endTime: Date) {
         self.trip = trip
         self.activityType = activityType
         self.startTime = startTime
         self.endTime = endTime
-        
+
         // Create prefilled edit data based on activity type
         let template = Self.createTemplate(for: activityType, startTime: startTime, endTime: endTime)
         self._editData = State(initialValue: TripActivityEditData(from: template))
     }
-    
+
     private static func createTemplate(for type: T.Type, startTime: Date, endTime: Date) -> T {
         _ = "\(String(describing: type).replacingOccurrences(of: "Type", with: ""))"
-        
+
         switch type {
         case is Lodging.Type:
             return Lodging(
@@ -63,11 +63,11 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
             fatalError("Unknown activity type")
         }
     }
-    
+
     private var template: T {
         Self.createTemplate(for: activityType, startTime: startTime, endTime: endTime)
     }
-    
+
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
@@ -79,56 +79,56 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
                         .padding()
                         .background(template.color.opacity(0.1))
                         .clipShape(Circle())
-                    
+
                     Text("New \(template.activityType.rawValue)")
                         .font(.title2)
                         .fontWeight(.semibold)
                         .foregroundColor(template.color)
-                    
+
                     VStack(spacing: 4) {
                         Text("\(startTime.formatted(date: .abbreviated, time: .shortened))")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
-                        
+
                         Text("to")
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        
+
                         Text("\(endTime.formatted(date: .abbreviated, time: .shortened))")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
                 }
                 .padding(.top)
-                
+
                 // Basic Info
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {
                         Image(systemName: "info.circle.fill")
                             .font(.title3)
                             .foregroundColor(template.color)
-                        
+
                         Text("Details")
                             .font(.headline)
                             .foregroundColor(template.color)
                     }
-                    
+
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Name")
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        
+
                         TextField("Enter \(template.activityType.rawValue.lowercased()) name", text: $editData.name)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                     }
-                    
+
                     // Type picker for transportation
                     if template.hasTypeSelector {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Transportation Type")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
-                            
+
                             Picker("Type", selection: Binding(
                                 get: { editData.transportationType ?? .plane },
                                 set: { editData.transportationType = $0 }
@@ -144,28 +144,28 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
                 .padding()
                 .background(template.color.opacity(0.05))
                 .cornerRadius(12)
-                
+
                 // Organization
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {
                         Image(systemName: "building.2.fill")
                             .font(.title3)
                             .foregroundColor(template.color)
-                        
+
                         Text("Organization")
                             .font(.headline)
                             .foregroundColor(template.color)
                     }
-                    
+
                     Button {
                         showingOrganizationPicker = true
                     } label: {
                         HStack {
                             Text(editData.organization?.name ?? "Select organization")
                                 .foregroundColor(editData.organization == nil ? .secondary : .primary)
-                            
+
                             Spacer()
-                            
+
                             Image(systemName: "chevron.right")
                                 .foregroundColor(.secondary)
                                 .font(.caption)
@@ -180,34 +180,34 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
                 .padding()
                 .background(template.color.opacity(0.05))
                 .cornerRadius(12)
-                
+
                 // Time adjustment (optional)
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {
                         Image(systemName: "clock.fill")
                             .font(.title3)
                             .foregroundColor(template.color)
-                        
+
                         Text("Adjust Times (Optional)")
                             .font(.headline)
                             .foregroundColor(template.color)
                     }
-                    
+
                     VStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 8) {
                             Text(template.startLabel)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
-                            
+
                             DatePicker("", selection: $editData.start, displayedComponents: [.date, .hourAndMinute])
                                 .labelsHidden()
                         }
-                        
+
                         VStack(alignment: .leading, spacing: 8) {
                             Text(template.endLabel)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
-                            
+
                             DatePicker("", selection: $editData.end, displayedComponents: [.date, .hourAndMinute])
                                 .labelsHidden()
                         }
@@ -216,23 +216,23 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
                 .padding()
                 .background(template.color.opacity(0.05))
                 .cornerRadius(12)
-                
+
                 // Cost
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {
                         Image(systemName: "dollarsign.circle.fill")
                             .font(.title3)
                             .foregroundColor(template.color)
-                        
+
                         Text("Cost (Optional)")
                             .font(.headline)
                             .foregroundColor(template.color)
                     }
-                    
+
                     HStack {
                         CurrencyTextField(value: $editData.cost)
                             .frame(maxWidth: .infinity)
-                        
+
                         Spacer()
                     }
                     .padding(.vertical, 12)
@@ -243,19 +243,19 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
                 .padding()
                 .background(template.color.opacity(0.05))
                 .cornerRadius(12)
-                
+
                 // Notes
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {
                         Image(systemName: "note.text")
                             .font(.title3)
                             .foregroundColor(template.color)
-                        
+
                         Text("Notes (Optional)")
                             .font(.headline)
                             .foregroundColor(template.color)
                     }
-                    
+
                     TextField("Add any notes", text: $editData.notes, axis: .vertical)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
                         .lineLimit(3...6)
@@ -263,7 +263,7 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
                 .padding()
                 .background(template.color.opacity(0.05))
                 .cornerRadius(12)
-                
+
                 // Submit Button
                 Button {
                     save()
@@ -313,16 +313,16 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
         }
         .disabled(isSaving)
     }
-    
+
     private var isFormValid: Bool {
         !editData.name.isEmpty && editData.organization != nil
     }
-    
+
     private func save() {
         guard !isSaving, let organization = editData.organization else { return }
-        
+
         isSaving = true
-        
+
         switch activityType {
         case is Lodging.Type:
             saveLodging(organization: organization)
@@ -335,7 +335,7 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
             return
         }
     }
-    
+
     private func saveLodging(organization: Organization) {
         let lodging = Lodging(
             name: editData.name,
@@ -350,11 +350,11 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
             trip: trip,
             organization: organization
         )
-        
+
         modelContext.insert(lodging)
         saveToContext()
     }
-    
+
     private func saveTransportation(organization: Organization) {
         let transportation = Transportation(
             name: editData.name,
@@ -370,11 +370,11 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
             trip: trip,
             organization: organization
         )
-        
+
         modelContext.insert(transportation)
         saveToContext()
     }
-    
+
     private func saveActivity(organization: Organization) {
         let activity = Activity(
             name: editData.name,
@@ -389,11 +389,11 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
             trip: trip,
             organization: organization
         )
-        
+
         modelContext.insert(activity)
         saveToContext()
     }
-    
+
     private func saveToContext() {
         do {
             try modelContext.save()

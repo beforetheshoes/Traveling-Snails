@@ -4,14 +4,14 @@
 //
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 /// Comprehensive data browser and troubleshooting suite for SwiftData
 struct DataBrowserView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    
+
     @Query private var allTrips: [Trip]
     @Query private var allTransportation: [Transportation]
     @Query private var allLodging: [Lodging]
@@ -19,13 +19,13 @@ struct DataBrowserView: View {
     @Query private var allOrganizations: [Organization]
     @Query private var allAddresses: [Address]
     @Query private var allAttachments: [EmbeddedFileAttachment]
-    
+
     @State private var selectedTab = 0
-    @State private var diagnosticResults: DiagnosticResults = DiagnosticResults()
+    @State private var diagnosticResults = DiagnosticResults()
     @State private var isRunning = false
     @State private var showingFixOptions = false
     @State private var selectedIssue: IssueType?
-    
+
     enum IssueType: String, CaseIterable {
         case blankEntries = "Blank Entries"
         case orphanedData = "Orphaned Data"
@@ -35,7 +35,7 @@ struct DataBrowserView: View {
         case missingOrganizations = "Missing Organizations"
         case unusedAddresses = "Unused Addresses"
         case brokenAttachments = "Broken Attachments"
-        
+
         var icon: String {
             switch self {
             case .blankEntries: return "doc.text"
@@ -48,7 +48,7 @@ struct DataBrowserView: View {
             case .brokenAttachments: return "paperclip.badge.ellipsis"
             }
         }
-        
+
         var color: Color {
             switch self {
             case .blankEntries, .orphanedData: return .red
@@ -57,7 +57,7 @@ struct DataBrowserView: View {
             }
         }
     }
-    
+
     struct DiagnosticResults {
         // Data counts
         var totalTrips: Int = 0
@@ -67,35 +67,35 @@ struct DataBrowserView: View {
         var totalOrganizations: Int = 0
         var totalAddresses: Int = 0
         var totalAttachments: Int = 0
-        
+
         // Issues
         var blankTransportation: [Transportation] = []
         var blankLodging: [Lodging] = []
         var blankActivities: [Activity] = []
-        
+
         var orphanedTransportation: [Transportation] = []
         var orphanedLodging: [Lodging] = []
         var orphanedActivities: [Activity] = []
         var orphanedAddresses: [Address] = []
         var orphanedAttachments: [EmbeddedFileAttachment] = []
-        
+
         var duplicateTransportation: [(Trip, [Transportation])] = []
         var duplicateLodging: [(Trip, [Lodging])] = []
         var duplicateActivities: [(Trip, [Activity])] = []
-        
+
         var invalidTimezoneTransportation: [Transportation] = []
         var invalidTimezoneLodging: [Lodging] = []
         var invalidTimezoneActivities: [Activity] = []
-        
+
         var invalidDateTransportation: [Transportation] = []
         var invalidDateLodging: [Lodging] = []
         var invalidDateActivities: [Activity] = []
-        
+
         var activitiesWithoutOrganizations: [String] = []
         var brokenAttachments: [EmbeddedFileAttachment] = []
-        
+
         var lastRunDate: Date?
-        
+
         var totalIssues: Int {
             blankTransportation.count + blankLodging.count + blankActivities.count +
             orphanedTransportation.count + orphanedLodging.count + orphanedActivities.count +
@@ -105,9 +105,9 @@ struct DataBrowserView: View {
             invalidDateTransportation.count + invalidDateLodging.count + invalidDateActivities.count +
             activitiesWithoutOrganizations.count + brokenAttachments.count
         }
-        
+
         var hasIssues: Bool { totalIssues > 0 }
-        
+
         func issueCount(for type: IssueType) -> Int {
             switch type {
             case .blankEntries:
@@ -129,7 +129,7 @@ struct DataBrowserView: View {
             }
         }
     }
-    
+
     var body: some View {
         NavigationStack {
             TabView(selection: $selectedTab) {
@@ -137,36 +137,35 @@ struct DataBrowserView: View {
                 DataBrowserOverviewTab(
                     results: diagnosticResults,
                     isRunning: isRunning,
-                    onRunDiagnostic: runComprehensiveDiagnostic,
-                    onShowFixes: { showingFixOptions = true }
-                )
+                    onRunDiagnostic: runComprehensiveDiagnostic
+                )                    { showingFixOptions = true }
                 .tabItem {
                     Label("Overview", systemImage: "chart.pie")
                 }
                 .tag(0)
-                
+
                 // Database Browser Tab
                 DatabaseBrowserTab()
                 .tabItem {
                     Label("Browse", systemImage: "folder")
                 }
                 .tag(1)
-                
+
                 // Issues Tab
-                DataBrowserIssuesTab(results: diagnosticResults, onSelectIssue: { issue in
+                DataBrowserIssuesTab(results: diagnosticResults) { issue in
                     selectedIssue = issue
                     showingFixOptions = true
-                })
+                }
                 .tabItem {
                     Label("Issues", systemImage: "exclamationmark.triangle")
                 }
                 .tag(2)
                 .badge(diagnosticResults.hasIssues ? diagnosticResults.totalIssues : 0)
-                
+
                 // Tools Tab
-                ToolsTab(modelContext: modelContext, onDataChanged: {
+                ToolsTab(modelContext: modelContext) {
                     Task { await runComprehensiveDiagnostic() }
-                })
+                }
                 .tabItem {
                     Label("Tools", systemImage: "wrench.and.screwdriver")
                 }
@@ -185,27 +184,26 @@ struct DataBrowserView: View {
                 DataBrowserIssueFixerSheet(
                     results: diagnosticResults,
                     selectedIssue: selectedIssue,
-                    modelContext: modelContext,
-                    onFixed: {
+                    modelContext: modelContext
+                )                    {
                         showingFixOptions = false
                         selectedIssue = nil
                         Task { await runComprehensiveDiagnostic() }
                     }
-                )
             }
         }
         .onAppear {
             Task { await runComprehensiveDiagnostic() }
         }
     }
-    
+
     private func runComprehensiveDiagnostic() async {
         await MainActor.run { isRunning = true }
-        
+
         let results = await withCheckedContinuation { continuation in
             Task {
                 var diagnostic = DiagnosticResults()
-                
+
                 // Count totals
                 diagnostic.totalTrips = allTrips.count
                 diagnostic.totalTransportation = allTransportation.count
@@ -214,7 +212,7 @@ struct DataBrowserView: View {
                 diagnostic.totalOrganizations = allOrganizations.count
                 diagnostic.totalAddresses = allAddresses.count
                 diagnostic.totalAttachments = allAttachments.count
-                
+
                 // Find blank entries
                 diagnostic.blankTransportation = allTransportation.filter {
                     $0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -225,44 +223,44 @@ struct DataBrowserView: View {
                 diagnostic.blankActivities = allActivities.filter {
                     $0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 }
-                
+
                 // Find orphaned entries
                 diagnostic.orphanedTransportation = allTransportation.filter { $0.trip == nil }
                 diagnostic.orphanedLodging = allLodging.filter { $0.trip == nil }
                 diagnostic.orphanedActivities = allActivities.filter { $0.trip == nil }
-                
+
                 // Find orphaned addresses
                 diagnostic.orphanedAddresses = allAddresses.filter { address in
                     (address.organizations?.isEmpty ?? true) &&
                     (address.activities?.isEmpty ?? true) &&
                     (address.lodgings?.isEmpty ?? true)
                 }
-                
+
                 // Find orphaned attachments
                 diagnostic.orphanedAttachments = allAttachments.filter { attachment in
                     attachment.activity == nil &&
                     attachment.lodging == nil &&
                     attachment.transportation == nil
                 }
-                
+
                 // Check for duplicate relationships
                 for trip in allTrips {
                     let transportationUniqueIds = Set(trip.transportation.map { $0.id })
                     if transportationUniqueIds.count != trip.transportation.count {
                         diagnostic.duplicateTransportation.append((trip, trip.transportation))
                     }
-                    
+
                     let lodgingUniqueIds = Set(trip.lodging.map { $0.id })
                     if lodgingUniqueIds.count != trip.lodging.count {
                         diagnostic.duplicateLodging.append((trip, trip.lodging))
                     }
-                    
+
                     let activityUniqueIds = Set(trip.activity.map { $0.id })
                     if activityUniqueIds.count != trip.activity.count {
                         diagnostic.duplicateActivities.append((trip, trip.activity))
                     }
                 }
-                
+
                 // Check for invalid timezones
                 diagnostic.invalidTimezoneTransportation = allTransportation.filter {
                     TimeZone(identifier: $0.startTZId) == nil || TimeZone(identifier: $0.endTZId) == nil
@@ -273,12 +271,12 @@ struct DataBrowserView: View {
                 diagnostic.invalidTimezoneActivities = allActivities.filter {
                     TimeZone(identifier: $0.startTZId) == nil || TimeZone(identifier: $0.endTZId) == nil
                 }
-                
+
                 // Check for invalid dates
                 diagnostic.invalidDateTransportation = allTransportation.filter { $0.start >= $0.end }
                 diagnostic.invalidDateLodging = allLodging.filter { $0.start >= $0.end }
                 diagnostic.invalidDateActivities = allActivities.filter { $0.start >= $0.end }
-                
+
                 // Check for activities without organizations
                 var activitiesWithoutOrgs: [String] = []
                 for transportation in allTransportation {
@@ -297,17 +295,17 @@ struct DataBrowserView: View {
                     }
                 }
                 diagnostic.activitiesWithoutOrganizations = activitiesWithoutOrgs
-                
+
                 // Check for broken attachments
                 diagnostic.brokenAttachments = allAttachments.filter {
                     $0.fileData == nil || $0.fileData?.isEmpty == true
                 }
-                
+
                 diagnostic.lastRunDate = Date()
                 continuation.resume(returning: diagnostic)
             }
         }
-        
+
         await MainActor.run {
             diagnosticResults = results
             isRunning = false
@@ -321,7 +319,7 @@ private struct DataBrowserOverviewTab: View {
     let isRunning: Bool
     let onRunDiagnostic: () async -> Void
     let onShowFixes: () -> Void
-    
+
     var body: some View {
         List {
             Section("Database Summary") {
@@ -329,7 +327,7 @@ private struct DataBrowserOverviewTab: View {
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
             }
-            
+
             Section("Diagnostic Actions") {
                 Button {
                     Task { await onRunDiagnostic() }
@@ -337,7 +335,7 @@ private struct DataBrowserOverviewTab: View {
                     HStack {
                         Image(systemName: isRunning ? "clock" : "stethoscope")
                             .foregroundColor(.blue)
-                        
+
                         VStack(alignment: .leading) {
                             Text("Run Full Diagnostic")
                             if let lastRun = results.lastRunDate {
@@ -346,9 +344,9 @@ private struct DataBrowserOverviewTab: View {
                                     .foregroundColor(.secondary)
                             }
                         }
-                        
+
                         Spacer()
-                        
+
                         if isRunning {
                             ProgressView()
                                 .scaleEffect(0.8)
@@ -356,7 +354,7 @@ private struct DataBrowserOverviewTab: View {
                     }
                 }
                 .disabled(isRunning)
-                
+
                 if results.hasIssues {
                     Button {
                         onShowFixes()
@@ -364,7 +362,7 @@ private struct DataBrowserOverviewTab: View {
                         HStack {
                             Image(systemName: "wrench.and.screwdriver")
                                 .foregroundColor(.orange)
-                            
+
                             VStack(alignment: .leading) {
                                 Text("Fix Issues")
                                 Text("\(results.totalIssues) issues found")
@@ -375,7 +373,7 @@ private struct DataBrowserOverviewTab: View {
                     }
                 }
             }
-            
+
             if results.hasIssues {
                 Section("Quick Issue Summary") {
                     ForEach(DataBrowserView.IssueType.allCases, id: \.self) { issueType in
@@ -384,11 +382,11 @@ private struct DataBrowserOverviewTab: View {
                             HStack {
                                 Image(systemName: issueType.icon)
                                     .foregroundColor(issueType.color)
-                                
+
                                 Text(issueType.rawValue)
-                                
+
                                 Spacer()
-                                
+
                                 Text("\(count)")
                                     .font(.headline)
                                     .foregroundColor(issueType.color)
@@ -404,11 +402,11 @@ private struct DataBrowserOverviewTab: View {
 // MARK: - Database Summary Grid
 private struct DatabaseSummaryGrid: View {
     let results: DataBrowserView.DiagnosticResults
-    
+
     var body: some View {
         LazyVGrid(columns: [
             GridItem(.flexible()),
-            GridItem(.flexible())
+            GridItem(.flexible()),
         ], spacing: 16) {
             DatabaseStatCard(title: "Trips", count: results.totalTrips, icon: "airplane", color: .blue)
             DatabaseStatCard(title: "Transportation", count: results.totalTransportation, icon: "car", color: .green)
@@ -434,17 +432,17 @@ private struct DatabaseStatCard: View {
     let count: Int
     let icon: String
     let color: Color
-    
+
     var body: some View {
         VStack(spacing: 8) {
             Image(systemName: icon)
                 .font(.title2)
                 .foregroundColor(color)
-            
+
             Text("\(count)")
                 .font(.title2)
                 .fontWeight(.bold)
-            
+
             Text(title)
                 .font(.caption)
                 .foregroundColor(.secondary)
@@ -461,9 +459,9 @@ private struct DatabaseStatCard: View {
 private struct DataBrowserIssuesTab: View {
     let results: DataBrowserView.DiagnosticResults
     let onSelectIssue: (DataBrowserView.IssueType) -> Void
-    
+
     @State private var expandedIssues: Set<DataBrowserView.IssueType> = []
-    
+
     var body: some View {
         List {
             if !results.hasIssues {
@@ -472,11 +470,11 @@ private struct DataBrowserIssuesTab: View {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.system(size: 60))
                             .foregroundColor(.green)
-                        
+
                         Text("No Issues Found")
                             .font(.title2)
                             .fontWeight(.semibold)
-                        
+
                         Text("Your database is in good shape! All relationships are properly connected and no orphaned data was found.")
                             .font(.body)
                             .foregroundColor(.secondary)
@@ -512,7 +510,7 @@ private struct DataBrowserIssuesTab: View {
                                         onSelectIssue(issueType)
                                     }
                                 )
-                                
+
                                 // Expandable detailed items list
                                 if isExpanded {
                                     IssueDetailsList(
@@ -528,7 +526,7 @@ private struct DataBrowserIssuesTab: View {
             }
         }
     }
-    
+
     private func getIssueDescription(for type: DataBrowserView.IssueType, results: DataBrowserView.DiagnosticResults) -> String {
         switch type {
         case .blankEntries:
@@ -537,7 +535,7 @@ private struct DataBrowserIssuesTab: View {
             if !results.blankLodging.isEmpty { items.append("\(results.blankLodging.count) lodging") }
             if !results.blankActivities.isEmpty { items.append("\(results.blankActivities.count) activities") }
             return "Entries with no name: " + items.joined(separator: ", ")
-            
+
         case .orphanedData:
             var items: [String] = []
             if !results.orphanedTransportation.isEmpty { items.append("\(results.orphanedTransportation.count) transportation") }
@@ -546,34 +544,34 @@ private struct DataBrowserIssuesTab: View {
             if !results.orphanedAddresses.isEmpty { items.append("\(results.orphanedAddresses.count) addresses") }
             if !results.orphanedAttachments.isEmpty { items.append("\(results.orphanedAttachments.count) attachments") }
             return "Data not linked to trips: " + items.joined(separator: ", ")
-            
+
         case .duplicateRelationships:
             var items: [String] = []
             if !results.duplicateTransportation.isEmpty { items.append("\(results.duplicateTransportation.count) trip transportation") }
             if !results.duplicateLodging.isEmpty { items.append("\(results.duplicateLodging.count) trip lodging") }
             if !results.duplicateActivities.isEmpty { items.append("\(results.duplicateActivities.count) trip activities") }
             return "Duplicate relationships: " + items.joined(separator: ", ")
-            
+
         case .invalidTimezones:
             var items: [String] = []
             if !results.invalidTimezoneTransportation.isEmpty { items.append("\(results.invalidTimezoneTransportation.count) transportation") }
             if !results.invalidTimezoneLodging.isEmpty { items.append("\(results.invalidTimezoneLodging.count) lodging") }
             if !results.invalidTimezoneActivities.isEmpty { items.append("\(results.invalidTimezoneActivities.count) activities") }
             return "Invalid timezone identifiers: " + items.joined(separator: ", ")
-            
+
         case .invalidDates:
             var items: [String] = []
             if !results.invalidDateTransportation.isEmpty { items.append("\(results.invalidDateTransportation.count) transportation") }
             if !results.invalidDateLodging.isEmpty { items.append("\(results.invalidDateLodging.count) lodging") }
             if !results.invalidDateActivities.isEmpty { items.append("\(results.invalidDateActivities.count) activities") }
             return "End dates before start dates: " + items.joined(separator: ", ")
-            
+
         case .missingOrganizations:
             return "Activities without organizations assigned"
-            
+
         case .unusedAddresses:
             return "Addresses not referenced by any items"
-            
+
         case .brokenAttachments:
             return "File attachments with missing or corrupted data"
         }
@@ -584,33 +582,33 @@ private struct IssueRowView: View {
     let type: DataBrowserView.IssueType
     let count: Int
     let description: String
-    
+
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: type.icon)
                 .font(.title2)
                 .foregroundColor(type.color)
                 .frame(width: 30)
-            
+
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text(type.rawValue)
                         .font(.headline)
-                    
+
                     Spacer()
-                    
+
                     Text("\(count)")
                         .font(.title3)
                         .fontWeight(.bold)
                         .foregroundColor(type.color)
                 }
-                
+
                 Text(description)
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .lineLimit(2)
             }
-            
+
             Image(systemName: "chevron.right")
                 .font(.caption)
                 .foregroundColor(.secondary)
@@ -625,11 +623,11 @@ struct DataBrowserIssueFixerSheet: View {
     let selectedIssue: DataBrowserView.IssueType?
     let modelContext: ModelContext
     let onFixed: () -> Void
-    
+
     @Environment(\.dismiss) private var dismiss
     @State private var isFixing = false
     @State private var fixResults: [String] = []
-    
+
     var body: some View {
         NavigationStack {
             VStack {
@@ -638,16 +636,14 @@ struct DataBrowserIssueFixerSheet: View {
                         issue: issue,
                         results: results,
                         isFixing: isFixing,
-                        fixResults: fixResults,
-                        onFix: { await fixIssue(issue) }
-                    )
+                        fixResults: fixResults
+                    )                        { await fixIssue(issue) }
                 } else {
                     AllIssuesFixerContent(
                         results: results,
                         isFixing: isFixing,
-                        fixResults: fixResults,
-                        onFixAll: { await fixAllIssues() }
-                    )
+                        fixResults: fixResults
+                    )                        { await fixAllIssues() }
                 }
             }
             .navigationTitle(selectedIssue?.rawValue ?? "Fix All Issues")
@@ -656,7 +652,7 @@ struct DataBrowserIssueFixerSheet: View {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") { dismiss() }
                 }
-                
+
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
                         onFixed()
@@ -667,88 +663,88 @@ struct DataBrowserIssueFixerSheet: View {
             }
         }
     }
-    
+
     private func fixIssue(_ issue: DataBrowserView.IssueType) async {
         await MainActor.run {
             isFixing = true
             fixResults = []
         }
-        
+
         var results: [String] = []
-        
+
         switch issue {
         case .blankEntries:
             results.append("Deleting blank entries...")
-            
+
             for transportation in self.results.blankTransportation {
                 modelContext.delete(transportation)
                 results.append("Deleted blank transportation")
             }
-            
+
             for lodging in self.results.blankLodging {
                 modelContext.delete(lodging)
                 results.append("Deleted blank lodging")
             }
-            
+
             for activity in self.results.blankActivities {
                 modelContext.delete(activity)
                 results.append("Deleted blank activity")
             }
-            
+
         case .orphanedData:
             results.append("Deleting orphaned data...")
-            
+
             for item in self.results.orphanedTransportation {
                 modelContext.delete(item)
                 results.append("Deleted orphaned transportation: \(item.name)")
             }
-            
+
             for item in self.results.orphanedLodging {
                 modelContext.delete(item)
                 results.append("Deleted orphaned lodging: \(item.name)")
             }
-            
+
             for item in self.results.orphanedActivities {
                 modelContext.delete(item)
                 results.append("Deleted orphaned activity: \(item.name)")
             }
-            
+
             for item in self.results.orphanedAddresses {
                 modelContext.delete(item)
                 results.append("Deleted orphaned address")
             }
-            
+
             for item in self.results.orphanedAttachments {
                 modelContext.delete(item)
                 results.append("Deleted orphaned attachment: \(item.originalFileName)")
             }
-            
+
         case .duplicateRelationships:
             results.append("Fixing duplicate relationships...")
-            
+
             for (trip, transportation) in self.results.duplicateTransportation {
                 let unique = Array(Set(transportation))
                 trip.transportation = unique
                 results.append("Fixed duplicate transportation in trip: \(trip.name)")
             }
-            
+
             for (trip, lodging) in self.results.duplicateLodging {
                 let unique = Array(Set(lodging))
                 trip.lodging = unique
                 results.append("Fixed duplicate lodging in trip: \(trip.name)")
             }
-            
+
             for (trip, activities) in self.results.duplicateActivities {
                 let unique = Array(Set(activities))
                 trip.activity = unique
                 results.append("Fixed duplicate activities in trip: \(trip.name)")
             }
-            
+
         case .invalidTimezones:
             results.append("Fixing invalid timezones...")
-            
+
             let defaultTZ = TimeZone.current.identifier
-            
+
             for transportation in self.results.invalidTimezoneTransportation {
                 if TimeZone(identifier: transportation.startTZId) == nil {
                     transportation.startTZId = defaultTZ
@@ -758,7 +754,7 @@ struct DataBrowserIssueFixerSheet: View {
                 }
                 results.append("Fixed timezone for transportation: \(transportation.name)")
             }
-            
+
             for lodging in self.results.invalidTimezoneLodging {
                 if TimeZone(identifier: lodging.startTZId) == nil {
                     lodging.startTZId = defaultTZ
@@ -768,7 +764,7 @@ struct DataBrowserIssueFixerSheet: View {
                 }
                 results.append("Fixed timezone for lodging: \(lodging.name)")
             }
-            
+
             for activity in self.results.invalidTimezoneActivities {
                 if TimeZone(identifier: activity.startTZId) == nil {
                     activity.startTZId = defaultTZ
@@ -778,55 +774,55 @@ struct DataBrowserIssueFixerSheet: View {
                 }
                 results.append("Fixed timezone for activity: \(activity.name)")
             }
-            
+
         case .invalidDates:
             results.append("Fixing invalid dates...")
-            
+
             for transportation in self.results.invalidDateTransportation {
                 transportation.end = transportation.start.addingTimeInterval(3600) // Add 1 hour
                 results.append("Fixed dates for transportation: \(transportation.name)")
             }
-            
+
             for lodging in self.results.invalidDateLodging {
                 lodging.end = lodging.start.addingTimeInterval(24 * 3600) // Add 1 day
                 results.append("Fixed dates for lodging: \(lodging.name)")
             }
-            
+
             for activity in self.results.invalidDateActivities {
                 activity.end = activity.start.addingTimeInterval(3600) // Add 1 hour
                 results.append("Fixed dates for activity: \(activity.name)")
             }
-            
+
         case .missingOrganizations, .unusedAddresses, .brokenAttachments:
             results.append("This fix is not yet implemented")
         }
-        
+
         do {
             try modelContext.save()
             results.append("✅ All changes saved successfully")
         } catch {
             results.append("❌ Error saving changes: \(error.localizedDescription)")
         }
-        
+
         await MainActor.run {
             fixResults = results
             isFixing = false
         }
     }
-    
+
     private func fixAllIssues() async {
         await MainActor.run {
             isFixing = true
             fixResults = ["Starting to fix all issues..."]
         }
-        
+
         // Fix each issue type
         for issueType in DataBrowserView.IssueType.allCases {
             if results.issueCount(for: issueType) > 0 {
                 await fixIssue(issueType)
             }
         }
-        
+
         await MainActor.run {
             fixResults.append("✅ All issues have been processed")
             isFixing = false
@@ -840,7 +836,7 @@ private struct IssueFixerContent: View {
     let isFixing: Bool
     let fixResults: [String]
     let onFix: () async -> Void
-    
+
     var body: some View {
         VStack(spacing: 20) {
             // Issue description
@@ -848,16 +844,16 @@ private struct IssueFixerContent: View {
                 Image(systemName: issue.icon)
                     .font(.system(size: 60))
                     .foregroundColor(issue.color)
-                
+
                 Text(issue.rawValue)
                     .font(.title2)
                     .fontWeight(.semibold)
-                
+
                 Text("\(results.issueCount(for: issue)) issues found")
                     .font(.headline)
                     .foregroundColor(issue.color)
             }
-            
+
             // Fix button
             if !isFixing && fixResults.isEmpty {
                 Button {
@@ -872,7 +868,7 @@ private struct IssueFixerContent: View {
                 }
                 .padding(.horizontal)
             }
-            
+
             // Progress or results
             if isFixing {
                 VStack {
@@ -895,7 +891,7 @@ private struct IssueFixerContent: View {
                 .cornerRadius(12)
                 .padding(.horizontal)
             }
-            
+
             Spacer()
         }
         .padding()
@@ -908,23 +904,23 @@ private struct AllIssuesFixerContent: View {
     let fixResults: [String]
     let onFixAll: () async -> Void
     @State private var showingDetails = false
-    
+
     var body: some View {
         VStack(spacing: 20) {
             VStack(spacing: 12) {
                 Image(systemName: "wrench.and.screwdriver.fill")
                     .font(.system(size: 60))
                     .foregroundColor(.orange)
-                
+
                 Text("Fix All Issues")
                     .font(.title2)
                     .fontWeight(.semibold)
-                
+
                 Text("\(results.totalIssues) total issues found")
                     .font(.headline)
                     .foregroundColor(.orange)
             }
-            
+
             if !isFixing && fixResults.isEmpty {
                 VStack(spacing: 12) {
                     Button {
@@ -940,7 +936,7 @@ private struct AllIssuesFixerContent: View {
                         .foregroundColor(.primary)
                         .cornerRadius(12)
                     }
-                    
+
                     if showingDetails {
                         ScrollView {
                             LazyVStack(alignment: .leading, spacing: 16) {
@@ -958,7 +954,7 @@ private struct AllIssuesFixerContent: View {
                                                     .font(.headline)
                                                     .foregroundColor(issueType.color)
                                             }
-                                            
+
                                             VStack(alignment: .leading, spacing: 4) {
                                                 ForEach(getDetailedItems(for: issueType), id: \.self) { item in
                                                     Text("• \(item)")
@@ -980,7 +976,7 @@ private struct AllIssuesFixerContent: View {
                         .background(Color(.systemGray6))
                         .cornerRadius(12)
                     }
-                    
+
                     Button {
                         Task { await onFixAll() }
                     } label: {
@@ -994,7 +990,7 @@ private struct AllIssuesFixerContent: View {
                 }
                 .padding(.horizontal)
             }
-            
+
             if isFixing {
                 VStack {
                     ProgressView("Fixing all issues...")
@@ -1016,12 +1012,12 @@ private struct AllIssuesFixerContent: View {
                 .cornerRadius(12)
                 .padding(.horizontal)
             }
-            
+
             Spacer()
         }
         .padding()
     }
-    
+
     private func getDetailedItems(for type: DataBrowserView.IssueType) -> [String] {
         switch type {
         case .blankEntries:
@@ -1030,7 +1026,7 @@ private struct AllIssuesFixerContent: View {
             items.append(contentsOf: results.blankLodging.map { _ in "Lodging: (no name)" })
             items.append(contentsOf: results.blankActivities.map { _ in "Activity: (no name)" })
             return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])
-            
+
         case .orphanedData:
             var items: [String] = []
             items.append(contentsOf: results.orphanedTransportation.map { "Transportation: \($0.name.isEmpty ? $0.type.rawValue : $0.name)" })
@@ -1039,7 +1035,7 @@ private struct AllIssuesFixerContent: View {
             items.append(contentsOf: results.orphanedAddresses.map { "Address: \($0.displayAddress)" })
             items.append(contentsOf: results.orphanedAttachments.map { "Attachment: \($0.fileName)" })
             return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])
-            
+
         case .duplicateRelationships:
             var items: [String] = []
             for (trip, duplicates) in results.duplicateTransportation {
@@ -1052,29 +1048,29 @@ private struct AllIssuesFixerContent: View {
                 items.append("Trip '\(trip.name)': \(duplicates.count) duplicate activity entries")
             }
             return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])
-            
+
         case .invalidTimezones:
             var items: [String] = []
             items.append(contentsOf: results.invalidTimezoneTransportation.map { "Transportation: \($0.name.isEmpty ? $0.type.rawValue : $0.name) (timezone: \($0.startTZId))" })
             items.append(contentsOf: results.invalidTimezoneLodging.map { "Lodging: \($0.name.isEmpty ? "Unnamed" : $0.name) (timezone: \($0.checkInTZId))" })
             items.append(contentsOf: results.invalidTimezoneActivities.map { "Activity: \($0.name.isEmpty ? "Unnamed" : $0.name) (timezone: \($0.startTZId))" })
             return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])
-            
+
         case .invalidDates:
             var items: [String] = []
             items.append(contentsOf: results.invalidDateTransportation.map { "Transportation: \($0.name.isEmpty ? $0.type.rawValue : $0.name) (end before start)" })
             items.append(contentsOf: results.invalidDateLodging.map { "Lodging: \($0.name.isEmpty ? "Unnamed" : $0.name) (end before start)" })
             items.append(contentsOf: results.invalidDateActivities.map { "Activity: \($0.name.isEmpty ? "Unnamed" : $0.name) (end before start)" })
             return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])
-            
+
         case .missingOrganizations:
-            return Array(results.activitiesWithoutOrganizations.prefix(10)) + 
+            return Array(results.activitiesWithoutOrganizations.prefix(10)) +
                    (results.activitiesWithoutOrganizations.count > 10 ? ["... and \(results.activitiesWithoutOrganizations.count - 10) more"] : [])
-            
+
         case .unusedAddresses:
             let items = results.orphanedAddresses.map { "Address: \($0.displayAddress) - \($0.city)" }
             return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])
-            
+
         case .brokenAttachments:
             let items = results.brokenAttachments.map { "Attachment: \($0.fileName) (size: \($0.fileSize) bytes)" }
             return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])
@@ -1091,7 +1087,7 @@ private struct IssueRowWithDetailsView: View {
     let isExpanded: Bool
     let onToggleExpanded: () -> Void
     let onSelectIssue: () -> Void
-    
+
     var body: some View {
         VStack(spacing: 0) {
             // Main issue header
@@ -1101,27 +1097,27 @@ private struct IssueRowWithDetailsView: View {
                         Image(systemName: type.icon)
                             .foregroundColor(type.color)
                             .font(.headline)
-                        
+
                         Text(type.rawValue)
                             .font(.headline)
                             .fontWeight(.semibold)
-                        
+
                         Spacer()
-                        
+
                         Text("\(count)")
                             .font(.headline)
                             .fontWeight(.bold)
                             .foregroundColor(type.color)
                     }
-                    
+
                     Text(description)
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.leading)
                 }
-                
+
                 Spacer()
-                
+
                 // Toggle details button
                 Button(action: onToggleExpanded) {
                     HStack(spacing: 4) {
@@ -1139,7 +1135,7 @@ private struct IssueRowWithDetailsView: View {
             .onTapGesture {
                 onToggleExpanded()
             }
-            
+
             // Fix button
             HStack {
                 Spacer()
@@ -1161,10 +1157,10 @@ private struct IssueRowWithDetailsView: View {
 private struct IssueDetailsList: View {
     let issueType: DataBrowserView.IssueType
     let results: DataBrowserView.DiagnosticResults
-    
+
     var body: some View {
         let detailedItems = getDetailedItems(for: issueType)
-        
+
         if !detailedItems.isEmpty {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Affected Items:")
@@ -1172,7 +1168,7 @@ private struct IssueDetailsList: View {
                     .fontWeight(.semibold)
                     .foregroundColor(.secondary)
                     .padding(.leading, 24)
-                
+
                 VStack(alignment: .leading, spacing: 3) {
                     ForEach(detailedItems, id: \.self) { item in
                         Text("• \(item)")
@@ -1189,7 +1185,7 @@ private struct IssueDetailsList: View {
             .cornerRadius(8)
         }
     }
-    
+
     private func getDetailedItems(for type: DataBrowserView.IssueType) -> [String] {
         switch type {
         case .blankEntries:
@@ -1198,7 +1194,7 @@ private struct IssueDetailsList: View {
             items.append(contentsOf: results.blankLodging.map { _ in "Lodging: (no name)" })
             items.append(contentsOf: results.blankActivities.map { _ in "Activity: (no name)" })
             return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])
-            
+
         case .orphanedData:
             var items: [String] = []
             items.append(contentsOf: results.orphanedTransportation.map { "Transportation: \($0.name.isEmpty ? $0.type.rawValue : $0.name)" })
@@ -1207,7 +1203,7 @@ private struct IssueDetailsList: View {
             items.append(contentsOf: results.orphanedAddresses.map { "Address: \($0.displayAddress)" })
             items.append(contentsOf: results.orphanedAttachments.map { "Attachment: \($0.fileName)" })
             return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])
-            
+
         case .duplicateRelationships:
             var items: [String] = []
             for (trip, duplicates) in results.duplicateTransportation {
@@ -1220,29 +1216,29 @@ private struct IssueDetailsList: View {
                 items.append("Trip '\(trip.name)': \(duplicates.count) duplicate activity entries")
             }
             return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])
-            
+
         case .invalidTimezones:
             var items: [String] = []
             items.append(contentsOf: results.invalidTimezoneTransportation.map { "Transportation: \($0.name.isEmpty ? $0.type.rawValue : $0.name) (timezone: \($0.startTZId))" })
             items.append(contentsOf: results.invalidTimezoneLodging.map { "Lodging: \($0.name.isEmpty ? "Unnamed" : $0.name) (timezone: \($0.checkInTZId))" })
             items.append(contentsOf: results.invalidTimezoneActivities.map { "Activity: \($0.name.isEmpty ? "Unnamed" : $0.name) (timezone: \($0.startTZId))" })
             return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])
-            
+
         case .invalidDates:
             var items: [String] = []
             items.append(contentsOf: results.invalidDateTransportation.map { "Transportation: \($0.name.isEmpty ? $0.type.rawValue : $0.name) (end before start)" })
             items.append(contentsOf: results.invalidDateLodging.map { "Lodging: \($0.name.isEmpty ? "Unnamed" : $0.name) (end before start)" })
             items.append(contentsOf: results.invalidDateActivities.map { "Activity: \($0.name.isEmpty ? "Unnamed" : $0.name) (end before start)" })
             return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])
-            
+
         case .missingOrganizations:
-            return Array(results.activitiesWithoutOrganizations.prefix(10)) + 
+            return Array(results.activitiesWithoutOrganizations.prefix(10)) +
                    (results.activitiesWithoutOrganizations.count > 10 ? ["... and \(results.activitiesWithoutOrganizations.count - 10) more"] : [])
-            
+
         case .unusedAddresses:
             let items = results.orphanedAddresses.map { "Address: \($0.displayAddress) - \($0.city)" }
             return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])
-            
+
         case .brokenAttachments:
             let items = results.brokenAttachments.map { "Attachment: \($0.fileName) (size: \($0.fileSize) bytes)" }
             return Array(items.prefix(10)) + (items.count > 10 ? ["... and \(items.count - 10) more"] : [])

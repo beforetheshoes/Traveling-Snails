@@ -11,19 +11,18 @@ import UIKit
 /// Production implementation of PhotoLibraryService using PHPhotoLibrary
 /// PHPhotoLibrary is thread-safe, so this service is naturally Sendable
 final class SystemPhotoLibraryService: PhotoLibraryService, Sendable {
-    
     // MARK: - Properties
-    
+
     private let photoLibrary: PHPhotoLibrary
-    
+
     // MARK: - Initialization
-    
+
     init() {
         self.photoLibrary = PHPhotoLibrary.shared()
     }
-    
+
     // MARK: - PhotoLibraryService Implementation
-    
+
     func authorizationStatus(for accessLevel: PHAccessLevel) -> PHAuthorizationStatus {
         if #available(iOS 14.0, *) {
             return PHPhotoLibrary.authorizationStatus(for: accessLevel)
@@ -32,9 +31,9 @@ final class SystemPhotoLibraryService: PhotoLibraryService, Sendable {
             return PHPhotoLibrary.authorizationStatus()
         }
     }
-    
+
     func requestAuthorization(for accessLevel: PHAccessLevel) async -> PHAuthorizationStatus {
-        return await withCheckedContinuation { continuation in
+        await withCheckedContinuation { continuation in
             if #available(iOS 14.0, *) {
                 PHPhotoLibrary.requestAuthorization(for: accessLevel) { status in
                     continuation.resume(returning: status)
@@ -47,21 +46,21 @@ final class SystemPhotoLibraryService: PhotoLibraryService, Sendable {
             }
         }
     }
-    
+
     func presentLimitedLibraryPicker(from viewController: UIViewController?) {
         guard #available(iOS 14.0, *) else {
             Logger.shared.warning("Limited library picker is only available on iOS 14+")
             return
         }
-        
+
         guard let viewController = viewController else {
             Logger.shared.warning("No view controller provided for limited library picker")
             return
         }
-        
+
         photoLibrary.presentLimitedLibraryPicker(from: viewController)
     }
-    
+
     var preventsAutomaticLimitedAccessAlert: Bool {
         get {
             if #available(iOS 14.0, *) {
@@ -76,11 +75,11 @@ final class SystemPhotoLibraryService: PhotoLibraryService, Sendable {
             Logger.shared.warning("preventsAutomaticLimitedAccessAlert is read-only and must be set in Info.plist")
         }
     }
-    
+
     func register(_ observer: PHPhotoLibraryChangeObserver) {
         photoLibrary.register(observer)
     }
-    
+
     func unregister(_ observer: PHPhotoLibraryChangeObserver) {
         photoLibrary.unregisterChangeObserver(observer)
     }
@@ -89,35 +88,34 @@ final class SystemPhotoLibraryService: PhotoLibraryService, Sendable {
 // MARK: - Convenience Extensions
 
 extension SystemPhotoLibraryService {
-    
     /// Check if the app has any level of photo library access
     var hasPhotoAccess: Bool {
         let status = authorizationStatus(for: .readWrite)
         return status.allowsPhotoAccess
     }
-    
+
     /// Check if the app has full photo library access
     var hasFullPhotoAccess: Bool {
         let status = authorizationStatus(for: .readWrite)
         return status == .authorized
     }
-    
+
     /// Check if the app has limited photo library access
     var hasLimitedPhotoAccess: Bool {
         let status = authorizationStatus(for: .readWrite)
         return status == .limited
     }
-    
+
     /// Request read-write access to the photo library
     func requestReadWriteAccess() async -> PHAuthorizationStatus {
-        return await requestAuthorization(for: .readWrite)
+        await requestAuthorization(for: .readWrite)
     }
-    
+
     /// Request add-only access to the photo library
     func requestAddOnlyAccess() async -> PHAuthorizationStatus {
-        return await requestAuthorization(for: .addOnly)
+        await requestAuthorization(for: .addOnly)
     }
-    
+
     /// Get user-friendly status description
     func getStatusDescription(for accessLevel: PHAccessLevel) -> String {
         let status = authorizationStatus(for: accessLevel)
@@ -128,7 +126,6 @@ extension SystemPhotoLibraryService {
 // MARK: - Error Handling
 
 extension SystemPhotoLibraryService {
-    
     /// Convert PHAuthorizationStatus to PhotoLibraryError
     func error(from status: PHAuthorizationStatus) -> PhotoLibraryError? {
         switch status {
@@ -146,7 +143,7 @@ extension SystemPhotoLibraryService {
             return .unknown
         }
     }
-    
+
     /// Get PhotoLibraryError for current status
     func getCurrentError(for accessLevel: PHAccessLevel) -> PhotoLibraryError? {
         let status = authorizationStatus(for: accessLevel)

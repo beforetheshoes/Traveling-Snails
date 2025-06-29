@@ -8,21 +8,21 @@ import SwiftUI
 
 struct SettingsContentView: View {
     @Bindable var viewModel: SettingsViewModel
-    
+
     var body: some View {
         List {
             // Appearance Section
             AppearanceSection(viewModel: viewModel)
-            
+
             // Data Management Section
             DataManagementSection(viewModel: viewModel)
-            
+
             // File Attachments Section
             FileAttachmentsSection(viewModel: viewModel)
-            
+
             // Security Section
             SecuritySection(viewModel: viewModel)
-            
+
             // About Section
             AboutSection(viewModel: viewModel)
 
@@ -30,7 +30,7 @@ struct SettingsContentView: View {
             // Developer Section
             DeveloperSection()
             #endif
-            
+
             // Import Result Display
             if let result = viewModel.importResult {
                 ImportResultSection(result: result)
@@ -67,18 +67,18 @@ struct SettingsContentView: View {
 struct AppearanceSection: View {
     @Bindable var viewModel: SettingsViewModel
     @Environment(AppSettings.self) private var appSettings
-    
+
     var body: some View {
         Section("Appearance") {
             HStack {
                 Image(systemName: "moon.fill")
                     .foregroundColor(.blue)
                     .frame(width: 24)
-                
+
                 Text("Dark Mode")
-                
+
                 Spacer()
-                
+
                 Picker("Color Scheme", selection: Binding(
                     get: { appSettings.colorScheme },
                     set: { appSettings.colorScheme = $0 }
@@ -90,7 +90,7 @@ struct AppearanceSection: View {
                 .pickerStyle(.segmented)
                 .frame(width: 180)
             }
-            
+
             #if DEBUG
             Button("🧪 Test iCloud Sync") {
                 AppSettings.shared.forceSyncTest()
@@ -105,7 +105,7 @@ struct AppearanceSection: View {
 
 struct DataManagementSection: View {
     @Bindable var viewModel: SettingsViewModel
-    
+
     var body: some View {
         Section("Data Management") {
             Button {
@@ -119,7 +119,7 @@ struct DataManagementSection: View {
                 )
             }
             .foregroundColor(.primary)
-            
+
             Button {
                 viewModel.openExportView()
             } label: {
@@ -131,7 +131,7 @@ struct DataManagementSection: View {
                 )
             }
             .foregroundColor(.primary)
-            
+
             Button {
                 viewModel.openImportPicker()
             } label: {
@@ -143,7 +143,7 @@ struct DataManagementSection: View {
                 )
             }
             .foregroundColor(.primary)
-            
+
             Button {
                 viewModel.cleanupNoneOrganizations()
             } label: {
@@ -155,7 +155,7 @@ struct DataManagementSection: View {
                 )
             }
             .foregroundColor(.primary)
-            
+
             Button {
                 viewModel.openDatabaseCleanup()
             } label: {
@@ -180,7 +180,7 @@ struct DataManagementSection: View {
 
 struct FileAttachmentsSection: View {
     @Bindable var viewModel: SettingsViewModel
-    
+
     var body: some View {
         Section("File Attachments") {
             Button {
@@ -203,7 +203,7 @@ struct FileAttachmentsSection: View {
 struct SecuritySection: View {
     @Bindable var viewModel: SettingsViewModel
     private let authManager = BiometricAuthManager.shared
-    
+
     var body: some View {
         Section {
             if authManager.canUseBiometrics() {
@@ -211,7 +211,7 @@ struct SecuritySection: View {
                     Image(systemName: authManager.biometricType == .faceID ? "faceid" : "touchid")
                         .foregroundColor(.green)
                         .frame(width: 24)
-                    
+
                     VStack(alignment: .leading) {
                         Text("\(authManager.biometricType == .faceID ? "Face ID" : "Touch ID") Available")
                             .font(.headline)
@@ -219,13 +219,13 @@ struct SecuritySection: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
-                    
+
                     Spacer()
-                    
+
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.green)
                 }
-                
+
                 HStack {
                     Text("Auto-lock timeout")
                     Spacer()
@@ -240,8 +240,8 @@ struct SecuritySection: View {
                             .foregroundColor(.blue)
                     }
                 }
-                
-                if (!viewModel.allTripsLocked) {
+
+                if !viewModel.allTripsLocked {
                     Button("Lock All Protected Trips Now") {
                         viewModel.lockAllProtectedTrips()
                     }
@@ -255,7 +255,7 @@ struct SecuritySection: View {
                     Image(systemName: "faceid")
                         .foregroundColor(.gray)
                         .frame(width: 24)
-                    
+
                     VStack(alignment: .leading) {
                         Text("Biometric Authentication Unavailable")
                             .font(.headline)
@@ -263,9 +263,9 @@ struct SecuritySection: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
-                    
+
                     Spacer()
-                    
+
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundColor(.orange)
                 }
@@ -282,31 +282,31 @@ struct SecuritySection: View {
 
 struct AboutSection: View {
     @Bindable var viewModel: SettingsViewModel
-    
+
     var body: some View {
         Section("About") {
             HStack {
                 Image(systemName: "info.circle")
                     .foregroundColor(.blue)
                     .frame(width: 24)
-                
+
                 Text("Version")
-                
+
                 Spacer()
-                
+
                 Text(viewModel.appVersion)
                     .foregroundColor(.secondary)
             }
-            
+
             HStack {
                 Image(systemName: "number")
                     .foregroundColor(.blue)
                     .frame(width: 24)
-                
+
                 Text("Build")
-                
+
                 Spacer()
-                
+
                 Text(viewModel.buildNumber)
                     .foregroundColor(.secondary)
             }
@@ -318,13 +318,13 @@ struct AboutSection: View {
 
 struct ImportResultSection: View {
     let result: DatabaseImportManager.ImportResult
-    
+
     var body: some View {
         Section("Last Import Results") {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Import Summary")
                     .font(.headline)
-                
+
                 ImportResultSummary(result: result)
                     .padding(.vertical, 8)
             }
@@ -361,22 +361,22 @@ struct SettingsRow: View {
     let iconColor: Color
     let title: String
     let subtitle: String
-    
+
     var body: some View {
         HStack {
             Image(systemName: icon)
                 .foregroundColor(iconColor)
                 .frame(width: 24)
-            
+
             VStack(alignment: .leading) {
                 Text(title)
                 Text(subtitle)
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            
+
             Spacer()
-            
+
             Image(systemName: "chevron.right")
                 .font(.caption)
                 .foregroundColor(.secondary)

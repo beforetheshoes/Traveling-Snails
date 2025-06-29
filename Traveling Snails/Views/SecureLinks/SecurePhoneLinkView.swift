@@ -8,7 +8,7 @@ import SwiftUI
 
 struct SecurePhoneLink: View {
     let phoneNumber: String
-    
+
     var body: some View {
         SecureContactLink(
             text: phoneNumber,

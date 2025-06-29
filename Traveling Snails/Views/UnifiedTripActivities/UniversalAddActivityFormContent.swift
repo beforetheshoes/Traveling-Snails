@@ -9,7 +9,7 @@ import SwiftUI
 struct UniversalAddActivityFormContent: View {
     @Bindable var viewModel: UniversalActivityFormViewModel
     @Environment(\.dismiss) private var dismiss
-    
+
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
@@ -30,9 +30,9 @@ struct UniversalAddActivityFormContent: View {
             )
         }
     }
-    
+
     // MARK: - Section Views
-    
+
     private var headerSection: some View {
         ActivityHeaderView(
             icon: viewModel.currentIcon,
@@ -40,7 +40,7 @@ struct UniversalAddActivityFormContent: View {
             title: viewModel.activityType.displayName
         )
     }
-    
+
     private var basicInfoSection: some View {
         ActivitySectionCard(
             headerIcon: "info.circle.fill",
@@ -52,13 +52,13 @@ struct UniversalAddActivityFormContent: View {
                     label: "Name",
                     text: $viewModel.editData.name,
                     placeholder: "\(viewModel.activityType.displayName) Name"
-                )                
+                )
                 if viewModel.hasTypeSelector {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Transportation Type")
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        
+
                         Picker("Transportation Type", selection: $viewModel.editData.transportationType) {
                             ForEach(TransportationType.allCases, id: \.self) { type in
                                 Label(type.displayName, systemImage: type.systemImage)
@@ -71,7 +71,7 @@ struct UniversalAddActivityFormContent: View {
             }
         }
     }
-    
+
     private var organizationSection: some View {
         ActivitySectionCard(
             headerIcon: "mappin.circle.fill",
@@ -81,10 +81,9 @@ struct UniversalAddActivityFormContent: View {
             VStack(spacing: 16) {
                 ActivityFormButton(
                     label: "Organization",
-                    value: viewModel.editData.organization?.name ?? "Select Organization",
-                    action: { viewModel.showingOrganizationPicker = true }
-                )
-                
+                    value: viewModel.editData.organization?.name ?? "Select Organization"
+                )                    { viewModel.showingOrganizationPicker = true }
+
                 if viewModel.supportsCustomLocation {
                     if viewModel.editData.organization?.isNone == true {
                         VStack(spacing: 16) {
@@ -93,12 +92,12 @@ struct UniversalAddActivityFormContent: View {
                                 text: $viewModel.editData.customLocationName,
                                 placeholder: "Enter location name"
                             )
-                            
+
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("Address")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
-                                
+
                                 AddressAutocompleteView(
                                     selectedAddress: $viewModel.editData.customAddress,
                                     placeholder: "Enter address"
@@ -106,14 +105,14 @@ struct UniversalAddActivityFormContent: View {
                             }
                         }
                     }
-                    
+
                     Toggle("Hide location in views", isOn: $viewModel.editData.hideLocation)
                         .toggleStyle(SwitchToggleStyle(tint: colorFromString(viewModel.color)))
                 }
             }
         }
     }
-    
+
     private var scheduleSection: some View {
         ActivitySectionCard(
             headerIcon: viewModel.activityType == .lodging ? "calendar.badge.plus" :
@@ -147,7 +146,7 @@ struct UniversalAddActivityFormContent: View {
             }
         }
     }
-    
+
     private var costSection: some View {
         ActivitySectionCard(
             headerIcon: "dollarsign.circle.fill",
@@ -159,15 +158,15 @@ struct UniversalAddActivityFormContent: View {
                     Text("Cost")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    
+
                     CurrencyTextField(value: $viewModel.editData.cost, color: colorFromString(viewModel.color))
                 }
-                
+
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Payment Status")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    
+
                     Picker("", selection: $viewModel.editData.paid) {
                         ForEach(PaidStatus.allCases, id: \.self) { status in
                             Text(status.displayName).tag(status)
@@ -178,7 +177,7 @@ struct UniversalAddActivityFormContent: View {
             }
         }
     }
-    
+
     private var detailsSection: some View {
         ActivitySectionCard(
             headerIcon: "note.text",
@@ -191,7 +190,7 @@ struct UniversalAddActivityFormContent: View {
                     text: $viewModel.editData.confirmationField,
                     placeholder: "Enter \(viewModel.confirmationLabel.lowercased()) number"
                 )
-                
+
                 ActivityFormField(
                     label: "Notes",
                     text: $viewModel.editData.notes,
@@ -201,7 +200,7 @@ struct UniversalAddActivityFormContent: View {
             }
         }
     }
-    
+
     private var attachmentsSection: some View {
         ActivitySectionCard(
             headerIcon: "paperclip",
@@ -217,13 +216,13 @@ struct UniversalAddActivityFormContent: View {
                             .foregroundColor(.secondary)
                     }
                 }
-                
+
                 if viewModel.attachments.isEmpty {
                     VStack(spacing: 8) {
                         Image(systemName: "doc.badge.plus")
                             .font(.title2)
                             .foregroundColor(.secondary)
-                        
+
                         Text("No attachments yet")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
@@ -234,21 +233,21 @@ struct UniversalAddActivityFormContent: View {
                         HStack {
                             Image(systemName: "doc.fill")
                                 .foregroundColor(colorFromString(viewModel.color))
-                            
+
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(attachment.fileName)
                                     .font(.body)
                                     .foregroundColor(.primary)
-                                
+
                                 if attachment.fileSize > 0 {
                                     Text(ByteCountFormatter.string(fromByteCount: Int64(attachment.fileSize), countStyle: .file))
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }
                             }
-                            
+
                             Spacer()
-                            
+
                             Button {
                                 viewModel.removeAttachment(attachment)
                             } label: {
@@ -263,7 +262,7 @@ struct UniversalAddActivityFormContent: View {
                         .cornerRadius(8)
                     }
                 }
-                
+
                 UnifiedFilePicker.allFiles(
                     onSelected: { attachment in
                         viewModel.addAttachment(attachment)
@@ -279,15 +278,15 @@ struct UniversalAddActivityFormContent: View {
         }
         .frame(maxWidth: .infinity)
     }
-    
+
     private var submitButton: some View {
         ActivitySubmitButton(
             title: "Save \(viewModel.activityType.displayName)",
             isValid: viewModel.isFormValid,
             isSaving: viewModel.isSaving,
             color: colorFromString(viewModel.color),
-            saveError: viewModel.saveError,
-            action: {
+            saveError: viewModel.saveError
+        )            {
                 Task { @MainActor in
                     do {
                         try await viewModel.save()
@@ -297,9 +296,8 @@ struct UniversalAddActivityFormContent: View {
                     }
                 }
             }
-        )
     }
-    
+
     // Helper function to convert color strings to SwiftUI Colors
     private func colorFromString(_ colorString: String) -> Color {
         switch colorString.lowercased() {

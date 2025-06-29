@@ -10,12 +10,12 @@ struct ActivityWrapper: Identifiable, Equatable {
     let id = UUID()
     let tripActivity: any TripActivityProtocol
     let type: ActivityType
-    
+
     enum ActivityType: String {
         case lodging = "Lodging"
         case transportation = "Transportation"
         case activity = "Activity"
-        
+
         var icon: String {
             switch self {
             case .lodging: return "bed.double.fill"
@@ -23,7 +23,7 @@ struct ActivityWrapper: Identifiable, Equatable {
             case .activity: return "ticket.fill"
             }
         }
-        
+
         var color: Color {
             switch self {
             case .lodging: return .indigo
@@ -32,10 +32,10 @@ struct ActivityWrapper: Identifiable, Equatable {
             }
         }
     }
-    
+
     init(_ tripActivity: any TripActivityProtocol) {
         self.tripActivity = tripActivity
-        
+
         switch tripActivity {
         case is Lodging:
             self.type = .lodging
@@ -47,9 +47,9 @@ struct ActivityWrapper: Identifiable, Equatable {
             self.type = .activity
         }
     }
-    
+
     static func == (lhs: ActivityWrapper, rhs: ActivityWrapper) -> Bool {
         // Use the underlying trip activity ID for equality comparison
-        return lhs.tripActivity.id == rhs.tripActivity.id
+        lhs.tripActivity.id == rhs.tripActivity.id
     }
 }

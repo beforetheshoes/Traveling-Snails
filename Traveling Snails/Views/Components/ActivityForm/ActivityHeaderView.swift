@@ -11,7 +11,7 @@ struct ActivityHeaderView: View {
     let icon: String
     let color: Color
     let title: String?
-    
+
     var body: some View {
         VStack(spacing: 12) {
             // Activity Icon with colored background
@@ -21,7 +21,7 @@ struct ActivityHeaderView: View {
                 .padding(8)
                 .background(color.opacity(0.1))
                 .clipShape(Circle())
-            
+
             // Optional title (for activity name or type)
             if let title = title {
                 Text(title)
@@ -40,13 +40,13 @@ struct ActivityHeaderView: View {
             color: .blue,
             title: "Test Lodging"
         )
-        
+
         ActivityHeaderView(
             icon: "figure.walk",
             color: .green,
             title: "Activity"
         )
-        
+
         ActivityHeaderView(
             icon: "airplane",
             color: .orange,

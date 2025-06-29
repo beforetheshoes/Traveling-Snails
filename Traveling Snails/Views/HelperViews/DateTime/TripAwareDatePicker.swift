@@ -11,7 +11,7 @@ struct TripAwareDatePicker: View {
     @Binding var selection: Date
     let trip: Trip
     let displayedComponents: DatePicker.Components
-    
+
     init(
         _ title: String,
         selection: Binding<Date>,
@@ -23,20 +23,20 @@ struct TripAwareDatePicker: View {
         self.trip = trip
         self.displayedComponents = displayedComponents
     }
-    
+
     private var dateRange: ClosedRange<Date>? {
         // Only constrain dates if the trip has BOTH start and end dates
         guard trip.hasDateRange,
               let tripRange = trip.dateRange else { return nil }
-        
+
         return tripRange
     }
-    
+
     private var shouldShowWarning: Bool {
         guard let range = dateRange else { return false }
         return !range.contains(selection)
     }
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             if let range = dateRange {
@@ -53,7 +53,7 @@ struct TripAwareDatePicker: View {
                     displayedComponents: displayedComponents
                 )
             }
-            
+
             // Show helpful context about date constraints
             if let range = dateRange {
                 Text("Limited to trip dates: \(formatDateRange(range))")
@@ -66,7 +66,7 @@ struct TripAwareDatePicker: View {
             }
         }
     }
-    
+
     private var partialRangeText: String {
         var rangeText = "Trip dates: "
         if trip.hasStartDate {
@@ -83,14 +83,14 @@ struct TripAwareDatePicker: View {
         rangeText += " (partial range - no date restrictions)"
         return rangeText
     }
-    
+
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
         return formatter.string(from: date)
     }
-    
+
     private func formatDateRange(_ range: ClosedRange<Date>) -> String {
         "\(formatDate(range.lowerBound)) to \(formatDate(range.upperBound))"
     }

@@ -11,20 +11,20 @@ struct StatCard: View {
     let value: String
     let icon: String
     let color: Color
-    
+
     var body: some View {
         VStack(spacing: 6) {
             Image(systemName: icon)
                 .font(.title2)
                 .foregroundColor(color)
                 .frame(height: 24)
-            
+
             Text(value)
                 .font(.title2)
                 .fontWeight(.bold)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
-            
+
             Text(title)
                 .font(.caption)
                 .foregroundColor(.secondary)

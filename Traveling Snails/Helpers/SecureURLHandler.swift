@@ -8,45 +8,44 @@ import SwiftUI
 import UIKit
 
 struct SecureURLHandler {
-    
     enum URLSecurityLevel {
         case safe
         case suspicious
         case blocked
     }
-    
+
     enum URLAction {
         case open
         case download
         case cache
     }
-    
+
     // MARK: - Core Security Evaluation
-    
+
     static func evaluateURL(_ urlString: String) -> URLSecurityLevel {
         guard let url = URL(string: urlString) else { return .blocked }
-        
+
         // Check scheme
         guard let scheme = url.scheme?.lowercased(),
               ["http", "https", "mailto", "tel"].contains(scheme) else {
             return .blocked
         }
-        
+
         // For web URLs, check for suspicious patterns
         if scheme == "http" || scheme == "https" {
             guard let host = url.host?.lowercased() else { return .blocked }
-            
+
             // Suspicious indicators
             let suspiciousPatterns = [
                 "bit.ly", "tinyurl.com", "t.co", // URL shorteners
                 "000webhostapp.com", "herokuapp.com", // Free hosting
-                "ngrok.io", "localhost" // Development/tunneling
+                "ngrok.io", "localhost", // Development/tunneling
             ]
-            
+
             if suspiciousPatterns.contains(where: { host.contains($0) }) {
                 return .suspicious
             }
-            
+
             // Check for suspicious characters in domain
             if host.contains("xn--") || // Punycode (internationalized domains)
                host.count > 50 ||       // Extremely long domains
@@ -54,21 +53,21 @@ struct SecureURLHandler {
                 return .suspicious
             }
         }
-        
+
         return .safe
     }
-    
+
     // MARK: - URL Opening
-    
+
     static func openURLDirectly(_ urlString: String) {
         guard let url = URL(string: urlString),
               UIApplication.shared.canOpenURL(url) else { return }
-        
+
         UIApplication.shared.open(url)
     }
-    
+
     // MARK: - Secure URL Handling with User Confirmation
-    
+
     /// Handle URL with appropriate security checks and user prompts
     static func handleURL(
         _ urlString: String,
@@ -78,21 +77,21 @@ struct SecureURLHandler {
         onBlocked: @escaping () -> Void
     ) {
         let securityLevel = evaluateURL(urlString)
-        
+
         switch securityLevel {
         case .safe:
             onSafe()
-            
+
         case .suspicious:
             onSuspicious(onSafe)
-            
+
         case .blocked:
             onBlocked()
         }
     }
-    
+
     // MARK: - Alert Message Helpers
-    
+
     static func alertTitle(for level: URLSecurityLevel, action: URLAction) -> String {
         switch (level, action) {
         case (.blocked, .open):
@@ -107,7 +106,7 @@ struct SecureURLHandler {
             return ""
         }
     }
-    
+
     static func alertMessage(for level: URLSecurityLevel, action: URLAction, url: String) -> String {
         switch (level, action) {
         case (.blocked, .open):
@@ -122,12 +121,12 @@ struct SecureURLHandler {
             return ""
         }
     }
-    
+
     // MARK: - Contact Type Specific Handling
-    
+
     enum ContactType {
         case phone, email, website
-        
+
         var isTrusted: Bool {
             switch self {
             case .phone, .email:
@@ -137,7 +136,7 @@ struct SecureURLHandler {
             }
         }
     }
-    
+
     /// Handle contact URLs with type-specific security rules
     static func handleContactURL(
         _ urlString: String,
@@ -170,7 +169,7 @@ extension SecureURLHandler {
         action: URLAction = .open,
         showAlert: @escaping (String, String, Bool, @escaping () -> Void) -> Void
     ) -> () -> Void {
-        return {
+        {
             handleURL(
                 urlString,
                 action: action,

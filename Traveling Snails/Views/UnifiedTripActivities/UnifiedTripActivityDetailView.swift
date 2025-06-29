@@ -10,20 +10,20 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     let activity: T
-    
+
     @State private var isEditing = false
-    @State private var editData: TripActivityEditData = TripActivityEditData(from: Activity())
+    @State private var editData = TripActivityEditData(from: Activity())
     @State private var showDeleteConfirmation = false
     @State private var showingOrganizationPicker = false
     @State private var showMap = false
-    
+
     init(activity: T) {
         self.activity = activity
     }
-    
+
     // Use @State for attachments since we need to mutate it
     @State private var attachments: [EmbeddedFileAttachment] = []
-    
+
     private var displayAddress: Address? {
         if isEditing {
             return editData.customAddress ?? editData.organization?.address
@@ -31,7 +31,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
             return activity.displayAddress
         }
     }
-    
+
     /// Dynamic icon that updates based on current transportation type selection in edit mode
     private var currentIcon: String {
         // In edit mode for transportation activities, use the selected transportation type icon
@@ -43,7 +43,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
         // Otherwise, use the activity's default icon
         return activity.icon
     }
-    
+
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
@@ -56,7 +56,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
                     icon: currentIcon,
                     attachmentCount: attachments.count
                 )
-                
+
                 // Location Section (if applicable)
                 if !activity.supportsCustomLocation || (!editData.hideLocation || isEditing) {
                     ActivityLocationSection(
@@ -69,7 +69,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
                         showMap: { showMap = true }
                     )
                 }
-                
+
                 // Schedule Section
                 ActivityScheduleSection(
                     activity: activity,
@@ -78,7 +78,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
                     color: activity.color,
                     trip: activity.trip
                 )
-                
+
                 // Cost & Payment Section
                 ActivityCostSection(
                     activity: activity,
@@ -86,7 +86,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
                     isEditing: isEditing,
                     color: activity.color
                 )
-                
+
                 // Details Section
                 ActivityDetailsSection(
                     activity: activity,
@@ -95,7 +95,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
                     color: activity.color,
                     supportsCustomLocation: activity.supportsCustomLocation
                 )
-                
+
                 // File Attachments Section (always visible)
                 ActivityAttachmentsSection(
                     attachments: $attachments,
@@ -104,7 +104,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
                     onAttachmentAdded: addAttachmentToActivity,
                     onAttachmentRemoved: removeAttachmentFromActivity
                 )
-                
+
                 // Delete Button (only in edit mode)
                 if isEditing {
                     deleteButton
@@ -124,7 +124,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
                     }
                 }
             }
-            
+
             if isEditing {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") {
@@ -168,9 +168,9 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
         }
         // Smooth transition animations for edit mode
     }
-    
+
     // MARK: - View Components (Replaced with Reusable Section Components)
-    
+
     @ViewBuilder
     private var deleteButton: some View {
         Button(role: .destructive) {
@@ -183,9 +183,9 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
         .controlSize(.large)
         .padding(.bottom)
     }
-    
+
     // MARK: - Actions
-    
+
     private func startEditing() {
         editData = TripActivityEditData(from: activity)
         attachments = activity.fileAttachments
@@ -193,7 +193,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
             isEditing = true
         }
     }
-    
+
     private func cancelEditing() {
         editData = TripActivityEditData(from: activity)
         attachments = activity.fileAttachments
@@ -201,20 +201,19 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
             isEditing = false
         }
     }
-    
+
     private func saveChanges() {
-        print("=== DEBUG: saveChanges() called ===")
         #if DEBUG
         Logger.shared.debug("Activity edit data updated", category: .ui)
         #endif
         
         // Update the activity with the edit data
         updateActivityFromEditData()
-        
+
         do {
             try modelContext.save()
             print("=== DEBUG: Changes saved successfully ===")
-            
+
             withAnimation {
                 isEditing = false
             }
@@ -222,7 +221,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
             print("=== ERROR: Failed to save changes: \(error) ===")
         }
     }
-    
+
     private func updateActivityFromEditData() {
         switch activity.activityType {
         case .activity:
@@ -239,7 +238,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
             }
         }
     }
-    
+
     private func updateActivity(_ activityItem: Activity) {
         activityItem.name = editData.name
         activityItem.start = editData.start
@@ -256,7 +255,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
         activityItem.hideLocation = editData.hideLocation
         activityItem.fileAttachments = attachments
     }
-    
+
     private func updateLodging(_ lodging: Lodging) {
         lodging.name = editData.name
         lodging.start = editData.start
@@ -273,7 +272,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
         lodging.hideLocation = editData.hideLocation
         lodging.fileAttachments = attachments
     }
-    
+
     private func updateTransportation(_ transportation: Transportation) {
         transportation.name = editData.name
         transportation.start = editData.start
@@ -288,7 +287,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
         transportation.type = editData.transportationType ?? .plane
         transportation.fileAttachments = attachments
     }
-    
+
     private func deleteActivity() {
         // Type-safe deletion based on activity type
         switch activity.activityType {
@@ -305,7 +304,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
                 modelContext.delete(transportation)
             }
         }
-        
+
         do {
             try modelContext.save()
             dismiss()
@@ -313,9 +312,9 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
             Logger.shared.error("Failed to delete activity: \(error.localizedDescription)", category: .database)
         }
     }
-    
+
     // MARK: - Helper Methods
-    
+
     private func formatDateInTimezone(_ date: Date, timezone: TimeZone) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
@@ -325,7 +324,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
     }
 
     // MARK: - File Attachment Management
-    
+
     private func addAttachmentToActivity(_ attachment: EmbeddedFileAttachment) {
         switch activity.activityType {
         case .activity:
@@ -344,16 +343,16 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
                 transportation.fileAttachments.append(attachment)
             }
         }
-        
+
         attachments.append(attachment)
-        
+
         do {
             try modelContext.save()
         } catch {
             print("Failed to save attachment relationship: \(error)")
         }
     }
-    
+
     private func removeAttachmentFromActivity(_ attachment: EmbeddedFileAttachment) {
         attachments.removeAll { $0.id == attachment.id }
     }

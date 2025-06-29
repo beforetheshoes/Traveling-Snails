@@ -1,5 +1,5 @@
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 // NavigationSplitView-based trip navigation with proper SwiftData patterns
 struct NavigationSplitTripView: View {
@@ -9,19 +9,19 @@ struct NavigationSplitTripView: View {
     @State private var searchText = ""
     @State private var showingAddTrip = false
     @State private var columnVisibility: NavigationSplitViewVisibility = .automatic
-    
+
     var filteredTrips: [Trip] {
         guard !searchText.isEmpty else { return trips }
         return trips.filter { trip in
             trip.name.localizedCaseInsensitiveContains(searchText)
         }
     }
-    
+
     var selectedTrip: Trip? {
         guard let selectedTripID = selectedTripID else { return nil }
         return trips.first { $0.id == selectedTripID }
     }
-    
+
     var body: some View {
         NavigationSplitView(columnVisibility: $columnVisibility) {
             // Sidebar
@@ -51,7 +51,7 @@ struct NavigationSplitTripView: View {
             AddTrip()
         }
     }
-    
+
     @ViewBuilder
     private var tripSidebar: some View {
         VStack(spacing: 0) {
@@ -59,7 +59,7 @@ struct NavigationSplitTripView: View {
             UnifiedSearchBar.general(text: $searchText, placeholder: "Search trips...")
                 .padding(.horizontal)
                 .padding(.top, 8)
-            
+
             // Trip list
             if filteredTrips.isEmpty {
                 if searchText.isEmpty {
@@ -90,7 +90,7 @@ struct NavigationSplitTripRowView: View {
     let trip: Trip
     private let authManager = BiometricAuthManager.shared
     @Environment(\.colorScheme) private var colorScheme
-    
+
     var body: some View {
         HStack(spacing: 16) {
             // Icon with background
@@ -98,19 +98,19 @@ struct NavigationSplitTripRowView: View {
                 Circle()
                     .fill(Color.blue.opacity(0.15))
                     .frame(width: 44, height: 44)
-                
+
                 Image(systemName: "airplane")
                     .foregroundStyle(.blue)
                     .font(.system(size: 20, weight: .medium))
             }
-            
+
             // Content
             VStack(alignment: .leading, spacing: 4) {
                 Text(trip.name.isEmpty ? "Untitled Trip" : trip.name)
                     .font(.headline)
                     .lineLimit(1)
                     .foregroundStyle(.primary)
-                
+
                 if let subtitle = tripSubtitle {
                     Text(subtitle)
                         .font(.subheadline)
@@ -120,7 +120,7 @@ struct NavigationSplitTripRowView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            
+
             // Badge
             HStack(spacing: 8) {
                 // Biometric protection indicator
@@ -130,7 +130,7 @@ struct NavigationSplitTripRowView: View {
                         .foregroundStyle(.secondary)
                         .accessibilityLabel("Protected with biometric authentication")
                 }
-                
+
                 if trip.totalActivities > 0 {
                     Text("\(trip.totalActivities)")
                         .font(.caption.weight(.semibold))
@@ -151,11 +151,11 @@ struct NavigationSplitTripRowView: View {
         )
         .contentShape(Rectangle())
     }
-    
+
     private var tripSubtitle: String? {
         let formatter = DateFormatter()
         formatter.dateStyle = .short
-        
+
         if trip.hasDateRange {
             let start = formatter.string(from: trip.startDate)
             let end = formatter.string(from: trip.endDate)

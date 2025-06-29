@@ -10,7 +10,7 @@ enum DestinationType: Hashable {
     case lodging(Lodging)
     case transportation(Transportation)
     case activity(Activity)
-    
+
     // Computed property to get the activity ID
     var activityId: UUID {
         switch self {
@@ -19,7 +19,7 @@ enum DestinationType: Hashable {
         case .activity(let a): return a.id
         }
     }
-    
+
     static func == (lhs: DestinationType, rhs: DestinationType) -> Bool {
         switch (lhs, rhs) {
         case (.lodging(let l1), .lodging(let l2)):
@@ -32,7 +32,7 @@ enum DestinationType: Hashable {
             return false
         }
     }
-    
+
     func hash(into hasher: inout Hasher) {
         switch self {
         case .lodging(let l):
@@ -46,7 +46,7 @@ enum DestinationType: Hashable {
             hasher.combine(a.id)
         }
     }
-    
+
     // Helper method to create DestinationType from any TripActivityProtocol
     static func from(_ activity: any TripActivityProtocol) -> DestinationType {
         switch activity.activityType {
@@ -66,11 +66,11 @@ struct ActivityNavigationReference: Codable {
     let activityId: UUID
     let activityType: ActivityTypeKey
     let tripId: UUID
-    
+
     enum ActivityTypeKey: String, Codable {
         case lodging, transportation, activity
     }
-    
+
     init(from destination: DestinationType, tripId: UUID) {
         self.tripId = tripId
         switch destination {
@@ -85,7 +85,7 @@ struct ActivityNavigationReference: Codable {
             self.activityType = .activity
         }
     }
-    
+
     func createDestination(from trip: Trip) -> DestinationType? {
         switch activityType {
         case .lodging:
