@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - **Enhanced Sync Reliability (Issue #16)**: Comprehensive CloudKit synchronization improvements with robust conflict resolution, exponential backoff retry logic, and real-time diagnostic tools
+
+### Fixed
+- **Reset All Data in Tools Tab (Issue #29)**: Fixed non-functional "Reset All Data" option in Settings > Data Browser > Tools that previously only simulated deletion. Now performs actual data deletion matching the behavior of DatabaseCleanupView
 - **Trip Deletion Navigation Fix (Issue #34)**: Fixed iPhone navigation issue where users remained on deleted trip detail screen instead of returning to trip list
 - **Cross-Device Sync Improvements**: Enhanced sync reliability between iPhone and iPad with proper deletion propagation and conflict resolution
 - **Advanced SyncManager**: Complete rewrite following TDD methodology with proper NSPersistentStoreRemoteChange handling, network status monitoring, and CloudKit account status tracking

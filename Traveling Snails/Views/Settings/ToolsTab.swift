@@ -203,14 +203,46 @@ struct ToolsTab: View {
             operationStatus = "Resetting all data..."
         }
         
-        // This would require more complex implementation to safely delete all data
-        // For now, just simulate the operation
-        try? await Task.sleep(nanoseconds: 2_000_000_000)
-        
-        await MainActor.run {
-            operationStatus = "All data has been reset"
-            isPerformingOperation = false
-            onDataChanged()
+        // Implement actual data deletion using the same pattern as DatabaseCleanupView
+        do {
+            // Fetch data counts before deletion
+            let trips = try modelContext.fetch(FetchDescriptor<Trip>())
+            let organizations = try modelContext.fetch(FetchDescriptor<Organization>())
+            let addresses = try modelContext.fetch(FetchDescriptor<Address>())
+            
+            let tripCount = trips.count
+            let orgCount = organizations.count
+            let addressCount = addresses.count
+            
+            // Delete all trips (cascading deletes will handle related data)
+            for trip in trips {
+                modelContext.delete(trip)
+            }
+            
+            // Delete all organizations except "None"
+            for org in organizations {
+                if !org.isNone {
+                    modelContext.delete(org)
+                }
+            }
+            
+            // Delete all addresses
+            for address in addresses {
+                modelContext.delete(address)
+            }
+            
+            try modelContext.save()
+            
+            await MainActor.run {
+                operationStatus = "Reset complete: Removed \(tripCount) trips, \(orgCount) organizations, \(addressCount) addresses"
+                isPerformingOperation = false
+                onDataChanged()
+            }
+        } catch {
+            await MainActor.run {
+                operationStatus = "Error resetting data: \(error.localizedDescription)"
+                isPerformingOperation = false
+            }
         }
     }
 }
