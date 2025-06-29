@@ -7,10 +7,13 @@
 import SwiftUI
 import SwiftData
 
+
 struct EditTripView: View {
     @Bindable var trip: Trip
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.navigationRouter) private var navigationRouter
+    @Environment(SyncManager.self) private var syncManager
     
     // Local state for editing
     @State private var name: String = ""
@@ -230,8 +233,43 @@ struct EditTripView: View {
     }
 
     func deleteTrip() {
+        print("📱 EditTripView: Starting trip deletion for: \(trip.name)")
+        
+        // Store trip info for logging
+        let tripName = trip.name
+        let tripId = trip.id
+        
+        // CRITICAL: Delete and save FIRST to ensure CloudKit sync happens
         modelContext.delete(trip)
-        dismiss()
+        
+        do {
+            try modelContext.save()
+            print("📱 EditTripView: Trip '\(tripName)' (ID: \(tripId)) deleted and modelContext saved successfully")
+            
+            // CRITICAL: Wait a moment for the deletion to be committed before triggering sync
+            Task {
+                // Wait for the deletion to be fully processed
+                try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
+                
+                // THEN trigger sync to ensure deletion propagates properly
+                await MainActor.run {
+                    syncManager.triggerSync()
+                    print("📱 EditTripView: Triggered explicit sync for trip deletion after delay")
+                }
+                
+                // Additional wait for CloudKit to process the deletion
+                try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 more seconds
+                print("📱 EditTripView: CloudKit deletion processing delay completed for trip: \(tripId)")
+            }
+            
+            // ONLY AFTER successful save: trigger navigation (immediate)
+            navigationRouter.navigate(.navigateToTripList)
+            dismiss()
+            
+        } catch {
+            print("❌ EditTripView: Failed to save after trip deletion: \(error)")
+            // If save failed, don't navigate - stay on the edit view
+        }
     }
 }
 

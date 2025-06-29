@@ -21,7 +21,7 @@ final class MockAuthenticationService: AuthenticationService, Sendable {
     nonisolated(unsafe) private var _mockBiometricType: BiometricType = .faceID
     nonisolated(unsafe) private var _mockCanUseBiometrics: Bool = true
     nonisolated(unsafe) private var _mockAuthenticationResult: Bool = true
-    nonisolated(unsafe) private var _mockAuthenticationDelay: TimeInterval = 0.1
+    nonisolated(unsafe) private var _mockAuthenticationDelay: TimeInterval = 0.0
     nonisolated(unsafe) private var _authenticationCallCount: Int = 0
     nonisolated(unsafe) private var _authenticatedTripIDs: Set<UUID> = [] // Start empty so allTripsLocked = true
     nonisolated(unsafe) private var _protectedTripIDs: Set<UUID> = []

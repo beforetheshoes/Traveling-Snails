@@ -15,7 +15,7 @@ class SettingsViewModel {
     
     private let modelContext: ModelContext
     private let appSettings = AppSettings.shared
-    private let authManager = BiometricAuthManager.shared
+    private let authService: AuthenticationService
     
     // UI State
     var showingDataBrowser = false
@@ -39,14 +39,15 @@ class SettingsViewModel {
     
     // MARK: - Initialization
     
-    init(modelContext: ModelContext) {
+    init(modelContext: ModelContext, authService: AuthenticationService) {
         self.modelContext = modelContext
+        self.authService = authService
     }
     
     // MARK: - Computed Properties
     
     var allTripsLocked: Bool {
-        authManager.allTripsLocked
+        authService.allTripsLocked
     }
     
     var colorScheme: ColorSchemePreference {
@@ -110,7 +111,7 @@ class SettingsViewModel {
     
     func lockAllProtectedTrips() {
         Task { @MainActor in
-            authManager.lockAllTrips()
+            authService.lockAllTrips()
         }
     }
     

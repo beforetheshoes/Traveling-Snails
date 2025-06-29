@@ -19,7 +19,7 @@ final class MockSyncService: SyncService, Sendable {
     // nonisolated(unsafe) is appropriate here because we use OSAllocatedUnfairLock for synchronization
     nonisolated(unsafe) private var _mockSyncResult: Bool = true
     nonisolated(unsafe) private var _mockSyncProgress: Double = 1.0
-    nonisolated(unsafe) private var _mockSyncDelay: TimeInterval = 0.2
+    nonisolated(unsafe) private var _mockSyncDelay: TimeInterval = 0.0
     nonisolated(unsafe) private var _mockSyncError: Error? = nil
     nonisolated(unsafe) private var _mockLastSyncDate: Date? = nil
     nonisolated(unsafe) private var _mockPendingChangesCount: Int = 0

@@ -41,8 +41,11 @@ final class ProductionAuthenticationService: AuthenticationService, Sendable {
         }
         #endif
         
+        #if targetEnvironment(simulator)
+        return .none
+        #else
         let context = LAContext()
-        context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil)
+        context.canEvaluatePolicy(.deviceOwnerAuthentication, error: nil)
         switch context.biometryType {
         case .faceID:
             return .faceID
@@ -51,6 +54,7 @@ final class ProductionAuthenticationService: AuthenticationService, Sendable {
         default:
             return .none
         }
+        #endif
     }
     
     func canUseBiometrics() -> Bool {
@@ -64,8 +68,12 @@ final class ProductionAuthenticationService: AuthenticationService, Sendable {
         }
         #endif
         
+        #if targetEnvironment(simulator)
+        return false
+        #else
         let context = LAContext()
-        return context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: nil)
+        return context.canEvaluatePolicy(.deviceOwnerAuthentication, error: nil)
+        #endif
     }
     
     nonisolated func authenticateTrip(_ trip: Trip) async -> Bool {
@@ -109,12 +117,19 @@ final class ProductionAuthenticationService: AuthenticationService, Sendable {
             return true
         }
         
+        // Handle simulator differently to prevent hanging
+        #if targetEnvironment(simulator)
+        Logger.shared.debug("Simulator detected, simulating successful authentication")
+        _ = lock.withLock { authenticatedTripIDs.insert(tripId) }
+        return true
+        #else
+        
         // Perform biometric authentication with fresh context
         let context = LAContext()
         
         // Check if biometrics are available before attempting authentication
         var error: NSError?
-        guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) else {
+        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
             if let error = error {
                 Logger.shared.debug("Biometrics not available: \(error.localizedDescription)")
             } else {
@@ -133,7 +148,7 @@ final class ProductionAuthenticationService: AuthenticationService, Sendable {
             group.addTask {
                 do {
                     let result = try await context.evaluatePolicy(
-                        .deviceOwnerAuthenticationWithBiometrics,
+                        .deviceOwnerAuthentication,
                         localizedReason: "Authenticate to access protected content"
                     )
                     
@@ -189,6 +204,7 @@ final class ProductionAuthenticationService: AuthenticationService, Sendable {
             group.cancelAll()
             return result
         }
+        #endif
     }
     
     func isAuthenticated(for trip: Trip) -> Bool {
