@@ -119,7 +119,9 @@ class SyncManager {
         #endif
         
         let deviceType = UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone"
-        print("🔄 SyncManager: Setting up CloudKit monitoring on \(deviceType) - \(deviceIdentifier)")
+        #if DEBUG
+        Logger.shared.debug("SyncManager: Setting up CloudKit monitoring", category: .sync)
+        #endif
         Logger.shared.info("Setting up CloudKit monitoring on \(deviceType) - \(deviceIdentifier)", category: .sync)
         
         // Monitor CloudKit remote changes - SwiftData uses NSPersistentCloudKitContainer under the hood
@@ -138,7 +140,9 @@ class SyncManager {
             object: nil
         )
         
-        print("🔄 SyncManager: CloudKit monitoring setup complete on \(deviceType)")
+        #if DEBUG
+        Logger.shared.debug("SyncManager: CloudKit monitoring setup complete", category: .sync)
+        #endif
     }
     
     @objc private func remoteStoreDidChange(notification: NSNotification) {
@@ -153,24 +157,32 @@ class SyncManager {
         #endif
         
         Logger.shared.info("🔄 Remote store change detected on device: \(deviceIdentifier)", category: .sync)
-        print("🔄 SyncManager: Remote store change detected on device: \(deviceIdentifier)")
+        #if DEBUG
+        Logger.shared.debug("SyncManager: Remote store change detected", category: .sync)
+        #endif
         
         // Extract change information from notification
         if let changeToken = notification.userInfo?[NSPersistentHistoryTokenKey] as? NSPersistentHistoryToken {
             Logger.shared.info("Processing remote changes with token: \(changeToken)", category: .sync)
-            print("🔄 SyncManager: Processing remote changes with token: \(changeToken)")
+            #if DEBUG
+            Logger.shared.debug("SyncManager: Processing remote changes with change token", category: .sync)
+            #endif
         }
         
         // Log all userInfo for debugging
         if let userInfo = notification.userInfo {
-            print("🔄 SyncManager: Remote change userInfo: \(userInfo)")
+            #if DEBUG
+            Logger.shared.debug("SyncManager: Remote change notification received", category: .sync)
+            #endif
         }
         
         Task { @MainActor in
             lastSyncDate = Date()
             
             // Log the notification object type
-            print("🔄 SyncManager: Remote change notification object: \(String(describing: notification.object))")
+            #if DEBUG
+            Logger.shared.debug("SyncManager: Remote change notification processed", category: .sync)
+            #endif
             
             await processRemoteChanges(from: notification)
         }
@@ -197,7 +209,9 @@ class SyncManager {
     
     func triggerSync() {
         let deviceType = UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone"
-        print("🔄 SyncManager: triggerSync() called on \(deviceType) - \(deviceIdentifier)")
+        #if DEBUG
+        Logger.shared.debug("SyncManager: triggerSync() called", category: .sync)
+        #endif
         Logger.shared.info("Sync triggered on \(deviceType) - \(deviceIdentifier)", category: .sync)
         
         Task {
@@ -438,7 +452,9 @@ class SyncManager {
     
     private func processRemoteChanges(from notification: NSNotification? = nil) async {
         Logger.shared.info("Processing remote changes from CloudKit", category: .sync)
-        print("🔄 SyncManager: Processing remote changes from CloudKit")
+        #if DEBUG
+        Logger.shared.debug("SyncManager: Processing remote changes from CloudKit", category: .sync)
+        #endif
         
         // In a real implementation, this would:
         // 1. Extract the NSPersistentHistoryToken from the notification
@@ -451,7 +467,9 @@ class SyncManager {
             // Process specific changes from the notification
             if let userInfo = notification.userInfo {
                 Logger.shared.info("Remote change details: \(userInfo)", category: .sync)
-                print("🔄 SyncManager: Remote change userInfo details: \(userInfo)")
+                #if DEBUG
+                Logger.shared.debug("SyncManager: Remote change userInfo processed", category: .sync)
+                #endif
             }
         }
         
@@ -584,7 +602,7 @@ class SyncManager {
                         modelContainer.mainContext.delete(sortedTrips[i])
                     }
                     
-                    Logger.shared.info("Kept trip: '\(winningTrip.name)' as conflict resolution winner", category: .sync)
+                    Logger.shared.info("Kept trip (ID: \(winningTrip.id)) as conflict resolution winner", category: .sync)
                 }
             }
             
@@ -664,8 +682,10 @@ class SyncManager {
             SyncManager.crossDeviceTestData.removeAll { cloudTrip in
                 let shouldRemove = !localTripIds.contains(cloudTrip.id)
                 if shouldRemove {
-                    Logger.shared.info("Removing deleted trip '\(cloudTrip.name)' (ID: \(cloudTrip.id)) from cloud test data", category: .sync)
-                    print("🗑️ SyncManager: Removing deleted trip '\(cloudTrip.name)' from cloud data")
+                    Logger.shared.info("Removing deleted trip (ID: \(cloudTrip.id)) from cloud test data", category: .sync)
+                    #if DEBUG
+                    Logger.shared.debug("SyncManager: Removing deleted trip from cloud data", category: .sync)
+                    #endif
                 }
                 return shouldRemove
             }
@@ -693,7 +713,7 @@ class SyncManager {
                         existingCloudTrip.startDate = trip.startDate
                         existingCloudTrip.endDate = trip.endDate
                         
-                        Logger.shared.info("Updated trip '\(trip.name)' in cloud with merged changes", category: .sync)
+                        Logger.shared.info("Updated trip (ID: \(trip.id)) in cloud with merged changes", category: .sync)
                     } else {
                         // Create a copy for cross-device storage
                         let cloudTrip = Trip(name: trip.name, isProtected: trip.isProtected)
@@ -702,7 +722,7 @@ class SyncManager {
                         cloudTrip.startDate = trip.startDate
                         cloudTrip.endDate = trip.endDate
                         SyncManager.crossDeviceTestData.append(cloudTrip)
-                        Logger.shared.info("Uploaded trip '\(trip.name)' to cloud", category: .sync)
+                        Logger.shared.info("Uploaded trip (ID: \(trip.id)) to cloud", category: .sync)
                     }
                 }
             }
@@ -724,7 +744,7 @@ class SyncManager {
                             existingLocalTrip.notes = existingLocalTrip.notes + "\n" + cloudTrip.notes
                         }
                         
-                        Logger.shared.info("Merged cloud changes into local trip '\(existingLocalTrip.name)'", category: .sync)
+                        Logger.shared.info("Merged cloud changes into local trip (ID: \(existingLocalTrip.id))", category: .sync)
                     } else {
                         // Create local copy for new trip
                         let localTrip = Trip(name: cloudTrip.name, isProtected: cloudTrip.isProtected)
@@ -733,7 +753,7 @@ class SyncManager {
                         localTrip.startDate = cloudTrip.startDate
                         localTrip.endDate = cloudTrip.endDate
                         modelContainer.mainContext.insert(localTrip)
-                        Logger.shared.info("Downloaded trip '\(cloudTrip.name)' from cloud", category: .sync)
+                        Logger.shared.info("Downloaded trip (ID: \(cloudTrip.id)) from cloud", category: .sync)
                     }
                 }
             }

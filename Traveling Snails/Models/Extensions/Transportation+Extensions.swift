@@ -70,7 +70,7 @@ extension Transportation: TripActivityProtocol {
     
     func applyEdits(from data: TripActivityEditData) {
         #if DEBUG
-        Logger.shared.debug("Transportation.applyEdits called - Current cost: \(cost), New cost: \(data.cost)")
+        Logger.shared.debug("Transportation.applyEdits called - cost field updated")
         #endif
         
         name = data.name
@@ -88,7 +88,7 @@ extension Transportation: TripActivityProtocol {
         }
         
         #if DEBUG
-        Logger.shared.debug("Transportation cost updated to: \(cost)")
+        Logger.shared.debug("Transportation cost field updated successfully")
         #endif
     }
 }

@@ -117,14 +117,18 @@ class BiometricAuthManager {
         let result = !isProtectedTrip || isInAuthenticatedSet
         
         // Only log when state actually changes to reduce noise
-        // print("🔐 BiometricAuthManager.isAuthenticated(for: \(trip.name)): \(result)")
+        #if DEBUG
+        Logger.shared.debug("BiometricAuthManager.isAuthenticated for trip ID: \(trip.id) - result: \(result)")
+        #endif
         
         return result
     }
     
     func isProtected(_ trip: Trip) -> Bool {
         let result = isEnabled && trip.isProtected
-        // print("🛡️ BiometricAuthManager.isProtected(\(trip.name)): \(result)")
+        #if DEBUG
+        Logger.shared.debug("BiometricAuthManager.isProtected for trip ID: \(trip.id) - result: \(result)")
+        #endif
         return result
     }
     
@@ -135,7 +139,7 @@ class BiometricAuthManager {
         let tripIsProtected = trip.isProtected
         
         #if DEBUG
-        Logger.shared.debug("BiometricAuthManager.authenticateTrip(\(tripName)) - START")
+        Logger.shared.debug("BiometricAuthManager.authenticateTrip for trip ID: \(tripId) - START")
         #endif
         
         // CRITICAL: Test detection FIRST before any LAContext creation
@@ -320,7 +324,7 @@ class BiometricAuthManager {
     
     func lockTrip(_ trip: Trip) {
         #if DEBUG
-        Logger.shared.debug("BiometricAuthManager.lockTrip(\(trip.name))")
+        Logger.shared.debug("BiometricAuthManager.lockTrip for trip ID: \(trip.id)")
         Logger.shared.debug("Before: authenticatedTripIDs = \(authenticatedTripIDs)")
         #endif
         authenticatedTripIDs.remove(trip.id)
@@ -333,7 +337,7 @@ class BiometricAuthManager {
     
     func toggleProtection(for trip: Trip) {
         #if DEBUG
-        Logger.shared.debug("BiometricAuthManager.toggleProtection(\(trip.name))")
+        Logger.shared.debug("BiometricAuthManager.toggleProtection for trip ID: \(trip.id))")
         Logger.shared.debug("Before: trip.isProtected = \(trip.isProtected)")
         #endif
         trip.isProtected.toggle()
