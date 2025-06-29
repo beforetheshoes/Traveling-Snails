@@ -524,7 +524,7 @@ struct DatabaseExportView: View {
             try exportData.write(to: tempURL, atomically: true, encoding: .utf8)
             return tempURL
         } catch {
-            print("Error creating export file: \(error)")
+            Logger.shared.error("Failed to create export file: \(error.localizedDescription)", category: .export)
             return tempURL
         }
     }

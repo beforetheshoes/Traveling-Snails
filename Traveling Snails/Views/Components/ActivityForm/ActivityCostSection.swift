@@ -53,7 +53,9 @@ struct ActivityCostSection<T: TripActivityProtocol>: View {
 
                 CurrencyTextField(value: $editData.cost, color: color)
                     .onChange(of: editData.cost) { _, newValue in
-                        print("=== DEBUG: Cost updated to \(newValue) ===")
+                        #if DEBUG
+                        Logger.shared.debug("Cost field updated", category: .ui)
+                        #endif
                     }
             }
 

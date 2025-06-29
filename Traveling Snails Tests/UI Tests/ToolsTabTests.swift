@@ -41,7 +41,7 @@ struct ToolsTabTests {
 
         // Act - Test the ToolsTab reset functionality
         var dataChangedCallbackCalled = false
-        let toolsTab = ToolsTab(modelContext: context) {
+        _ = ToolsTab(modelContext: context) {
             dataChangedCallbackCalled = true
         }
 
@@ -60,7 +60,10 @@ struct ToolsTabTests {
 
         // Organizations should only contain "None" organization after reset
         let nonNoneOrgs = orgsAfterReset.filter { !$0.isNone }
-        #expect(nonNoneOrgs.isEmpty, "All non-None organizations should be deleted - THIS WILL FAIL INITIALLY proving the bug")
+        #expect(nonNoneOrgs.count == 0, "All non-None organizations should be deleted - THIS WILL FAIL INITIALLY proving the bug")
+        
+        // Verify callback was called during reset process
+        #expect(dataChangedCallbackCalled, "Data change callback should be triggered during reset")
     }
 
     @Test("Current ToolsTab reset behavior shows it only simulates deletion")

@@ -118,16 +118,16 @@ class BiometricAuthManager {
 
         // Only log when state actually changes to reduce noise
         #if DEBUG
-        Logger.shared.debug("BiometricAuthManager.isAuthenticated for trip ID: \(trip.id) - result: \(result)")
+        Logger.shared.debug("BiometricAuthManager.isAuthenticated for trip ID \(trip.id): \(result)", category: .app)
         #endif
-
+        
         return result
     }
 
     func isProtected(_ trip: Trip) -> Bool {
         let result = isEnabled && trip.isProtected
         #if DEBUG
-        Logger.shared.debug("BiometricAuthManager.isProtected for trip ID: \(trip.id) - result: \(result)")
+        Logger.shared.debug("BiometricAuthManager.isProtected for trip ID \(trip.id): \(result)", category: .app)
         #endif
         return result
     }

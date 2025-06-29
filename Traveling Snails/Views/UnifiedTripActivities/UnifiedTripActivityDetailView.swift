@@ -203,11 +203,10 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
     }
 
     private func saveChanges() {
-        print("=== DEBUG: saveChanges() called ===")
-        print("Edit data cost: \(editData.cost)")
-        print("Current activity cost: \(activity.cost)")
-        print("Activity type: \(activity.activityType)")
-
+        #if DEBUG
+        Logger.shared.debug("Activity edit data updated", category: .ui)
+        #endif
+        
         // Update the activity with the edit data
         updateActivityFromEditData()
 
@@ -310,7 +309,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
             try modelContext.save()
             dismiss()
         } catch {
-            print("Failed to delete activity: \(error)")
+            Logger.shared.error("Failed to delete activity: \(error.localizedDescription)", category: .database)
         }
     }
 
