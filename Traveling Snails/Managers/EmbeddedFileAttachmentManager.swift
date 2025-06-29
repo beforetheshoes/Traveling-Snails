@@ -88,22 +88,20 @@ class EmbeddedFileAttachmentManager {
             Logger.shared.debug("EmbeddedFileAttachment created successfully")
             Logger.shared.debug("ID: \(attachment.id)")
             #endif
-            print("   - FileName: \(attachment.fileName)")
-            print("   - OriginalName: \(attachment.originalFileName)")
-            print("   - Size: \(attachment.fileSize) bytes")
-            print("   - MIME: \(attachment.mimeType)")
-            print("   - Extension: \(attachment.fileExtension)")
+            #if DEBUG
+            Logger.shared.debug("File attachment created - Extension: \(attachment.fileExtension), Size: \(attachment.fileSize) bytes", category: .fileAttachment)
+            #endif
             
             return .success(attachment)
             
         } catch {
-            print("❌ Failed to read file data from \(sourceURL.path)")
-            print("❌ Error details: \(error)")
-            print("❌ Error type: \(type(of: error))")
+            Logger.shared.error("Failed to read file data", category: .fileAttachment)
+            Logger.shared.error("File read error: \(error.localizedDescription)", category: .fileAttachment)
+            #if DEBUG
             if let nsError = error as NSError? {
-                print("❌ NSError domain: \(nsError.domain), code: \(nsError.code)")
-                print("❌ NSError userInfo: \(nsError.userInfo)")
+                Logger.shared.debug("NSError domain: \(nsError.domain), code: \(nsError.code)", category: .fileAttachment)
             }
+            #endif
             return .failure(.fileReadError(filename: originalName, underlying: error))
         }
     }
