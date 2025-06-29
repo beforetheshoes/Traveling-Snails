@@ -602,7 +602,7 @@ class SyncManager {
                         modelContainer.mainContext.delete(sortedTrips[i])
                     }
                     
-                    Logger.shared.info("Kept trip: '\(winningTrip.name)' as conflict resolution winner", category: .sync)
+                    Logger.shared.info("Kept trip (ID: \(winningTrip.id)) as conflict resolution winner", category: .sync)
                 }
             }
             
@@ -713,7 +713,7 @@ class SyncManager {
                         existingCloudTrip.startDate = trip.startDate
                         existingCloudTrip.endDate = trip.endDate
                         
-                        Logger.shared.info("Updated trip '\(trip.name)' in cloud with merged changes", category: .sync)
+                        Logger.shared.info("Updated trip (ID: \(trip.id)) in cloud with merged changes", category: .sync)
                     } else {
                         // Create a copy for cross-device storage
                         let cloudTrip = Trip(name: trip.name, isProtected: trip.isProtected)
@@ -722,7 +722,7 @@ class SyncManager {
                         cloudTrip.startDate = trip.startDate
                         cloudTrip.endDate = trip.endDate
                         SyncManager.crossDeviceTestData.append(cloudTrip)
-                        Logger.shared.info("Uploaded trip '\(trip.name)' to cloud", category: .sync)
+                        Logger.shared.info("Uploaded trip (ID: \(trip.id)) to cloud", category: .sync)
                     }
                 }
             }
@@ -744,7 +744,7 @@ class SyncManager {
                             existingLocalTrip.notes = existingLocalTrip.notes + "\n" + cloudTrip.notes
                         }
                         
-                        Logger.shared.info("Merged cloud changes into local trip '\(existingLocalTrip.name)'", category: .sync)
+                        Logger.shared.info("Merged cloud changes into local trip (ID: \(existingLocalTrip.id))", category: .sync)
                     } else {
                         // Create local copy for new trip
                         let localTrip = Trip(name: cloudTrip.name, isProtected: cloudTrip.isProtected)
@@ -753,7 +753,7 @@ class SyncManager {
                         localTrip.startDate = cloudTrip.startDate
                         localTrip.endDate = cloudTrip.endDate
                         modelContainer.mainContext.insert(localTrip)
-                        Logger.shared.info("Downloaded trip '\(cloudTrip.name)' from cloud", category: .sync)
+                        Logger.shared.info("Downloaded trip (ID: \(cloudTrip.id)) from cloud", category: .sync)
                     }
                 }
             }
