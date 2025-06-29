@@ -9,6 +9,7 @@ import Foundation
 import SwiftData
 import CloudKit
 import CoreData
+import UIKit
 
 
 // NOTE: Type definitions moved to SyncService.swift to avoid conflicts
@@ -117,6 +118,10 @@ class SyncManager {
         }
         #endif
         
+        let deviceType = UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone"
+        print("🔄 SyncManager: Setting up CloudKit monitoring on \(deviceType) - \(deviceIdentifier)")
+        Logger.shared.info("Setting up CloudKit monitoring on \(deviceType) - \(deviceIdentifier)", category: .sync)
+        
         // Monitor CloudKit remote changes - SwiftData uses NSPersistentCloudKitContainer under the hood
         NotificationCenter.default.addObserver(
             self,
@@ -132,6 +137,8 @@ class SyncManager {
             name: NSNotification.Name.CKAccountChanged,
             object: nil
         )
+        
+        print("🔄 SyncManager: CloudKit monitoring setup complete on \(deviceType)")
     }
     
     @objc private func remoteStoreDidChange(notification: NSNotification) {
@@ -145,15 +152,26 @@ class SyncManager {
         }
         #endif
         
-        Logger.shared.info("Remote store change detected", category: .sync)
+        Logger.shared.info("🔄 Remote store change detected on device: \(deviceIdentifier)", category: .sync)
+        print("🔄 SyncManager: Remote store change detected on device: \(deviceIdentifier)")
         
         // Extract change information from notification
         if let changeToken = notification.userInfo?[NSPersistentHistoryTokenKey] as? NSPersistentHistoryToken {
             Logger.shared.info("Processing remote changes with token: \(changeToken)", category: .sync)
+            print("🔄 SyncManager: Processing remote changes with token: \(changeToken)")
+        }
+        
+        // Log all userInfo for debugging
+        if let userInfo = notification.userInfo {
+            print("🔄 SyncManager: Remote change userInfo: \(userInfo)")
         }
         
         Task { @MainActor in
             lastSyncDate = Date()
+            
+            // Log the notification object type
+            print("🔄 SyncManager: Remote change notification object: \(String(describing: notification.object))")
+            
             await processRemoteChanges(from: notification)
         }
     }
@@ -178,6 +196,10 @@ class SyncManager {
     // MARK: - Basic Sync Operations
     
     func triggerSync() {
+        let deviceType = UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone"
+        print("🔄 SyncManager: triggerSync() called on \(deviceType) - \(deviceIdentifier)")
+        Logger.shared.info("Sync triggered on \(deviceType) - \(deviceIdentifier)", category: .sync)
+        
         Task {
             await performSync()
         }
@@ -416,6 +438,7 @@ class SyncManager {
     
     private func processRemoteChanges(from notification: NSNotification? = nil) async {
         Logger.shared.info("Processing remote changes from CloudKit", category: .sync)
+        print("🔄 SyncManager: Processing remote changes from CloudKit")
         
         // In a real implementation, this would:
         // 1. Extract the NSPersistentHistoryToken from the notification
@@ -428,6 +451,7 @@ class SyncManager {
             // Process specific changes from the notification
             if let userInfo = notification.userInfo {
                 Logger.shared.info("Remote change details: \(userInfo)", category: .sync)
+                print("🔄 SyncManager: Remote change userInfo details: \(userInfo)")
             }
         }
         
@@ -634,6 +658,17 @@ class SyncManager {
         // For testing: simulate cross-device synchronization
         do {
             let localTrips = try modelContainer.mainContext.fetch(FetchDescriptor<Trip>())
+            let localTripIds = Set(localTrips.map { $0.id })
+            
+            // CRITICAL: Remove trips from cloud data that were deleted locally
+            SyncManager.crossDeviceTestData.removeAll { cloudTrip in
+                let shouldRemove = !localTripIds.contains(cloudTrip.id)
+                if shouldRemove {
+                    Logger.shared.info("Removing deleted trip '\(cloudTrip.name)' (ID: \(cloudTrip.id)) from cloud test data", category: .sync)
+                    print("🗑️ SyncManager: Removing deleted trip '\(cloudTrip.name)' from cloud data")
+                }
+                return shouldRemove
+            }
             
             // Upload local trips to "cloud" (static storage)
             for trip in localTrips {

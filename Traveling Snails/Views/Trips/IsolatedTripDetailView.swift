@@ -2,10 +2,6 @@ import SwiftUI
 import SwiftData
 import Foundation
 
-// MARK: - Notification Names
-extension Notification.Name {
-    static let tripSelectedFromList = Notification.Name("tripSelectedFromList")
-}
 
 // A completely isolated trip detail view that doesn't depend on @Observable state
 struct IsolatedTripDetailView: View {

@@ -5,7 +5,7 @@ import SwiftData
 struct Traveling_SnailsApp: App {
     @State private var appSettings = AppSettings.shared
     @State private var syncManager = SyncManager.shared
-    @State private var showSplash = true
+    @State private var showSplash = false
     @State private var hasShownSplashOnce = false
     @Environment(\.scenePhase) private var scenePhase
 
@@ -76,24 +76,25 @@ struct Traveling_SnailsApp: App {
                 ContentView()
                     .environment(appSettings)
                     .environment(syncManager)
+                    .environment(NavigationRouter.shared)
                     .opacity(showSplash ? 0 : 1) // Hide content while splash is showing
                 
-                if showSplash {
-                    SplashView(isVisible: $showSplash)
-                        .transition(.opacity)
-                        .onTapGesture {
-                            showSplash = false
-                        }
-                }
+//                if showSplash {
+//                    SplashView(isVisible: $showSplash)
+//                        .transition(.opacity)
+//                        .onTapGesture {
+//                            showSplash = false
+//                        }
+//                }
             }
-            .onAppear {
-                // Only show splash on first launch
-                if !hasShownSplashOnce {
-                    hasShownSplashOnce = true
-                } else {
-                    showSplash = false
-                }
-            }
+//            .onAppear {
+//                // Only show splash on first launch
+//                if !hasShownSplashOnce {
+//                    hasShownSplashOnce = true
+//                } else {
+//                    showSplash = false
+//                }
+//            }
             .onChange(of: scenePhase) { _, newPhase in
                 switch newPhase {
                 case .background:

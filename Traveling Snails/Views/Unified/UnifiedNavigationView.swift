@@ -208,6 +208,14 @@ struct UnifiedNavigationView<Item: NavigationItem, DetailView: View>: View {
                 }
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .clearTripSelection)) { _ in
+            // Clear the selected item when trip deletion navigation is triggered
+            print("📱 UnifiedNavigationView: Received clearTripSelection notification")
+            print("📱 UnifiedNavigationView: Current selectedItem: \(selectedItem?.displayName ?? "nil")")
+            selectedItem = nil
+            navigationPath = NavigationPath()
+            print("📱 UnifiedNavigationView: Cleared selectedItem and navigationPath for trip deletion navigation")
+        }
     }
     
     @ViewBuilder

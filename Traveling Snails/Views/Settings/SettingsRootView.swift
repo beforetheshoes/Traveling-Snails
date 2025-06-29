@@ -22,7 +22,7 @@ struct SettingsRootView: View {
                 } else {
                     ProgressView("Loading Settings...")
                         .onAppear {
-                            let authService = serviceContainer.resolve(AuthenticationService.self)
+                            let authService = ProductionAuthenticationService()
                             viewModel = SettingsViewModel(modelContext: modelContext, authService: authService)
                         }
                 }

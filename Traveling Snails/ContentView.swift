@@ -24,6 +24,11 @@ struct ContentView: View {
     @State private var isInitialSyncComplete = false
     @State private var showingSyncIndicator = false
     
+    // Remote change detection
+    @State private var syncTimer: Timer?
+    @Environment(SyncManager.self) private var syncManager
+    @Environment(\.scenePhase) private var scenePhase
+    
     var body: some View {
         Group {
             if !isInitialSyncComplete && trips.isEmpty {
@@ -56,6 +61,26 @@ struct ContentView: View {
         }
         .onChange(of: selectedTrip) { oldTrip, newTrip in
             print("📱 ContentView: selectedTrip changed from '\(oldTrip?.name ?? "nil")' to '\(newTrip?.name ?? "nil")'")
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .clearTripSelection)) { _ in
+            // Clear the selected trip to return to trip list (crucial for iPhone TabView navigation)
+            print("📱 ContentView: Received clearTripSelection notification")
+            print("📱 ContentView: Current selectedTrip: \(selectedTrip?.name ?? "nil")")
+            selectedTrip = nil
+            print("📱 ContentView: Cleared selectedTrip for TabView navigation")
+        }
+        .onAppear {
+            startPeriodicSyncCheck()
+        }
+        .onDisappear {
+            stopPeriodicSyncCheck()
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                print("📱 ContentView: App became active, triggering sync check")
+                // Trigger sync when app becomes active to catch any missed remote changes
+                syncManager.triggerSync()
+            }
         }
     }
     
@@ -135,6 +160,28 @@ struct ContentView: View {
     
     private var settingsTab: some View {
         SettingsRootView()
+    }
+    
+    // MARK: - Periodic Sync Check
+    
+    private func startPeriodicSyncCheck() {
+        // Enable periodic sync check on both iPad and iPhone to ensure reliable sync
+        #if os(iOS)
+        let deviceType = UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone"
+        let interval: TimeInterval = UIDevice.current.userInterfaceIdiom == .pad ? 30.0 : 45.0 // iPad syncs more frequently
+        
+        print("📱 ContentView: Starting periodic sync check on \(deviceType) (every \(interval)s)")
+        syncTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
+            print("📱 ContentView: Periodic sync check triggered on \(deviceType)")
+            syncManager.triggerSync()
+        }
+        #endif
+    }
+    
+    private func stopPeriodicSyncCheck() {
+        syncTimer?.invalidate()
+        syncTimer = nil
+        print("📱 ContentView: Stopped periodic sync check")
     }
     
 }
