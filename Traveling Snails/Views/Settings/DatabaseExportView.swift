@@ -92,13 +92,61 @@ struct DatabaseExportView: View {
                         .background(Color.green.opacity(0.1))
                         .cornerRadius(12)
                         
+                        // Enhanced preview with better visibility and error handling
                         ScrollView {
-                            Text(exportData)
-                                .font(.system(.caption, design: .monospaced))
-                                .padding()
+                            Group {
+                                if exportData.hasPrefix("Error:") {
+                                    // Error state with distinct styling
+                                    Label(exportData, systemImage: "exclamationmark.triangle")
+                                        .foregroundColor(.red)
+                                        .font(.callout)
+                                        .padding()
+                                } else if exportData.isEmpty {
+                                    // Empty state
+                                    Text("No data to preview")
+                                        .foregroundColor(.secondary)
+                                        .font(.callout)
+                                        .italic()
+                                        .padding()
+                                } else if exportData.count > 50000 {
+                                    // Large data with truncation for performance
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        HStack {
+                                            Image(systemName: "doc.text")
+                                                .foregroundColor(.orange)
+                                            Text("Large Export Preview")
+                                                .font(.headline)
+                                                .foregroundColor(.orange)
+                                            Spacer()
+                                            Text("\(exportData.count) characters")
+                                                .font(.caption)
+                                                .foregroundColor(.secondary)
+                                        }
+                                        .padding(.bottom, 4)
+                                        
+                                        Text("Preview (first 2000 characters):")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        
+                                        Text(String(exportData.prefix(2000)) + "\n\n... (truncated for performance)")
+                                            .font(.system(.callout, design: .monospaced))
+                                            .foregroundColor(.primary)
+                                    }
+                                    .padding()
+                                } else {
+                                    // Normal preview with improved readability
+                                    Text(exportData)
+                                        .font(.system(.callout, design: .monospaced))
+                                        .foregroundColor(.primary)
+                                        .padding()
+                                }
+                            }
                         }
-                        .background(Color(.systemGray6))
-                        .cornerRadius(12)
+                        .background(Color(.systemBackground))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color(.systemGray4), lineWidth: 1)
+                        )
                         .frame(maxHeight: 300)
                         
                         Button {
