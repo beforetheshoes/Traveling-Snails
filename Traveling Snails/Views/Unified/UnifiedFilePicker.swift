@@ -158,7 +158,9 @@ struct UnifiedFilePicker: View {
 
     @MainActor
     private func handlePhotoSelection(_ item: PhotosPickerItem) async {
-        print("📸 Photo selection started") // Temporary until Logger is available
+        #if DEBUG
+        Logger.shared.debug("Photo selection started", category: .filePicker)
+        #endif
         isProcessing = true
 
         defer {
@@ -175,7 +177,9 @@ struct UnifiedFilePicker: View {
             if let supportedContentTypes = item.supportedContentTypes.first {
                 if let preferredExtension = supportedContentTypes.preferredFilenameExtension {
                     fileExtension = preferredExtension
-                    print("📸 Photo type detected: \(fileExtension)")
+                    #if DEBUG
+                    Logger.shared.debug("Photo type detected: \(fileExtension)", category: .filePicker)
+                    #endif
                 }
             }
 
@@ -183,7 +187,9 @@ struct UnifiedFilePicker: View {
                 throw FilePickerError.failedToLoadPhotoData
             }
 
-            print("✅ Photo data loaded: \(data.count) bytes, extension: \(fileExtension)") // Temporary until Logger is available
+            #if DEBUG
+            Logger.shared.debug("Photo data loaded: \(data.count) bytes, extension: \(fileExtension)", category: .filePicker)
+            #endif
 
             // Update original name to use correct extension
             if !originalName.contains(".") {
@@ -196,7 +202,7 @@ struct UnifiedFilePicker: View {
 
             try await processFile(url: tempURL, originalName: originalName)
         } catch {
-            print("❌ Photo selection failed: \(error)") // Temporary until Logger is available
+            Logger.shared.error("Photo selection failed: \(error.localizedDescription)", category: .filePicker)
             handleError("Failed to process photo: \(error.localizedDescription)")
         }
     }
@@ -216,13 +222,13 @@ struct UnifiedFilePicker: View {
                     let originalName = url.lastPathComponent
                     try await processFile(url: url, originalName: originalName)
                 } catch {
-                    print("❌ Document processing failed: \(error)") // Temporary until Logger is available
+                    Logger.shared.error("Document processing failed: \(error.localizedDescription)", category: .filePicker)
                     handleError("Failed to process document: \(error.localizedDescription)")
                 }
             }
 
         case .failure(let error):
-            print("❌ Document picker failed: \(error)") // Temporary until Logger is available
+            Logger.shared.error("Document picker failed: \(error.localizedDescription)", category: .filePicker)
             handleError("Document selection failed: \(error.localizedDescription)")
         }
     }
@@ -230,7 +236,9 @@ struct UnifiedFilePicker: View {
     // MARK: - File Processing
 
     private func processFile(url: URL, originalName: String) async throws {
-        print("📁 Processing file: \(originalName)") // Temporary until Logger is available
+        #if DEBUG
+        Logger.shared.debug("Processing file: \(originalName)", category: .filePicker)
+        #endif
 
         guard let attachment = EmbeddedFileAttachmentManager.shared.saveFile(
             from: url,
@@ -246,7 +254,9 @@ struct UnifiedFilePicker: View {
             await MainActor.run {
                 onFileSelected(attachment)
             }
-            print("✅ File attachment saved successfully") // Temporary until Logger is available
+            #if DEBUG
+            Logger.shared.debug("File attachment saved successfully", category: .filePicker)
+            #endif
         } catch {
             modelContext.delete(attachment)
             throw FilePickerError.failedToSaveToDatabase(error)
@@ -268,16 +278,18 @@ struct UnifiedFilePicker: View {
     }
 
     private func handleError(_ message: String) {
-        onError?(message) ?? print("⚠️ Unhandled file picker error: \(message)") // Temporary until Logger is available
+        onError?(message) ?? Logger.shared.error("Unhandled file picker error: \(message)", category: .filePicker)
     }
 
     private func cleanupTemporaryFiles() {
         for url in temporaryFiles {
             do {
                 try FileManager.default.removeItem(at: url)
-                print("🧹 Cleaned up temporary file: \(url.lastPathComponent)") // Temporary until Logger is available
+                #if DEBUG
+                Logger.shared.debug("Cleaned up temporary file: \(url.lastPathComponent)", category: .filePicker)
+                #endif
             } catch {
-                print("⚠️ Failed to cleanup temporary file: \(error)") // Temporary until Logger is available
+                Logger.shared.warning("Failed to cleanup temporary file: \(error.localizedDescription)", category: .filePicker)
             }
         }
         temporaryFiles.removeAll()

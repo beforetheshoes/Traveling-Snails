@@ -53,21 +53,21 @@ struct ContentView: View {
         .environment(navigationContext)
         .onChange(of: selectedTab) { oldTab, newTab in
             if oldTab != newTab {
-                print("📱 ContentView: Using NavigationContext instance: \(ObjectIdentifier(navigationContext))")
-                print("📱 ContentView: selectedTrip = \(selectedTrip?.name ?? "nil")")
+                Logger.shared.debug("Using NavigationContext instance: \(ObjectIdentifier(navigationContext))", category: .navigation)
+                Logger.shared.debug("selectedTrip = \(selectedTrip?.name ?? "nil")", category: .navigation)
                 navigationContext.markTabSwitch(to: newTab, from: oldTab)
-                print("📱 ContentView: Tab changed from \(oldTab) to \(newTab)")
+                Logger.shared.info("Tab changed from \(oldTab) to \(newTab)", category: .navigation)
             }
         }
         .onChange(of: selectedTrip) { oldTrip, newTrip in
-            print("📱 ContentView: selectedTrip changed from '\(oldTrip?.name ?? "nil")' to '\(newTrip?.name ?? "nil")'")
+            Logger.shared.debug("selectedTrip changed from '\(oldTrip?.name ?? "nil")' to '\(newTrip?.name ?? "nil")'")
         }
         .onReceive(NotificationCenter.default.publisher(for: .clearTripSelection)) { _ in
             // Clear the selected trip to return to trip list (crucial for iPhone TabView navigation)
-            print("📱 ContentView: Received clearTripSelection notification")
-            print("📱 ContentView: Current selectedTrip: \(selectedTrip?.name ?? "nil")")
+            Logger.shared.debug("Received clearTripSelection notification", category: .navigation)
+            Logger.shared.debug("Current selectedTrip: \(selectedTrip?.name ?? "nil")", category: .navigation)
             selectedTrip = nil
-            print("📱 ContentView: Cleared selectedTrip for TabView navigation")
+            Logger.shared.debug("Cleared selectedTrip for TabView navigation", category: .navigation)
         }
         .onAppear {
             startPeriodicSyncCheck()
@@ -77,7 +77,7 @@ struct ContentView: View {
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .active {
-                print("📱 ContentView: App became active, triggering sync check")
+                Logger.shared.info("App became active, triggering sync check", category: .sync)
                 // Trigger sync when app becomes active to catch any missed remote changes
                 syncManager.triggerSync()
             }
@@ -170,9 +170,9 @@ struct ContentView: View {
         let deviceType = UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone"
         let interval: TimeInterval = UIDevice.current.userInterfaceIdiom == .pad ? 30.0 : 45.0 // iPad syncs more frequently
 
-        print("📱 ContentView: Starting periodic sync check on \(deviceType) (every \(interval)s)")
+        Logger.shared.info("Starting periodic sync check on \(deviceType) (every \(interval)s)", category: .sync)
         syncTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
-            print("📱 ContentView: Periodic sync check triggered on \(deviceType)")
+            Logger.shared.debug("Periodic sync check triggered on \(deviceType)", category: .sync)
             syncManager.triggerSync()
         }
         #endif
@@ -181,7 +181,7 @@ struct ContentView: View {
     private func stopPeriodicSyncCheck() {
         syncTimer?.invalidate()
         syncTimer = nil
-        print("📱 ContentView: Stopped periodic sync check")
+        Logger.shared.debug("Stopped periodic sync check", category: .sync)
     }
 }
 

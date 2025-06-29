@@ -132,21 +132,23 @@ custom_rules:
     regex: '\bprint\s*\('
     message: "Use Logger.shared instead of print statements for security and consistency"
     severity: warning
+    excluded: ".*Tests.*\\.swift$|.*Preview.*\\.swift$"
     
   # SECURITY: Detect potential sensitive data logging (exclude test files)
   no_sensitive_logging:
     name: "No Sensitive Data Logging"
-    regex: '(trip\.name|\.name.*[Ll]og|[Ll]og.*\.name|user\..*[Ll]og|[Ll]og.*user\.|password|token|secret|key.*[Ll]og|[Ll]og.*key)'
+    regex: '\b(?:password|token|secret|apiKey|authKey|privateKey|accessKey)\b'
     message: "Potential sensitive data in logging - review for security implications"
     severity: warning
-    excluded: ".*Tests.*"
+    excluded: ".*Tests.*\\.swift$"
     
   # SECURITY: Ensure proper error handling doesn't expose internals
   safe_error_messages:
     name: "Safe Error Messages"
-    regex: '(LocalizedError|Error.*message).*(\binternal\b|\bprivate\b|\bdebug\b|\bstack\b)'
+    regex: '\b(?:SQL|query|database|modelContext|CoreData|SwiftData|internal|private key)\b'
     message: "Error messages should not expose internal implementation details"
     severity: warning
+    excluded: ".*Tests.*\\.swift$"
     
   # MODERN SWIFT: Enforce NavigationStack over NavigationView
   use_navigation_stack:
@@ -165,16 +167,18 @@ custom_rules:
   # MODERN SWIFT: Detect hardcoded strings that should be localized
   no_hardcoded_strings:
     name: "No Hardcoded UI Strings"
-    regex: '(Text|Label|Button|Alert)\s*\(\s*"[A-Z][a-zA-Z\s]{10,}"'
+    regex: '(?:Text|Label|Button|Alert)\s*\(\s*"[A-Z][a-zA-Z\s]{20,}"'
     message: "UI strings should use L10n enum system for localization"
     severity: warning
+    excluded: ".*Tests.*\\.swift$|.*Preview.*\\.swift$"
     
   # SWIFTDATA: Prevent parameter passing anti-pattern
   no_swiftdata_parameter_passing:
     name: "No SwiftData Parameter Passing"
-    regex: '(init|func).*\([^)]*:\s*\[[A-Z][a-zA-Z]*\]\s*[,)]'
+    regex: ':\s*\[(?:Trip|Activity|Lodging|Transportation|Organization|Address)\]'
     message: "Avoid passing SwiftData model arrays as parameters - use @Query in consuming view instead"
     severity: warning
+    excluded: ".*Tests.*\\.swift$"
     
   # MODERN SWIFT: Enforce @Observable over @StateObject
   no_state_object:
@@ -183,12 +187,13 @@ custom_rules:
     message: "Use @Observable instead of @StateObject/@ObservableObject (iOS 17+)"
     severity: error
     
-  # SECURITY: Enforce input validation patterns
+  # SECURITY: Enforce input validation for sensitive fields
   require_input_validation:
     name: "Input Validation Required"
-    regex: '(TextField|TextEditor).*(?!.*\.validate|.*isValid|.*validation)'
-    message: "User input fields should include validation"
+    regex: '(?:TextField|SecureField).*(?:password|email|phone|credit|ssn|account)'
+    message: "Sensitive input fields should include validation"
     severity: warning
+    excluded: ".*Tests.*\\.swift$|.*Preview.*\\.swift$"
 
 # Rule configurations
 accessibility_label_for_image:

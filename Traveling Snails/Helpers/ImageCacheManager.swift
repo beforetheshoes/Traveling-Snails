@@ -27,7 +27,7 @@ class ImageCacheManager {
         // Use SecureURLHandler for security evaluation instead of duplicating logic
         let securityLevel = SecureURLHandler.evaluateURL(urlString)
         guard securityLevel != .blocked else {
-            print("Blocked URL, not caching: \(urlString)")
+            Logger.shared.warning("Blocked URL, not caching: \(urlString)", category: .network)
             return nil
         }
 
@@ -41,13 +41,13 @@ class ImageCacheManager {
                   httpResponse.statusCode == 200,
                   let mimeType = httpResponse.mimeType,
                   mimeType.hasPrefix("image/") else {
-                print("Invalid image response")
+                Logger.shared.warning("Invalid image response", category: .network)
                 return nil
             }
 
             // Validate image data
             guard UIImage(data: data) != nil else {
-                print("Invalid image data")
+                Logger.shared.warning("Invalid image data", category: .fileManagement)
                 return nil
             }
 
@@ -61,7 +61,7 @@ class ImageCacheManager {
 
             return fileURL.lastPathComponent
         } catch {
-            print("Failed to cache image: \(error)")
+            Logger.shared.logError(error, message: "Failed to cache image", category: .fileManagement)
             return nil
         }
     }

@@ -290,7 +290,7 @@ struct AddOrganizationForm: View {
             dismiss()
         } catch {
             // Handle error appropriately
-            print("Failed to save organization: \(error)")
+            Logger.shared.error("Failed to save organization: \(error.localizedDescription)", category: .database)
         }
     }
 }

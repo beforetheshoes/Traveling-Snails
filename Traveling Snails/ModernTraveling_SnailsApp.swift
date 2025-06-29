@@ -47,12 +47,12 @@ struct ModernTraveling_SnailsApp: App {
 
             let modelConfiguration: ModelConfiguration
             if isInTests {
-                print("🧪 ModernApp: Test environment detected, using in-memory storage")
+                Logger.shared.info("Test environment detected, using in-memory storage", category: .app)
                 modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
             } else {
                 // CRITICAL: Do NOT use cloudKitDatabase: .automatic during init() - causes "Early unexpected exit" crash
                 // CloudKit configuration will be set up later in onAppear after app launch
-                print("🏗️ ModernApp: Using local storage, CloudKit will be configured after app launch")
+                Logger.shared.info("Using local storage, CloudKit will be configured after app launch", category: .app)
                 modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
             }
             #else
@@ -65,16 +65,16 @@ struct ModernTraveling_SnailsApp: App {
 
             // Create basic service container with MainActor isolation
             serviceContainer = ServiceContainer()
-            print("✅ ModernApp: Basic ServiceContainer created")
+            Logger.shared.info("Basic ServiceContainer created", category: .app)
 
             // Create backward compatibility adapter (minimal configuration)
             backwardCompatibilityAdapter = BackwardCompatibilityAdapter()
-            print("✅ ModernApp: BackwardCompatibilityAdapter created")
+            Logger.shared.info("BackwardCompatibilityAdapter created", category: .app)
 
             // NOTE: CloudKit/SyncManager registration is deferred to avoid startup crash
             // These will be configured asynchronously in onAppear to prevent blocking app startup
 
-            print("✅ ModernApp: Dependency injection setup complete")
+            Logger.shared.info("Dependency injection setup complete", category: .app)
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }
@@ -155,12 +155,12 @@ struct ModernTraveling_SnailsApp: App {
                       UserDefaults.standard.bool(forKey: "isRunningTests")
 
         guard !isInTests else {
-            print("🧪 ModernApp: Skipping async service configuration in test environment")
+            Logger.shared.info("Skipping async service configuration in test environment", category: .app)
             return
         }
         #endif
 
-        print("🔄 ModernApp: Starting async service configuration...")
+        Logger.shared.info("Starting async service configuration...", category: .app)
 
         // Step 1: Configure CloudKit for ModelContainer (safe after app launch)
         await configureCloudKitForModelContainer()
@@ -178,23 +178,23 @@ struct ModernTraveling_SnailsApp: App {
         let permissionService = SystemPermissionService()
         serviceContainer.register(permissionService, as: PermissionService.self)
 
-        print("✅ ModernApp: Registered core services asynchronously")
+        Logger.shared.info("Registered core services asynchronously", category: .app)
 
         // Step 3: Configure backward compatibility adapter (basic configuration)
         backwardCompatibilityAdapter.configure(with: serviceContainer)
-        print("✅ ModernApp: Configured BackwardCompatibilityAdapter asynchronously")
+        Logger.shared.info("Configured BackwardCompatibilityAdapter asynchronously", category: .app)
 
         // Step 4: Configure sync manager using async pattern
         // This will register CloudKitSyncService internally to avoid "Early unexpected exit" error
         await backwardCompatibilityAdapter.configureSyncManagerAsync(with: modelContainer)
-        print("✅ ModernApp: Configured SyncManager asynchronously")
+        Logger.shared.info("Configured SyncManager asynchronously", category: .sync)
 
-        print("✅ ModernApp: All services configured successfully")
+        Logger.shared.info("All services configured successfully", category: .app)
     }
 
     /// Configure CloudKit for the ModelContainer after app launch (safe timing)
     private func configureCloudKitForModelContainer() async {
-        print("🔄 ModernApp: Configuring CloudKit for SwiftData (post-launch)")
+        Logger.shared.info("Configuring CloudKit for SwiftData (post-launch)", category: .cloudKit)
 
         // Note: Since ModelContainer is already created without CloudKit,
         // CloudKit sync will be handled by CloudKitSyncService which bridges
@@ -208,23 +208,23 @@ struct ModernTraveling_SnailsApp: App {
 
             switch accountStatus {
             case .available:
-                print("✅ ModernApp: CloudKit account available")
+                Logger.shared.info("CloudKit account available", category: .cloudKit)
             case .noAccount:
-                print("⚠️ ModernApp: No CloudKit account configured")
+                Logger.shared.warning("No CloudKit account configured", category: .cloudKit)
             case .restricted:
-                print("⚠️ ModernApp: CloudKit account restricted")
+                Logger.shared.warning("CloudKit account restricted", category: .cloudKit)
             case .temporarilyUnavailable:
-                print("⚠️ ModernApp: CloudKit temporarily unavailable")
+                Logger.shared.warning("CloudKit temporarily unavailable", category: .cloudKit)
             case .couldNotDetermine:
-                print("⚠️ ModernApp: Could not determine CloudKit status")
+                Logger.shared.warning("Could not determine CloudKit status", category: .cloudKit)
             @unknown default:
-                print("⚠️ ModernApp: Unknown CloudKit account status")
+                Logger.shared.warning("Unknown CloudKit account status", category: .cloudKit)
             }
         } catch {
-            print("⚠️ ModernApp: CloudKit account status check failed: \(error)")
+            Logger.shared.error("CloudKit account status check failed: \(error)", category: .cloudKit)
         }
 
-        print("✅ ModernApp: CloudKit configuration completed")
+        Logger.shared.info("CloudKit configuration completed", category: .cloudKit)
     }
 }
 

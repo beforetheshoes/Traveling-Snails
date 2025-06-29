@@ -74,7 +74,7 @@ struct AnimatedSVGView: UIViewRepresentable {
         guard let svgURL = Bundle.main.url(forResource: "traveling-snails-animation", withExtension: "svg"),
               let svgData = try? Data(contentsOf: svgURL),
               let svgString = String(data: svgData, encoding: .utf8) else {
-            print("❌ Failed to load animated SVG file")
+            Logger.shared.error("Failed to load animated SVG file", category: .ui)
             return
         }
 
@@ -180,11 +180,11 @@ struct AnimatedSVGView: UIViewRepresentable {
         }
 
         func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
-            print("❌ SVG WebView failed to load: \(error.localizedDescription)")
+            Logger.shared.error("SVG WebView failed to load: \(error.localizedDescription)", category: .ui)
         }
 
         func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
-            print("❌ SVG WebView navigation failed: \(error.localizedDescription)")
+            Logger.shared.error("SVG WebView navigation failed: \(error.localizedDescription)", category: .ui)
         }
     }
 }

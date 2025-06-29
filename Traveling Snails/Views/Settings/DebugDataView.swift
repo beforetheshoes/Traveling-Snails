@@ -79,9 +79,11 @@ struct DebugDataView: View {
 
         do {
             try modelContext.save()
-            print("✅ Created test data")
+            #if DEBUG
+            Logger.shared.info("Created test data", category: .debug)
+            #endif
         } catch {
-            print("❌ Error creating test data: \(error)")
+            Logger.shared.error("Error creating test data: \(error.localizedDescription)", category: .debug)
         }
     }
 }

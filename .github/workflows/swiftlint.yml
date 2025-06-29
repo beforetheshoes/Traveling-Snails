@@ -26,8 +26,9 @@ jobs:
         path: |
           .build
           SourcePackages
-        key: ${{ runner.os }}-spm-${{ hashFiles('Package.swift', 'Package.resolved') }}
+        key: ${{ runner.os }}-spm-${{ hashFiles('Package.swift', 'Package.resolved') }}-v2
         restore-keys: |
+          ${{ runner.os }}-spm-${{ hashFiles('Package.swift', 'Package.resolved') }}-
           ${{ runner.os }}-spm-
           
     - name: Resolve Swift Package Dependencies
@@ -36,40 +37,60 @@ jobs:
     - name: Run SwiftLint Security Analysis
       run: |
         echo "🔍 Running SwiftLint with security-focused rules..."
-        swift run swiftlint lint --config .swiftlint.yml --reporter github-actions-logging
+        # Single run with JSON output for efficiency
+        swift run swiftlint lint --config .swiftlint.yml --parallel --reporter json > violations.json || true
+        
+        # Also output to console for immediate feedback
+        swift run swiftlint lint --config .swiftlint.yml --parallel --reporter github-actions-logging || true
         
     - name: Check for Critical Security Violations
       run: |
         echo "🚨 Checking for critical security violations..."
         
-        # Run SwiftLint and capture output
-        VIOLATIONS=$(swift run swiftlint lint --config .swiftlint.yml --quiet 2>&1 || true)
+        # Use jq for robust JSON parsing of security violations
+        PRINT_VIOLATIONS=$(jq -r '.[] | select(.rule_id == "no_print_statements" and .severity == "error") | "\(.file):\(.line): \(.reason)"' violations.json 2>/dev/null || echo "")
+        SENSITIVE_VIOLATIONS=$(jq -r '.[] | select(.rule_id | test("sensitive|logging")) | "\(.file):\(.line): \(.reason)"' violations.json 2>/dev/null || echo "")
         
-        # Check for critical security issues
-        PRINT_VIOLATIONS=$(echo "$VIOLATIONS" | grep -E "(print|Print).*error.*no_print_statements" || true)
-        SENSITIVE_VIOLATIONS=$(echo "$VIOLATIONS" | grep -E "sensitive.*logging" || true)
+        # Count violations by type
+        PRINT_COUNT=$(jq '[.[] | select(.rule_id == "no_print_statements" and .severity == "error")] | length' violations.json 2>/dev/null || echo "0")
+        SENSITIVE_COUNT=$(jq '[.[] | select(.rule_id | test("sensitive|logging"))] | length' violations.json 2>/dev/null || echo "0")
         
-        # Report findings
-        if [ ! -z "$PRINT_VIOLATIONS" ]; then
-          echo "❌ CRITICAL: Print statement security violations found:"
+        # Report findings with better error handling
+        if [ "$PRINT_COUNT" -gt 0 ]; then
+          echo "❌ CRITICAL: $PRINT_COUNT print statement security violations found:"
           echo "$PRINT_VIOLATIONS"
-          echo "::error::Critical security violation: print statements detected. Use Logger.shared instead."
+          echo "::error::Critical security violation: $PRINT_COUNT print statements detected. Use Logger.shared instead."
           exit 1
         fi
         
-        if [ ! -z "$SENSITIVE_VIOLATIONS" ]; then
-          echo "⚠️  WARNING: Potential sensitive data logging detected:"
+        if [ "$SENSITIVE_COUNT" -gt 0 ]; then
+          echo "⚠️  WARNING: $SENSITIVE_COUNT potential sensitive data logging issues detected:"
           echo "$SENSITIVE_VIOLATIONS"
-          echo "::warning::Potential sensitive data in logging detected. Please review."
+          echo "::warning::$SENSITIVE_COUNT potential sensitive data in logging detected. Please review."
         fi
         
-        # Count total violations
-        VIOLATION_COUNT=$(echo "$VIOLATIONS" | wc -l | tr -d ' ')
+        # Count total violations using JSON
+        VIOLATION_COUNT=$(jq 'length' violations.json 2>/dev/null || echo "0")
         if [ "$VIOLATION_COUNT" -gt 50 ]; then
           echo "::warning::High number of violations detected ($VIOLATION_COUNT). Consider addressing these for better code quality."
         fi
         
         echo "✅ Security check completed. Found $VIOLATION_COUNT total violations."
+        
+    - name: Performance Monitoring
+      run: |
+        echo "📊 Monitoring SwiftLint CI performance..."
+        
+        # Reuse existing violations.json for efficiency
+        VIOLATIONS=$(jq 'length' violations.json 2>/dev/null || echo "0")
+        
+        echo "🔢 Total violations found: $VIOLATIONS"
+        
+        # Add to step summary for tracking
+        echo "## SwiftLint Performance Metrics" >> $GITHUB_STEP_SUMMARY
+        echo "- **Violations Found**: $VIOLATIONS" >> $GITHUB_STEP_SUMMARY
+        echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Timestamp**: $(date)" >> $GITHUB_STEP_SUMMARY
         
     - name: Run SwiftLint Autocorrect (Safe Changes Only)
       run: |
@@ -89,22 +110,23 @@ jobs:
       if: always()
       run: |
         echo "📊 Generating SwiftLint report..."
-        swift run swiftlint lint --config .swiftlint.yml --reporter json > swiftlint-report.json || true
+        # Reuse existing violations.json and copy it as the final report for consistency
+        cp violations.json swiftlint-report.json || echo '[]' > swiftlint-report.json
         
         # Create a summary
         echo "## SwiftLint Analysis Summary" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         
-        # Count violations by severity
-        ERRORS=$(jq -r '.[] | select(.severity == "error")' swiftlint-report.json 2>/dev/null | wc -l | tr -d ' ')
-        WARNINGS=$(jq -r '.[] | select(.severity == "warning")' swiftlint-report.json 2>/dev/null | wc -l | tr -d ' ')
+        # Count violations by severity using robust JSON parsing
+        ERRORS=$(jq '[.[] | select(.severity == "error")] | length' swiftlint-report.json 2>/dev/null || echo "0")
+        WARNINGS=$(jq '[.[] | select(.severity == "warning")] | length' swiftlint-report.json 2>/dev/null || echo "0")
         
         echo "- **Errors:** $ERRORS" >> $GITHUB_STEP_SUMMARY
         echo "- **Warnings:** $WARNINGS" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         
-        # Add security-specific summary
-        SECURITY_ISSUES=$(swift run swiftlint lint --config .swiftlint.yml --quiet 2>&1 | grep -E "(no_print_statements|no_sensitive_logging|safe_error_messages)" | wc -l | tr -d ' ')
+        # Add security-specific summary using JSON parsing
+        SECURITY_ISSUES=$(jq '[.[] | select(.rule_id | test("print_statements|sensitive_logging|safe_error_messages|security"))] | length' swiftlint-report.json 2>/dev/null || echo "0")
         echo "- **Security Issues:** $SECURITY_ISSUES" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
         
