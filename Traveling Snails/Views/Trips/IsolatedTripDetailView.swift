@@ -455,7 +455,7 @@ struct IsolatedTripDetailView: View {
         let authManager = BiometricAuthManager.shared
         let success = await authManager.authenticateTrip(trip)
         #if DEBUG
-        print("🔓 Authentication result: \(success)")
+        Logger.shared.debug("Authentication process completed", category: .ui)
         #endif
         
         isAuthenticating = false
@@ -464,12 +464,12 @@ struct IsolatedTripDetailView: View {
             isLocallyAuthenticated = true
             needsAuthentication = false
             #if DEBUG
-            print("🔓 Authentication successful - setting isLocallyAuthenticated = true, needsAuthentication = false")
+            Logger.shared.debug("Authentication state updated", category: .ui)
             #endif
         }
         
         #if DEBUG
-        print("🔓 IsolatedTripDetailView.authenticateUser() - END")
+        Logger.shared.debug("IsolatedTripDetailView.authenticateUser() completed", category: .ui)
         #endif
     }
     
@@ -477,27 +477,22 @@ struct IsolatedTripDetailView: View {
     
     @MainActor
     private func updateViewState() async {
-        print("📱 Getting BiometricAuthManager.shared...")
+        #if DEBUG
+        Logger.shared.debug("Updating view state for trip ID: \(trip.id)", category: .ui)
+        #endif
+        
         let authManager = BiometricAuthManager.shared
         
-        print("📱 Calling authManager.isAuthenticated(for: trip)...")
         isLocallyAuthenticated = authManager.isAuthenticated(for: trip)
-        
-        print("📱 Calling authManager.isProtected(trip)...")
         isTripProtected = authManager.isProtected(trip)
-        
         needsAuthentication = isTripProtected && !isLocallyAuthenticated
-        
-        print("📱 Calling authManager.canUseBiometrics()...")
         canUseBiometrics = authManager.canUseBiometrics()
-        
-        print("📱 Accessing authManager.isEnabled...")
         biometricAuthEnabled = authManager.isEnabled
-        
-        print("📱 Accessing authManager.biometricType...")
         isFaceID = authManager.biometricType == .faceID
         
-        print("📱 About to call updateCachedActivities...")
+        #if DEBUG
+        Logger.shared.debug("View state updated, updating cached activities", category: .ui)
+        #endif
         // Update cached activities for the current trip
         updateCachedActivities(for: trip)
     }
@@ -524,7 +519,9 @@ struct IsolatedTripDetailView: View {
             UserDefaults.standard.set(encoded, forKey: "activityNavigation_\(trip.id)")
         }
         
-        print("📱 Saved activity navigation state for \(destination)")
+        #if DEBUG
+        Logger.shared.debug("Saved activity navigation state", category: .navigation)
+        #endif
     }
     
     @MainActor
@@ -540,7 +537,9 @@ struct IsolatedTripDetailView: View {
         
         // Create destination from the saved reference
         guard let destination = activityNav.createDestination(from: trip) else {
-            print("📱 Could not create destination from saved reference - activity may have been deleted")
+            #if DEBUG
+            Logger.shared.debug("Could not create destination from saved reference - activity may have been deleted", category: .navigation)
+            #endif
             // Clear the invalid state
             clearNavigationStates()
             return
@@ -548,7 +547,9 @@ struct IsolatedTripDetailView: View {
         
         // Use NavigationPath to restore - this is the proper SwiftUI way
         navigationPath = NavigationPath([destination])
-        print("📱 ✅ Restored navigation to activity: \(destination)")
+        #if DEBUG
+        Logger.shared.debug("Restored navigation to activity", category: .navigation)
+        #endif
     }
     
     private func clearNavigationStates() {
