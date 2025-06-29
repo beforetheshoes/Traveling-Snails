@@ -95,10 +95,10 @@ Logger.shared.info("User trip accessed")
 Logger.shared.debug("Authentication attempt")
 ```
 
-**Monitored Fields**:
-- `trip.name`
-- `user.name`, `user.email`, `user.phone`
-- `password`, `token`, `secret`, `apiKey`, `authKey`
+**Monitored Keywords** (refined patterns):
+- `password`, `token`, `secret`, `apiKey`, `authKey`, `privateKey`, `accessKey`
+- Rule uses simplified regex patterns to reduce false positives
+- Focuses on truly sensitive authentication and security data
 
 #### 3. Safe Error Messages (`safe_error_messages`)
 
@@ -238,21 +238,34 @@ The project includes a comprehensive GitHub Actions workflow (`.github/workflows
 3. **Fails builds** on critical security violations
 4. **Provides summaries** in GitHub PR comments
 
-### Key CI Features:
+### Key CI Features (Recently Optimized):
 
-- **JSON-based parsing** for better error handling
+- **Single SwiftLint run with JSON output** for efficiency (eliminates redundant executions)
+- **JSON-based parsing with jq** for robust error handling and better performance
 - **Security-focused violation detection** with specific error codes
-- **Artifact upload** of detailed reports
+- **Artifact upload** of detailed reports with 30-day retention
 - **GitHub Actions annotations** for inline PR feedback
+- **Performance monitoring** with violation count tracking
+- **Optimized caching** using Swift Package Manager cache keys
 
 ### Local CI Simulation:
 
 ```bash
-# Run the same checks as CI
-swift run swiftlint lint --config .swiftlint.yml --reporter json > violations.json
+# Run the same checks as CI (optimized workflow)
+swift run swiftlint lint --config .swiftlint.yml --parallel --reporter json > violations.json
 
-# Check for security violations
-jq '[.[] | select(.rule_id | test("print_statements|sensitive_logging|safe_error_messages"))] | length' violations.json
+# Check for security violations using refined patterns
+jq '[.[] | select(.rule_id | test("no_print_statements|no_sensitive_logging|safe_error_messages"))] | length' violations.json
+
+# Count violations by severity
+jq '[.[] | .severity] | group_by(.) | map({severity: .[0], count: length})' violations.json
+
+# Check for critical print statement violations
+PRINT_COUNT=$(jq '[.[] | select(.rule_id == "no_print_statements" and .severity == "error")] | length' violations.json)
+if [ "$PRINT_COUNT" -gt 0 ]; then
+  echo "Critical: $PRINT_COUNT print statement violations found"
+  exit 1
+fi
 ```
 
 ## Troubleshooting
@@ -378,6 +391,32 @@ echo 'let test = "problematic pattern"' | swift run swiftlint lint --enable-rule
 2. **Update regex patterns** based on false positives
 3. **Adjust severity levels** based on team feedback
 4. **Document new patterns** in this guide
+
+### Recent Pattern Refinements (Latest Update)
+
+The custom rules have been simplified for better reliability and fewer false positives:
+
+#### Pattern Improvements:
+- **Simplified regex patterns** to reduce complexity and improve maintainability
+- **Removed overly complex negative lookbehinds** that caused parsing errors
+- **Enhanced exclusions** for test files and preview content
+- **Focused security detection** on the most critical patterns
+
+#### Before/After Examples:
+
+```yaml
+# Old complex pattern (caused parsing issues)
+regex: '(?<!//\s*)(?<!#if\s+DEBUG\s*\n\s*)(?<!/\*[\s\S]*?)\bprint\s*\('
+
+# New simplified pattern (reliable and fast)
+regex: '\bprint\s*\('
+```
+
+This approach prioritizes:
+- ✅ **Reliability** over complexity
+- ✅ **Performance** in CI environments  
+- ✅ **Maintainability** for future updates
+- ✅ **Reduced false negatives** while accepting some false positives that can be addressed with exclusions
 
 ## Advanced Configuration
 

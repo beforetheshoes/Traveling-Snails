@@ -167,6 +167,9 @@ analyze_violations() {
     echo "$violations_json" | jq -r 'group_by(.rule_id) | sort_by(length) | reverse | .[0:5] | .[] | "\(length) - \(.[0].rule_id)"' 2>/dev/null || echo "  Unable to analyze rule patterns"
     echo
     
+    # Save violations for trend analysis
+    echo "$violations_json" > "${BENCHMARK_DIR}/violations_${TIMESTAMP}.json"
+    
     # Export for JSON
     TOTAL_VIOLATIONS=$total_violations
     ERROR_VIOLATIONS=$error_violations
@@ -286,11 +289,19 @@ save_benchmark_results() {
     "cached_build": $CACHED_TIME,
     "cache_benefit_percent": $CACHE_BENEFIT
   },
+  "ci_scenarios": {
+    "github_actions_simulation": $GA_TIME,
+    "changed_files_only": $CHANGED_FILES_TIME,
+    "quick_security_check": $QUICK_SECURITY_TIME
+  },
   "violation_analysis": {
     "total_violations": $TOTAL_VIOLATIONS,
     "error_violations": $ERROR_VIOLATIONS,
     "warning_violations": $WARNING_VIOLATIONS,
     "security_violations": $SECURITY_VIOLATIONS
+  },
+  "trend_analysis": {
+    "status": "$TREND_ANALYSIS"
   },
   "recommendations": [
     $(echo "$RECOMMENDATIONS" | sed 's/^/"/; s/$/",/; $s/,$//')
@@ -314,6 +325,89 @@ display_summary() {
     echo "Security Issues: $SECURITY_VIOLATIONS"
     echo "=================================="
     echo
+}
+
+# Function to benchmark CI-specific scenarios
+benchmark_ci_scenarios() {
+    echo -e "${BLUE}🔧 CI Scenario Benchmarks${NC}"
+    
+    # GitHub Actions simulation
+    local ga_time=$(time_command "GitHub Actions Simulation" "swift run swiftlint lint --config .swiftlint.yml --parallel --reporter json")
+    
+    # PR changed files simulation (mock)
+    local changed_files_time
+    if [ -d ".git" ]; then
+        # Simulate checking last 10 changed files
+        local changed_files=$(git diff --name-only HEAD~1 HEAD | grep "\.swift$" | head -10 || echo "")
+        if [ ! -z "$changed_files" ]; then
+            changed_files_time=$(time_command "PR Changed Files (last commit)" "echo '$changed_files' | xargs swift run swiftlint lint --config .swiftlint.yml")
+        else
+            changed_files_time="0.000"
+        fi
+    else
+        changed_files_time="0.000"
+    fi
+    
+    # Quick security check
+    local quick_security_time=$(time_command "Quick Security Check" "swift run swiftlint lint --config .swiftlint.yml --enable-rule no_print_statements,no_sensitive_logging --reporter json")
+    
+    echo "📊 CI Performance Results:"
+    echo "  GitHub Actions workflow: ${ga_time}s"
+    echo "  Changed files only: ${changed_files_time}s"
+    echo "  Quick security check: ${quick_security_time}s"
+    echo
+    
+    # Export for JSON
+    GA_TIME=$ga_time
+    CHANGED_FILES_TIME=$changed_files_time
+    QUICK_SECURITY_TIME=$quick_security_time
+}
+
+# Function to generate trend analysis
+generate_trend_analysis() {
+    echo -e "${BLUE}📈 Performance Trend Analysis${NC}"
+    
+    # Look for previous benchmark files
+    local previous_benchmarks=$(find "$BENCHMARK_DIR" -name "swiftlint_benchmark_*.json" | sort | tail -5)
+    
+    if [ ! -z "$previous_benchmarks" ]; then
+        echo "📊 Recent Benchmark Trends:"
+        echo "$previous_benchmarks" | while read benchmark_file; do
+            local timestamp=$(echo "$benchmark_file" | grep -o '[0-9]\{8\}_[0-9]\{6\}')
+            local full_time=$(jq -r '.configuration_performance.full_configuration' "$benchmark_file" 2>/dev/null || echo "unknown")
+            local violations=$(jq -r '.violation_analysis.total_violations' "$benchmark_file" 2>/dev/null || echo "unknown")
+            echo "  $timestamp: ${full_time}s (${violations} violations)"
+        done
+        echo
+        
+        # Calculate performance trend
+        local latest_benchmark=$(echo "$previous_benchmarks" | tail -1)
+        local oldest_benchmark=$(echo "$previous_benchmarks" | head -1)
+        
+        if [ "$latest_benchmark" != "$oldest_benchmark" ]; then
+            local latest_time=$(jq -r '.configuration_performance.full_configuration' "$latest_benchmark" 2>/dev/null || echo "0")
+            local oldest_time=$(jq -r '.configuration_performance.full_configuration' "$oldest_benchmark" 2>/dev/null || echo "0")
+            
+            if [ "$oldest_time" != "0" ] && [ "$latest_time" != "0" ]; then
+                local trend=$(echo "scale=1; ($latest_time - $oldest_time) / $oldest_time * 100" | bc 2>/dev/null || echo "0")
+                if (( $(echo "$trend > 0" | bc -l) )); then
+                    echo "📈 Performance trend: ${trend}% slower over time (investigate optimization)"
+                elif (( $(echo "$trend < 0" | bc -l) )); then
+                    local improvement=$(echo "scale=1; -1 * $trend" | bc)
+                    echo "📉 Performance trend: ${improvement}% faster over time (good!)"
+                else
+                    echo "📊 Performance trend: Stable"
+                fi
+                echo
+            fi
+        fi
+        
+        TREND_ANALYSIS="Available"
+    else
+        echo "📊 No previous benchmarks found for trend analysis"
+        echo
+        TREND_ANALYSIS="None"
+    fi
 }
 
 # Function to generate CI optimization suggestions
@@ -418,6 +512,8 @@ main() {
     benchmark_file_subsets
     analyze_violations
     benchmark_cache_performance
+    benchmark_ci_scenarios
+    generate_trend_analysis
     generate_recommendations
     save_benchmark_results
     display_summary

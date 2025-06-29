@@ -218,8 +218,8 @@ struct SwiftLintIntegrationTests {
         #expect(workflowContent.contains("jq"), "Workflow should use jq for JSON processing")
     }
     
-    @Test("Rule regex patterns exclude comments and tests")
-    func ruleRegexPatternsExcludeCommentsAndTests() async throws {
+    @Test("Rule regex patterns exclude test files")
+    func ruleRegexPatternsExcludeTestFiles() async throws {
         let projectRoot = URL(fileURLWithPath: #file)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
@@ -227,14 +227,14 @@ struct SwiftLintIntegrationTests {
 
         let swiftLintConfigPath = projectRoot.appendingPathComponent(".swiftlint.yml")
         let configContent = try String(contentsOf: swiftLintConfigPath, encoding: .utf8)
-
-        // Verify patterns include comment exclusions
-        #expect(configContent.contains("(?<!//"), "Rules should exclude commented code")
-        #expect(configContent.contains("(?<!/\\*"), "Rules should exclude block comments")
         
         // Verify test file exclusions
         let testExclusionPattern = ".*Tests.*\\.swift$"
         #expect(configContent.contains(testExclusionPattern), "Rules should exclude test files with proper regex")
+        
+        // Verify preview file exclusions  
+        let previewExclusionPattern = ".*Preview.*\\.swift$"
+        #expect(configContent.contains(previewExclusionPattern), "Rules should exclude preview files with proper regex")
     }
     
     @Test("Rule severity levels are appropriate")
@@ -258,5 +258,284 @@ struct SwiftLintIntegrationTests {
         // StateObject should be error (modern pattern required)
         let observableRulePattern = #"no_state_object:[\s\S]*?severity:\s*error"#
         #expect(configContent.range(of: observableRulePattern, options: .regularExpression) != nil, "Old observable patterns should be error severity")
+    }
+    
+    @Test("Print statement rule detects violations correctly")
+    func printStatementRuleDetectsViolationsCorrectly() async throws {
+        let projectRoot = URL(fileURLWithPath: #file)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        
+        // Create a temporary file with print statements
+        let tempFile = FileManager.default.temporaryDirectory.appendingPathComponent("test_print.swift")
+        let testCode = """
+        import Foundation
+        
+        func testFunction() {
+            print("This should be caught by SwiftLint")
+            Logger.shared.debug("This should not be caught")
+            // print("This comment should not be caught")
+        }
+        """
+        
+        try testCode.write(to: tempFile, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: tempFile) }
+        
+        // Run SwiftLint on the test file
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/swift")
+        process.arguments = ["run", "swiftlint", "lint", "--enable-rule", "no_print_statements", tempFile.path]
+        process.currentDirectoryURL = projectRoot
+        
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = pipe
+        
+        try process.run()
+        process.waitUntilExit()
+        
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        let output = String(data: data, encoding: .utf8) ?? ""
+        
+        #expect(output.contains("print"), "SwiftLint should detect print statement violations")
+        #expect(output.contains("no_print_statements"), "Violation should reference the correct rule")
+    }
+    
+    @Test("Sensitive logging rule detects violations correctly")
+    func sensitiveLoggingRuleDetectsViolationsCorrectly() async throws {
+        let projectRoot = URL(fileURLWithPath: #file)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        
+        // Create a temporary file with sensitive data in logging
+        let tempFile = FileManager.default.temporaryDirectory.appendingPathComponent("test_sensitive.swift")
+        let testCode = """
+        import Foundation
+        
+        func authenticateUser() {
+            let password = "secret123"
+            let apiKey = "api_key_123"
+            
+            Logger.shared.debug("User password: \\(password)")
+            Logger.shared.info("API key: \\(apiKey)")
+            Logger.shared.info("Login successful")
+        }
+        """
+        
+        try testCode.write(to: tempFile, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: tempFile) }
+        
+        // Run SwiftLint on the test file
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/swift")
+        process.arguments = ["run", "swiftlint", "lint", "--enable-rule", "no_sensitive_logging", tempFile.path]
+        process.currentDirectoryURL = projectRoot
+        
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = pipe
+        
+        try process.run()
+        process.waitUntilExit()
+        
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        let output = String(data: data, encoding: .utf8) ?? ""
+        
+        #expect(output.contains("password") || output.contains("apiKey"), "SwiftLint should detect sensitive data logging violations")
+        #expect(output.contains("no_sensitive_logging"), "Violation should reference the correct rule")
+    }
+    
+    @Test("NavigationStack rule detects deprecated NavigationView")
+    func navigationStackRuleDetectsDeprecatedNavigationView() async throws {
+        let projectRoot = URL(fileURLWithPath: #file)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        
+        // Create a temporary file with NavigationView usage
+        let tempFile = FileManager.default.temporaryDirectory.appendingPathComponent("test_navigation.swift")
+        let testCode = """
+        import SwiftUI
+        
+        struct ContentView: View {
+            var body: some View {
+                NavigationView {
+                    Text("Hello World")
+                }
+            }
+        }
+        """
+        
+        try testCode.write(to: tempFile, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: tempFile) }
+        
+        // Run SwiftLint on the test file
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/swift")
+        process.arguments = ["run", "swiftlint", "lint", "--enable-rule", "use_navigation_stack", tempFile.path]
+        process.currentDirectoryURL = projectRoot
+        
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = pipe
+        
+        try process.run()
+        process.waitUntilExit()
+        
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        let output = String(data: data, encoding: .utf8) ?? ""
+        
+        #expect(output.contains("NavigationView") || output.contains("NavigationStack"), "SwiftLint should detect deprecated NavigationView usage")
+        #expect(output.contains("use_navigation_stack"), "Violation should reference the correct rule")
+    }
+    
+    @Test("StateObject rule detects deprecated observable patterns")
+    func stateObjectRuleDetectsDeprecatedObservablePatterns() async throws {
+        let projectRoot = URL(fileURLWithPath: #file)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        
+        // Create a temporary file with @StateObject usage
+        let tempFile = FileManager.default.temporaryDirectory.appendingPathComponent("test_stateobject.swift")
+        let testCode = """
+        import SwiftUI
+        
+        struct ContentView: View {
+            @StateObject private var viewModel = MyViewModel()
+            @ObservableObject var anotherModel: AnotherModel
+            
+            var body: some View {
+                Text("Hello World")
+            }
+        }
+        """
+        
+        try testCode.write(to: tempFile, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: tempFile) }
+        
+        // Run SwiftLint on the test file
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/swift")
+        process.arguments = ["run", "swiftlint", "lint", "--enable-rule", "no_state_object", tempFile.path]
+        process.currentDirectoryURL = projectRoot
+        
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = pipe
+        
+        try process.run()
+        process.waitUntilExit()
+        
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        let output = String(data: data, encoding: .utf8) ?? ""
+        
+        #expect(output.contains("@StateObject") || output.contains("@ObservableObject"), "SwiftLint should detect deprecated observable patterns")
+        #expect(output.contains("no_state_object"), "Violation should reference the correct rule")
+    }
+    
+    @Test("SwiftData parameter passing rule detects anti-patterns")
+    func swiftDataParameterPassingRuleDetectsAntiPatterns() async throws {
+        let projectRoot = URL(fileURLWithPath: #file)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        
+        // Create a temporary file with SwiftData parameter passing
+        let tempFile = FileManager.default.temporaryDirectory.appendingPathComponent("test_swiftdata.swift")
+        let testCode = """
+        import SwiftUI
+        import SwiftData
+        
+        struct TripView: View {
+            let trips: [Trip]
+            let activities: [Activity]
+            
+            init(trips: [Trip], activities: [Activity]) {
+                self.trips = trips
+                self.activities = activities
+            }
+            
+            var body: some View {
+                Text("Hello World")
+            }
+        }
+        """
+        
+        try testCode.write(to: tempFile, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: tempFile) }
+        
+        // Run SwiftLint on the test file
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/swift")
+        process.arguments = ["run", "swiftlint", "lint", "--enable-rule", "no_swiftdata_parameter_passing", tempFile.path]
+        process.currentDirectoryURL = projectRoot
+        
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        process.standardError = pipe
+        
+        try process.run()
+        process.waitUntilExit()
+        
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        let output = String(data: data, encoding: .utf8) ?? ""
+        
+        #expect(output.contains("Trip") || output.contains("Activity"), "SwiftLint should detect SwiftData model parameter passing")
+        #expect(output.contains("no_swiftdata_parameter_passing"), "Violation should reference the correct rule")
+    }
+    
+    @Test("JSON output format works correctly")
+    func jsonOutputFormatWorksCorrectly() async throws {
+        let projectRoot = URL(fileURLWithPath: #file)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        
+        // Create a simple test file with a violation
+        let tempFile = FileManager.default.temporaryDirectory.appendingPathComponent("test_json.swift")
+        let testCode = """
+        import Foundation
+        
+        func testFunction() {
+            print("This should produce a JSON violation")
+        }
+        """
+        
+        try testCode.write(to: tempFile, atomically: true, encoding: .utf8)
+        defer { try? FileManager.default.removeItem(at: tempFile) }
+        
+        // Run SwiftLint with JSON output
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/swift")
+        process.arguments = ["run", "swiftlint", "lint", "--reporter", "json", tempFile.path]
+        process.currentDirectoryURL = projectRoot
+        
+        let pipe = Pipe()
+        process.standardOutput = pipe
+        
+        try process.run()
+        process.waitUntilExit()
+        
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        let output = String(data: data, encoding: .utf8) ?? ""
+        
+        // Verify JSON format
+        #expect(output.hasPrefix("[") && output.hasSuffix("]"), "Output should be valid JSON array")
+        
+        // Try to parse JSON
+        guard let jsonData = output.data(using: .utf8) else {
+            Issue.record("Could not convert output to data")
+            return
+        }
+        
+        do {
+            let jsonObject = try JSONSerialization.jsonObject(with: jsonData)
+            #expect(jsonObject is [Any], "JSON should be an array")
+        } catch {
+            Issue.record("JSON parsing failed: \\(error)")
+        }
     }
 }

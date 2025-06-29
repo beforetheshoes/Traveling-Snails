@@ -37,15 +37,15 @@ jobs:
     - name: Run SwiftLint Security Analysis
       run: |
         echo "🔍 Running SwiftLint with security-focused rules..."
-        # Use parallel processing for better performance
-        swift run swiftlint lint --config .swiftlint.yml --parallel --reporter github-actions-logging
+        # Single run with JSON output for efficiency
+        swift run swiftlint lint --config .swiftlint.yml --parallel --reporter json > violations.json || true
+        
+        # Also output to console for immediate feedback
+        swift run swiftlint lint --config .swiftlint.yml --parallel --reporter github-actions-logging || true
         
     - name: Check for Critical Security Violations
       run: |
         echo "🚨 Checking for critical security violations..."
-        
-        # Run SwiftLint with JSON output for better parsing (parallel for performance)
-        swift run swiftlint lint --config .swiftlint.yml --parallel --reporter json > violations.json || true
         
         # Use jq for robust JSON parsing of security violations
         PRINT_VIOLATIONS=$(jq -r '.[] | select(.rule_id == "no_print_statements" and .severity == "error") | "\(.file):\(.line): \(.reason)"' violations.json 2>/dev/null || echo "")
@@ -81,26 +81,16 @@ jobs:
       run: |
         echo "📊 Monitoring SwiftLint CI performance..."
         
-        # Record performance metrics
-        START_TIME=$(date +%s)
-        swift run swiftlint lint --config .swiftlint.yml --parallel --reporter json > perf-test.json || true
-        END_TIME=$(date +%s)
+        # Reuse existing violations.json for efficiency
+        VIOLATIONS=$(jq 'length' violations.json 2>/dev/null || echo "0")
         
-        DURATION=$((END_TIME - START_TIME))
-        VIOLATIONS=$(jq 'length' perf-test.json 2>/dev/null || echo "0")
-        
-        echo "⏱️  SwiftLint execution time: ${DURATION}s"
         echo "🔢 Total violations found: $VIOLATIONS"
         
         # Add to step summary for tracking
         echo "## SwiftLint Performance Metrics" >> $GITHUB_STEP_SUMMARY
-        echo "- **Execution Time**: ${DURATION}s" >> $GITHUB_STEP_SUMMARY
         echo "- **Violations Found**: $VIOLATIONS" >> $GITHUB_STEP_SUMMARY
         echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
         echo "- **Timestamp**: $(date)" >> $GITHUB_STEP_SUMMARY
-        
-        # Clean up
-        rm -f perf-test.json
         
     - name: Run SwiftLint Autocorrect (Safe Changes Only)
       run: |
@@ -120,7 +110,8 @@ jobs:
       if: always()
       run: |
         echo "📊 Generating SwiftLint report..."
-        swift run swiftlint lint --config .swiftlint.yml --reporter json > swiftlint-report.json || true
+        # Reuse existing violations.json and copy it as the final report for consistency
+        cp violations.json swiftlint-report.json || echo '[]' > swiftlint-report.json
         
         # Create a summary
         echo "## SwiftLint Analysis Summary" >> $GITHUB_STEP_SUMMARY

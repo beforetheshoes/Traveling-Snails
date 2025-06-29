@@ -1,582 +1,495 @@
 # SwiftLint Development Integration Guide
 
-This guide covers integrating SwiftLint into your daily development workflow, including Xcode integration, pre-commit hooks, and automated tooling.
+This guide covers setting up SwiftLint integration for daily development, including Xcode build phases, pre-commit hooks, and automated workflows.
 
 ## Table of Contents
 
 1. [Xcode Integration](#xcode-integration)
-2. [Pre-Commit Hooks](#pre-commit-hooks)
-3. [IDE Configuration](#ide-configuration)
-4. [Command Line Tools](#command-line-tools)
-5. [Automation Scripts](#automation-scripts)
-6. [Performance Optimization](#performance-optimization)
-7. [Troubleshooting](#troubleshooting)
+2. [Pre-commit Hooks](#pre-commit-hooks)
+3. [IDE Setup](#ide-setup)
+4. [Automated Workflows](#automated-workflows)
+5. [Performance Optimization](#performance-optimization)
+6. [Troubleshooting](#troubleshooting)
 
 ## Xcode Integration
 
-### Build Phase Integration
+### Automatic Setup
 
-Add SwiftLint as a build phase to automatically check code during compilation:
-
-#### 1. Add Build Phase Script
-
-1. Open your Xcode project
-2. Select your target
-3. Go to "Build Phases" tab
-4. Click "+" and select "New Run Script Phase"
-5. Name it "SwiftLint"
-6. Add this script:
+Use the automated setup script for the fastest configuration:
 
 ```bash
-# SwiftLint Build Phase Script for Traveling Snails
-
-# Only run SwiftLint on main scheme builds, not for testing
-if [ "${CONFIGURATION}" = "Debug" ] || [ "${CONFIGURATION}" = "Release" ]; then
-    # Check if SwiftLint is available via Swift Package Manager
-    if command -v swift >/dev/null 2>&1; then
-        cd "${SRCROOT}"
-        
-        # Run autocorrect first (safe fixes only)
-        echo "🔧 Running SwiftLint autocorrect..."
-        swift run swiftlint --autocorrect --config .swiftlint.yml
-        
-        # Then run linting with build integration
-        echo "🔍 Running SwiftLint analysis..."
-        swift run swiftlint lint --config .swiftlint.yml --strict
-        
-        # Check for security violations and fail build if found
-        VIOLATIONS=$(swift run swiftlint lint --config .swiftlint.yml --reporter json 2>/dev/null || echo "[]")
-        SECURITY_VIOLATIONS=$(echo "$VIOLATIONS" | jq '[.[] | select(.rule_id | test("print_statements|sensitive_logging|safe_error_messages"))] | length' 2>/dev/null || echo "0")
-        
-        if [ "$SECURITY_VIOLATIONS" -gt 0 ]; then
-            echo "error: $SECURITY_VIOLATIONS security violations detected. Build failed."
-            exit 1
-        fi
-        
-        echo "✅ SwiftLint analysis completed"
-    else
-        echo "warning: SwiftLint not found. Install via Swift Package Manager."
-    fi
-fi
+# Run the automated Xcode integration script
+./Scripts/setup-swiftlint.sh
 ```
 
-#### 2. Position the Build Phase
+This script will:
+- ✅ Verify SwiftLint is available via SPM
+- ✅ Generate the proper Xcode build script
+- ✅ Provide step-by-step Xcode configuration instructions
+- ✅ Test the SwiftLint configuration
 
-- Drag the "SwiftLint" phase to run **after** "Compile Sources"
-- This ensures SwiftLint runs on the latest code but doesn't interfere with compilation
+### Manual Xcode Build Phase Setup
 
-### Xcode Scheme Configuration
+If you prefer manual setup, follow these steps:
 
-#### Development Scheme Setup
+#### 1. Add Run Script Build Phase
 
-Create a dedicated development scheme with SwiftLint integration:
+1. Open `Traveling Snails.xcodeproj` in Xcode
+2. Select the **Traveling Snails** project in the navigator
+3. Select the **Traveling Snails** target (not the test target)
+4. Go to the **Build Phases** tab
+5. Click **+** and select **New Run Script Phase**
+6. Name the phase **"SwiftLint"**
 
-1. **Product → Scheme → Manage Schemes**
-2. **Duplicate** your main scheme and name it "Development"
-3. **Edit Scheme → Build → Pre-actions**
-4. Add pre-action script:
+#### 2. Configure the Script
 
-```bash
-# Pre-build SwiftLint check
-cd "${SRCROOT}"
-swift run swiftlint --autocorrect
-```
-
-#### Release Scheme Setup
-
-For release builds, use stricter validation:
-
-1. **Edit Scheme → Build → Post-actions**
-2. Add post-action script:
+Paste this optimized script into the run script phase:
 
 ```bash
-# Post-build release validation
-cd "${SRCROOT}"
-VIOLATIONS=$(swift run swiftlint lint --reporter json | jq 'length' 2>/dev/null || echo "999")
-if [ "$VIOLATIONS" -gt 10 ]; then
-    echo "error: Too many SwiftLint violations ($VIOLATIONS) for release build"
-    exit 1
-fi
-```
+# SwiftLint Build Phase for Traveling Snails
+# Security-focused with performance optimizations
 
-### Xcode Warnings Integration
-
-Configure SwiftLint to show violations as Xcode warnings/errors:
-
-```bash
-# Use in build phase for better Xcode integration
-swift run swiftlint lint --reporter xcode
-```
-
-This will show violations directly in Xcode's issue navigator with clickable file links.
-
-## Pre-Commit Hooks
-
-### Automatic Git Hook Setup
-
-#### 1. Install Pre-Commit Hook
-
-Run this command in your project root:
-
-```bash
-# Create and install pre-commit hook
-cat > .git/hooks/pre-commit << 'EOF'
-#!/bin/sh
-# SwiftLint Pre-Commit Hook for Traveling Snails
-
-echo "🔍 Running SwiftLint pre-commit check..."
-
-# Check if SwiftLint is available
-if ! command -v swift >/dev/null 2>&1; then
-    echo "❌ Swift not found. Cannot run SwiftLint."
-    exit 1
-fi
-
-# Get list of Swift files being committed
-SWIFT_FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep "\.swift$" || true)
-
-if [ -z "$SWIFT_FILES" ]; then
-    echo "📝 No Swift files in commit. Skipping SwiftLint."
+# Exit early if not the main app target
+if [ "${TARGET_NAME}" != "Traveling Snails" ]; then
+    echo "Skipping SwiftLint for ${TARGET_NAME} (test target)"
     exit 0
 fi
 
-echo "📁 Checking $(echo "$SWIFT_FILES" | wc -l) Swift files..."
+echo "🔍 Running SwiftLint for ${TARGET_NAME}..."
 
-# Run autocorrect first
-echo "🔧 Running SwiftLint autocorrect..."
-swift run swiftlint --autocorrect --config .swiftlint.yml
-
-# Add any auto-corrected changes to commit
-git add $SWIFT_FILES
-
-# Run linting on staged files
-echo "🔍 Running SwiftLint analysis..."
-VIOLATIONS_OUTPUT=$(swift run swiftlint lint --config .swiftlint.yml --reporter json $SWIFT_FILES 2>/dev/null || echo "[]")
-
-# Check for critical security violations
-SECURITY_VIOLATIONS=$(echo "$VIOLATIONS_OUTPUT" | jq '[.[] | select(.rule_id | test("print_statements|sensitive_logging|safe_error_messages") and .severity == "error")] | length' 2>/dev/null || echo "0")
-
-if [ "$SECURITY_VIOLATIONS" -gt 0 ]; then
-    echo "🚨 CRITICAL: $SECURITY_VIOLATIONS security violations detected!"
-    echo "❌ Commit blocked. Please fix security issues before committing."
-    echo "$VIOLATIONS_OUTPUT" | jq -r '.[] | select(.rule_id | test("print_statements|sensitive_logging|safe_error_messages") and .severity == "error") | "\(.file):\(.line): error: \(.reason)"' 2>/dev/null || true
+# Use SwiftLint from SPM or fallback to system installation
+SWIFTLINT_CMD=""
+if command -v swift >/dev/null 2>&1; then
+    # Try SPM first (project dependency)
+    if swift package --package-path "${SRCROOT}" plugin --list | grep -q SwiftLint; then
+        SWIFTLINT_CMD="swift run --package-path ${SRCROOT} swiftlint"
+    elif command -v swiftlint >/dev/null 2>&1; then
+        SWIFTLINT_CMD="swiftlint"
+    else
+        echo "❌ SwiftLint not found. Run ./Scripts/setup-swiftlint.sh"
+        exit 1
+    fi
+else
+    echo "❌ Swift not found. Ensure Xcode Command Line Tools are installed."
     exit 1
 fi
 
-# Check for high violation count
-TOTAL_VIOLATIONS=$(echo "$VIOLATIONS_OUTPUT" | jq 'length' 2>/dev/null || echo "0")
-if [ "$TOTAL_VIOLATIONS" -gt 20 ]; then
-    echo "⚠️  Warning: High number of violations ($TOTAL_VIOLATIONS). Consider fixing before commit."
-    echo "Continue anyway? (y/N)"
-    read -r RESPONSE
-    if [ "$RESPONSE" != "y" ] && [ "$RESPONSE" != "Y" ]; then
-        echo "❌ Commit cancelled."
-        exit 1
-    fi
+# Run SwiftLint with optimized settings
+cd "${SRCROOT}"
+${SWIFTLINT_CMD} lint --config .swiftlint.yml --quiet
+
+# Check for critical security violations separately
+SECURITY_CHECK=$(${SWIFTLINT_CMD} lint --config .swiftlint.yml --reporter json | jq -r '.[] | select(.rule_id | test("no_print_statements|no_sensitive_logging|safe_error_messages") and .severity == "error") | "\(.file):\(.line): \(.reason)"' 2>/dev/null || echo "")
+
+if [ ! -z "$SECURITY_CHECK" ]; then
+    echo ""
+    echo "🚨 CRITICAL SECURITY VIOLATIONS:"
+    echo "$SECURITY_CHECK"
+    echo ""
+    echo "❌ Build failed due to security violations."
+    echo "   Fix these issues before building:"
+    echo "   • Replace print() with Logger.shared"
+    echo "   • Remove sensitive data from logs"
+    echo "   • Use safe error messages"
+    exit 1
 fi
 
-echo "✅ SwiftLint check passed. Proceeding with commit."
-exit 0
+echo "✅ SwiftLint checks passed"
+```
+
+#### 3. Configure Input/Output Files
+
+**Input Files** (for build optimization):
+```
+$(SRCROOT)/.swiftlint.yml
+$(SRCROOT)/Traveling Snails
+```
+
+**Output Files** (for build caching):
+```
+$(DERIVED_FILE_DIR)/swiftlint.log
+```
+
+#### 4. Position the Build Phase
+
+**Important**: Move the SwiftLint build phase to run **before** the "Compile Sources" phase to catch issues early.
+
+### Xcode Settings Optimization
+
+#### Build Settings
+
+Add these build settings for better SwiftLint integration:
+
+1. Go to **Build Settings** tab
+2. Search for "Other Swift Flags"
+3. Add: `-Xfrontend -warn-long-function-bodies=100`
+4. This helps identify functions that might need SwiftLint attention
+
+#### Scheme Configuration
+
+1. Edit the scheme (Product → Scheme → Edit Scheme)
+2. Go to **Build** section
+3. Check **"Parallelize Build"** for faster builds
+4. Ensure SwiftLint runs for both Debug and Release configurations
+
+## Pre-commit Hooks
+
+Pre-commit hooks catch issues before they enter the repository, improving code quality and reducing CI failures.
+
+### Automatic Setup
+
+```bash
+# Set up pre-commit hooks automatically
+./Scripts/setup-pre-commit-hooks.sh
+```
+
+This script installs:
+- ✅ **pre-commit hook** - Runs SwiftLint on staged files
+- ✅ **commit-msg hook** - Validates commit message format
+- ✅ **Security-focused checks** that block commits with violations
+
+### Manual Pre-commit Hook Setup
+
+If you prefer manual setup:
+
+#### 1. Create Basic Pre-commit Hook
+
+```bash
+# Create the hook file
+cat > .git/hooks/pre-commit << 'EOF'
+#!/bin/bash
+echo "🔍 Running SwiftLint pre-commit checks..."
+
+# Get staged Swift files
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep "\.swift$" | grep -v "Tests" || true)
+
+if [ -z "$STAGED_FILES" ]; then
+    echo "✅ No Swift files to check"
+    exit 0
+fi
+
+# Run SwiftLint on staged files only
+swift run swiftlint lint --use-stdin --path /dev/stdin < <(git diff --cached --name-only --diff-filter=ACM | grep "\.swift$" | xargs cat)
+
+# Check exit code
+if [ $? -ne 0 ]; then
+    echo "❌ SwiftLint found issues. Fix them before committing."
+    echo "💡 Run 'swift run swiftlint --autocorrect' to fix style issues"
+    exit 1
+fi
+
+echo "✅ SwiftLint checks passed!"
 EOF
 
-# Make hook executable
+# Make it executable
 chmod +x .git/hooks/pre-commit
-
-echo "✅ Pre-commit hook installed successfully!"
 ```
 
-#### 2. Team Hook Distribution
+#### 2. Enhanced Security-Focused Hook
 
-To ensure all team members use the same hooks, add a setup script:
+For production use, the automated script creates a more sophisticated hook that:
+- 📋 **Stages file analysis** - Only checks files being committed
+- 🚨 **Security violation blocking** - Prevents commits with security issues
+- 📊 **Detailed reporting** - Shows exactly what needs to be fixed
+- ⚡ **Performance optimized** - Uses temporary directories for efficient checking
 
+### Hook Behavior
+
+#### What Gets Checked
+- ✅ Staged Swift files only (not entire codebase)
+- ✅ Production code (excludes test files)
+- ✅ Security rules (print statements, sensitive logging)
+- ✅ Critical style violations
+
+#### Blocking vs Warning Violations
+- **BLOCKS commit**: Security violations, critical errors
+- **ALLOWS commit**: Style warnings, minor issues
+
+#### Bypass Options
 ```bash
-# Scripts/setup-git-hooks.sh
-#!/bin/bash
+# Skip hooks in emergencies (use sparingly)
+git commit --no-verify -m "Emergency fix"
 
-echo "🔧 Setting up Git hooks for Traveling Snails..."
-
-# Copy pre-commit hook
-cp Scripts/git-hooks/pre-commit .git/hooks/pre-commit
-chmod +x .git/hooks/pre-commit
-
-# Copy pre-push hook (optional)
-if [ -f "Scripts/git-hooks/pre-push" ]; then
-    cp Scripts/git-hooks/pre-push .git/hooks/pre-push
-    chmod +x .git/hooks/pre-push
-fi
-
-echo "✅ Git hooks installed successfully!"
-echo "🔍 SwiftLint will now run automatically before commits."
+# Check what the hook would do without committing
+.git/hooks/pre-commit
 ```
 
-### Custom Hook Configurations
+## IDE Setup
 
-#### Selective File Checking
+### Xcode Extensions
 
-Only check files that have changed:
+While there's no official SwiftLint Xcode extension, you can improve the experience:
 
-```bash
-# In pre-commit hook - check only modified files
-STAGED_SWIFT_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep "\.swift$" || true)
+#### 1. Build Phase Integration (Recommended)
+- Errors appear directly in Xcode's issue navigator
+- Violations show as compiler warnings/errors
+- Click to jump directly to problem locations
 
-if [ ! -z "$STAGED_SWIFT_FILES" ]; then
-    echo "$STAGED_SWIFT_FILES" | xargs swift run swiftlint lint --config .swiftlint.yml
-fi
-```
+#### 2. External Editor Integration
 
-#### Skip Hook for Emergency Commits
+For users of external editors:
 
-Allow bypassing the hook when needed:
-
-```bash
-# Emergency commit without SwiftLint check
-git commit --no-verify -m "Emergency fix: bypassing SwiftLint"
-```
-
-## IDE Configuration
-
-### VS Code Integration
-
-#### 1. Install SwiftLint Extension
-
-1. Install "SwiftLint" extension by Shin Yamamoto
-2. Configure in VS Code settings:
-
+**VS Code:**
 ```json
 {
     "swiftlint.enable": true,
     "swiftlint.configPath": ".swiftlint.yml",
-    "swiftlint.autocorrectOnSave": true,
-    "swiftlint.onlyEnableWithSwiftlintFile": true
+    "swiftlint.onlyEnableWithSwiftlintConfig": true
 }
 ```
 
-#### 2. Task Integration
-
-Add to `.vscode/tasks.json`:
-
-```json
-{
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "SwiftLint",
-            "type": "shell",
-            "command": "swift",
-            "args": ["run", "swiftlint", "lint"],
-            "group": "build",
-            "presentation": {
-                "echo": true,
-                "reveal": "always",
-                "focus": false,
-                "panel": "shared"
-            },
-            "problemMatcher": {
-                "owner": "swiftlint",
-                "fileLocation": "absolute",
-                "pattern": {
-                    "regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "column": 3,
-                    "severity": 4,
-                    "message": 5
-                }
-            }
-        },
-        {
-            "label": "SwiftLint Autocorrect",
-            "type": "shell",
-            "command": "swift",
-            "args": ["run", "swiftlint", "--autocorrect"],
-            "group": "build"
-        }
-    ]
-}
+**Vim/Neovim:**
+```vim
+" Add to your .vimrc
+Plug 'dense-analysis/ale'
+let g:ale_swift_swiftlint_executable = 'swift run swiftlint'
+let g:ale_swift_swiftlint_use_global = 1
 ```
 
-### AppCode Integration
+### Xcode Snippets
 
-For JetBrains AppCode users:
+Create code snippets for common SwiftLint-compliant patterns:
 
-1. **File → Settings → Tools → External Tools**
-2. **Add New Tool**:
-   - **Name**: SwiftLint
-   - **Program**: `swift`
-   - **Arguments**: `run swiftlint lint $FilePath$`
-   - **Working Directory**: `$ProjectFileDir$`
-
-## Command Line Tools
-
-### Development Scripts
-
-#### Quick Lint Script
-
-Create `Scripts/quick-lint.sh`:
-
-```bash
-#!/bin/bash
-# Quick SwiftLint check for development
-
-echo "🔍 Quick SwiftLint check..."
-
-# Check only modified files
-MODIFIED_FILES=$(git status --porcelain | grep "\.swift$" | cut -c4- || true)
-
-if [ -z "$MODIFIED_FILES" ]; then
-    echo "📝 No modified Swift files found."
-    exit 0
-fi
-
-echo "📁 Checking $(echo "$MODIFIED_FILES" | wc -l) modified files..."
-
-# Run on modified files only
-echo "$MODIFIED_FILES" | xargs swift run swiftlint lint --config .swiftlint.yml
-
-echo "✅ Quick lint completed."
+#### Logger Usage Snippet
+```swift
+// Identifier: logger-debug
+Logger.shared.debug("<#message#>", category: .<#category#>)
 ```
 
-#### Fix All Script
-
-Create `Scripts/fix-all-violations.sh`:
-
-```bash
-#!/bin/bash
-# Fix all possible SwiftLint violations
-
-echo "🔧 Fixing all SwiftLint violations..."
-
-# Run autocorrect multiple times (some fixes enable other fixes)
-for i in {1..3}; do
-    echo "🔄 Autocorrect pass $i..."
-    swift run swiftlint --autocorrect --config .swiftlint.yml
-done
-
-# Show remaining violations
-echo "📊 Remaining violations:"
-swift run swiftlint lint --config .swiftlint.yml --reporter summary
-
-echo "✅ Auto-fix completed. Manual fixes may be required for remaining violations."
+#### SwiftData Query Snippet  
+```swift
+// Identifier: swiftdata-query
+@Query private var <#items#>: [<#ModelType#>]
 ```
 
-### Alias Setup
+## Automated Workflows
 
-Add to your shell profile (`.bashrc`, `.zshrc`):
+### Local Development Automation
+
+#### Shell Aliases
+
+Add these to your `.bashrc` or `.zshrc`:
 
 ```bash
-# SwiftLint aliases for Traveling Snails
-alias swiftlint-check='swift run swiftlint lint'
-alias swiftlint-fix='swift run swiftlint --autocorrect'
-alias swiftlint-security='swift run swiftlint lint --enable-rule no_print_statements,no_sensitive_logging,safe_error_messages'
-alias swiftlint-report='swift run swiftlint lint --reporter html > swiftlint-report.html && open swiftlint-report.html'
+# SwiftLint shortcuts for Traveling Snails
+alias lint='swift run swiftlint'
+alias lintf='swift run swiftlint --autocorrect'
+alias lintj='swift run swiftlint lint --reporter json'
+alias lints='swift run swiftlint lint | grep -E "(warning:|error:)"'
 ```
 
-## Automation Scripts
-
-### CI Integration Helper
-
-Create `Scripts/ci-swiftlint.sh`:
+#### Git Aliases
 
 ```bash
-#!/bin/bash
-# CI-optimized SwiftLint execution
-
-set -e
-
-echo "🔍 Running CI SwiftLint checks..."
-
-# Generate JSON report
-swift run swiftlint lint --config .swiftlint.yml --reporter json > swiftlint-results.json
-
-# Check for critical violations
-CRITICAL_VIOLATIONS=$(jq '[.[] | select(.severity == "error")] | length' swiftlint-results.json 2>/dev/null || echo "0")
-SECURITY_VIOLATIONS=$(jq '[.[] | select(.rule_id | test("print_statements|sensitive_logging|safe_error_messages"))] | length' swiftlint-results.json 2>/dev/null || echo "0")
-
-echo "📊 Analysis Results:"
-echo "   Critical Violations: $CRITICAL_VIOLATIONS"
-echo "   Security Violations: $SECURITY_VIOLATIONS"
-
-# Fail if critical issues found
-if [ "$CRITICAL_VIOLATIONS" -gt 0 ]; then
-    echo "❌ Critical violations detected. Build failed."
-    jq -r '.[] | select(.severity == "error") | "\(.file):\(.line): error: \(.reason)"' swiftlint-results.json 2>/dev/null || true
-    exit 1
-fi
-
-if [ "$SECURITY_VIOLATIONS" -gt 0 ]; then
-    echo "🚨 Security violations detected. Build failed."
-    jq -r '.[] | select(.rule_id | test("print_statements|sensitive_logging|safe_error_messages")) | "\(.file):\(.line): \(.severity): \(.reason)"' swiftlint-results.json 2>/dev/null || true
-    exit 1
-fi
-
-echo "✅ SwiftLint CI check passed."
+# Add to ~/.gitconfig
+[alias]
+    lint-staged = !git diff --cached --name-only | grep '\\.swift$' | xargs swift run swiftlint lint
+    fix-style = !swift run swiftlint --autocorrect && git add -u
 ```
 
-### Weekly Cleanup Script
+### Continuous Integration
 
-Create `Scripts/weekly-swiftlint-cleanup.sh`:
+The project includes optimized CI workflows in `.github/workflows/swiftlint.yml`:
 
+#### Key Features:
+- 🚀 **Parallel execution** for faster builds
+- 📊 **JSON-based parsing** for reliable violation detection
+- 🔒 **Security-focused checks** with build failures
+- 📋 **Detailed reporting** with GitHub PR annotations
+- ⚡ **Optimized caching** using SPM package resolution
+
+#### Local CI Simulation:
 ```bash
-#!/bin/bash
-# Weekly SwiftLint maintenance
+# Run the same checks as CI locally
+swift run swiftlint lint --config .swiftlint.yml --parallel --reporter json > violations.json
 
-echo "🧹 Weekly SwiftLint cleanup..."
-
-# Generate comprehensive report
-swift run swiftlint lint --config .swiftlint.yml --reporter html > "reports/swiftlint-$(date +%Y-%m-%d).html"
-
-# Show statistics
-echo "📊 Current Statistics:"
-VIOLATIONS=$(swift run swiftlint lint --config .swiftlint.yml --reporter json | jq 'length' 2>/dev/null || echo "0")
-ERRORS=$(swift run swiftlint lint --config .swiftlint.yml --reporter json | jq '[.[] | select(.severity == "error")] | length' 2>/dev/null || echo "0")
-WARNINGS=$(swift run swiftlint lint --config .swiftlint.yml --reporter json | jq '[.[] | select(.severity == "warning")] | length' 2>/dev/null || echo "0")
-
-echo "   Total Violations: $VIOLATIONS"
-echo "   Errors: $ERRORS"
-echo "   Warnings: $WARNINGS"
-
-# Suggest focus areas
-if [ "$ERRORS" -gt 0 ]; then
-    echo "🎯 Focus: Fix $ERRORS error-level violations first"
-elif [ "$WARNINGS" -gt 50 ]; then
-    echo "🎯 Focus: Reduce warning count (currently $WARNINGS)"
-else
-    echo "✅ Code quality is good! Consider enhancing rules."
-fi
+# Analyze results like CI does
+jq '[.[] | select(.rule_id | test("no_print_statements|no_sensitive_logging|safe_error_messages"))] | length' violations.json
 ```
 
 ## Performance Optimization
 
-### Caching Strategy
+### Build Performance
 
-#### SPM Build Cache
+#### Xcode Build Optimization
+1. **Incremental linting** - Only lint changed files
+2. **Parallel builds** - Enable in scheme settings
+3. **Input/Output files** - Proper caching configuration
+4. **Target-specific** - Only run on main app target
 
-Leverage SPM caching for faster subsequent runs:
-
+#### Advanced Caching
 ```bash
-# Use existing .build cache when possible
-if [ -d ".build" ]; then
-    echo "📦 Using existing SPM cache..."
-    swift run swiftlint lint
-else
-    echo "🔄 Building SwiftLint (first run)..."
-    swift build && swift run swiftlint lint
+# Custom build script with file-based caching
+CACHE_FILE="${DERIVED_FILE_DIR}/swiftlint.cache"
+SOURCE_HASH=$(find "Traveling Snails" -name "*.swift" -exec shasum {} \; | shasum | cut -d' ' -f1)
+
+if [ -f "$CACHE_FILE" ] && [ "$(cat $CACHE_FILE)" = "$SOURCE_HASH" ]; then
+    echo "✅ SwiftLint cache hit - skipping"
+    exit 0
 fi
-```
 
-#### File-Level Caching
-
-Only process changed files:
-
-```bash
-# Check modification times
-CACHE_FILE=".swiftlint-cache"
-if [ -f "$CACHE_FILE" ]; then
-    # Only lint files newer than cache
-    find . -name "*.swift" -newer "$CACHE_FILE" | xargs swift run swiftlint lint
-else
-    # Full lint and create cache
-    swift run swiftlint lint
-    touch "$CACHE_FILE"
-fi
-```
-
-### Parallel Processing
-
-For large codebases:
-
-```bash
-# Use parallel processing (if available)
-swift run swiftlint lint --parallel --config .swiftlint.yml
-```
-
-### Rule Subsets
-
-Run different rule sets at different times:
-
-```bash
-# Quick security check
-swift run swiftlint lint --enable-rule no_print_statements,no_sensitive_logging
-
-# Full check (less frequently)
+# Run SwiftLint and cache result
 swift run swiftlint lint --config .swiftlint.yml
+echo "$SOURCE_HASH" > "$CACHE_FILE"
+```
+
+### Git Hook Performance
+
+#### Staged Files Only
+The pre-commit hook only checks staged files, not the entire codebase:
+
+```bash
+# Efficient: Only staged Swift files
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep "\.swift$")
+
+# Inefficient: Entire codebase (avoid this)
+# swift run swiftlint lint
+```
+
+#### Parallel Processing
+```bash
+# Use SwiftLint's built-in parallelization
+swift run swiftlint lint --parallel
+```
+
+### Rule Performance
+
+#### Selective Rule Execution
+For development, focus on critical rules:
+
+```bash
+# Security-only check (fastest)
+swift run swiftlint lint --enable-rule no_print_statements,no_sensitive_logging,safe_error_messages
+
+# Modern Swift patterns only
+swift run swiftlint lint --enable-rule use_navigation_stack,no_state_object,use_l10n_enum
 ```
 
 ## Troubleshooting
 
-### Common Issues
+### Common Integration Issues
 
-#### 1. "SwiftLint not found"
+#### 1. "SwiftLint not found" in Xcode
 
+**Problem**: Build fails with SwiftLint not found error
+
+**Solution**:
 ```bash
-# Verify SwiftLint is built
-swift build
-ls .build/debug/swiftlint
+# Verify SwiftLint is available
+swift run swiftlint version
 
-# Rebuild if necessary
-swift package clean
-swift build
+# If not available, run setup script
+./Scripts/setup-swiftlint.sh
+
+# Check Xcode build script uses correct path
+# Should use: swift run swiftlint (not just swiftlint)
 ```
 
-#### 2. "Configuration file not found"
+#### 2. Pre-commit Hook Not Running
 
+**Problem**: Committing without SwiftLint checks
+
+**Solution**:
 ```bash
-# Verify config file exists
-ls -la .swiftlint.yml
+# Check if hook exists and is executable
+ls -la .git/hooks/pre-commit
 
-# Check working directory in scripts
-pwd
-cd "${SRCROOT}" || cd "$(dirname "$0")/.."
+# If not executable
+chmod +x .git/hooks/pre-commit
+
+# If doesn't exist
+./Scripts/setup-pre-commit-hooks.sh
 ```
 
-#### 3. "Permission denied"
+#### 3. Performance Issues
 
+**Problem**: SwiftLint slowing down builds
+
+**Solution**:
 ```bash
-# Fix script permissions
-chmod +x Scripts/*.sh
-chmod +x .git/hooks/*
+# Use parallel processing
+swift run swiftlint lint --parallel
+
+# Optimize Xcode build phase with proper input/output files
+# Add to Input Files: $(SRCROOT)/.swiftlint.yml
+# Add to Output Files: $(DERIVED_FILE_DIR)/swiftlint.log
 ```
 
-#### 4. "jq command not found"
+#### 4. False Positives
 
-```bash
-# Install jq for JSON processing
-brew install jq  # macOS
-# or use alternative JSON parsing
+**Problem**: SwiftLint flagging legitimate code
+
+**Solution**:
+```swift
+// Disable specific rules for lines
+// swiftlint:disable:next no_print_statements
+print("This print is intentional")
+
+// Disable for entire file
+// swiftlint:disable no_print_statements
+
+// Disable for code block
+// swiftlint:disable no_print_statements
+func debugFunction() {
+    print("Debug output")
+}
+// swiftlint:enable no_print_statements
 ```
 
 ### Debug Mode
 
-Enable verbose output for troubleshooting:
-
+#### Verbose Output
 ```bash
-# Verbose SwiftLint output
+# Get detailed SwiftLint execution info
 swift run swiftlint lint --verbose
 
-# Debug rule matching
-swift run swiftlint lint --enable-rule specific_rule --verbose
+# Test specific rules
+swift run swiftlint lint --enable-rule no_print_statements --verbose
 ```
 
-### Performance Debugging
-
+#### Configuration Validation
 ```bash
-# Time SwiftLint execution
-time swift run swiftlint lint
+# Validate .swiftlint.yml syntax
+swift run swiftlint rules
 
-# Profile specific rules
-swift run swiftlint lint --enable-rule no_print_statements --reporter summary
+# Test configuration against sample file
+echo 'print("test")' | swift run swiftlint lint --use-stdin --path test.swift
 ```
+
+### Getting Help
+
+#### Project-Specific Issues
+1. Check existing documentation in `wiki/`
+2. Review `CLAUDE.md` for development guidelines
+3. Look at successful CI runs in GitHub Actions
+
+#### SwiftLint Issues
+1. Check [SwiftLint documentation](https://github.com/realm/SwiftLint)
+2. Review rule-specific documentation
+3. Test with minimal examples
+
+#### Performance Issues
+1. Run `./Scripts/swiftlint-performance-benchmark.sh`
+2. Check CI execution times in GitHub Actions
+3. Profile specific rules with `--verbose` flag
 
 ---
 
-## Quick Setup Checklist
+## Quick Reference
 
-- [ ] **Xcode Build Phase**: Added SwiftLint script to build phases
-- [ ] **Pre-Commit Hook**: Installed and tested git hook
-- [ ] **IDE Integration**: Configured VS Code/AppCode extensions
-- [ ] **Command Aliases**: Added helpful shell aliases
-- [ ] **Team Scripts**: Set up shared automation scripts
-- [ ] **Performance**: Enabled caching and parallel processing
-- [ ] **Documentation**: Team trained on integration workflow
+### Essential Commands
+```bash
+./Scripts/setup-swiftlint.sh          # Xcode integration setup
+./Scripts/setup-pre-commit-hooks.sh   # Git hooks setup
+swift run swiftlint lint              # Manual check
+swift run swiftlint --autocorrect     # Fix style issues
+git commit                            # Triggers pre-commit checks
+```
 
-**Next Steps**: Customize the integration based on your team's specific workflow and preferences. Consider setting up team-specific rules and automation based on your development patterns.
+### Key Integration Points
+- **Xcode Build Phase**: Runs before compilation
+- **Pre-commit Hook**: Runs before each commit
+- **CI/CD Pipeline**: Runs on every PR/push
+- **Local Development**: Manual and automated checks
+
+**For questions about development integration, refer to the main SwiftLint Usage Guide or create an issue in the repository.**
