@@ -97,19 +97,19 @@ final class Logger {
         let formattedMessage = formatMessage(message, category: category, level: level, file: fileName, function: function, line: line)
 
         guard let logger = loggers[category] else {
-            // Only print logger errors if not in test environment
+            // Only log logger errors if not in test environment
             if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
-                print("⚠️ No logger found for category: \(category)")
+                os_log("⚠️ No logger found for category: %{public}@", log: .default, type: .error, category.rawValue)
             }
             return
         }
 
         logger.log(level: level.osLogType, "\(formattedMessage)")
 
-        // Only print to console in debug builds and not during testing
+        // Only log to console in debug builds and not during testing
         #if DEBUG
         if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
-            print(formattedMessage)
+            os_log("%{public}@", log: .default, type: .debug, formattedMessage)
         }
         #endif
     }

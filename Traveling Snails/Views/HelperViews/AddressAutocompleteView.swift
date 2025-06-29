@@ -229,7 +229,7 @@ struct AddressAutocompleteView: View {
 
                 guard let response = response,
                       let mapItem = response.mapItems.first else {
-                    print("Failed to get location for completion: \(error?.localizedDescription ?? "Unknown error")")
+                    Logger.shared.warning("Failed to get location for completion: \(error?.localizedDescription ?? "Unknown error")", category: .network)
                     // Reset to search mode on error
                     self.showResults = true
                     return
@@ -261,7 +261,7 @@ class SearchCompleterDelegate: NSObject, MKLocalSearchCompleterDelegate {
     }
 
     func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
-        print("Search completer error: \(error)")
+        Logger.shared.warning("Search completer error: \(error.localizedDescription)", category: .network)
     }
 }
 

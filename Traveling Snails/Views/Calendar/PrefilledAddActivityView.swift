@@ -399,7 +399,7 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
             try modelContext.save()
             dismiss()
         } catch {
-            print("Failed to save: \(error)")
+            Logger.shared.error("Failed to save activity: \(error.localizedDescription)", category: .data)
             isSaving = false
         }
     }

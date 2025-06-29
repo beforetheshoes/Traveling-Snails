@@ -102,20 +102,21 @@ struct IsolatedTripDetailView: View {
                 let isRecentSwitch = navigationContext.isRecentTabSwitch(within: 3.0)
                 let isTabRestoration = shouldRestore && isRecentSwitch
 
-                print("📱 Navigation Context Debug:")
-                print("   - NavigationContext instance: \(ObjectIdentifier(navigationContext))")
-                print("   - shouldRestoreNavigation: \(shouldRestore)")
-                print("   - isRecentTabSwitch: \(isRecentSwitch)")
-                print("   - isTabRestoration: \(isTabRestoration)")
-                print("   - hasAppearedOnce: \(hasAppearedOnce)")
+                #if DEBUG
+                Logger.shared.debug("Navigation Context Debug - instance: \(ObjectIdentifier(navigationContext)), shouldRestore: \(shouldRestore), isRecentSwitch: \(isRecentSwitch), isTabRestoration: \(isTabRestoration), hasAppearedOnce: \(hasAppearedOnce)", category: .ui)
+                #endif
 
                 if isTabRestoration {
                     await handleNavigationRestoration()
                     navigationContext.markNavigationRestored()
-                    print("📱 ✅ Tab restoration detected - handled navigation restoration")
+                    #if DEBUG
+                    Logger.shared.debug("Tab restoration detected - handled navigation restoration", category: .ui)
+                    #endif
                 } else {
                     hasAppearedOnce = true
-                    print("📱 Fresh selection or first appearance - skipping navigation restoration")
+                    #if DEBUG
+                    Logger.shared.debug("Fresh selection or first appearance - skipping navigation restoration", category: .ui)
+                    #endif
                 }
                 
                 #if DEBUG
@@ -133,7 +134,9 @@ struct IsolatedTripDetailView: View {
             Task {
                 await updateViewState()
                 // Don't restore navigation when trip changes - this is a fresh selection
-                print("📱 Trip changed - skipping navigation restoration")
+                #if DEBUG
+                Logger.shared.debug("Trip changed - skipping navigation restoration", category: .ui)
+                #endif
             }
         }
         .onDisappear {
@@ -147,7 +150,9 @@ struct IsolatedTripDetailView: View {
             // Clear old navigation states when user actively navigates back to root
             if newPath.isEmpty && !oldPath.isEmpty {
                 clearNavigationStates()
-                print("📱 User navigated back to root - clearing navigation states")
+                #if DEBUG
+                Logger.shared.debug("User navigated back to root - clearing navigation states", category: .ui)
+                #endif
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .tripSelectedFromList)) { notification in
@@ -157,7 +162,9 @@ struct IsolatedTripDetailView: View {
                 let previousCount = navigationPath.count
                 if previousCount > 0 {
                     navigationPath = NavigationPath()
-                    print("📱 Trip selected from list - cleared navigation path (was \(previousCount) deep)")
+                    #if DEBUG
+                    Logger.shared.debug("Trip selected from list - cleared navigation path (was \(previousCount) deep)", category: .ui)
+                    #endif
                 }
             }
         }

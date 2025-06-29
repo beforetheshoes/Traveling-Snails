@@ -10,7 +10,9 @@ struct BiometricLockView: View {
         self.trip = trip
         self._isAuthenticating = isAuthenticating
         self.onAuthenticationSuccess = onAuthenticationSuccess
-        print("🔒 BiometricLockView.init() for \(trip.name)")
+        #if DEBUG
+        Logger.shared.debug("BiometricLockView.init() for trip", category: .app)
+        #endif
     }
 
     var body: some View {
@@ -62,39 +64,54 @@ struct BiometricLockView: View {
     }
 
     private func authenticateUser() {
-        print("🔓 BiometricLockView.authenticateUser() for \(trip.name) - START")
-        print("   - isAuthenticating: \(isAuthenticating)")
+        #if DEBUG
+        Logger.shared.debug("BiometricLockView.authenticateUser() - START, isAuthenticating: \(isAuthenticating)", category: .app)
+        #endif
 
         guard !isAuthenticating else {
-            print("   - Already authenticating, returning early")
+            #if DEBUG
+            Logger.shared.debug("Already authenticating, returning early", category: .app)
+            #endif
             return
         }
 
-        print("   - Setting isAuthenticating = true")
+        #if DEBUG
+        Logger.shared.debug("Setting isAuthenticating = true", category: .app)
+        #endif
         isAuthenticating = true
 
         Task {
             // Add slight delay for better UX
             try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
 
-            print("   - Calling authManager.authenticateTrip()")
+            #if DEBUG
+            Logger.shared.debug("Calling authManager.authenticateTrip()", category: .app)
+            #endif
             let success = await authManager.authenticateTrip(trip)
-            print("   - Authentication result: \(success)")
+            #if DEBUG
+            Logger.shared.debug("Authentication result: \(success)", category: .app)
+            #endif
 
             await MainActor.run {
                 // Only update isAuthenticating if authentication failed
                 // If successful, the view will automatically switch due to @Observable
                 if !success {
-                    print("   - Authentication failed, setting isAuthenticating = false")
+                    #if DEBUG
+                    Logger.shared.debug("Authentication failed, setting isAuthenticating = false", category: .app)
+                    #endif
                     isAuthenticating = false
                 } else {
-                    print("   - Authentication successful, allowing transition")
+                    #if DEBUG
+                    Logger.shared.debug("Authentication successful, allowing transition", category: .app)
+                    #endif
                     isAuthenticating = false
                     onAuthenticationSuccess()
                 }
             }
 
-            print("🔓 BiometricLockView.authenticateUser() for \(trip.name) - END")
+            #if DEBUG
+            Logger.shared.debug("BiometricLockView.authenticateUser() - END", category: .app)
+            #endif
         }
     }
 }

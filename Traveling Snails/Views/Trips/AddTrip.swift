@@ -32,7 +32,7 @@ struct AddTrip: View {
             presentationMode.wrappedValue.dismiss()
         } catch {
             // Handle save error - for now just print, could add error state
-            print("Failed to save trip: \(error)")
+            Logger.shared.error("Failed to save trip: \(error.localizedDescription)", category: .database)
         }
     }
 

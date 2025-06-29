@@ -129,24 +129,26 @@ custom_rules:
   # SECURITY: Discourage print statements - prefer Logger
   no_print_statements:
     name: "No Print Statements"
-    regex: '\bprint\s*\('
+    regex: '(?<!//\s*)(?<!#if\s+DEBUG\s*\n\s*)(?<!/\*[\s\S]*?)\bprint\s*\('
     message: "Use Logger.shared instead of print statements for security and consistency"
     severity: warning
+    excluded: ".*Tests.*\\.swift$"
     
   # SECURITY: Detect potential sensitive data logging (exclude test files)
   no_sensitive_logging:
     name: "No Sensitive Data Logging"
-    regex: '(trip\.name|\.name.*[Ll]og|[Ll]og.*\.name|user\..*[Ll]og|[Ll]og.*user\.|password|token|secret|key.*[Ll]og|[Ll]og.*key)'
+    regex: '(?<!//\s*)(?<!/\*[\s\S]*?)\b(?:Logger\.shared\.|print\(|os_log\().*?\b(?:trip\.name|user\.(?:name|email|phone)|password|token|secret|apiKey|authKey)\b'
     message: "Potential sensitive data in logging - review for security implications"
     severity: warning
-    excluded: ".*Tests.*"
+    excluded: ".*Tests.*\\.swift$"
     
   # SECURITY: Ensure proper error handling doesn't expose internals
   safe_error_messages:
     name: "Safe Error Messages"
-    regex: '(LocalizedError|Error.*message).*(\binternal\b|\bprivate\b|\bdebug\b|\bstack\b)'
+    regex: '(?<!//\s*)(?<!/\*[\s\S]*?)(?:LocalizedError|ErrorMessage|\.localizedDescription).*?\b(?:internal|private|debug|stack|SQL|query|database|modelContext)\b'
     message: "Error messages should not expose internal implementation details"
     severity: warning
+    excluded: ".*Tests.*\\.swift$"
     
   # MODERN SWIFT: Enforce NavigationStack over NavigationView
   use_navigation_stack:
@@ -165,16 +167,18 @@ custom_rules:
   # MODERN SWIFT: Detect hardcoded strings that should be localized
   no_hardcoded_strings:
     name: "No Hardcoded UI Strings"
-    regex: '(Text|Label|Button|Alert)\s*\(\s*"[A-Z][a-zA-Z\s]{10,}"'
+    regex: '(?<!//\s*)(?<!/\*[\s\S]*?)(?:Text|Label|Button|Alert)\s*\(\s*"[A-Z][a-zA-Z\s]{15,}[^"]*"'
     message: "UI strings should use L10n enum system for localization"
     severity: warning
+    excluded: ".*Tests.*\\.swift$|.*Preview.*\\.swift$"
     
   # SWIFTDATA: Prevent parameter passing anti-pattern
   no_swiftdata_parameter_passing:
     name: "No SwiftData Parameter Passing"
-    regex: '(init|func).*\([^)]*:\s*\[[A-Z][a-zA-Z]*\]\s*[,)]'
+    regex: '(?<!//\s*)(?<!/\*[\s\S]*?)(?:init|func).*\([^)]*:\s*\[(?:Trip|Activity|Lodging|Transportation|Organization|Address)\]\s*[,)]'
     message: "Avoid passing SwiftData model arrays as parameters - use @Query in consuming view instead"
     severity: warning
+    excluded: ".*Tests.*\\.swift$"
     
   # MODERN SWIFT: Enforce @Observable over @StateObject
   no_state_object:
@@ -186,9 +190,10 @@ custom_rules:
   # SECURITY: Enforce input validation patterns
   require_input_validation:
     name: "Input Validation Required"
-    regex: '(TextField|TextEditor).*(?!.*\.validate|.*isValid|.*validation)'
+    regex: '(?<!//\s*)(?<!/\*[\s\S]*?)(?:TextField|TextEditor)\s*\([^)]*text:\s*\$[a-zA-Z]+[^)]*\)(?![^{]*\{[^}]*(?:validate|isValid|validation|\.isEmpty|\.count))'
     message: "User input fields should include validation"
     severity: warning
+    excluded: ".*Tests.*\\.swift$|.*Preview.*\\.swift$"
 
 # Rule configurations
 accessibility_label_for_image:

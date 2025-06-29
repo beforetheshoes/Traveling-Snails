@@ -24,23 +24,23 @@ class NavigationRouter {
     /// Execute a navigation action
     /// This will be called by views that need to trigger navigation
     func navigate(_ action: NavigationAction) {
-        print("📱 NavigationRouter: Executing navigation action: \(action)")
+        Logger.shared.debug("Executing navigation action: \(action)", category: .navigation)
 
         switch action {
         case .navigateToTripList:
             // Clear any selected trip to return to list
             NotificationCenter.default.post(name: .clearTripSelection, object: nil)
-            print("📱 NavigationRouter: Posted clearTripSelection notification to return to trip list")
+            Logger.shared.debug("Posted clearTripSelection notification to return to trip list", category: .navigation)
 
         case .navigateToTrip(let tripId):
             // Navigate to specific trip
             NotificationCenter.default.post(name: .navigateToTrip, object: tripId)
-            print("📱 NavigationRouter: Posted navigateToTrip notification for trip: \(tripId)")
+            Logger.shared.debug("Posted navigateToTrip notification for trip: \(tripId)", category: .navigation)
 
         case .clearTripSelection:
             // Clear current trip selection
             NotificationCenter.default.post(name: .clearTripSelection, object: nil)
-            print("📱 NavigationRouter: Posted clearTripSelection notification")
+            Logger.shared.debug("Posted clearTripSelection notification", category: .navigation)
         }
     }
 }

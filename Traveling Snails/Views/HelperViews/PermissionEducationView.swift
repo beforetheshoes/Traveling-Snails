@@ -112,10 +112,14 @@ extension View {
     PermissionEducationView(
         permissionType: .photoLibrary,
         onSettingsButtonTap: {
-            print("Settings tapped")
+            #if DEBUG
+            Logger.shared.debug("Settings tapped", category: .ui)
+            #endif
         },
         onDismiss: {
-            print("Dismissed")
+            #if DEBUG
+            Logger.shared.debug("Dismissed", category: .ui)
+            #endif
         }
     )
     .padding()
