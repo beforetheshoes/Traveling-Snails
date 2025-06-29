@@ -682,7 +682,7 @@ class SyncManager {
             SyncManager.crossDeviceTestData.removeAll { cloudTrip in
                 let shouldRemove = !localTripIds.contains(cloudTrip.id)
                 if shouldRemove {
-                    Logger.shared.info("Removing deleted trip '\(cloudTrip.name)' (ID: \(cloudTrip.id)) from cloud test data", category: .sync)
+                    Logger.shared.info("Removing deleted trip (ID: \(cloudTrip.id)) from cloud test data", category: .sync)
                     #if DEBUG
                     Logger.shared.debug("SyncManager: Removing deleted trip (ID: \(cloudTrip.id)) from cloud data", category: .sync)
                     #endif
