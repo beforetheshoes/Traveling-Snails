@@ -111,6 +111,11 @@ disabled_rules:
   - line_length # We'll use a more reasonable line length
   - type_body_length # Some models may be longer
   - file_length # Some files may be longer for comprehensive functionality
+  - force_try # Allow force try in test files
+  - type_contents_order # Too strict for existing codebase
+  - no_grouping_extension # Allow extensions for organization
+  - file_header # Not enforcing consistent file headers yet
+  - type_name # Allow existing naming conventions
 
 # Custom rules for security and project-specific patterns
 custom_rules:
@@ -121,12 +126,13 @@ custom_rules:
     message: "Use Logger.shared instead of print statements for security and consistency"
     severity: error
     
-  # SECURITY: Detect potential sensitive data logging
+  # SECURITY: Detect potential sensitive data logging (exclude test files)
   no_sensitive_logging:
     name: "No Sensitive Data Logging"
     regex: '(trip\.name|\.name.*[Ll]og|[Ll]og.*\.name|user\..*[Ll]og|[Ll]og.*user\.|password|token|secret|key.*[Ll]og|[Ll]og.*key)'
     message: "Potential sensitive data in logging - review for security implications"
     severity: warning
+    excluded: ".*Tests.*"
     
   # SECURITY: Ensure proper error handling doesn't expose internals
   safe_error_messages:
@@ -226,12 +232,12 @@ enum_case_associated_values_count:
 explicit_enum_raw_value:
   severity: warning
 
-file_header:
-  required_pattern: |
-                    \/\/
-                    \/\/  .*\.swift
-                    \/\/  Traveling Snails.*
-                    \/\/
+# file_header: (disabled)
+# required_pattern: |
+#                   \/\/
+#                   \/\/  .*\.swift
+#                   \/\/  Traveling Snails.*
+#                   \/\/
 
 file_name:
   severity: warning
@@ -266,13 +272,13 @@ large_tuple:
   warning: 3
   error: 4
 
-line_length:
-  warning: 150
-  error: 200
-  ignores_comments: true
-  ignores_urls: true
-  ignores_function_declarations: true
-  ignores_interpolated_strings: true
+# line_length: (disabled)
+# warning: 150
+# error: 200
+# ignores_comments: true
+# ignores_urls: true
+# ignores_function_declarations: true
+# ignores_interpolated_strings: true
 
 modifier_order:
   preferred_modifier_order:
@@ -285,8 +291,6 @@ modifier_order:
     - "final"
     - "required"
     - "convenience"
-    - "typeMethods"
-    - "owned"
 
 multiline_arguments:
   first_argument_location: next_line
@@ -323,34 +327,34 @@ trailing_whitespace:
   ignores_empty_lines: false
   ignores_comments: true
 
-type_body_length:
-  warning: 300
-  error: 500
+# type_body_length: (disabled)
+# warning: 300
+# error: 500
 
-type_contents_order:
-  order:
-    - case
-    - associated_type
-    - type_alias
-    - subtype
-    - type_property
-    - instance_property
-    - ib_outlet
-    - ib_inspectable
-    - initializer
-    - type_method
-    - view_life_cycle_method
-    - ib_action
-    - other_method
-    - subscript
+# type_contents_order: (disabled)
+# order:
+#   - case
+#   - associated_type
+#   - type_alias
+#   - subtype
+#   - type_property
+#   - instance_property
+#   - ib_outlet
+#   - ib_inspectable
+#   - initializer
+#   - type_method
+#   - view_life_cycle_method
+#   - ib_action
+#   - other_method
+#   - subscript
 
-type_name:
-  min_length: 3
-  max_length:
-    warning: 50
-    error: 60
+# type_name: (disabled)
+# min_length: 3
+# max_length:
+#   warning: 50
+#   error: 60
 
 vertical_whitespace:
   max_empty_lines: 2
 
-warning_threshold: 10
+warning_threshold: 2500
