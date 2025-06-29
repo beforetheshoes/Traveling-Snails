@@ -8,7 +8,7 @@ import SwiftUI
 
 struct ActivityRowView: View {
     let wrapper: ActivityWrapper
-    
+
     private var hasAttachments: Bool {
         switch wrapper.tripActivity {
         case let activity as Activity:
@@ -21,7 +21,7 @@ struct ActivityRowView: View {
             return false
         }
     }
-    
+
     private var attachmentCount: Int {
         switch wrapper.tripActivity {
         case let activity as Activity:
@@ -34,7 +34,7 @@ struct ActivityRowView: View {
             return 0
         }
     }
-    
+
     var body: some View {
         HStack(spacing: 12) {
             // Icon
@@ -45,7 +45,7 @@ struct ActivityRowView: View {
                     .frame(width: 44, height: 44)
                     .background(wrapper.type.color)
                     .clipShape(RoundedRectangle(cornerRadius: 10))
-                
+
                 // Attachment indicator
                 if hasAttachments {
                     VStack {
@@ -65,26 +65,26 @@ struct ActivityRowView: View {
                     .frame(width: 44, height: 44)
                 }
             }
-            
+
             // Content
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text(wrapper.tripActivity.name)
                         .font(.headline)
                         .lineLimit(1)
-                    
+
                     if hasAttachments {
                         Text("(\(attachmentCount))")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
                 }
-                
+
                 HStack {
                     Label(formatDate(wrapper.tripActivity.start), systemImage: "calendar")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    
+
                     if let lodging = wrapper.tripActivity as? Lodging {
                         let nights = Calendar.current.dateComponents([.day], from: lodging.start, to: lodging.end).day ?? 0
                         Text("• \(nights) night\(nights == 1 ? "" : "s")")
@@ -97,9 +97,9 @@ struct ActivityRowView: View {
                     }
                 }
             }
-            
+
             Spacer()
-                                        
+
             Image(systemName: "chevron.right")
                 .font(.caption)
                 .foregroundColor(.secondary)
@@ -109,14 +109,14 @@ struct ActivityRowView: View {
         .background(Color(.systemGray6))
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
-    
+
     private func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
         return formatter.string(from: date)
     }
-    
+
     private func formatTime(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .none

@@ -9,7 +9,7 @@ import SwiftUI
 struct CalendarContentView: View {
     @Bindable var viewModel: CalendarViewModel
     @Environment(\.dismiss) private var dismiss
-    
+
     var body: some View {
         VStack(spacing: 0) {
             // Enhanced header
@@ -20,9 +20,9 @@ struct CalendarContentView: View {
                 calendarMode: $viewModel.calendarMode,
                 activities: viewModel.allActivities
             )
-            
+
             // Calendar content with proper layout constraints
-            GeometryReader { geometry in
+            GeometryReader { _ in
                 ZStack {
                     Group {
                         switch viewModel.calendarMode {
@@ -55,7 +55,7 @@ struct CalendarContentView: View {
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                         }
                     }
-                    
+
                     // Drag preview overlay positioned correctly
                     if viewModel.showingDragPreview {
                         DragPreviewView(frame: viewModel.dragPreviewFrame)
@@ -72,7 +72,7 @@ struct CalendarContentView: View {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button("Done") { dismiss() }
             }
-            
+
             ToolbarItem(placement: .navigationBarTrailing) {
                 CalendarToolbarMenu(viewModel: viewModel)
             }
@@ -121,7 +121,7 @@ struct CalendarContentView: View {
 
 struct CalendarToolbarMenu: View {
     @Bindable var viewModel: CalendarViewModel
-    
+
     var body: some View {
         Menu {
             Button {
@@ -129,15 +129,15 @@ struct CalendarToolbarMenu: View {
             } label: {
                 Label("Add Activity", systemImage: "plus.circle.fill")
             }
-            
+
             Divider()
-            
+
             Button {
                 // Export calendar view
             } label: {
                 Label("Export Calendar", systemImage: "square.and.arrow.up")
             }
-            
+
             Button {
                 // Calendar settings
             } label: {
@@ -153,7 +153,7 @@ struct CalendarToolbarMenu: View {
 
 struct ActivityCreationSheet: View {
     @Bindable var viewModel: CalendarViewModel
-    
+
     var body: some View {
         NavigationStack {
             Group {
@@ -202,7 +202,7 @@ struct ActivityCreationSheet: View {
 
 struct DragPreviewView: View {
     let frame: CGRect
-    
+
     var body: some View {
         RoundedRectangle(cornerRadius: 4)
             .fill(Color.blue.opacity(0.3))

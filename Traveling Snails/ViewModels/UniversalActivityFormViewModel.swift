@@ -5,30 +5,30 @@
 //
 
 import Foundation
-import SwiftData
 import Observation
+import SwiftData
 
 @Observable
 class UniversalActivityFormViewModel {
     // MARK: - Properties
-    
+
     let trip: Trip
     private let activitySaver: ActivitySaver
     private let modelContext: ModelContext
-    
+
     // Edit mode support
     private let existingActivity: (any TripActivityProtocol)?
     let isEditMode: Bool
-    
+
     // Form state
     var editData: TripActivityEditData
     var attachments: [EmbeddedFileAttachment] = []
     var isSaving = false
     var showingOrganizationPicker = false
-    var saveError: Error? = nil
-    
+    var saveError: Error?
+
     // MARK: - Initialization
-    
+
     /// Initialize for creating a new activity
     init(trip: Trip, activityType: ActivityType, modelContext: ModelContext) {
         self.trip = trip
@@ -36,22 +36,22 @@ class UniversalActivityFormViewModel {
         self.modelContext = modelContext
         self.existingActivity = nil
         self.isEditMode = false
-        
+
         // Create template and initialize edit data
         let template = activitySaver.createTemplate(in: trip)
         self.editData = TripActivityEditData(from: template)
-        
+
         // Set default organization to None
         self.editData.organization = Organization.ensureUniqueNoneOrganization(in: modelContext)
     }
-    
+
     /// Initialize for editing an existing activity
     init<T: TripActivityProtocol>(existingActivity: T, modelContext: ModelContext) {
         self.trip = existingActivity.trip!
         self.existingActivity = existingActivity
         self.isEditMode = true
         self.modelContext = modelContext
-        
+
         // Map from ActivityWrapper.ActivityType to ActivityType
         let serviceActivityType: ActivityType = {
             switch existingActivity.activityType {
@@ -63,35 +63,35 @@ class UniversalActivityFormViewModel {
                 return .transportation
             }
         }()
-        
+
         self.activitySaver = ActivitySaverFactory.createSaver(for: serviceActivityType)
-        
+
         // Initialize edit data from existing activity
         self.editData = TripActivityEditData(from: existingActivity)
-        
+
         // Initialize attachments from existing activity
         self.attachments = existingActivity.fileAttachments
     }
-    
+
     // MARK: - Computed Properties
-    
+
     var template: any TripActivityProtocol {
         activitySaver.createTemplate(in: trip)
     }
-    
+
     var locationAddress: Address? {
         editData.customAddress ?? editData.organization?.address
     }
-    
+
     var isFormValid: Bool {
         editData.organization != nil && !editData.name.isEmpty
     }
-    
+
     // Activity configuration from saver
     var activityType: ActivityType { activitySaver.activityType }
     var icon: String { activitySaver.icon }
     var color: String { activitySaver.color }
-    
+
     /// Dynamic icon that updates based on current transportation type selection
     var currentIcon: String {
         // For transportation activities, use the selected transportation type icon
@@ -107,32 +107,32 @@ class UniversalActivityFormViewModel {
     var confirmationLabel: String { activitySaver.confirmationLabel }
     var supportsCustomLocation: Bool { activitySaver.supportsCustomLocation }
     var hasTypeSelector: Bool { activitySaver.hasTypeSelector }
-    
+
     // MARK: - Actions
-    
+
     func addAttachment(_ attachment: EmbeddedFileAttachment) {
         attachments.append(attachment)
     }
-    
+
     func removeAttachment(_ attachment: EmbeddedFileAttachment) {
         attachments.removeAll { $0.id == attachment.id }
         modelContext.delete(attachment)
         try? modelContext.save()
     }
-    
+
     func handleAttachmentError(_ error: String) {
         // Store the error for UI display
         saveError = NSError(domain: "AttachmentError", code: 1, userInfo: [NSLocalizedDescriptionKey: error])
         Logger.shared.error("Attachment error: \(error)", category: .fileAttachment)
     }
-    
+
     @MainActor
     func save() async throws {
         guard !isSaving, isFormValid else { return }
-        
+
         isSaving = true
         saveError = nil
-        
+
         do {
             if isEditMode {
                 try updateExistingActivity()
@@ -149,25 +149,25 @@ class UniversalActivityFormViewModel {
             isSaving = false
             throw error
         }
-        
+
         isSaving = false
     }
-    
+
     private func updateExistingActivity() throws {
         guard let existingActivity = existingActivity else {
             throw ActivitySaveError.saveFailed(NSError(domain: "UniversalActivityFormViewModel", code: 1, userInfo: [NSLocalizedDescriptionKey: "No existing activity to update"]))
         }
-        
+
         // Update the existing activity with new data
         updateActivityProperties(existingActivity)
-        
+
         // Update attachments
         updateActivityAttachments(existingActivity)
-        
+
         // Save changes
         try modelContext.save()
     }
-    
+
     private func updateActivityProperties(_ activity: any TripActivityProtocol) {
         // Update based on specific activity type
         switch activity.activityType {
@@ -184,7 +184,7 @@ class UniversalActivityFormViewModel {
                 updateTransportation(transportationInstance)
             }
         }
-        
+
         // Handle custom address insertion if needed
         if let customAddress = editData.customAddress {
             // Only insert if it's not already in the context
@@ -193,7 +193,7 @@ class UniversalActivityFormViewModel {
             }
         }
     }
-    
+
     private func updateActivity(_ activity: Activity) {
         activity.name = editData.name
         activity.start = editData.start
@@ -209,7 +209,7 @@ class UniversalActivityFormViewModel {
         activity.customAddresss = editData.customAddress  // Note: typo in model property name
         activity.hideLocation = editData.hideLocation
     }
-    
+
     private func updateLodging(_ lodging: Lodging) {
         lodging.name = editData.name
         lodging.start = editData.start
@@ -225,7 +225,7 @@ class UniversalActivityFormViewModel {
         lodging.customAddresss = editData.customAddress  // Note: typo in model property name
         lodging.hideLocation = editData.hideLocation
     }
-    
+
     private func updateTransportation(_ transportation: Transportation) {
         transportation.name = editData.name
         transportation.start = editData.start
@@ -239,7 +239,7 @@ class UniversalActivityFormViewModel {
         transportation.organization = editData.organization
         transportation.type = editData.transportationType ?? .plane
     }
-    
+
     private func updateActivityAttachments(_ activity: any TripActivityProtocol) {
         // Update file attachments based on activity type
         switch activity.activityType {
@@ -275,7 +275,7 @@ class UniversalActivityFormViewModel {
             }
         }
     }
-    
+
     func resetForm() {
         let template = activitySaver.createTemplate(in: trip)
         editData = TripActivityEditData(from: template)

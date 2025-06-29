@@ -13,45 +13,45 @@ import SwiftData
 protocol SyncService: Sendable {
     /// Current sync status
     @MainActor var isSyncing: Bool { get }
-    
+
     /// Date of last successful sync
     @MainActor var lastSyncDate: Date? { get }
-    
+
     /// Current sync error, if any
     @MainActor var syncError: Error? { get }
-    
+
     /// Number of pending changes waiting to sync
     @MainActor var pendingChangesCount: Int { get }
-    
+
     /// Whether protected trips should be synced
     @MainActor var syncProtectedTrips: Bool { get set }
-    
+
     /// Trigger a sync operation
     @MainActor func triggerSync()
-    
+
     /// Trigger a sync operation and wait for completion
     func triggerSyncAndWait() async
-    
+
     /// Process pending changes when coming back online
     func processPendingChanges() async
-    
+
     /// Sync with progress tracking for large datasets
     /// - Returns: Progress information about the sync operation
     func syncWithProgress() async -> SyncProgress
-    
+
     /// Sync and resolve any conflicts that arise
     func syncAndResolveConflicts() async
-    
+
     /// Trigger sync with retry logic for network interruptions
     func triggerSyncWithRetry() async
-    
+
     /// Set the network status for testing offline scenarios
     /// - Parameter status: The network status to simulate
     @MainActor func setNetworkStatus(_ status: NetworkStatus)
-    
+
     /// Simulate network error for testing
     func simulateNetworkError() async
-    
+
     /// Simulate network interruptions for testing
     /// - Parameter count: Number of interruptions to simulate
     @MainActor func simulateNetworkInterruptions(count: Int)
@@ -68,7 +68,7 @@ struct SyncProgress: Sendable {
     let totalBatches: Int
     let completedBatches: Int
     let isCompleted: Bool
-    
+
     var progressPercentage: Double {
         guard totalBatches > 0 else { return 1.0 }
         return Double(completedBatches) / Double(totalBatches)
@@ -85,7 +85,7 @@ enum SyncError: Error, LocalizedError, Sendable {
     case permissionDenied
     case dataCorruption
     case unknown(Error)
-    
+
     var errorDescription: String? {
         switch self {
         case .networkUnavailable:
@@ -128,18 +128,18 @@ protocol AdvancedSyncService: SyncService {
     /// Add an observer for sync events
     /// - Parameter observer: The observer to add
     @MainActor func addObserver(_ observer: SyncServiceObserver)
-    
+
     /// Remove an observer for sync events
     /// - Parameter observer: The observer to remove
     @MainActor func removeObserver(_ observer: SyncServiceObserver)
-    
+
     /// Force a full sync (re-download all data)
     func forceFullSync() async
-    
+
     /// Get detailed sync statistics
     /// - Returns: Statistics about sync operations
     func getSyncStatistics() async -> SyncStatistics
-    
+
     /// Reset sync state (for testing or troubleshooting)
     func resetSyncState() async
 }
@@ -153,7 +153,7 @@ struct SyncStatistics: Sendable {
     let lastSyncDuration: TimeInterval
     let dataTransferred: Int // bytes
     let conflictsResolved: Int
-    
+
     var successRate: Double {
         guard totalSyncsPerformed > 0 else { return 0.0 }
         return Double(successfulSyncs) / Double(totalSyncsPerformed)

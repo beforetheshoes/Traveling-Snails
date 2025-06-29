@@ -9,23 +9,23 @@ import SwiftUI
 struct ArrivalTimeZonePicker: View {
     @Binding var selectedTimeZoneId: String
     @State private var showingSheet = false
-    
+
     var selectedTimeZone: TimeZone {
         TimeZone(identifier: selectedTimeZoneId) ?? TimeZone.current
     }
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Arrival Timezone")
                 .font(.caption)
                 .foregroundColor(.secondary)
-            
+
             HStack {
                 Text(TimeZoneHelper.formatTimeZone(selectedTimeZone))
                     .font(.body)
-                
+
                 Spacer()
-                
+
                 Button("Change") {
                     showingSheet = true
                 }

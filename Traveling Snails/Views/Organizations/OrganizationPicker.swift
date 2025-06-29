@@ -4,27 +4,27 @@
 //
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct OrganizationPicker: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query private var organizations: [Organization]
-    
+
     @Binding var selectedOrganization: Organization?
     @State private var showingAddOrganization = false
     @State private var searchText = ""
-    
+
     // Get sorted organizations with None first, then alphabetical
     var sortedOrganizations: [Organization] {
         // Separate None organization from others
         let none = organizations.filter { $0.name == "None" }
         let others = organizations.filter { $0.name != "None" }.sorted { $0.name < $1.name }
-        
+
         return none + others
     }
-    
+
     var filteredOrganizations: [Organization] {
         if searchText.isEmpty {
             return sortedOrganizations
@@ -35,12 +35,12 @@ struct OrganizationPicker: View {
             }
         }
     }
-    
+
     var body: some View {
         VStack {
             // Search bar
             UnifiedSearchBar(text: $searchText)
-            
+
             List {
                 // All organizations (including None first, then alphabetical)
                 ForEach(filteredOrganizations) { organization in
@@ -66,7 +66,7 @@ struct OrganizationPicker: View {
                         }
                     }
                 }
-                
+
                 // "Add New" option
                 if !searchText.isEmpty && !filteredOrganizations.contains(where: { $0.name.localizedCaseInsensitiveContains(searchText) }) {
                     Button {
@@ -80,7 +80,7 @@ struct OrganizationPicker: View {
                         }
                     }
                 }
-                
+
                 // General "Add New" button
                 Button {
                     showingAddOrganization = true
@@ -106,12 +106,11 @@ struct OrganizationPicker: View {
         }
         .sheet(isPresented: $showingAddOrganization) {
             AddOrganizationForm(
-                prefilledName: searchText.isEmpty ? nil : searchText,
-                onSave: { newOrg in
+                prefilledName: searchText.isEmpty ? nil : searchText
+            )                { newOrg in
                     selectedOrganization = newOrg
                     showingAddOrganization = false
                 }
-            )
         }
     }
 }
@@ -121,10 +120,10 @@ struct OrganizationPicker: View {
 struct AddOrganizationForm: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
-    
+
     let prefilledName: String?
     let onSave: (Organization) -> Void
-    
+
     @State private var name = ""
     @State private var phone = ""
     @State private var email = ""
@@ -135,12 +134,12 @@ struct AddOrganizationForm: View {
     @State private var showBlockedURLAlert = false
     @State private var showSuspiciousURLAlert = false
     @State private var errorMessage = ""
-    
+
     init(prefilledName: String? = nil, onSave: @escaping (Organization) -> Void) {
         self.prefilledName = prefilledName
         self.onSave = onSave
     }
-    
+
     var body: some View {
         NavigationStack {
             Form {
@@ -152,7 +151,7 @@ struct AddOrganizationForm: View {
                         .keyboardType(.emailAddress)
                     TextField("Website", text: $website)
                         .keyboardType(.URL)
-                    
+
                     HStack {
                         TextField("Logo URL", text: $logoURL)
                             .keyboardType(.URL)
@@ -165,12 +164,12 @@ struct AddOrganizationForm: View {
                                     logoURLSecurityLevel = SecureURLHandler.evaluateURL(trimmedValue)
                                 }
                             }
-                        
+
                         // Security indicator
                         securityIndicator(for: logoURLSecurityLevel)
                     }
                 }
-                
+
                 Section("Address") {
                     AddressAutocompleteView(
                         selectedAddress: $selectedAddress,
@@ -186,7 +185,7 @@ struct AddOrganizationForm: View {
                         dismiss()
                     }
                 }
-                
+
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
                         saveOrganization()
@@ -214,7 +213,7 @@ struct AddOrganizationForm: View {
             }
         }
     }
-    
+
     private func securityIndicator(for level: SecureURLHandler.URLSecurityLevel) -> some View {
         Group {
             switch level {
@@ -233,19 +232,19 @@ struct AddOrganizationForm: View {
         }
         .frame(width: 24, height: 24)
     }
-    
+
     private func saveOrganization() {
         let trimmedLogoURL = logoURL.trimmingCharacters(in: .whitespacesAndNewlines)
-        
+
         // Empty URL is acceptable - just save without validation
         if trimmedLogoURL.isEmpty {
             performSave()
             return
         }
-        
+
         // Only validate non-empty URLs
         let urlSecurityLevel = SecureURLHandler.evaluateURL(trimmedLogoURL)
-        
+
         switch urlSecurityLevel {
         case .blocked:
             errorMessage = SecureURLHandler.alertMessage(for: .blocked, action: .cache, url: trimmedLogoURL)
@@ -257,7 +256,7 @@ struct AddOrganizationForm: View {
             performSave()
         }
     }
-    
+
     private func performSave() {
         let organization = Organization(
             name: name.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -266,7 +265,7 @@ struct AddOrganizationForm: View {
             website: website.trimmingCharacters(in: .whitespacesAndNewlines),
             logoURL: logoURL.trimmingCharacters(in: .whitespacesAndNewlines)
         )
-        
+
         // Handle address if selected
         if let selectedAddress = selectedAddress {
             // Ensure organization has an address object to update
@@ -282,9 +281,9 @@ struct AddOrganizationForm: View {
             organization.address?.longitude = selectedAddress.longitude
             organization.address?.formattedAddress = selectedAddress.formattedAddress
         }
-        
+
         modelContext.insert(organization)
-        
+
         do {
             try modelContext.save()
             onSave(organization)

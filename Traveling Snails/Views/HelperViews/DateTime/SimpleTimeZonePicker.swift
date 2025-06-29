@@ -9,28 +9,28 @@ import SwiftUI
 struct SimpleTimeZonePicker: View {
     @Binding var selectedTimeZoneId: String
     let label: String
-    
+
     @State private var showingAllTimeZones = false
-    
+
     var selectedTimeZone: TimeZone {
         TimeZone(identifier: selectedTimeZoneId) ?? TimeZone.current
     }
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(.caption)
                 .foregroundColor(.secondary)
-            
+
             // Current selection display
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(TimeZoneHelper.formatTimeZone(selectedTimeZone))
                         .font(.body)
                 }
-                
+
                 Spacer()
-                
+
                 Button("Change") {
                     print("DEBUG: \(label) - Change button tapped")
                     showingAllTimeZones = true

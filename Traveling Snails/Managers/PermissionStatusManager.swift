@@ -11,15 +11,15 @@ import SwiftUI
 @MainActor
 class PermissionStatusManager {
     static let shared = PermissionStatusManager()
-    
+
     private init() {}
-    
+
     // MARK: - Photo Library Permission Management
-    
+
     var photoLibraryAuthorizationStatus: PHAuthorizationStatus {
         PHPhotoLibrary.authorizationStatus(for: .readWrite)
     }
-    
+
     var canUsePhotoLibrary: Bool {
         switch photoLibraryAuthorizationStatus {
         case .authorized, .limited:
@@ -30,7 +30,7 @@ class PermissionStatusManager {
             return false
         }
     }
-    
+
     var photoLibraryPermissionMessage: String {
         switch photoLibraryAuthorizationStatus {
         case .authorized:
@@ -47,33 +47,33 @@ class PermissionStatusManager {
             return "Photo library permission status is unknown"
         }
     }
-    
+
     // MARK: - Permission Request Methods
-    
+
     nonisolated func requestPhotoLibraryAccess() async -> PHAuthorizationStatus {
         // Skip photo permission prompts during testing to prevent hanging
         if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
             // Return .authorized in test environment to avoid blocking tests
             return .authorized
         }
-        
+
         return await PHPhotoLibrary.requestAuthorization(for: .readWrite)
     }
-    
+
     // MARK: - Settings Navigation
-    
+
     func openAppSettings() {
         guard let settingsUrl = URL(string: UIApplication.openSettingsURLString) else {
             return
         }
-        
+
         if UIApplication.shared.canOpenURL(settingsUrl) {
             UIApplication.shared.open(settingsUrl)
         }
     }
-    
+
     // MARK: - Permission Status Checking
-    
+
     func checkPhotoLibraryPermission() -> LegacyPermissionStatus {
         switch photoLibraryAuthorizationStatus {
         case .authorized:
@@ -101,7 +101,7 @@ enum LegacyPermissionStatus {
     case restricted
     case notDetermined
     case unknown
-    
+
     var userFriendlyDescription: String {
         switch self {
         case .granted:

@@ -8,7 +8,7 @@ import SwiftUI
 
 struct SecureEmailLink: View {
     let email: String
-    
+
     var body: some View {
         SecureContactLink(
             text: email,

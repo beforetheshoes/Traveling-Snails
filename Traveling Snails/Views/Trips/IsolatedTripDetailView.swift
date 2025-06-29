@@ -1,24 +1,24 @@
-import SwiftUI
-import SwiftData
 import Foundation
+import SwiftData
+import SwiftUI
 
 
 // A completely isolated trip detail view that doesn't depend on @Observable state
 struct IsolatedTripDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.navigationContext) private var navigationContext
-    
+
     // Store trip data as immutable values to prevent rebuilds from Trip mutations
     let trip: Trip // Use let instead of @State!
     private let tripID: UUID
     private let tripName: String
-    
+
     // Local authentication state that doesn't observe the auth manager
     @State private var isLocallyAuthenticated: Bool
     @State private var isAuthenticating: Bool = false
     @State private var navigationPath = NavigationPath()
     @State private var viewMode: ViewMode = .list
-    
+
     // Navigation restoration support
     @State private var hasAppearedOnce = false
     @State private var lastDisappearTime: Date?
@@ -30,11 +30,11 @@ struct IsolatedTripDetailView: View {
     @State private var showingEditTripSheet: Bool = false
     @State private var showingCalendarView: Bool = false
     @State private var showingRemoveProtectionConfirmation: Bool = false
-    
+
     enum ViewMode: String, CaseIterable {
         case list = "List"
         case calendar = "Calendar"
-        
+
         var icon: String {
             switch self {
             case .list: return "list.bullet"
@@ -42,29 +42,28 @@ struct IsolatedTripDetailView: View {
             }
         }
     }
-    
+
     init(trip: Trip) {
         self.trip = trip
         self.tripID = trip.id
         self.tripName = trip.name
-        
+
         // Initialize with false - will be updated in onAppear to avoid init-time dependencies
         self._isLocallyAuthenticated = State(initialValue: false)
-        
     }
-    
+
     // Removed computed property that was causing SwiftData relationship access
-    
+
     // Local state to track if this trip needs authentication
     @State private var needsAuthentication: Bool = false
     @State private var canUseBiometrics: Bool = false
     @State private var biometricAuthEnabled: Bool = false
     @State private var isTripProtected: Bool = false
     @State private var isFaceID: Bool = false
-    
+
     // Cached activities to prevent repeated SwiftData access
     @State private var cachedActivities: [ActivityWrapper] = []
-    
+
     var body: some View {
         NavigationStack(path: $navigationPath) {
             Group {
@@ -89,25 +88,25 @@ struct IsolatedTripDetailView: View {
             print("📱 IsolatedTripDetailView.onAppear - START for \(trip.name)")
             let currentTime = Date()
             lastAppearTime = currentTime
-            
+
             Task {
                 await updateViewState()
-                
+
                 // Small delay for iPad to ensure NavigationContext is updated
                 try? await Task.sleep(nanoseconds: 50_000_000) // 0.05 second
-                
+
                 // Check if this is a tab restoration using NavigationContext
                 let shouldRestore = navigationContext.shouldRestoreNavigation
                 let isRecentSwitch = navigationContext.isRecentTabSwitch(within: 3.0)
                 let isTabRestoration = shouldRestore && isRecentSwitch
-                
+
                 print("📱 Navigation Context Debug:")
                 print("   - NavigationContext instance: \(ObjectIdentifier(navigationContext))")
                 print("   - shouldRestoreNavigation: \(shouldRestore)")
                 print("   - isRecentTabSwitch: \(isRecentSwitch)")
                 print("   - isTabRestoration: \(isTabRestoration)")
                 print("   - hasAppearedOnce: \(hasAppearedOnce)")
-                
+
                 if isTabRestoration {
                     await handleNavigationRestoration()
                     navigationContext.markNavigationRestored()
@@ -116,11 +115,11 @@ struct IsolatedTripDetailView: View {
                     hasAppearedOnce = true
                     print("📱 Fresh selection or first appearance - skipping navigation restoration")
                 }
-                
+
                 print("📱 IsolatedTripDetailView.onAppear - COMPLETED for \(trip.name)")
             }
         }
-        .onChange(of: trip.id) { _, newTripID in
+        .onChange(of: trip.id) { _, _ in
             print("📱 IsolatedTripDetailView.onChange(of: trip.id) - Trip changed to \(trip.name)")
             // Reset state when trip changes - this is a fresh selection
             hasAppearedOnce = false
@@ -138,7 +137,7 @@ struct IsolatedTripDetailView: View {
         }
         .onChange(of: navigationPath) { oldPath, newPath in
             // Clear old navigation states when user actively navigates back to root
-            if newPath.count == 0 && oldPath.count > 0 {
+            if newPath.isEmpty && !oldPath.isEmpty {
                 clearNavigationStates()
                 print("📱 User navigated back to root - clearing navigation states")
             }
@@ -155,27 +154,27 @@ struct IsolatedTripDetailView: View {
             }
         }
     }
-    
+
     @ViewBuilder
     private var lockScreenView: some View {
         VStack(spacing: 24) {
             Spacer()
-            
+
             Image(systemName: isFaceID ? "faceid" : "touchid")
                 .font(.system(size: 60))
                 .foregroundColor(.blue)
-            
+
             VStack(spacing: 8) {
                 Text("This trip is protected")
                     .font(.title2)
                     .fontWeight(.semibold)
-                
+
                 Text("Authenticate to view trip details")
                     .font(.body)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
             }
-            
+
             Button {
                 Task {
                     await authenticateUser()
@@ -188,7 +187,7 @@ struct IsolatedTripDetailView: View {
                     } else {
                         Image(systemName: isFaceID ? "faceid" : "touchid")
                     }
-                    
+
                     Text("Authenticate with \(isFaceID ? "Face ID" : "Touch ID")")
                 }
                 .frame(maxWidth: .infinity)
@@ -197,15 +196,15 @@ struct IsolatedTripDetailView: View {
             .buttonStyle(.borderedProminent)
             .disabled(isAuthenticating)
             .padding(.horizontal)
-            
+
             Spacer()
         }
         .background(Color(.systemBackground))
         .navigationTitle(tripName)
         .navigationBarTitleDisplayMode(.inline)
     }
-    
-    @ViewBuilder  
+
+    @ViewBuilder
     private var tripContentView: some View {
         VStack(spacing: 0) {
             // View mode selector
@@ -218,13 +217,13 @@ struct IsolatedTripDetailView: View {
                     }
                     .pickerStyle(.segmented)
                     .padding(.horizontal)
-                    
+
                     TripSummaryView(trip: trip, activities: cachedActivities)
                 }
                 .padding(.vertical)
                 .background(Color(.systemGray6))
             }
-            
+
             // Content based on view mode
             Group {
                 switch viewMode {
@@ -300,7 +299,7 @@ struct IsolatedTripDetailView: View {
                     Image(systemName: "pencil")
                 }
             }
-            
+
             ToolbarItem(placement: .navigationBarTrailing) {
                 Menu {
                     Button {
@@ -313,23 +312,23 @@ struct IsolatedTripDetailView: View {
                     } label: {
                         Label("Add Lodging", systemImage: "bed.double")
                     }
-                    
+
                     Button {
                         showingTransportationSheet = true
                     } label: {
                         Label("Add Transportation", systemImage: "airplane")
                     }
-                    
+
                     Divider()
-                    
+
                     Button {
                         showingCalendarView = true
                     } label: {
                         Label("Full Calendar View", systemImage: "calendar.badge.plus")
                     }
-                    
+
                     Divider()
-                    
+
                     // Biometric protection controls
                     if canUseBiometrics && biometricAuthEnabled {
                         if isTripProtected && isLocallyAuthenticated {
@@ -345,7 +344,7 @@ struct IsolatedTripDetailView: View {
                                 Label("Lock Trip Now", systemImage: "lock.fill")
                             }
                         }
-                        
+
                         Button {
                             if isTripProtected {
                                 // Show confirmation dialog for removing protection
@@ -376,7 +375,7 @@ struct IsolatedTripDetailView: View {
             }
         }
     }
-    
+
     @ViewBuilder
     private var listView: some View {
         if cachedActivities.isEmpty {
@@ -400,7 +399,7 @@ struct IsolatedTripDetailView: View {
                         default:
                             return
                         }
-                        
+
                         navigationPath.append(destinationType)
                         saveActivityNavigationState(destinationType)
                     } label: {
@@ -414,7 +413,7 @@ struct IsolatedTripDetailView: View {
             .listStyle(.plain)
         }
     }
-    
+
         @ViewBuilder
     private var calendarView: some View {
         CompactCalendarView(trip: trip, activities: cachedActivities) { activity in
@@ -429,29 +428,29 @@ struct IsolatedTripDetailView: View {
             default:
                 return
             }
-            
+
             navigationPath.append(destinationType)
             saveActivityNavigationState(destinationType)
         }
     }
-    
+
     @MainActor
     private func authenticateUser() async {
         guard !isAuthenticating else { return }
-        
+
         #if DEBUG
         print("🔓 IsolatedTripDetailView.authenticateUser() - START")
         #endif
         isAuthenticating = true
-        
+
         let authManager = BiometricAuthManager.shared
         let success = await authManager.authenticateTrip(trip)
         #if DEBUG
         print("🔓 Authentication result: \(success)")
         #endif
-        
+
         isAuthenticating = false
-        
+
         if success {
             isLocallyAuthenticated = true
             needsAuthentication = false
@@ -459,64 +458,64 @@ struct IsolatedTripDetailView: View {
             print("🔓 Authentication successful - setting isLocallyAuthenticated = true, needsAuthentication = false")
             #endif
         }
-        
+
         #if DEBUG
         print("🔓 IsolatedTripDetailView.authenticateUser() - END")
         #endif
     }
-    
+
     // fetchTrip method removed since we now receive trip directly
-    
+
     @MainActor
     private func updateViewState() async {
         print("📱 Getting BiometricAuthManager.shared...")
         let authManager = BiometricAuthManager.shared
-        
+
         print("📱 Calling authManager.isAuthenticated(for: trip)...")
         isLocallyAuthenticated = authManager.isAuthenticated(for: trip)
-        
+
         print("📱 Calling authManager.isProtected(trip)...")
         isTripProtected = authManager.isProtected(trip)
-        
+
         needsAuthentication = isTripProtected && !isLocallyAuthenticated
-        
+
         print("📱 Calling authManager.canUseBiometrics()...")
         canUseBiometrics = authManager.canUseBiometrics()
-        
+
         print("📱 Accessing authManager.isEnabled...")
         biometricAuthEnabled = authManager.isEnabled
-        
+
         print("📱 Accessing authManager.biometricType...")
         isFaceID = authManager.biometricType == .faceID
-        
+
         print("📱 About to call updateCachedActivities...")
         // Update cached activities for the current trip
         updateCachedActivities(for: trip)
     }
-    
+
     private func updateCachedActivities(for trip: Trip) {
         let lodgingActivities = trip.lodging.map { ActivityWrapper($0) }
         let transportationActivities = trip.transportation.map { ActivityWrapper($0) }
         let activityActivities = trip.activity.map { ActivityWrapper($0) }
-        
+
         cachedActivities = (lodgingActivities + transportationActivities + activityActivities)
             .sorted { $0.tripActivity.start < $1.tripActivity.start }
-        
+
         print("📱 Updated cachedActivities for \(trip.name): \(cachedActivities.count) activities")
     }
-    
+
     // MARK: - Navigation State Management
-    
+
     private func saveActivityNavigationState(_ destination: DestinationType) {
         // Save the specific activity navigation for restoration
         let activityData = ActivityNavigationReference(from: destination, tripId: trip.id)
         if let encoded = try? JSONEncoder().encode(activityData) {
             UserDefaults.standard.set(encoded, forKey: "activityNavigation_\(trip.id)")
         }
-        
+
         print("📱 Saved activity navigation state for \(destination)")
     }
-    
+
     @MainActor
     private func handleNavigationRestoration() async {
         // Check for activity-specific navigation state
@@ -525,7 +524,7 @@ struct IsolatedTripDetailView: View {
             print("📱 No navigation state found for trip \(trip.name)")
             return
         }
-        
+
         // Create destination from the saved reference
         guard let destination = activityNav.createDestination(from: trip) else {
             print("📱 Could not create destination from saved reference - activity may have been deleted")
@@ -533,16 +532,14 @@ struct IsolatedTripDetailView: View {
             clearNavigationStates()
             return
         }
-        
+
         // Use NavigationPath to restore - this is the proper SwiftUI way
         navigationPath = NavigationPath([destination])
         print("📱 ✅ Restored navigation to activity: \(destination)")
     }
-    
+
     private func clearNavigationStates() {
         UserDefaults.standard.removeObject(forKey: "activityNavigation_\(trip.id)")
         print("📱 Cleared navigation states for trip \(trip.name)")
     }
-    
 }
-

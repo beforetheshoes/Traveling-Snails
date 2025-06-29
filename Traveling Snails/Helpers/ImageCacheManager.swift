@@ -4,25 +4,25 @@
 //
 //
 
-import SwiftUI
 import Foundation
+import SwiftUI
 
 @Observable
 class ImageCacheManager {
     static let shared = ImageCacheManager()
-    
+
     private let cacheDirectory: URL
     private let fileManager = FileManager.default
-    
+
     private init() {
         // Create cache directory in Documents
         let documentsPath = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
         cacheDirectory = documentsPath.appendingPathComponent("ImageCache")
-        
+
         // Create directory if it doesn't exist
         try? fileManager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
     }
-    
+
     func cacheImage(from urlString: String, for organizationId: UUID) async -> String? {
         // Use SecureURLHandler for security evaluation instead of duplicating logic
         let securityLevel = SecureURLHandler.evaluateURL(urlString)
@@ -30,12 +30,12 @@ class ImageCacheManager {
             print("Blocked URL, not caching: \(urlString)")
             return nil
         }
-        
+
         guard let url = URL(string: urlString) else { return nil }
-        
+
         do {
             let (data, response) = try await URLSession.shared.data(from: url)
-            
+
             // Validate response
             guard let httpResponse = response as? HTTPURLResponse,
                   httpResponse.statusCode == 200,
@@ -44,38 +44,38 @@ class ImageCacheManager {
                 print("Invalid image response")
                 return nil
             }
-            
+
             // Validate image data
             guard UIImage(data: data) != nil else {
                 print("Invalid image data")
                 return nil
             }
-            
+
             // Create filename based on organization ID and URL hash
             let urlHash = urlString.hash
             let filename = "\(organizationId.uuidString)_\(urlHash).jpg"
             let fileURL = cacheDirectory.appendingPathComponent(filename)
-            
+
             // Save to cache
             try data.write(to: fileURL)
-            
+
             return fileURL.lastPathComponent
         } catch {
             print("Failed to cache image: \(error)")
             return nil
         }
     }
-    
+
     func getCachedImageURL(filename: String) -> URL? {
         let fileURL = cacheDirectory.appendingPathComponent(filename)
         return fileManager.fileExists(atPath: fileURL.path) ? fileURL : nil
     }
-    
+
     func deleteCachedImage(filename: String) {
         let fileURL = cacheDirectory.appendingPathComponent(filename)
         try? fileManager.removeItem(at: fileURL)
     }
-    
+
     func clearCache() {
         try? fileManager.removeItem(at: cacheDirectory)
         try? fileManager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
@@ -89,7 +89,7 @@ struct CachedAsyncImage<Content: View & Sendable, Placeholder: View & Sendable>:
     let organizationId: UUID
     let content: @Sendable (Image) -> Content
     let placeholder: @Sendable () -> Placeholder
-    
+
     @State private var cachedImageURL: URL?
     @State private var isLoading = false
     @State private var showingSecurityAlert = false
@@ -98,7 +98,7 @@ struct CachedAsyncImage<Content: View & Sendable, Placeholder: View & Sendable>:
     @State private var isConfirmationAlert = false
     @State private var pendingDownloadAction: (() -> Void)?
     @State private var cacheManager = ImageCacheManager.shared
-    
+
     init(
         url urlString: String?,
         organizationId: UUID,
@@ -110,7 +110,7 @@ struct CachedAsyncImage<Content: View & Sendable, Placeholder: View & Sendable>:
         self.content = content
         self.placeholder = placeholder
     }
-    
+
     var body: some View {
         Group {
             if let cachedURL = cachedImageURL {
@@ -151,19 +151,19 @@ struct CachedAsyncImage<Content: View & Sendable, Placeholder: View & Sendable>:
             Text(alertMessage)
         }
     }
-    
+
     private func loadImage() {
         guard let urlString = urlString, !urlString.isEmpty else { return }
-        
+
         // Check if already cached (based on URL hash)
         let urlHash = urlString.hash
         let filename = "\(organizationId.uuidString)_\(urlHash).jpg"
-        
+
         if let existingURL = cacheManager.getCachedImageURL(filename: filename) {
             cachedImageURL = existingURL
             return
         }
-        
+
         // Use SecureURLHandler for consistent security handling
         SecureURLHandler.handleURL(
             urlString,
@@ -186,12 +186,12 @@ struct CachedAsyncImage<Content: View & Sendable, Placeholder: View & Sendable>:
             }
         )
     }
-    
+
     private func downloadImage() {
         guard let urlString = urlString else { return }
-        
+
         isLoading = true
-        
+
         Task {
             if let cachedFilename = await cacheManager.cacheImage(from: urlString, for: organizationId) {
                 await MainActor.run {
@@ -211,11 +211,11 @@ struct CachedAsyncImage<Content: View & Sendable, Placeholder: View & Sendable>:
 
 struct SendableAnyView: View, Sendable {
     private let viewBuilder: @Sendable () -> AnyView
-    
+
     init<Content: View & Sendable>(_ content: @escaping @Sendable () -> Content) {
         self.viewBuilder = { AnyView(content()) }
     }
-    
+
     var body: some View {
         viewBuilder()
     }

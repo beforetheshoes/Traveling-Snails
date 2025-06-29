@@ -10,16 +10,16 @@ struct SecureContactLink: View {
     let text: String
     let urlString: String
     let contactType: ContactType
-    
+
     enum ContactType {
         case phone, email, website
     }
-    
+
     @State private var showingAlert = false
     @State private var alertTitle = ""
     @State private var alertMessage = ""
     @State private var isConfirmationAlert = false
-    
+
     var body: some View {
         Button(text) {
             handleContactAction()
@@ -40,30 +40,30 @@ struct SecureContactLink: View {
             Text(alertMessage)
         }
     }
-    
+
     private var canOpenURL: Bool {
         guard let url = URL(string: urlString) else { return false }
         return UIApplication.shared.canOpenURL(url)
     }
-    
+
     private func handleContactAction() {
         // Phone and email are generally safe, only check websites for security
         if contactType == .website {
             let securityLevel = SecureURLHandler.evaluateURL(urlString)
-            
+
             switch securityLevel {
             case .blocked:
                 alertTitle = "Invalid URL"
                 alertMessage = "This URL cannot be opened for security reasons."
                 isConfirmationAlert = false
                 showingAlert = true
-                
+
             case .suspicious:
                 alertTitle = "External Link"
                 alertMessage = "This link will open in an external app or browser:\n\n\(urlString)\n\nDo you want to continue?"
                 isConfirmationAlert = true
                 showingAlert = true
-                
+
             case .safe:
                 SecureURLHandler.openURLDirectly(urlString)
             }

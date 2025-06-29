@@ -4,18 +4,18 @@
 //
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 struct UniversalAddTripActivityRootView: View {
     let trip: Trip
     let activityType: ActivityType
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    
+
     // FIX: Create view model once using @State instead of recreating on every view update
     @State private var viewModel: UniversalActivityFormViewModel?
-    
+
     var body: some View {
         NavigationStack {
             if let viewModel = viewModel {
@@ -50,11 +50,11 @@ extension UniversalAddTripActivityRootView {
     static func forActivity(trip: Trip) -> UniversalAddTripActivityRootView {
         UniversalAddTripActivityRootView(trip: trip, activityType: .activity)
     }
-    
+
     static func forLodging(trip: Trip) -> UniversalAddTripActivityRootView {
         UniversalAddTripActivityRootView(trip: trip, activityType: .lodging)
     }
-    
+
     static func forTransportation(trip: Trip) -> UniversalAddTripActivityRootView {
         UniversalAddTripActivityRootView(trip: trip, activityType: .transportation)
     }

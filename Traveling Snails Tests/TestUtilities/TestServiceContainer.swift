@@ -11,15 +11,14 @@ import Testing
 /// Utility class for setting up service containers in tests
 /// Provides convenient methods for creating and configuring mock services
 final class TestServiceContainer {
-    
     // MARK: - Container Creation
-    
+
     /// Create a test container with default mock services
     /// - Returns: ServiceContainer configured with mock services
     static func create() -> ServiceContainer {
-        return DefaultServiceContainerFactory.createTestContainer()
+        DefaultServiceContainerFactory.createTestContainer()
     }
-    
+
     /// Create a test container with custom mock configuration
     /// - Parameter configure: Closure to configure mock services
     /// - Returns: ServiceContainer with customized mock services
@@ -29,7 +28,7 @@ final class TestServiceContainer {
         try configure(mockServices)
         return container
     }
-    
+
     /// Create a test container with specific mock services
     /// - Parameters:
     ///   - authService: Custom mock authentication service
@@ -46,21 +45,21 @@ final class TestServiceContainer {
         syncService: MockSyncService? = nil
     ) -> ServiceContainer {
         let container = ServiceContainer()
-        
+
         container.register(authService ?? MockAuthenticationService(), as: AuthenticationService.self)
         container.register(cloudService ?? MockCloudStorageService(), as: CloudStorageService.self)
         container.register(photoService ?? MockPhotoLibraryService(), as: PhotoLibraryService.self)
         container.register(permissionService ?? MockPermissionService(), as: PermissionService.self)
         container.register(syncService ?? MockSyncService(), as: SyncService.self)
-        
+
         return container
     }
-    
+
     // MARK: - Pre-configured Scenarios
-    
+
     /// Create a container configured for successful operations
     static func successfulScenario() -> ServiceContainer {
-        return create { mocks in
+        create { mocks in
             mocks.auth.configureSuccessfulAuthentication()
             mocks.cloud.configureAvailable()
             mocks.photo.configureAuthorized()
@@ -68,10 +67,10 @@ final class TestServiceContainer {
             mocks.sync.configureSuccessfulSync()
         }
     }
-    
+
     /// Create a container configured for failure scenarios
     static func failureScenario() -> ServiceContainer {
-        return create { mocks in
+        create { mocks in
             mocks.auth.configureFailedAuthentication()
             mocks.cloud.configureUnavailable()
             mocks.photo.configureDenied()
@@ -79,10 +78,10 @@ final class TestServiceContainer {
             mocks.sync.configureSyncFailure()
         }
     }
-    
+
     /// Create a container configured for no biometrics scenarios
     static func noBiometricsScenario() -> ServiceContainer {
-        return create { mocks in
+        create { mocks in
             mocks.auth.configureNoBiometrics()
             mocks.cloud.configureAvailable()
             mocks.photo.configureAuthorized()
@@ -90,10 +89,10 @@ final class TestServiceContainer {
             mocks.sync.configureSuccessfulSync()
         }
     }
-    
+
     /// Create a container configured for offline scenarios
     static func offlineScenario() -> ServiceContainer {
-        return create { mocks in
+        create { mocks in
             mocks.auth.configureSuccessfulAuthentication()
             mocks.cloud.configureUnavailable()
             mocks.photo.configureAuthorized()
@@ -101,10 +100,10 @@ final class TestServiceContainer {
             mocks.sync.configureSyncFailure(SyncError.networkUnavailable)
         }
     }
-    
+
     /// Create a container configured for restricted permissions scenario
     static func restrictedPermissionsScenario() -> ServiceContainer {
-        return create { mocks in
+        create { mocks in
             mocks.auth.configureSuccessfulAuthentication()
             mocks.cloud.configureAvailable()
             mocks.photo.configureRestricted()
@@ -118,13 +117,12 @@ final class TestServiceContainer {
 
 /// Provides easy access to mock services for configuration
 final class MockServices {
-    
     let auth: MockAuthenticationService
     let cloud: MockCloudStorageService
     let photo: MockPhotoLibraryService
     let permission: MockPermissionService
     let sync: MockSyncService
-    
+
     init(container: ServiceContainer) {
         self.auth = container.resolve(AuthenticationService.self) as! MockAuthenticationService
         self.cloud = container.resolve(CloudStorageService.self) as! MockCloudStorageService
@@ -132,7 +130,7 @@ final class MockServices {
         self.permission = container.resolve(PermissionService.self) as! MockPermissionService
         self.sync = container.resolve(SyncService.self) as! MockSyncService
     }
-    
+
     /// Reset all mock services to clean state
     func resetAll() {
         auth.resetForTesting()
@@ -149,27 +147,26 @@ final class MockServices {
 /// Provides automatic setup and cleanup of mock services
 @MainActor
 class MockServiceTestBase {
-    
     private(set) var container: ServiceContainer!
     private(set) var mockServices: MockServices!
-    
+
     /// Setup method - call this in your test setup
     func setupMockServices(configure: ((MockServices) throws -> Void)? = nil) throws {
         container = TestServiceContainer.create()
         mockServices = MockServices(container: container)
-        
+
         if let configure = configure {
             try configure(mockServices)
         }
     }
-    
+
     /// Cleanup method - call this in your test cleanup
     func cleanupMockServices() {
         mockServices?.resetAll()
         container = nil
         mockServices = nil
     }
-    
+
     /// Convenient access to mock services
     var auth: MockAuthenticationService { mockServices.auth }
     var cloud: MockCloudStorageService { mockServices.cloud }
@@ -181,7 +178,6 @@ class MockServiceTestBase {
 // MARK: - Test Utilities
 
 extension TestServiceContainer {
-    
     /// Assert that a service is registered and is the expected mock type
     /// - Parameters:
     ///   - container: The service container to check
@@ -197,7 +193,7 @@ extension TestServiceContainer {
         let service = container.resolve(serviceType)
         #expect(service is MockType)
     }
-    
+
     /// Verify that all expected mock services are registered
     /// - Parameter container: The service container to verify
     static func verifyAllMockServices(

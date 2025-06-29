@@ -4,26 +4,26 @@
 //
 //
 
-import SwiftUI
 import Foundation
+import SwiftUI
 
 struct CompactActivityView: View {
     let wrapper: ActivityWrapper
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack {
                 Circle()
                     .fill(wrapper.type.color)
                     .frame(width: 6, height: 6)
-                
+
                 Text(timeWithTimezone(wrapper.tripActivity.start, timezone: wrapper.tripActivity.startTZ))
                     .font(.caption2)
                     .foregroundColor(.secondary)
-                
+
                 Spacer()
             }
-            
+
             Text(wrapper.tripActivity.name)
                 .font(.caption)
                 .fontWeight(.medium)
@@ -38,7 +38,7 @@ struct CompactActivityView: View {
                 .fill(wrapper.type.color.opacity(0.1))
         )
     }
-    
+
     private func timeWithTimezone(_ date: Date, timezone: TimeZone) -> String {
         let formatter = DateFormatter()
         formatter.timeStyle = .short

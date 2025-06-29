@@ -13,14 +13,14 @@ struct DayHourRow: View {
     let onDragStart: (CGPoint, Date) -> Void
     let onDragUpdate: (CGPoint, Date) -> Void
     let onDragEnd: (CGPoint, Date) -> Void
-    
+
     @State private var dragOffset: CGFloat = 0
     @State private var isDragging = false
-    
+
     private var hourTime: Date {
         Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: date) ?? date
     }
-    
+
     var body: some View {
         HStack(spacing: 0) {
             // Time label
@@ -31,9 +31,9 @@ struct DayHourRow: View {
                 Spacer()
             }
             .frame(width: 60)
-            
+
             Divider()
-            
+
             // Hour content with drag support
             ZStack(alignment: .leading) {
                 Rectangle()
@@ -44,7 +44,7 @@ struct DayHourRow: View {
                             .frame(height: 0.5),
                         alignment: .bottom
                     )
-                
+
                 // Activities in this hour
                 ForEach(Array(activities.enumerated()), id: \.element.id) { index, wrapper in
                     ActivityBarView(
@@ -54,7 +54,7 @@ struct DayHourRow: View {
                         offset: CGFloat(index * 8)
                     )
                 }
-                
+
                 // Drag selection overlay
                 if dragOffset > 0 {
                     Rectangle()
@@ -84,7 +84,7 @@ struct DayHourRow: View {
             )
         }
     }
-    
+
     private var hourFormatter: DateFormatter {
         let formatter = DateFormatter()
         formatter.dateFormat = "ha"

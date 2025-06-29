@@ -12,9 +12,9 @@ struct MonthDayCell: View {
     let isCurrentMonth: Bool
     let isToday: Bool
     let onTap: () -> Void
-    
+
     private var calendar: Calendar { Calendar.current }
-    
+
     var body: some View {
         Button(action: onTap) {
             VStack(spacing: 4) {
@@ -26,9 +26,9 @@ struct MonthDayCell: View {
                         .frame(width: 24, height: 24)
                         .background(isToday ? Color.blue : Color.clear)
                         .clipShape(Circle())
-                    
+
                     Spacer()
-                    
+
                     if !activities.isEmpty {
                         Text("\(activities.count)")
                             .font(.caption2)
@@ -38,23 +38,23 @@ struct MonthDayCell: View {
                             .clipShape(Circle())
                     }
                 }
-                
+
                 // Activity indicators with better layout
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 1), count: 4), spacing: 1) {
-                    ForEach(Array(activities.prefix(8).enumerated()), id: \.offset) { index, wrapper in
+                    ForEach(Array(activities.prefix(8).enumerated()), id: \.offset) { _, wrapper in
                         RoundedRectangle(cornerRadius: 1)
                             .fill(wrapper.type.color)
                             .frame(height: 3)
                     }
                 }
                 .frame(height: 12)
-                
+
                 if activities.count > 8 {
                     Text("+\(activities.count - 8)")
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
-                
+
                 Spacer()
             }
         }

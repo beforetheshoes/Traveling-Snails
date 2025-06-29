@@ -10,18 +10,18 @@ import SwiftUI
 struct ActivityFormField: View {
     let label: String
     let content: AnyView
-    
+
     init<Content: View>(label: String, @ViewBuilder content: () -> Content) {
         self.label = label
         self.content = AnyView(content())
     }
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(.caption)
                 .foregroundColor(.secondary)
-            
+
             content
         }
     }
@@ -36,7 +36,7 @@ extension ActivityFormField {
                 .textFieldStyle(RoundedBorderTextFieldStyle())
         )
     }
-    
+
     init(label: String, text: Binding<String>, placeholder: String = "", axis: Axis) {
         self.label = label
         self.content = AnyView(
@@ -52,13 +52,13 @@ struct ActivityFormButton: View {
     let label: String
     let value: String
     let action: () -> Void
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(.caption)
                 .foregroundColor(.secondary)
-            
+
             Button(action: action) {
                 HStack {
                     Text(value)
@@ -85,18 +85,17 @@ struct ActivityFormButton: View {
             text: .constant("Test Activity"),
             placeholder: "Enter activity name"
         )
-        
+
         ActivityFormField(label: "Notes") {
             TextField("Add notes here", text: .constant("Test notes"), axis: .vertical)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .lineLimit(3...6)
         }
-        
+
         ActivityFormButton(
             label: "Organization",
-            value: "Select Organization",
-            action: {}
-        )
+            value: "Select Organization"
+        )            {}
     }
     .padding()
 }

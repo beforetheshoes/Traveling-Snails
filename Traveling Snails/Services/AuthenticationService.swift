@@ -13,42 +13,42 @@ import LocalAuthentication
 protocol AuthenticationService: Sendable {
     /// Whether biometric authentication is available and enabled
     var isEnabled: Bool { get }
-    
+
     /// The type of biometric authentication available
     var biometricType: BiometricType { get }
-    
+
     /// Check if the device can use biometric authentication
     func canUseBiometrics() -> Bool
-    
+
     /// Authenticate a user for a specific trip
     /// - Parameter trip: The trip to authenticate for
     /// - Returns: True if authentication succeeded, false otherwise
     func authenticateTrip(_ trip: Trip) async -> Bool
-    
+
     /// Check if a trip is currently authenticated
     /// - Parameter trip: The trip to check
     /// - Returns: True if the trip is authenticated
     func isAuthenticated(for trip: Trip) -> Bool
-    
+
     /// Check if a trip is protected (requires authentication)
     /// - Parameter trip: The trip to check
     /// - Returns: True if the trip requires authentication
     func isProtected(_ trip: Trip) -> Bool
-    
+
     /// Lock a specific trip (remove authentication)
     /// - Parameter trip: The trip to lock
     @MainActor func lockTrip(_ trip: Trip)
-    
+
     /// Toggle protection status for a trip
     /// - Parameter trip: The trip to toggle protection for
     @MainActor func toggleProtection(for trip: Trip)
-    
+
     /// Lock all authenticated trips
     @MainActor func lockAllTrips()
-    
+
     /// Reset the authentication session
     @MainActor func resetSession()
-    
+
     /// Whether all trips are currently locked
     var allTripsLocked: Bool { get }
 }
@@ -72,7 +72,7 @@ enum AuthenticationError: LocalizedError, Sendable {
     case notInteractive
     case timeout
     case unknown(Error)
-    
+
     var errorDescription: String? {
         switch self {
         case .notAvailable:

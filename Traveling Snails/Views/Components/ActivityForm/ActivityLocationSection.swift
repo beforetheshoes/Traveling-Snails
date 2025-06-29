@@ -15,7 +15,7 @@ struct ActivityLocationSection<T: TripActivityProtocol>: View {
     let supportsCustomLocation: Bool
     let showingOrganizationPicker: () -> Void
     let showMap: () -> Void
-    
+
     init(
         activity: T? = nil,
         editData: Binding<TripActivityEditData>,
@@ -33,7 +33,7 @@ struct ActivityLocationSection<T: TripActivityProtocol>: View {
         self.showingOrganizationPicker = showingOrganizationPicker
         self.showMap = showMap
     }
-    
+
     var body: some View {
         ActivitySectionCard(
             headerIcon: "mappin.circle.fill",
@@ -49,26 +49,26 @@ struct ActivityLocationSection<T: TripActivityProtocol>: View {
             }
         }
     }
-    
+
     // MARK: - Edit Mode Content
-    
+
     private var editModeContent: some View {
         VStack(spacing: 16) {
             // Organization picker
             organizationPicker
-            
+
             // Custom location fields (if applicable)
             if supportsCustomLocation && editData.organization?.isNone == true {
                 customLocationFields
             }
-            
+
             // Hide location toggle (if applicable)
             if supportsCustomLocation {
                 hideLocationToggle
             }
         }
     }
-    
+
     private var organizationPicker: some View {
         ActivityFormButton(
             label: "Organization",
@@ -76,7 +76,7 @@ struct ActivityLocationSection<T: TripActivityProtocol>: View {
             action: showingOrganizationPicker
         )
     }
-    
+
     private var customLocationFields: some View {
         VStack(spacing: 16) {
             ActivityFormField(
@@ -84,12 +84,12 @@ struct ActivityLocationSection<T: TripActivityProtocol>: View {
                 text: $editData.customLocationName,
                 placeholder: "Enter location name"
             )
-            
+
             VStack(alignment: .leading, spacing: 8) {
                 Text("Address")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                
+
                 AddressAutocompleteView(
                     selectedAddress: $editData.customAddress,
                     placeholder: "Enter address"
@@ -97,40 +97,40 @@ struct ActivityLocationSection<T: TripActivityProtocol>: View {
             }
         }
     }
-    
+
     private var hideLocationToggle: some View {
         Toggle("Hide location in views", isOn: $editData.hideLocation)
             .toggleStyle(SwitchToggleStyle(tint: color))
     }
-    
+
     // MARK: - View Mode Content
-    
+
     private var viewModeContent: some View {
         VStack(spacing: 16) {
             locationDisplayHeader
-            
+
             // Map view (if address is available)
             if let address = displayAddress {
                 mapButton(for: address)
             }
         }
     }
-    
+
     private var locationDisplayHeader: some View {
         HStack {
             VStack(alignment: .leading, spacing: 8) {
                 Text(displayLocation)
                     .font(.headline)
-                
+
                 if let address = displayAddress {
                     Text(address.displayAddress)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
             }
-            
+
             Spacer()
-            
+
             // Organization logo (if available)
             if let organization = displayOrganization, !organization.isNone {
                 CachedAsyncImage(
@@ -142,7 +142,7 @@ struct ActivityLocationSection<T: TripActivityProtocol>: View {
             }
         }
     }
-    
+
     private func mapButton(for address: Address) -> some View {
         Button(action: showMap) {
             AddressMapView(address: address)
@@ -152,21 +152,21 @@ struct ActivityLocationSection<T: TripActivityProtocol>: View {
         }
         .buttonStyle(.plain)
     }
-    
+
     // MARK: - Computed Properties
-    
+
     private var sectionTitle: String {
         if supportsCustomLocation && editData.organization?.isNone != false {
             return "Location"
         }
         return "Organization"
     }
-    
+
     private var organizationDisplayName: String {
         let org = editData.organization ?? activity?.organization
         return org?.name ?? "Select Organization"
     }
-    
+
     private var displayLocation: String {
         if let activity = activity {
             return activity.displayLocation
@@ -180,7 +180,7 @@ struct ActivityLocationSection<T: TripActivityProtocol>: View {
         }
         return "No location set"
     }
-    
+
     private var displayAddress: Address? {
         if isEditing {
             return editData.customAddress ?? editData.organization?.address
@@ -188,7 +188,7 @@ struct ActivityLocationSection<T: TripActivityProtocol>: View {
             return activity?.displayAddress
         }
     }
-    
+
     private var displayOrganization: Organization? {
         if isEditing {
             return editData.organization
@@ -213,7 +213,7 @@ struct ActivityLocationSection<T: TripActivityProtocol>: View {
             color: .orange,
             supportsCustomLocation: true
         )
-        
+
         // View mode preview
         ActivityLocationSection<Activity>(
             editData: .constant({

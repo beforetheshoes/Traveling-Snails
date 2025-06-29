@@ -11,18 +11,18 @@ struct FancyCurrencyTextField: View {
     @FocusState private var isFocused: Bool
     @State private var textValue: String = ""
     let color: Color
-    
+
     init(value: Binding<Decimal>, color: Color = .blue) {
         self._value = value
         self.color = color
     }
-    
+
     // Convenience initializer for views without activity context
     init(value: Binding<Decimal>) {
         self._value = value
         self.color = .blue
     }
-    
+
     var body: some View {
         HStack(spacing: 12) {
             // Currency symbol in a circle
@@ -30,12 +30,12 @@ struct FancyCurrencyTextField: View {
                 Circle()
                     .fill(color.opacity(0.1))
                     .frame(width: 32, height: 32)
-                
+
                 Text("$")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(color)
             }
-            
+
             VStack(alignment: .leading, spacing: 2) {
                 TextField("0.00", text: $textValue)
                     .keyboardType(.decimalPad)
@@ -52,7 +52,7 @@ struct FancyCurrencyTextField: View {
                             textValue = formatDecimalForEditing(newValue)
                         }
                     }
-                
+
                 if isFocused {
                     Text("Enter amount in USD")
                         .font(.caption2)
@@ -60,9 +60,9 @@ struct FancyCurrencyTextField: View {
                         .transition(.opacity)
                 }
             }
-            
+
             Spacer()
-            
+
             // Current formatted value
             if !isFocused && value > 0 {
                 Text(value, format: .currency(code: "USD"))
@@ -83,17 +83,17 @@ struct FancyCurrencyTextField: View {
         )
         .animation(.easeInOut(duration: 0.2), value: isFocused)
     }
-    
+
     private func updateDecimalValue(from text: String) {
         let cleanedText = text.replacingOccurrences(of: "[^0-9.]", with: "", options: .regularExpression)
-        
+
         if let double = Double(cleanedText) {
             value = Decimal(double)
         } else if cleanedText.isEmpty {
             value = 0
         }
     }
-    
+
     private func formatDecimalForEditing(_ decimal: Decimal) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal

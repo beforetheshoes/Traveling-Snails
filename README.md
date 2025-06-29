@@ -175,6 +175,33 @@ Traveling Snails/
 - **iPad Air 4th generation or newer**
 - **Mac with Apple Silicon** for development
 
+### Code Quality & Security
+
+This project uses **SwiftLint** with security-focused rules to maintain high code quality and security standards:
+
+- **Security Rules**: Prevents logging of sensitive data and enforces secure coding patterns
+- **Modern Swift Patterns**: Enforces use of `NavigationStack`, `@Observable`, and other iOS 18+ patterns
+- **Consistent Code Style**: Maintains consistent formatting and naming conventions
+- **Automated Checks**: Integrated into build process and CI/CD pipeline
+
+**Key Security Enforcements:**
+- ❌ **No `print()` statements** - Must use `Logger.shared` for all logging
+- ⚠️ **Sensitive data detection** - Warns about potential data exposure in logs
+- 🔄 **Modern SwiftUI patterns** - Enforces `NavigationStack` over deprecated `NavigationView`
+- 📱 **SwiftData best practices** - Prevents parameter passing anti-patterns
+
+**Setup Instructions:**
+```bash
+# Run the setup script to configure SwiftLint
+./Scripts/setup-swiftlint.sh
+
+# Check for violations
+swift run swiftlint lint
+
+# Auto-fix style issues
+swift run swiftlint --autocorrect
+```
+
 ## 🚀 Getting Started
 
 ### 1. Clone the Repository

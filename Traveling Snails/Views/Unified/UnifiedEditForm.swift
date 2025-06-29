@@ -4,8 +4,8 @@
 //
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 // MARK: - Form Field Protocol
 
@@ -15,7 +15,7 @@ protocol FormField: Identifiable {
     var isRequired: Bool { get }
     var validationRules: [ValidationRule] { get }
     var sectionName: String? { get }
-    
+
     func createView() -> AnyView
     func validate() -> ValidationResult
 }
@@ -25,7 +25,7 @@ protocol FormField: Identifiable {
 struct ValidationRule {
     let check: () -> Bool
     let errorMessage: String
-    
+
     init(check: @escaping () -> Bool, errorMessage: String) {
         self.check = check
         self.errorMessage = errorMessage
@@ -35,14 +35,14 @@ struct ValidationRule {
 enum ValidationResult {
     case valid
     case invalid(String)
-    
+
     var isValid: Bool {
         switch self {
         case .valid: return true
         case .invalid: return false
         }
     }
-    
+
     var errorMessage: String? {
         switch self {
         case .valid: return nil
@@ -62,7 +62,7 @@ struct FormConfiguration {
     let saveButtonColor: Color
     let deleteButtonColor: Color
     let showProgress: Bool
-    
+
     init(
         title: String,
         saveButtonTitle: String = L(L10n.General.save),
@@ -93,15 +93,15 @@ final class FormState {
     var hasUnsavedChanges = false
     var showingDeleteConfirmation = false
     var saveError: String?
-    
+
     var isValid: Bool {
         validationErrors.isEmpty
     }
-    
+
     var canSave: Bool {
         isValid && hasUnsavedChanges && !isLoading
     }
-    
+
     func setError(for fieldId: String, message: String?) {
         if let message = message {
             validationErrors[fieldId] = message
@@ -109,17 +109,17 @@ final class FormState {
             validationErrors.removeValue(forKey: fieldId)
         }
     }
-    
+
     func clearErrors() {
         validationErrors.removeAll()
         saveError = nil
     }
-    
+
     func validateField(_ field: any FormField) {
         let result = field.validate()
         setError(for: field.id, message: result.errorMessage)
     }
-    
+
     func validateAllFields(_ fields: [any FormField]) {
         for field in fields {
             validateField(field)
@@ -133,34 +133,34 @@ struct UnifiedEditForm: View {
     // Configuration
     let configuration: FormConfiguration
     let fields: [any FormField]
-    
+
     // State
     @State private var formState = FormState()
     @Environment(\.dismiss) private var dismiss
-    
+
     // Actions
     let onSave: () async throws -> Void
     let onDelete: (() async throws -> Void)?
     let onCancel: (() -> Void)?
-    
+
     private var groupedFields: [String: [any FormField]] {
         Dictionary(grouping: fields) { field in
             field.sectionName ?? L(L10n.General.info)
         }
     }
-    
+
     private var sectionOrder: [String] {
         var sections = Array(groupedFields.keys)
-        
+
         // Put "General" or "Info" section first if it exists
         if let generalIndex = sections.firstIndex(where: { $0 == L(L10n.General.info) || $0.localizedCaseInsensitiveContains("general") }) {
             let general = sections.remove(at: generalIndex)
             sections.insert(general, at: 0)
         }
-        
+
         return sections.sorted()
     }
-    
+
     init(
         configuration: FormConfiguration,
         fields: [any FormField],
@@ -174,7 +174,7 @@ struct UnifiedEditForm: View {
         self.onDelete = onDelete
         self.onCancel = onCancel
     }
-    
+
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -188,7 +188,7 @@ struct UnifiedEditForm: View {
                             )
                         }
                     }
-                    
+
                     // Delete button
                     if configuration.allowsDelete {
                         deleteButton
@@ -205,7 +205,7 @@ struct UnifiedEditForm: View {
                     }
                     .disabled(formState.isLoading)
                 }
-                
+
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(configuration.saveButtonTitle) {
                         Task {
@@ -248,7 +248,7 @@ struct UnifiedEditForm: View {
         .handleLanguageChanges()
         .handleErrors()
     }
-    
+
     @ViewBuilder
     private var deleteButton: some View {
         Button {
@@ -266,7 +266,7 @@ struct UnifiedEditForm: View {
         }
         .disabled(formState.isLoading)
     }
-    
+
     private func handleCancel() {
         if formState.hasUnsavedChanges {
             // Could show unsaved changes alert here
@@ -274,19 +274,19 @@ struct UnifiedEditForm: View {
         onCancel?()
         dismiss()
     }
-    
+
     private func handleSave() async {
         formState.isLoading = true
         formState.clearErrors()
-        
+
         // Validate all fields
         formState.validateAllFields(fields)
-        
+
         guard formState.isValid else {
             formState.isLoading = false
             return
         }
-        
+
         do {
             try await onSave()
             Logger.shared.info("Form saved successfully", category: .ui)
@@ -295,15 +295,15 @@ struct UnifiedEditForm: View {
             formState.saveError = error.localizedDescription
             Logger.shared.logError(error, message: "Form save failed", category: .ui)
         }
-        
+
         formState.isLoading = false
     }
-    
+
     private func handleDelete() async {
         guard let onDelete = onDelete else { return }
-        
+
         formState.isLoading = true
-        
+
         do {
             try await onDelete()
             Logger.shared.info("Item deleted successfully", category: .ui)
@@ -312,10 +312,10 @@ struct UnifiedEditForm: View {
             formState.saveError = error.localizedDescription
             Logger.shared.logError(error, message: "Delete failed", category: .ui)
         }
-        
+
         formState.isLoading = false
     }
-    
+
     private func validateAllFields() {
         formState.validateAllFields(fields)
     }
@@ -327,7 +327,7 @@ struct FormSectionView: View {
     let title: String
     let fields: [any FormField]
     let formState: FormState
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             // Section header
@@ -337,14 +337,14 @@ struct FormSectionView: View {
                     .foregroundColor(.primary)
                 Spacer()
             }
-            
+
             // Fields
             VStack(spacing: 12) {
                 ForEach(fields, id: \.id) { field in
                     VStack(alignment: .leading, spacing: 4) {
                         // Field view
                         field.createView()
-                        
+
                         // Validation error
                         if let error = formState.validationErrors[field.id] {
                             Text(error)
@@ -372,11 +372,11 @@ struct LoadingOverlay: View {
         ZStack {
             Color.black.opacity(0.3)
                 .edgesIgnoringSafeArea(.all)
-            
+
             VStack(spacing: 16) {
                 ProgressView()
                     .scaleEffect(1.2)
-                
+
                 Text(L(L10n.General.loading))
                     .font(.headline)
                     .foregroundColor(.primary)
@@ -400,7 +400,7 @@ struct TextFormField: FormField {
     let validationRules: [ValidationRule]
     let keyboardType: UIKeyboardType
     let multiline: Bool
-    
+
     init(
         id: String,
         title: String,
@@ -420,7 +420,7 @@ struct TextFormField: FormField {
         self._text = text
         self.keyboardType = keyboardType
         self.multiline = multiline
-        
+
         var rules = customValidation
         if isRequired {
             rules.append(ValidationRule(
@@ -430,7 +430,7 @@ struct TextFormField: FormField {
         }
         self.validationRules = rules
     }
-    
+
     func createView() -> AnyView {
         AnyView(
             VStack(alignment: .leading, spacing: 6) {
@@ -438,13 +438,13 @@ struct TextFormField: FormField {
                     Text(title)
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    
+
                     if isRequired {
                         Text("*")
                             .foregroundColor(.red)
                     }
                 }
-                
+
                 if multiline {
                     TextField(placeholder, text: $text, axis: .vertical)
                         .textFieldStyle(.roundedBorder)
@@ -458,7 +458,7 @@ struct TextFormField: FormField {
             }
         )
     }
-    
+
     func validate() -> ValidationResult {
         for rule in validationRules {
             if !rule.check() {
@@ -477,7 +477,7 @@ struct DecimalFormField: FormField {
     @Binding var value: Decimal
     let validationRules: [ValidationRule]
     let currencyCode: String?
-    
+
     init(
         id: String,
         title: String,
@@ -495,7 +495,7 @@ struct DecimalFormField: FormField {
         self.currencyCode = currencyCode
         self.validationRules = customValidation
     }
-    
+
     func createView() -> AnyView {
         AnyView(
             VStack(alignment: .leading, spacing: 6) {
@@ -503,19 +503,19 @@ struct DecimalFormField: FormField {
                     Text(title)
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    
+
                     if isRequired {
                         Text("*")
                             .foregroundColor(.red)
                     }
                 }
-                
+
                 HStack {
                     if let currencyCode = currencyCode {
                         Text(currencyCode)
                             .foregroundColor(.secondary)
                     }
-                    
+
                     TextField("0.00", value: $value, format: .number.precision(.fractionLength(2)))
                         .textFieldStyle(.roundedBorder)
                         .keyboardType(.decimalPad)
@@ -523,7 +523,7 @@ struct DecimalFormField: FormField {
             }
         )
     }
-    
+
     func validate() -> ValidationResult {
         for rule in validationRules {
             if !rule.check() {
@@ -542,7 +542,7 @@ struct DateFormField: FormField {
     @Binding var date: Date
     let validationRules: [ValidationRule]
     let displayComponents: DatePickerComponents
-    
+
     init(
         id: String,
         title: String,
@@ -560,7 +560,7 @@ struct DateFormField: FormField {
         self.displayComponents = displayComponents
         self.validationRules = customValidation
     }
-    
+
     func createView() -> AnyView {
         AnyView(
             VStack(alignment: .leading, spacing: 6) {
@@ -568,19 +568,19 @@ struct DateFormField: FormField {
                     Text(title)
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    
+
                     if isRequired {
                         Text("*")
                             .foregroundColor(.red)
                     }
                 }
-                
+
                 DatePicker("", selection: $date, displayedComponents: displayComponents)
                     .datePickerStyle(.compact)
             }
         )
     }
-    
+
     func validate() -> ValidationResult {
         for rule in validationRules {
             if !rule.check() {
@@ -603,15 +603,15 @@ extension UnifiedEditForm {
         @State var name = trip.name
         @State var notes = trip.notes
         @State var startDate = trip.effectiveStartDate ?? Date()
-        @State var endDate = trip.effectiveEndDate ?? Date().addingTimeInterval(86400)
+        @State var endDate = trip.effectiveEndDate ?? Date().addingTimeInterval(86_400)
         @State var hasStartDate = trip.hasStartDate
         @State var hasEndDate = trip.hasEndDate
-        
+
         let config = FormConfiguration(
             title: trip.name.isEmpty ? L(L10n.Trips.addTrip) : L(L10n.Trips.editTrip),
             allowsDelete: true
         )
-        
+
         let fields: [any FormField] = [
             TextFormField(
                 id: "name",
@@ -638,7 +638,7 @@ extension UnifiedEditForm {
                     ValidationRule(
                         check: { !hasEndDate || startDate <= endDate },
                         errorMessage: L(L10n.Validation.invalidDateRange)
-                    )
+                    ),
                 ]
             ),
             DateFormField(
@@ -650,32 +650,32 @@ extension UnifiedEditForm {
                     ValidationRule(
                         check: { !hasStartDate || endDate >= startDate },
                         errorMessage: L(L10n.Validation.invalidDateRange)
-                    )
+                    ),
                 ]
-            )
+            ),
         ]
-        
+
         return UnifiedEditForm(
             configuration: config,
             fields: fields,
             onSave: {
                 trip.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
                 trip.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
-                
+
                 if hasStartDate {
                     trip.startDate = startDate
                     trip.hasStartDate = true
                 } else {
                     trip.hasStartDate = false
                 }
-                
+
                 if hasEndDate {
                     trip.endDate = endDate
                     trip.hasEndDate = true
                 } else {
                     trip.hasEndDate = false
                 }
-                
+
                 switch modelContext.safeSave(context: "Saving trip") {
                 case .success:
                     onSaved()
@@ -693,7 +693,7 @@ extension UnifiedEditForm {
             }
         )
     }
-    
+
     /// Create a form for editing an organization
     static func organizationForm(
         organization: Organization,
@@ -705,12 +705,12 @@ extension UnifiedEditForm {
         @State var email = organization.email
         @State var website = organization.website
         @State var logoURL = organization.logoURL
-        
+
         let config = FormConfiguration(
             title: organization.name.isEmpty ? L(L10n.Organizations.addOrganization) : L(L10n.Organizations.editOrganization),
             allowsDelete: organization.name != "None" // Don't allow deleting the None organization
         )
-        
+
         let fields: [any FormField] = [
             TextFormField(
                 id: "name",
@@ -731,7 +731,7 @@ extension UnifiedEditForm {
                     ValidationRule(
                         check: { phone.isEmpty || phone.count >= 10 },
                         errorMessage: L(L10n.Validation.invalidPhone)
-                    )
+                    ),
                 ]
             ),
             TextFormField(
@@ -745,7 +745,7 @@ extension UnifiedEditForm {
                     ValidationRule(
                         check: { email.isEmpty || email.contains("@") && email.contains(".") },
                         errorMessage: L(L10n.Validation.invalidEmail)
-                    )
+                    ),
                 ]
             ),
             TextFormField(
@@ -759,7 +759,7 @@ extension UnifiedEditForm {
                     ValidationRule(
                         check: { website.isEmpty || website.lowercased().hasPrefix("http") },
                         errorMessage: L(L10n.Validation.invalidURL)
-                    )
+                    ),
                 ]
             ),
             TextFormField(
@@ -773,11 +773,11 @@ extension UnifiedEditForm {
                     ValidationRule(
                         check: { logoURL.isEmpty || logoURL.lowercased().hasPrefix("http") },
                         errorMessage: L(L10n.Validation.invalidURL)
-                    )
+                    ),
                 ]
-            )
+            ),
         ]
-        
+
         return UnifiedEditForm(
             configuration: config,
             fields: fields,
@@ -787,7 +787,7 @@ extension UnifiedEditForm {
                 organization.email = email.trimmingCharacters(in: .whitespacesAndNewlines)
                 organization.website = website.trimmingCharacters(in: .whitespacesAndNewlines)
                 organization.logoURL = logoURL.trimmingCharacters(in: .whitespacesAndNewlines)
-                
+
                 switch modelContext.safeSave(context: "Saving organization") {
                 case .success:
                     onSaved()
@@ -801,15 +801,15 @@ extension UnifiedEditForm {
                 let lodgingCount = organization.lodging.count
                 let activityCount = organization.activity.count
                 let totalUsage = transportCount + lodgingCount + activityCount
-                
+
                 if organization.name == "None" {
                     throw AppError.cannotDeleteNoneOrganization
                 }
-                
+
                 if totalUsage > 0 {
                     throw AppError.organizationInUse(organization.name, totalUsage)
                 }
-                
+
                 switch modelContext.safeDelete(organization, context: "Deleting organization") {
                 case .success:
                     break
@@ -819,7 +819,7 @@ extension UnifiedEditForm {
             }
         )
     }
-    
+
     /// Create a form for editing transportation
     static func transportationForm(
         transportation: Transportation,
@@ -834,12 +834,12 @@ extension UnifiedEditForm {
         @State var paid = transportation.paid
         @State var confirmation = transportation.confirmation
         @State var notes = transportation.notes
-        
+
         let config = FormConfiguration(
             title: transportation.name.isEmpty ? "Add Transportation" : "Edit Transportation",
             allowsDelete: true
         )
-        
+
         let fields: [any FormField] = [
             TextFormField(
                 id: "name",
@@ -859,7 +859,7 @@ extension UnifiedEditForm {
                     ValidationRule(
                         check: { start <= end },
                         errorMessage: L(L10n.Validation.invalidDateRange)
-                    )
+                    ),
                 ]
             ),
             DateFormField(
@@ -871,7 +871,7 @@ extension UnifiedEditForm {
                     ValidationRule(
                         check: { end >= start },
                         errorMessage: L(L10n.Validation.invalidDateRange)
-                    )
+                    ),
                 ]
             ),
             DecimalFormField(
@@ -895,9 +895,9 @@ extension UnifiedEditForm {
                 placeholder: "Additional notes...",
                 sectionName: "Details",
                 multiline: true
-            )
+            ),
         ]
-        
+
         return UnifiedEditForm(
             configuration: config,
             fields: fields,
@@ -910,7 +910,7 @@ extension UnifiedEditForm {
                 transportation.paid = paid
                 transportation.confirmation = confirmation.trimmingCharacters(in: .whitespacesAndNewlines)
                 transportation.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
-                
+
                 switch modelContext.safeSave(context: "Saving transportation") {
                 case .success:
                     onSaved()
@@ -939,7 +939,7 @@ struct PickerFormField<T: Hashable & CaseIterable & RawRepresentable>: FormField
     let sectionName: String?
     @Binding var selection: T
     let validationRules: [ValidationRule]
-    
+
     init(
         id: String,
         title: String,
@@ -955,7 +955,7 @@ struct PickerFormField<T: Hashable & CaseIterable & RawRepresentable>: FormField
         self._selection = selection
         self.validationRules = customValidation
     }
-    
+
     func createView() -> AnyView {
         AnyView(
             VStack(alignment: .leading, spacing: 6) {
@@ -963,13 +963,13 @@ struct PickerFormField<T: Hashable & CaseIterable & RawRepresentable>: FormField
                     Text(title)
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    
+
                     if isRequired {
                         Text("*")
                             .foregroundColor(.red)
                     }
                 }
-                
+
                 Picker(title, selection: $selection) {
                     ForEach(Array(T.allCases), id: \.self) { option in
                         Text(option.rawValue.capitalized).tag(option)
@@ -979,7 +979,7 @@ struct PickerFormField<T: Hashable & CaseIterable & RawRepresentable>: FormField
             }
         )
     }
-    
+
     func validate() -> ValidationResult {
         for rule in validationRules {
             if !rule.check() {
@@ -998,7 +998,7 @@ struct ToggleFormField: FormField {
     @Binding var isOn: Bool
     let validationRules: [ValidationRule]
     let subtitle: String?
-    
+
     init(
         id: String,
         title: String,
@@ -1016,14 +1016,14 @@ struct ToggleFormField: FormField {
         self.subtitle = subtitle
         self.validationRules = customValidation
     }
-    
+
     func createView() -> AnyView {
         AnyView(
             Toggle(isOn: $isOn) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
                         .font(.body)
-                    
+
                     if let subtitle = subtitle {
                         Text(subtitle)
                             .font(.caption)
@@ -1033,7 +1033,7 @@ struct ToggleFormField: FormField {
             }
         )
     }
-    
+
     func validate() -> ValidationResult {
         for rule in validationRules {
             if !rule.check() {

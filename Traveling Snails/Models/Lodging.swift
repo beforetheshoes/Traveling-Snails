@@ -4,41 +4,41 @@
 //
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 @Model
 class Lodging: Identifiable {
     var id = UUID()
     var name: String = ""
-    var start: Date = Date()
+    var start = Date()
     var checkInTZId: String = ""
-    var end: Date = Date()
+    var end = Date()
     var checkOutTZId: String = ""
     var cost: Decimal = 0
     var paid = PaidStatus.none
     var reservation: String = ""
     var notes: String = ""
-    
-    var trip: Trip? = nil
-    var organization: Organization? = nil
-    
+
+    var trip: Trip?
+    var organization: Organization?
+
     // Location fields
     var customLocationName: String = ""
     @Relationship(deleteRule: .cascade, inverse: \Address.lodgings)
-    var customAddresss: Address? = nil
+    var customAddresss: Address?
     var hideLocation: Bool = false
-    
+
     // CLOUDKIT REQUIRED: Optional file attachments with SAFE accessor
     @Relationship(deleteRule: .cascade, inverse: \EmbeddedFileAttachment.lodging)
-    private var _fileAttachments: [EmbeddedFileAttachment]? = nil
-    
+    private var _fileAttachments: [EmbeddedFileAttachment]?
+
     // SAFE ACCESSOR: Never return nil
     var fileAttachments: [EmbeddedFileAttachment] {
         get { _fileAttachments ?? [] }
         set { _fileAttachments = newValue.isEmpty ? nil : newValue }
     }
-    
+
     init(
         name: String = "",
         start: Date = Date(),
@@ -70,26 +70,26 @@ class Lodging: Identifiable {
         self.customAddresss = customAddress
         self.hideLocation = hideLocation
     }
-    
+
     // MARK: - Computed properties for TripActivityProtocol
     var startTZId: String {
         get { checkInTZId }
         set { checkInTZId = newValue }
     }
-    
+
     var endTZId: String {
         get { checkOutTZId }
         set { checkOutTZId = newValue }
     }
-    
+
     var startTZ: TimeZone {
         TimeZone(identifier: checkInTZId) ?? TimeZone.current
     }
-    
+
     var endTZ: TimeZone {
         TimeZone(identifier: checkOutTZId) ?? TimeZone.current
     }
-    
+
     var startFormatted: String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
@@ -97,7 +97,7 @@ class Lodging: Identifiable {
         formatter.timeZone = startTZ
         return formatter.string(from: start)
     }
-    
+
     var endFormatted: String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
@@ -105,7 +105,7 @@ class Lodging: Identifiable {
         formatter.timeZone = endTZ
         return formatter.string(from: end)
     }
-    
+
     var displayLocation: String {
         if let org = organization, org.name != "None" {
             return org.name
@@ -131,15 +131,15 @@ class Lodging: Identifiable {
     var hasLocation: Bool {
         customAddresss != nil || (organization?.address?.isEmpty == false)
     }
-    
+
     var checkInTZ: TimeZone? {
         TimeZone(identifier: checkInTZId) ?? TimeZone.current
     }
-    
+
     var checkOutTZ: TimeZone? {
         TimeZone(identifier: checkOutTZId) ?? TimeZone.current
     }
-    
+
     var checkInDateFormatted: String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
@@ -147,7 +147,7 @@ class Lodging: Identifiable {
         formatter.timeZone = checkInTZ
         return formatter.string(from: start)
     }
-    
+
     var checkOutDateFormatted: String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
@@ -155,7 +155,7 @@ class Lodging: Identifiable {
         formatter.timeZone = checkOutTZ
         return formatter.string(from: end)
     }
-    
+
     // File attachment support
     var hasAttachments: Bool { !fileAttachments.isEmpty }
     var attachmentCount: Int { fileAttachments.count }

@@ -4,14 +4,14 @@
 //
 //
 
-import SwiftUI
 import Foundation
+import SwiftUI
 
 struct CompactCalendarView: View {
     let trip: Trip
     let activities: [ActivityWrapper]
     let onActivityTap: (any TripActivityProtocol) -> Void
-    
+
     @State private var currentDateOffset = 0 // Day-based offset instead of week-based
     @State private var showingFullCalendar = false
     @State private var scrollPosition: CGFloat = 0 // Track scroll position
@@ -30,7 +30,7 @@ struct CompactCalendarView: View {
     }
 
     private var calendar: Calendar { Calendar.current }
-    
+
     private var baseStartDate: Date {
         // Use trip dates instead of today
         if let tripRange = trip.actualDateRange {
@@ -39,18 +39,18 @@ struct CompactCalendarView: View {
             return Date() // Fallback only if no trip activities
         }
     }
-    
+
     private var currentStartDate: Date {
-        return calendar.date(byAdding: .day, value: currentDateOffset, to: baseStartDate) ?? baseStartDate
+        calendar.date(byAdding: .day, value: currentDateOffset, to: baseStartDate) ?? baseStartDate
     }
-    
+
     private var visibleDateRange: [Date] {
-        return (0..<visibleDaysCount).compactMap { dayOffset in
+        (0..<visibleDaysCount).compactMap { dayOffset in
             calendar.date(byAdding: .day, value: dayOffset, to: currentStartDate)
         }
     }
-    
-    
+
+
     var body: some View {
         VStack(spacing: 0) {
             // Date range navigation
@@ -64,13 +64,13 @@ struct CompactCalendarView: View {
                         .font(.title2)
                         .foregroundColor(.blue)
                 }
-                
+
                 Spacer()
-                
+
                 headerTitleView
-                
+
                 Spacer()
-                
+
                 Button {
                     withAnimation(.easeInOut(duration: 0.3)) {
                         currentDateOffset += visibleDaysCount
@@ -83,7 +83,7 @@ struct CompactCalendarView: View {
             }
             .padding(.horizontal)
             .padding(.vertical, 16)
-            
+
             // Week view with full height - takes all remaining space
             GeometryReader { geometry in
                 // Comprehensive safety check for valid geometry
@@ -97,7 +97,7 @@ struct CompactCalendarView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
-            
+
             // Full calendar button - pinned to bottom
             Button {
                 showingFullCalendar = true
@@ -121,13 +121,13 @@ struct CompactCalendarView: View {
             TripCalendarRootView(trip: trip)
         }
     }
-    
+
     private var headerTitleView: some View {
         VStack {
             Text(headerTitleText)
                 .font(.headline)
                 .fontWeight(.semibold)
-            
+
             Text(headerSubtitleText)
                 .font(.caption)
                 .foregroundColor(.secondary)
@@ -146,14 +146,14 @@ struct CompactCalendarView: View {
     }
 
     private var headerSubtitleText: String {
-        return visibleDateRange.first?.formatted(.dateTime.year()) ?? ""
+        visibleDateRange.first?.formatted(.dateTime.year()) ?? ""
     }
-    
+
     private func dayScrollView(geometry: GeometryProxy) -> some View {
         VStack(spacing: 0) {
             // Full day events spanning across visible days
             fullDayEventBarsSection(geometry: geometry)
-            
+
             // Day views - using simple HStack since we're showing exact visible days
             dayHStack(geometry: geometry)
         }
@@ -161,7 +161,7 @@ struct CompactCalendarView: View {
 
     private func dayHStack(geometry: GeometryProxy) -> some View {
         let dayWidth = calculateDayWidth(geometry: geometry)
-        
+
         return HStack(spacing: 12) {
             ForEach(Array(visibleDateRange.enumerated()), id: \.element) { index, date in
                 dayView(for: date, index: index, dayWidth: dayWidth)
@@ -174,7 +174,7 @@ struct CompactCalendarView: View {
         // Ensure width is always valid, finite, and positive
         let safeWidth = dayWidth.isFinite && dayWidth > 0 ? dayWidth : 100
         let validWidth = max(50, min(safeWidth, 500))
-        
+
         return CompactDayView(
             date: date,
             activities: activitiesForDate(date).filter { !isFullDayEvent($0) },
@@ -184,7 +184,7 @@ struct CompactCalendarView: View {
         .frame(maxHeight: .infinity)
         .id(index)
     }
-    
+
     private func calculateDayWidth(geometry: GeometryProxy) -> CGFloat {
         // Comprehensive safety checks for geometry values
         guard geometry.size.width.isFinite,
@@ -193,32 +193,31 @@ struct CompactCalendarView: View {
               geometry.size.height > 0 else {
             return 100 // Safe fallback
         }
-        
+
         let availableWidth = max(48, geometry.size.width - 48) // Ensure at least 48pt available
         let dayCount = max(1, visibleDaysCount)
-        
+
         let calculatedWidth = availableWidth / CGFloat(dayCount)
-        
+
         // Ensure the result is always finite, positive, and reasonable
         guard calculatedWidth.isFinite,
               calculatedWidth > 0,
               calculatedWidth < CGFloat.greatestFiniteMagnitude else {
             return 100 // Safe fallback
         }
-        
+
         return max(50, min(calculatedWidth, 500)) // Bounded between 50-500pt
     }
-    
+
     private func fullDayEventBarsSection(geometry: GeometryProxy) -> some View {
         VStack(spacing: 2) {
             ForEach(fullDayEvents, id: \.id) { wrapper in
                 CompactFullDayEventBar(
                     wrapper: wrapper,
-                    visibleDates: visibleDateRange,
-                    onTap: {
+                    visibleDates: visibleDateRange
+                )                    {
                         onActivityTap(wrapper.tripActivity)
                     }
-                )
             }
         }
         .padding(.horizontal)
@@ -229,7 +228,7 @@ struct CompactCalendarView: View {
         VStack {
             Spacer()
                 .frame(height: 68)
-            
+
             VStack(spacing: 2) {
                 ForEach(fullDayEventsForDate(date), id: \.id) { wrapper in
                     HStack(spacing: 0) {
@@ -282,7 +281,7 @@ struct CompactCalendarView: View {
                     .padding(.horizontal, 2)
                 }
             }
-            
+
             Spacer()
         }
     }
@@ -290,35 +289,35 @@ struct CompactCalendarView: View {
     private func isEventStart(_ wrapper: ActivityWrapper, _ date: Date) -> Bool {
         calendar.isDate(wrapper.tripActivity.start, inSameDayAs: date)
     }
-    
+
     private func isEventEnd(_ wrapper: ActivityWrapper, _ date: Date) -> Bool {
         calendar.isDate(wrapper.tripActivity.end, inSameDayAs: date)
     }
-    
+
     private func eventSpansDate(_ wrapper: ActivityWrapper, _ date: Date) -> Bool {
         let startOfDay = calendar.startOfDay(for: date)
         let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? startOfDay
-        
+
         return wrapper.tripActivity.start < endOfDay && wrapper.tripActivity.end > startOfDay
     }
-    
+
     private func activitiesForDate(_ date: Date) -> [ActivityWrapper] {
         let startOfDay = calendar.startOfDay(for: date)
         let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? startOfDay
-        
+
         return activities.filter { wrapper in
             let activityStart = wrapper.tripActivity.start
             let activityEnd = wrapper.tripActivity.end
-            
+
             return activityStart < endOfDay && activityEnd > startOfDay
         }
     }
-    
+
     private var fullDayEvents: [ActivityWrapper] {
         let allFullDayEvents = visibleDateRange.flatMap { date in
             activitiesForDate(date).filter { isFullDayEvent($0) }
         }
-        
+
         // Remove duplicates
         var uniqueEvents: [ActivityWrapper] = []
         for event in allFullDayEvents {
@@ -328,39 +327,39 @@ struct CompactCalendarView: View {
         }
         return uniqueEvents
     }
-    
+
     private func fullDayEventsForDate(_ date: Date) -> [ActivityWrapper] {
-        return fullDayEvents.filter { wrapper in
+        fullDayEvents.filter { wrapper in
             let startOfDay = calendar.startOfDay(for: date)
             let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? startOfDay
-            
+
             return wrapper.tripActivity.start < endOfDay && wrapper.tripActivity.end > startOfDay
         }
     }
-    
+
     private func isFullDayEvent(_ wrapper: ActivityWrapper) -> Bool {
         let start = wrapper.tripActivity.start
         let end = wrapper.tripActivity.end
-        
+
         // Lodging is always full-day
         if wrapper.type == .lodging {
             return true
         }
-        
+
         // Check if any activity spans multiple days or is marked as all-day
         let startOfDay = calendar.startOfDay(for: start)
         let endOfDay = calendar.startOfDay(for: end)
         let duration = end.timeIntervalSince(start)
-        
+
         // Full day if:
         // 1. Activity spans multiple days
         // 2. Activity starts at midnight and lasts 8+ hours
         // 3. Activity duration is 16+ hours (likely full day)
-        return startOfDay != endOfDay || 
+        return startOfDay != endOfDay ||
                (start == startOfDay && duration >= 8 * 3600) ||
                duration >= 16 * 3600
     }
-    
+
     private func timeWithTimezone(_ date: Date, timezone: TimeZone) -> String {
         let formatter = DateFormatter()
         formatter.timeStyle = .short

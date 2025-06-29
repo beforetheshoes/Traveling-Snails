@@ -16,7 +16,7 @@ protocol ActivitySaver: Sendable {
         trip: Trip,
         in modelContext: ModelContext
     ) throws
-    
+
     func createTemplate(in trip: Trip) -> any TripActivityProtocol
     var activityType: ActivityType { get }
     var icon: String { get }
@@ -34,7 +34,7 @@ enum ActivityType: String, CaseIterable, Sendable {
     case activity = "Activity"
     case lodging = "Lodging"
     case transportation = "Transportation"
-    
+
     var displayName: String { rawValue }
 }
 
@@ -49,11 +49,11 @@ struct ActivitySaverImpl: ActivitySaver {
     let confirmationLabel = "Reservation"
     let supportsCustomLocation = true
     let hasTypeSelector = false
-    
+
     func createTemplate(in trip: Trip) -> any TripActivityProtocol {
         let defaultStart = trip.effectiveStartDate ?? Date()
         let defaultEnd = defaultStart.addingTimeInterval(2 * 3600) // 2 hours
-        
+
         return Activity(
             name: "",
             start: defaultStart,
@@ -62,7 +62,7 @@ struct ActivitySaverImpl: ActivitySaver {
             organization: nil
         )
     }
-    
+
     func save(
         editData: TripActivityEditData,
         attachments: [EmbeddedFileAttachment],
@@ -72,10 +72,10 @@ struct ActivitySaverImpl: ActivitySaver {
         guard let organization = editData.organization else {
             throw ActivitySaveError.missingOrganization
         }
-        
+
         let noneOrg = Organization.ensureUniqueNoneOrganization(in: modelContext)
         let finalOrg = organization.name == "None" ? noneOrg : organization
-        
+
         let activity = Activity(
             name: editData.name,
             start: editData.start,
@@ -90,23 +90,23 @@ struct ActivitySaverImpl: ActivitySaver {
             customAddress: editData.customAddress,
             hideLocation: editData.hideLocation
         )
-        
+
         modelContext.insert(activity)
-        
+
         if let customAddress = editData.customAddress {
             modelContext.insert(customAddress)
         }
-        
+
         activity.trip = trip
         activity.organization = finalOrg
-        
+
         for attachment in attachments {
             modelContext.insert(attachment)
             attachment.activity = activity
         }
-        
+
         try modelContext.save()
-        
+
         // REMOVED: Custom sync triggers - let SwiftData+CloudKit handle automatically
     }
 }
@@ -120,11 +120,11 @@ struct LodgingSaverImpl: ActivitySaver {
     let confirmationLabel = "Reservation"
     let supportsCustomLocation = true
     let hasTypeSelector = false
-    
+
     func createTemplate(in trip: Trip) -> any TripActivityProtocol {
         let defaultStart = trip.effectiveStartDate ?? Date()
         let defaultEnd = Calendar.current.date(byAdding: .day, value: 1, to: defaultStart) ?? defaultStart.addingTimeInterval(24 * 3600)
-        
+
         return Lodging(
             name: "",
             start: defaultStart,
@@ -135,7 +135,7 @@ struct LodgingSaverImpl: ActivitySaver {
             organization: nil
         )
     }
-    
+
     func save(
         editData: TripActivityEditData,
         attachments: [EmbeddedFileAttachment],
@@ -145,10 +145,10 @@ struct LodgingSaverImpl: ActivitySaver {
         guard let organization = editData.organization else {
             throw ActivitySaveError.missingOrganization
         }
-        
+
         let noneOrg = Organization.ensureUniqueNoneOrganization(in: modelContext)
         let finalOrg = organization.name == "None" ? noneOrg : organization
-        
+
         let lodging = Lodging(
             name: editData.name,
             start: editData.start,
@@ -163,23 +163,23 @@ struct LodgingSaverImpl: ActivitySaver {
             customAddress: editData.customAddress,
             hideLocation: editData.hideLocation
         )
-        
+
         modelContext.insert(lodging)
-        
+
         if let customAddress = editData.customAddress {
             modelContext.insert(customAddress)
         }
-        
+
         lodging.trip = trip
         lodging.organization = finalOrg
-        
+
         for attachment in attachments {
             modelContext.insert(attachment)
             attachment.lodging = lodging
         }
-        
+
         try modelContext.save()
-        
+
         // REMOVED: Custom sync triggers - let SwiftData+CloudKit handle automatically
     }
 }
@@ -193,11 +193,11 @@ struct TransportationSaverImpl: ActivitySaver {
     let confirmationLabel = "Confirmation"
     let supportsCustomLocation = false
     let hasTypeSelector = true
-    
+
     func createTemplate(in trip: Trip) -> any TripActivityProtocol {
         let defaultStart = trip.effectiveStartDate ?? Date()
         let defaultEnd = defaultStart.addingTimeInterval(2 * 3600) // 2 hours
-        
+
         return Transportation(
             name: "",
             start: defaultStart,
@@ -206,7 +206,7 @@ struct TransportationSaverImpl: ActivitySaver {
             organization: nil
         )
     }
-    
+
     func save(
         editData: TripActivityEditData,
         attachments: [EmbeddedFileAttachment],
@@ -216,10 +216,10 @@ struct TransportationSaverImpl: ActivitySaver {
         guard let organization = editData.organization else {
             throw ActivitySaveError.missingOrganization
         }
-        
+
         let noneOrg = Organization.ensureUniqueNoneOrganization(in: modelContext)
         let finalOrg = organization.name == "None" ? noneOrg : organization
-        
+
         let transportation = Transportation(
             name: editData.name,
             type: editData.transportationType ?? .plane,
@@ -232,19 +232,19 @@ struct TransportationSaverImpl: ActivitySaver {
             confirmation: editData.confirmationField,
             notes: editData.notes
         )
-        
+
         modelContext.insert(transportation)
-        
+
         transportation.trip = trip
         transportation.organization = finalOrg
-        
+
         for attachment in attachments {
             modelContext.insert(attachment)
             attachment.transportation = transportation
         }
-        
+
         try modelContext.save()
-        
+
         // REMOVED: Custom sync triggers - let SwiftData+CloudKit handle automatically
     }
 }
@@ -270,7 +270,7 @@ enum ActivitySaveError: Error, LocalizedError {
     case missingOrganization
     case unsupportedActivityType
     case saveFailed(Error)
-    
+
     var errorDescription: String? {
         switch self {
         case .missingOrganization:

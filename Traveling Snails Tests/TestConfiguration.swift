@@ -22,12 +22,12 @@ extension TestDataIsolation {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         do {
             return try ModelContainer(
-                for: Trip.self, 
-                Lodging.self, 
-                Transportation.self, 
-                Activity.self, 
-                Organization.self, 
-                Address.self, 
+                for: Trip.self,
+                Lodging.self,
+                Transportation.self,
+                Activity.self,
+                Organization.self,
+                Address.self,
                 EmbeddedFileAttachment.self,
                 configurations: config
             )
@@ -35,7 +35,7 @@ extension TestDataIsolation {
             fatalError("Failed to create test ModelContainer: \(error)")
         }
     }
-    
+
     var testModelContext: ModelContext {
         testModelContainer.mainContext
     }
@@ -47,7 +47,6 @@ extension TestDataIsolation {
 /// Base class that all SwiftData tests should inherit from
 @MainActor
 class IsolatedTestBase: TestDataIsolation {
-    
     /// Clean slate for each test
     func clearTestData() throws {
         let trips = try testModelContext.fetch(FetchDescriptor<Trip>())
@@ -57,7 +56,7 @@ class IsolatedTestBase: TestDataIsolation {
         let organizations = try testModelContext.fetch(FetchDescriptor<Organization>())
         let addresses = try testModelContext.fetch(FetchDescriptor<Address>())
         let attachments = try testModelContext.fetch(FetchDescriptor<EmbeddedFileAttachment>())
-        
+
         trips.forEach { testModelContext.delete($0) }
         lodgings.forEach { testModelContext.delete($0) }
         transportation.forEach { testModelContext.delete($0) }
@@ -65,15 +64,15 @@ class IsolatedTestBase: TestDataIsolation {
         organizations.forEach { testModelContext.delete($0) }
         addresses.forEach { testModelContext.delete($0) }
         attachments.forEach { testModelContext.delete($0) }
-        
+
         try testModelContext.save()
     }
-    
+
     /// Verify test isolation
     func verifyIsolation() throws {
         let trips = try testModelContext.fetch(FetchDescriptor<Trip>())
         let organizations = try testModelContext.fetch(FetchDescriptor<Organization>())
-        
+
         guard trips.isEmpty && organizations.isEmpty else {
             throw TestIsolationError.dataContamination
         }
@@ -84,7 +83,7 @@ class IsolatedTestBase: TestDataIsolation {
 enum TestIsolationError: Error {
     case dataContamination
     case mainContainerAccess
-    
+
     var localizedDescription: String {
         switch self {
         case .dataContamination:
@@ -101,25 +100,25 @@ struct TestGuard {
     static func ensureTestEnvironment() {
         // In test environment, we should never access the main app's ModelContainer
         // This guard helps catch tests that might accidentally access real data
-        
+
         #if DEBUG
         let isInTests = NSClassFromString("XCTestCase") != nil || ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
-        
+
         if isInTests {
             // Test environment logging suppressed to prevent hanging
-            
+
             // Set a flag that other parts of the app can check
             UserDefaults.standard.set(true, forKey: "isRunningTests")
-            
+
             // Force disable any CloudKit-related initialization
             UserDefaults.standard.set(true, forKey: "disableCloudKit")
-            
+
             // Debug log to verify this is being called
             print("🧪 TestGuard: Test environment detected and configured")
         }
         #endif
     }
-    
+
     static var isRunningTests: Bool {
         UserDefaults.standard.bool(forKey: "isRunningTests")
     }

@@ -18,10 +18,10 @@ class BiometricAuthManager {
         #endif
         return BiometricAuthManager()
     }()
-    
+
     // Simple session tracking - which trips are authenticated this session
     private var authenticatedTripIDs: Set<UUID> = []
-    
+
     // Biometrics are always enabled - protection is per-trip only
     var isEnabled: Bool {
         #if targetEnvironment(simulator)
@@ -41,14 +41,14 @@ class BiometricAuthManager {
         return canUseBiometrics()
         #endif
     }
-    
+
     // Notification to allow manual UI updates when needed
     private var stateChangeHandlers: [(UUID) -> Void] = []
-    
+
     private init() {
         // No longer need to initialize from settings - always enabled if available
     }
-    
+
     var biometricType: BiometricType {
         // CRITICAL: Test detection FIRST before any LAContext creation
         #if DEBUG
@@ -61,7 +61,7 @@ class BiometricAuthManager {
             return .none
         }
         #endif
-        
+
         // SECOND: Check simulator (only for non-test builds)
         #if targetEnvironment(simulator)
         return .none
@@ -79,13 +79,13 @@ class BiometricAuthManager {
         }
         #endif
     }
-    
+
     enum BiometricType {
         case none
         case faceID
         case touchID
     }
-    
+
     func canUseBiometrics() -> Bool {
         // CRITICAL: Test detection FIRST before any LAContext creation
         #if DEBUG
@@ -98,7 +98,7 @@ class BiometricAuthManager {
             return false
         }
         #endif
-        
+
         // SECOND: Check simulator (only for non-test builds)
         #if targetEnvironment(simulator)
         return false
@@ -108,22 +108,22 @@ class BiometricAuthManager {
         return context.canEvaluatePolicy(.deviceOwnerAuthentication, error: nil)
         #endif
     }
-    
+
     // MARK: - Core Authentication Methods
-    
+
     func isAuthenticated(for trip: Trip) -> Bool {
         let isProtectedTrip = isProtected(trip)
         let isInAuthenticatedSet = authenticatedTripIDs.contains(trip.id)
         let result = !isProtectedTrip || isInAuthenticatedSet
-        
+
         // Only log when state actually changes to reduce noise
         #if DEBUG
         Logger.shared.debug("BiometricAuthManager.isAuthenticated for trip ID: \(trip.id) - result: \(result)")
         #endif
-        
+
         return result
     }
-    
+
     func isProtected(_ trip: Trip) -> Bool {
         let result = isEnabled && trip.isProtected
         #if DEBUG
@@ -131,17 +131,17 @@ class BiometricAuthManager {
         #endif
         return result
     }
-    
+
     nonisolated func authenticateTrip(_ trip: Trip) async -> Bool {
         // Capture only the values we need to avoid Sendable issues
         let tripId = trip.id
         let tripName = trip.name
         let tripIsProtected = trip.isProtected
-        
+
         #if DEBUG
         Logger.shared.debug("BiometricAuthManager.authenticateTrip for trip ID: \(tripId) - START")
         #endif
-        
+
         // CRITICAL: Test detection FIRST before any LAContext creation
         #if DEBUG
         let isRunningTests = UserDefaults.standard.bool(forKey: "isRunningTests") ||
@@ -153,45 +153,45 @@ class BiometricAuthManager {
             #if DEBUG
             Logger.shared.debug("Test environment detected, skipping biometric authentication")
             #endif
-            let _ = await MainActor.run {
+            _ = await MainActor.run {
                 self.authenticatedTripIDs.insert(tripId)
             }
             return true
         }
         #endif
-        
+
         // Check if trip is protected on main actor
         let effectivelyProtected = await MainActor.run {
             self.isEnabled && tripIsProtected
         }
-        
+
         // If trip is not protected, always return true
-        guard effectivelyProtected else { 
+        guard effectivelyProtected else {
             #if DEBUG
             Logger.shared.debug("Trip not protected, returning true")
             #endif
-            return true 
+            return true
         }
-        
+
         // Check if already authenticated on main actor
         let alreadyAuthenticated = await MainActor.run {
             self.authenticatedTripIDs.contains(tripId)
         }
-        
+
         if alreadyAuthenticated {
             #if DEBUG
             Logger.shared.debug("Trip already authenticated, returning true")
             #endif
             return true
         }
-        
+
         // Perform authentication (platform-specific behavior)
         #if targetEnvironment(simulator)
         // On simulator, ALWAYS skip biometric authentication to prevent hanging
         #if DEBUG
         Logger.shared.debug("Simulator environment detected, skipping biometric authentication")
         #endif
-        let _ = await MainActor.run {
+        _ = await MainActor.run {
             self.authenticatedTripIDs.insert(tripId)
         }
         return true
@@ -200,10 +200,10 @@ class BiometricAuthManager {
         #if DEBUG
         Logger.shared.debug("Real device detected, proceeding with actual biometric authentication")
         #endif
-        
+
         // Perform biometric authentication with fresh context
         let context = LAContext()
-        
+
         // Check if biometrics are available before attempting authentication
         var error: NSError?
         guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
@@ -217,14 +217,14 @@ class BiometricAuthManager {
             #endif
             return false
         }
-        
+
         #if DEBUG
         Logger.shared.debug("Starting biometric authentication with timeout protection...")
         #endif
-        
+
         // Add timeout protection to prevent indefinite hanging
         let timeoutSeconds: UInt64 = 30 // 30 second timeout
-        
+
         return await withTaskGroup(of: Bool.self) { group in
             // Authentication task
             group.addTask {
@@ -233,11 +233,11 @@ class BiometricAuthManager {
                         .deviceOwnerAuthentication,
                         localizedReason: "Authenticate to access protected content"
                     )
-                    
+
                     #if DEBUG
                     Logger.shared.debug("Biometric authentication result: \(result)")
                     #endif
-                    
+
                     if result {
                         await MainActor.run {
                             self.authenticatedTripIDs.insert(tripId)
@@ -302,7 +302,7 @@ class BiometricAuthManager {
                     return false
                 }
             }
-            
+
             // Timeout task
             group.addTask {
                 try? await Task.sleep(nanoseconds: timeoutSeconds * 1_000_000_000)
@@ -311,17 +311,17 @@ class BiometricAuthManager {
                 #endif
                 return false
             }
-            
+
             // Return the first completed result
-            guard let result = await group.next() else { 
-                return false 
+            guard let result = await group.next() else {
+                return false
             }
             group.cancelAll()
             return result
         }
         #endif
     }
-    
+
     func lockTrip(_ trip: Trip) {
         #if DEBUG
         Logger.shared.debug("BiometricAuthManager.lockTrip for trip ID: \(trip.id)")
@@ -334,7 +334,7 @@ class BiometricAuthManager {
         // Don't notify state change here - let the view manage its own state
         // notifyStateChange(for: trip.id)
     }
-    
+
     func toggleProtection(for trip: Trip) {
         #if DEBUG
         Logger.shared.debug("BiometricAuthManager.toggleProtection for trip ID: \(trip.id))")
@@ -344,7 +344,7 @@ class BiometricAuthManager {
         #if DEBUG
         Logger.shared.debug("After: trip.isProtected = \(trip.isProtected)")
         #endif
-        
+
         // If removing protection, also remove from authenticated trips
         if !trip.isProtected {
             #if DEBUG
@@ -356,11 +356,11 @@ class BiometricAuthManager {
         Logger.shared.debug("Final authenticatedTripIDs = \(authenticatedTripIDs)")
         #endif
     }
-    
+
     func lockAllTrips() {
         authenticatedTripIDs.removeAll()
     }
-    
+
     var allTripsLocked: Bool {
         // Add runtime validation to warn about singleton access during tests
         #if DEBUG
@@ -373,11 +373,11 @@ class BiometricAuthManager {
         #endif
         return authenticatedTripIDs.isEmpty
     }
-    
+
     func resetSession() {
         authenticatedTripIDs.removeAll()
     }
-    
+
     // MARK: - Test Support
     #if DEBUG
     /// Reset authentication state for testing - clears all authenticated trips
@@ -385,13 +385,13 @@ class BiometricAuthManager {
         authenticatedTripIDs.removeAll()
     }
     #endif
-    
+
     // MARK: - Manual State Change Notification
-    
+
     func addStateChangeHandler(_ handler: @escaping (UUID) -> Void) {
         stateChangeHandlers.append(handler)
     }
-    
+
     private func notifyStateChange(for tripID: UUID) {
         for handler in stateChangeHandlers {
             handler(tripID)

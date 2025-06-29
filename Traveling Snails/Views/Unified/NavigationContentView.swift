@@ -14,7 +14,7 @@ struct NavigationContentView<Item: NavigationItem>: View {
     @Binding var selectedItem: Item?
     let onItemTap: (Item) -> Void
     let onAddTap: () -> Void
-    
+
     var body: some View {
         VStack(spacing: 0) {
             // Search bar
@@ -25,7 +25,7 @@ struct NavigationContentView<Item: NavigationItem>: View {
                 )
                 .padding(.top, 8)
             }
-            
+
             // Content
             if items.isEmpty {
                 NavigationEmptyStateView(configuration: configuration)
@@ -54,7 +54,7 @@ struct NavigationContentView<Item: NavigationItem>: View {
 /// Empty state view for when no items are available
 struct NavigationEmptyStateView<Item: NavigationItem>: View {
     let configuration: NavigationConfiguration<Item>
-    
+
     var body: some View {
         ContentUnavailableView(
             NSLocalizedString(configuration.emptyStateTitle, value: configuration.emptyStateTitle, comment: "Empty state title"),
@@ -71,7 +71,7 @@ struct NavigationListView<Item: NavigationItem>: View {
     let configuration: NavigationConfiguration<Item>
     let selectedItem: Item?
     let onItemTap: (Item) -> Void
-    
+
     var body: some View {
         List(
             items,
@@ -79,9 +79,8 @@ struct NavigationListView<Item: NavigationItem>: View {
         ) { item in
             NavigationRowView(
                 item: item,
-                isSelected: selectedItem?.id == item.id,
-                onTap: { onItemTap(item) }
-            )
+                isSelected: selectedItem?.id == item.id
+            )                { onItemTap(item) }
             .listRowSeparator(.hidden)
             .listRowBackground(Color.clear)
             .listRowInsets(EdgeInsets(top: 6, leading: 8, bottom: 6, trailing: 8))
@@ -96,10 +95,10 @@ struct NavigationRowView<Item: NavigationItem>: View {
     let item: Item
     let isSelected: Bool
     let onTap: () -> Void
-    
+
     @Environment(\.colorScheme) private var colorScheme
     private let authManager = BiometricAuthManager.shared
-    
+
     var body: some View {
         HStack(spacing: 16) {
             // Icon with background
@@ -111,19 +110,19 @@ struct NavigationRowView<Item: NavigationItem>: View {
                         Circle()
                             .stroke(item.displayColor, lineWidth: isSelected ? 2 : 0)
                     )
-                
+
                 Image(systemName: item.displayIcon)
                     .foregroundStyle(item.displayColor)
                     .font(.system(size: 20, weight: isSelected ? .semibold : .medium))
             }
-            
+
             // Content
             VStack(alignment: .leading, spacing: 4) {
                 Text(item.displayName)
                     .font(.headline)
                     .lineLimit(1)
                     .foregroundStyle(.primary)
-                
+
                 if let subtitle = item.displaySubtitle {
                     Text(subtitle)
                         .font(.subheadline)
@@ -133,18 +132,18 @@ struct NavigationRowView<Item: NavigationItem>: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            
+
             // Badge and chevron
             HStack(spacing: 8) {
                 // Biometric protection indicator
-                if let trip = item as? Trip, 
+                if let trip = item as? Trip,
                    authManager.isEnabled && authManager.isProtected(trip) {
                     Image(systemName: "lock.fill")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .accessibilityLabel("Protected with biometric authentication")
                 }
-                
+
                 if let badgeCount = item.displayBadgeCount, badgeCount > 0 {
                     Text("\(badgeCount)")
                         .font(.caption.weight(.semibold))
@@ -154,7 +153,7 @@ struct NavigationRowView<Item: NavigationItem>: View {
                         .background(item.displayColor, in: Capsule())
                         .accessibilityLabel("\(badgeCount) items")
                 }
-                
+
                 Image(systemName: "chevron.right")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.tertiary)

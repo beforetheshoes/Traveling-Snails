@@ -11,11 +11,11 @@ struct TimeZonePickerSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
     @State private var showingAllTimeZones = false
-    
+
     var commonTimeZones: [TimeZone] {
         TimeZoneHelper.commonTimeZones
     }
-    
+
     var filteredCommonTimeZones: [TimeZone] {
         if searchText.isEmpty {
             return commonTimeZones
@@ -25,13 +25,13 @@ struct TimeZonePickerSheet: View {
             TimeZoneHelper.formatTimeZone(timeZone).localizedCaseInsensitiveContains(searchText)
         }
     }
-    
+
     var filteredAllTimeZones: [String: [TimeZone]] {
         let grouped = TimeZoneHelper.groupedTimeZones
         if searchText.isEmpty {
             return grouped
         }
-        
+
         var filtered: [String: [TimeZone]] = [:]
         for (region, timeZones) in grouped {
             let matchingTimeZones = timeZones.filter { timeZone in
@@ -44,7 +44,7 @@ struct TimeZonePickerSheet: View {
         }
         return filtered
     }
-    
+
     var body: some View {
         NavigationStack {
             VStack {
@@ -52,12 +52,12 @@ struct TimeZonePickerSheet: View {
                 HStack {
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(.secondary)
-                    
+
                     TextField("Search timezones...", text: $searchText)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
                 }
                 .padding(.horizontal)
-                
+
                 // Toggle between common and all timezones
                 Picker("", selection: $showingAllTimeZones) {
                     Text("Common").tag(false)
@@ -65,7 +65,7 @@ struct TimeZonePickerSheet: View {
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
-                
+
                 List {
                     if showingAllTimeZones {
                         // All timezones grouped by region
@@ -95,7 +95,7 @@ struct TimeZonePickerSheet: View {
             }
         }
     }
-    
+
     @ViewBuilder
     private func timeZoneRow(for timeZone: TimeZone) -> some View {
         Button {
@@ -107,14 +107,14 @@ struct TimeZonePickerSheet: View {
                     Text(TimeZoneHelper.formatTimeZone(timeZone))
                         .font(.body)
                         .foregroundColor(.primary)
-                    
+
                     Text(timeZone.identifier)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                
+
                 Spacer()
-                
+
                 if timeZone.identifier == selectedTimeZoneId {
                     Image(systemName: "checkmark")
                         .foregroundColor(.blue)

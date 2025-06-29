@@ -16,11 +16,11 @@ protocol TripActivityProtocol: Identifiable, Observable {
     var notes: String { get set }
     var trip: Trip? { get set }
     var organization: Organization? { get set }
-    
+
     // Type-specific fields
     var confirmationField: String { get set }
     var confirmationLabel: String { get }
-    
+
     // Timezone handling
     var startTZId: String { get set }
     var endTZId: String { get set }
@@ -28,7 +28,7 @@ protocol TripActivityProtocol: Identifiable, Observable {
     var endTZ: TimeZone { get }
     var startFormatted: String { get }
     var endFormatted: String { get }
-    
+
     // Location handling
     var supportsCustomLocation: Bool { get }
     var customLocationName: String { get set }
@@ -37,13 +37,13 @@ protocol TripActivityProtocol: Identifiable, Observable {
     var displayLocation: String { get }
     var displayAddress: Address? { get }
     var hasLocation: Bool { get }
-    
+
     // File attachment support
     var supportsFileAttachments: Bool { get }
     var hasAttachments: Bool { get }
     var attachmentCount: Int { get }
     var fileAttachments: [EmbeddedFileAttachment] { get set }
-    
+
     // UI Configuration
     var activityType: ActivityWrapper.ActivityType { get }
     var icon: String { get }
@@ -53,7 +53,7 @@ protocol TripActivityProtocol: Identifiable, Observable {
     var endLabel: String { get }
     var hasTypeSelector: Bool { get }
     var transportationType: TransportationType? { get set }
-    
+
     // Actions
     func duration() -> TimeInterval
     func copyForEditing() -> TripActivityEditData

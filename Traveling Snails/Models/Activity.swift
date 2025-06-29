@@ -4,41 +4,41 @@
 //
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 @Model
 class Activity: Identifiable {
     var id = UUID()
     var name: String = ""
-    var start: Date = Date()
+    var start = Date()
     var startTZId: String = ""
-    var end: Date = Date()
+    var end = Date()
     var endTZId: String = ""
     var cost: Decimal = 0
-    var paid: PaidStatus = PaidStatus.none
+    var paid = PaidStatus.none
     var reservation: String = ""
     var notes: String = ""
-    
-    var trip: Trip? = nil
-    var organization: Organization? = nil
-    
+
+    var trip: Trip?
+    var organization: Organization?
+
     // Location fields
     var customLocationName: String = ""
     @Relationship(deleteRule: .cascade, inverse: \Address.activities)
-    var customAddresss: Address? = nil
+    var customAddresss: Address?
     var hideLocation: Bool = false
-    
+
     // CLOUDKIT REQUIRED: Optional file attachments with SAFE accessor
     @Relationship(deleteRule: .cascade, inverse: \EmbeddedFileAttachment.activity)
-    private var _fileAttachments: [EmbeddedFileAttachment]? = nil
-    
+    private var _fileAttachments: [EmbeddedFileAttachment]?
+
     // SAFE ACCESSOR: Never return nil
     var fileAttachments: [EmbeddedFileAttachment] {
         get { _fileAttachments ?? [] }
         set { _fileAttachments = newValue.isEmpty ? nil : newValue }
     }
-    
+
     init(
         name: String = "",
         start: Date = Date(),
@@ -70,16 +70,16 @@ class Activity: Identifiable {
         self.customAddresss = customAddress
         self.hideLocation = hideLocation
     }
-    
+
     // MARK: - Computed properties
     var startTZ: TimeZone {
         TimeZone(identifier: startTZId) ?? TimeZone.current
     }
-    
+
     var endTZ: TimeZone {
         TimeZone(identifier: endTZId) ?? TimeZone.current
     }
-    
+
     var startFormatted: String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
@@ -87,7 +87,7 @@ class Activity: Identifiable {
         formatter.timeZone = startTZ
         return formatter.string(from: start)
     }
-    
+
     var endFormatted: String {
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
@@ -95,7 +95,7 @@ class Activity: Identifiable {
         formatter.timeZone = endTZ
         return formatter.string(from: end)
     }
-    
+
     var displayLocation: String {
         if let org = organization, org.name != "None" {
             return org.name
@@ -117,9 +117,9 @@ class Activity: Identifiable {
 
         return nil
     }
-    
+
     var hasLocation: Bool { customAddresss != nil || (organization?.address?.isEmpty == false) }
-    
+
     // File attachment support
     var hasAttachments: Bool { !fileAttachments.isEmpty }
     var attachmentCount: Int { fileAttachments.count }

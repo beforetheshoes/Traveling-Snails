@@ -10,10 +10,10 @@ struct CompactDayView: View {
     let date: Date
     let activities: [ActivityWrapper]
     let onActivityTap: (any TripActivityProtocol) -> Void
-    
+
     private var calendar: Calendar { Calendar.current }
     private var isToday: Bool { calendar.isDateInToday(date) }
-    
+
     var body: some View {
         VStack(spacing: 8) {
             // Day header - fixed height
@@ -21,7 +21,7 @@ struct CompactDayView: View {
                 Text(date.formatted(.dateTime.weekday(.abbreviated)))
                     .font(.caption)
                     .foregroundColor(.secondary)
-                
+
                 Text("\(calendar.component(.day, from: date))")
                     .font(.title2)
                     .fontWeight(isToday ? .bold : .medium)
@@ -31,7 +31,7 @@ struct CompactDayView: View {
                     .clipShape(Circle())
             }
             .frame(height: 60) // Fixed header height
-            
+
             // Activities (excluding full-day events) - flexible height
             ScrollView {
                 LazyVStack(spacing: 4) {
@@ -61,14 +61,14 @@ struct CompactDayView: View {
         let calendar = Calendar.current
         let start = wrapper.tripActivity.start
         let end = wrapper.tripActivity.end
-        
+
         if wrapper.type == .lodging {
             return true
         }
-        
+
         let startOfDay = calendar.startOfDay(for: start)
         let duration = end.timeIntervalSince(start)
-        
+
         return start == startOfDay && duration >= 12 * 3600
     }
 }

@@ -10,7 +10,7 @@ enum PaidStatus: String, CaseIterable, Codable {
     case infull
     case deposit
     case none
-    
+
     var displayName: String {
         switch self {
         case .infull:
@@ -22,4 +22,3 @@ enum PaidStatus: String, CaseIterable, Codable {
         }
     }
 }
-

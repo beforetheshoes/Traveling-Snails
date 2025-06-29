@@ -11,16 +11,16 @@ struct DateTimeZoneSection: View {
     let endLabel: String
     var trip: Trip
     let syncTimezones: Bool // New parameter to control timezone syncing
-    
+
     @Binding var startDate: Date
     @Binding var endDate: Date
     @Binding var startTimeZoneId: String
     @Binding var endTimeZoneId: String
-    
+
     let address: Address?
-    
+
     @State private var hasUserSetEndTimeZone = false
-    
+
     init(
         startLabel: String,
         endLabel: String,
@@ -42,24 +42,24 @@ struct DateTimeZoneSection: View {
         self._endTimeZoneId = endTimeZoneId
         self.address = address
     }
-    
+
     var body: some View {
         VStack(spacing: 16) {
             // Start Date/Time
             VStack(alignment: .leading, spacing: 8) {
                 DatePicker(startLabel, selection: $startDate)
-                
+
                 TimeZonePicker(
                     selectedTimeZoneId: $startTimeZoneId,
                     address: address,
                     label: "\(startLabel) Timezone"
                 )
             }
-            
+
             // End Date/Time
             VStack(alignment: .leading, spacing: 8) {
                 DatePicker(endLabel, selection: $endDate)
-                
+
                 TimeZonePicker(
                     selectedTimeZoneId: $endTimeZoneId,
                     address: address,

@@ -4,8 +4,8 @@
 //
 //
 
-import SwiftUI
 import MapKit
+import SwiftUI
 
 struct AddressAutocompleteView: View {
     @Binding var selectedAddress: Address?
@@ -16,24 +16,24 @@ struct AddressAutocompleteView: View {
     @State private var isSearching = false
     @State private var showResults = false
     @State private var hasSelectedAddress = false
-    
+
     let placeholder: String
-    
+
     init(selectedAddress: Binding<Address?>, placeholder: String = "Enter address") {
         self._selectedAddress = selectedAddress
         self.placeholder = placeholder
     }
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             // Search field
             HStack {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.secondary)
-                
+
                 TextField(placeholder, text: $searchText)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .onChange(of: searchText) { oldValue, newValue in
+                    .onChange(of: searchText) { _, newValue in
                         handleSearchTextChange(newValue)
                     }
                     .onTapGesture {
@@ -42,7 +42,7 @@ struct AddressAutocompleteView: View {
                             searchCompleter.queryFragment = searchText
                         }
                     }
-                
+
                 if !searchText.isEmpty {
                     Button("Clear") {
                         clearSelection()
@@ -51,14 +51,14 @@ struct AddressAutocompleteView: View {
                     .foregroundColor(.blue)
                 }
             }
-            
+
             // Selected address display
             if let address = selectedAddress, hasSelectedAddress {
                 HStack {
                     Image(systemName: "location.fill")
                         .foregroundColor(.green)
                         .font(.caption)
-                    
+
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Selected Address:")
                             .font(.caption)
@@ -67,9 +67,9 @@ struct AddressAutocompleteView: View {
                             .font(.body)
                             .foregroundColor(.primary)
                     }
-                    
+
                     Spacer()
-                    
+
                     Button("Change") {
                         changeAddress()
                     }
@@ -81,7 +81,7 @@ struct AddressAutocompleteView: View {
                 .background(Color.green.opacity(0.1))
                 .cornerRadius(8)
             }
-            
+
             // Search results
             if showResults && !searchResults.isEmpty && searchText.count > 2 && !hasSelectedAddress {
                 VStack(alignment: .leading, spacing: 0) {
@@ -90,7 +90,7 @@ struct AddressAutocompleteView: View {
                         .foregroundColor(.secondary)
                         .padding(.horizontal, 12)
                         .padding(.top, 8)
-                    
+
                     ForEach(searchResults.prefix(5), id: \.self) { completion in
                         Button {
                             selectAddress(from: completion)
@@ -100,7 +100,7 @@ struct AddressAutocompleteView: View {
                                     .font(.body)
                                     .foregroundColor(.primary)
                                     .multilineTextAlignment(.leading)
-                                
+
                                 if !completion.subtitle.isEmpty {
                                     Text(completion.subtitle)
                                         .font(.caption)
@@ -114,7 +114,7 @@ struct AddressAutocompleteView: View {
                         }
                         .buttonStyle(PlainButtonStyle())
                         .background(Color(.systemBackground))
-                        
+
                         if completion != searchResults.prefix(5).last {
                             Divider()
                                 .padding(.leading, 16)
@@ -126,7 +126,7 @@ struct AddressAutocompleteView: View {
                 .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
                 .padding(.top, 4)
             }
-            
+
             // Loading indicator
             if isSearching {
                 HStack {
@@ -149,7 +149,7 @@ struct AddressAutocompleteView: View {
                 }
             }
         }
-        .onChange(of: selectedAddress) { oldValue, newValue in
+        .onChange(of: selectedAddress) { _, newValue in
             // Handle external changes to selectedAddress
             if newValue == nil || newValue?.isEmpty == true {
                 // Address was cleared externally or is empty
@@ -164,13 +164,13 @@ struct AddressAutocompleteView: View {
             }
         }
     }
-    
+
     private func handleSearchTextChange(_ newValue: String) {
         if newValue.isEmpty {
             clearSelection()
             return
         }
-        
+
         // Only search if we don't have a selected address
         if !hasSelectedAddress {
             showResults = true
@@ -182,7 +182,7 @@ struct AddressAutocompleteView: View {
             }
         }
     }
-    
+
     private func clearSelection() {
         searchText = ""
         searchResults = []
@@ -191,7 +191,7 @@ struct AddressAutocompleteView: View {
         hasSelectedAddress = false
         searchCompleter.queryFragment = ""
     }
-    
+
     private func changeAddress() {
         hasSelectedAddress = false
         selectedAddress = nil
@@ -200,7 +200,7 @@ struct AddressAutocompleteView: View {
             searchCompleter.queryFragment = searchText
         }
     }
-    
+
     private func setupSearchCompleter() {
         let delegate = SearchCompleterDelegate { results in
             DispatchQueue.main.async {
@@ -214,19 +214,19 @@ struct AddressAutocompleteView: View {
         searchCompleter.delegate = delegate
         searchCompleter.resultTypes = [.address, .pointOfInterest]
     }
-    
+
     private func selectAddress(from completion: MKLocalSearchCompletion) {
         // Immediately set flags to prevent UI flickering
         showResults = false
         isSearching = true
-        
+
         let searchRequest = MKLocalSearch.Request(completion: completion)
         let search = MKLocalSearch(request: searchRequest)
-        
+
         search.start { response, error in
             DispatchQueue.main.async {
                 self.isSearching = false
-                
+
                 guard let response = response,
                       let mapItem = response.mapItems.first else {
                     print("Failed to get location for completion: \(error?.localizedDescription ?? "Unknown error")")
@@ -234,9 +234,9 @@ struct AddressAutocompleteView: View {
                     self.showResults = true
                     return
                 }
-                
+
                 let address = Address(from: mapItem.placemark)
-                
+
                 // Set everything in the right order
                 self.selectedAddress = address
                 self.searchText = address.displayAddress
@@ -251,15 +251,15 @@ struct AddressAutocompleteView: View {
 // Helper class to handle search completer delegate
 class SearchCompleterDelegate: NSObject, MKLocalSearchCompleterDelegate {
     private let onResults: ([MKLocalSearchCompletion]) -> Void
-    
+
     init(onResults: @escaping ([MKLocalSearchCompletion]) -> Void) {
         self.onResults = onResults
     }
-    
+
     func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
         onResults(completer.results)
     }
-    
+
     func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
         print("Search completer error: \(error)")
     }
@@ -268,12 +268,12 @@ class SearchCompleterDelegate: NSObject, MKLocalSearchCompleterDelegate {
 #Preview {
     struct PreviewWrapper: View {
         @State private var address: Address?
-        
+
         var body: some View {
             VStack {
                 AddressAutocompleteView(selectedAddress: $address)
                     .padding()
-                
+
                 if let address = address {
                     VStack(alignment: .leading) {
                         Text("Selected Address Details:")
@@ -292,11 +292,11 @@ class SearchCompleterDelegate: NSObject, MKLocalSearchCompleterDelegate {
                     .cornerRadius(8)
                     .padding()
                 }
-                
+
                 Spacer()
             }
         }
     }
-    
+
     return PreviewWrapper()
 }

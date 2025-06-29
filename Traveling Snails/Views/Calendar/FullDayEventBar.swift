@@ -4,17 +4,17 @@
 //
 //
 
-import SwiftUI
 import Foundation
+import SwiftUI
 
 struct FullDayEventBar: View {
     let wrapper: ActivityWrapper
     let weekDates: [Date]
     let onTap: () -> Void
     let timeColumnWidth: CGFloat
-    
+
     private var calendar: Calendar { Calendar.current }
-    
+
     #if os(iOS)
     private var isCompact: Bool {
         UIDevice.current.userInterfaceIdiom == .phone
@@ -22,14 +22,14 @@ struct FullDayEventBar: View {
     #else
     private var isCompact: Bool { false }
     #endif
-    
+
     init(wrapper: ActivityWrapper, weekDates: [Date], onTap: @escaping () -> Void, timeColumnWidth: CGFloat = 50) {
         self.wrapper = wrapper
         self.weekDates = weekDates
         self.onTap = onTap
         self.timeColumnWidth = timeColumnWidth
     }
-    
+
     var body: some View {
         HStack(spacing: 0) {
             // Time column spacer
@@ -37,28 +37,28 @@ struct FullDayEventBar: View {
                 Color.clear
                     .frame(width: timeColumnWidth)
             }
-            
+
             // Single unified event bar spanning all event days
             unifiedEventBar
         }
     }
-    
+
     private var unifiedEventBar: some View {
         GeometryReader { geometry in
             let totalWidth = geometry.size.width
             let dayWidth = totalWidth / CGFloat(weekDates.count)
-            
+
             // Calculate which days the event spans and their positions
             let spanningDays = weekDates.enumerated().compactMap { index, date -> (index: Int, date: Date)? in
                 eventSpansDate(date) ? (index, date) : nil
             }
-            
+
             if !spanningDays.isEmpty {
                 let startIndex = spanningDays.first!.index
                 let endIndex = spanningDays.last!.index
                 let barWidth = CGFloat(endIndex - startIndex + 1) * dayWidth
                 let barXOffset = CGFloat(startIndex) * dayWidth
-                
+
                 Button(action: onTap) {
                     RoundedRectangle(cornerRadius: 6)
                         .fill(wrapper.type.color)
@@ -73,7 +73,7 @@ struct FullDayEventBar: View {
         }
         .frame(height: eventBarHeight)
     }
-    
+
     private var unifiedEventContent: some View {
         HStack {
             // Start time on left - only show if event starts within visible range
@@ -99,9 +99,9 @@ struct FullDayEventBar: View {
                         .fontWeight(.medium)
                 }
             }
-            
+
             Spacer()
-            
+
             // Event title in center
             VStack(spacing: 1) {
                 Text(wrapper.tripActivity.name)
@@ -110,16 +110,16 @@ struct FullDayEventBar: View {
                     .foregroundColor(.white)
                     .lineLimit(1)
                     .multilineTextAlignment(.center)
-                
+
                 if !isCompact && eventSpansMultipleDays {
                     Text("\(eventDurationText)")
                         .font(.caption2)
                         .foregroundColor(.white.opacity(0.8))
                 }
             }
-            
+
             Spacer()
-            
+
             // End time on right - only show if event ends within visible range
             if eventEndsInVisibleRange {
                 VStack(alignment: .trailing, spacing: 2) {
@@ -146,45 +146,45 @@ struct FullDayEventBar: View {
         }
         .padding(.horizontal, contentPadding)
     }
-    
+
     // MARK: - Computed Properties
-    
+
     private var eventBarHeight: CGFloat {
         isCompact ? 32 : 44
     }
-    
+
     private var subtitleFont: Font {
         isCompact ? .caption2 : .caption
     }
-    
+
     private var contentPadding: CGFloat {
         isCompact ? 6 : 12
     }
-    
+
     private var eventSpansMultipleDays: Bool {
         let startDay = calendar.startOfDay(for: wrapper.tripActivity.start)
         let endDay = calendar.startOfDay(for: wrapper.tripActivity.end)
         return startDay != endDay
     }
-    
+
     private var eventStartsInVisibleRange: Bool {
         weekDates.contains { date in
             calendar.isDate(wrapper.tripActivity.start, inSameDayAs: date)
         }
     }
-    
+
     private var eventEndsInVisibleRange: Bool {
         weekDates.contains { date in
             calendar.isDate(wrapper.tripActivity.end, inSameDayAs: date)
         }
     }
-    
+
     private var eventDurationText: String {
         if eventSpansMultipleDays {
             let startDate = wrapper.tripActivity.start
             let endDate = wrapper.tripActivity.end
             let daysDifference = calendar.dateComponents([.day], from: startDate, to: endDate).day ?? 0
-            
+
             if daysDifference == 0 {
                 return "Same day"
             } else if daysDifference == 1 {
@@ -195,16 +195,16 @@ struct FullDayEventBar: View {
         }
         return ""
     }
-    
+
     // MARK: - Helper Methods
-    
+
     private func eventSpansDate(_ date: Date) -> Bool {
         let startOfDay = calendar.startOfDay(for: date)
         let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? startOfDay
-        
+
         return wrapper.tripActivity.start < endOfDay && wrapper.tripActivity.end > startOfDay
     }
-    
+
     private func timeWithTimezone(_ date: Date, timezone: TimeZone) -> String {
         let formatter = DateFormatter()
         formatter.timeStyle = .short
@@ -221,7 +221,7 @@ struct CompactFullDayEventBar: View {
     let wrapper: ActivityWrapper
     let visibleDates: [Date]
     let onTap: () -> Void
-    
+
     var body: some View {
         FullDayEventBar(
             wrapper: wrapper,

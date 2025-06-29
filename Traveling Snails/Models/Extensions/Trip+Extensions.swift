@@ -9,7 +9,7 @@ import SwiftUI
 extension Trip: DetailDisplayable {
     var detailSections: [DetailSection] {
         var sections: [DetailSection] = []
-        
+
         // Basic Information
         sections.append(DetailSection(
             title: "Basic Information",
@@ -18,10 +18,10 @@ extension Trip: DetailDisplayable {
                 DetailRowData(label: "ID", value: id.uuidString),
                 DetailRowData(label: "Created", value: createdDate.formatted(date: .abbreviated, time: .shortened)),
                 DetailRowData(label: "Total Cost", value: totalCost.formatted(.currency(code: "USD"))),
-                DetailRowData(label: "Total Activities", value: "\(totalActivities)")
+                DetailRowData(label: "Total Activities", value: "\(totalActivities)"),
             ]
         ))
-        
+
         // Trip Dates (conditional)
         if hasStartDate || hasEndDate {
             var dateRows: [DetailRowData] = []
@@ -33,10 +33,10 @@ extension Trip: DetailDisplayable {
             if hasEndDate {
                 dateRows.append(DetailRowData(label: "End Date", value: endDate.formatted(date: .abbreviated, time: .omitted)))
             }
-            
+
             sections.append(DetailSection(title: "Trip Dates", rows: dateRows))
         }
-        
+
         // Notes (conditional)
         if !notes.isEmpty {
             sections.append(DetailSection(
@@ -45,18 +45,17 @@ extension Trip: DetailDisplayable {
                 textContent: notes
             ))
         }
-        
+
         // Activities Breakdown
         sections.append(DetailSection(
             title: "Activities Breakdown",
             rows: [
                 DetailRowData(label: "Transportation", value: "\(transportation.count)"),
                 DetailRowData(label: "Lodging", value: "\(lodging.count)"),
-                DetailRowData(label: "Activities", value: "\(activity.count)")
+                DetailRowData(label: "Activities", value: "\(activity.count)"),
             ]
         ))
-        
+
         return sections
     }
 }
-

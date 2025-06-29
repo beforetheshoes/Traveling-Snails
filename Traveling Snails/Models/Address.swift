@@ -6,8 +6,8 @@
 
 import Foundation
 import MapKit
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 @Model
 class Address: Identifiable {
@@ -20,11 +20,11 @@ class Address: Identifiable {
     var latitude: Double = 0.0
     var longitude: Double = 0.0
     var formattedAddress: String = ""
-    
+
     var activities: [Activity]? = []
     var lodgings: [Lodging]? = []
     var organizations: [Organization]? = []
-    
+
     init(
         street: String = "",
         city: String = "",
@@ -44,12 +44,12 @@ class Address: Identifiable {
         self.longitude = longitude
         self.formattedAddress = formattedAddress
     }
-    
+
     // Convenience initializer from MKPlacemark
     convenience init(from placemark: MKPlacemark) {
         let street = [placemark.subThoroughfare, placemark.thoroughfare]
             .compactMap { $0 }.joined(separator: " ")
-        
+
         self.init(
             street: street,
             city: placemark.locality ?? "",
@@ -61,23 +61,23 @@ class Address: Identifiable {
             formattedAddress: placemark.title ?? ""
         )
     }
-    
+
     var coordinate: CLLocationCoordinate2D? {
         guard latitude != 0.0 || longitude != 0.0 else { return nil }
         return CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
-    
+
     var displayAddress: String {
         if !formattedAddress.isEmpty {
             return formattedAddress
         }
-        
+
         let components = [street, city, state, country].filter { !$0.isEmpty }
         return components.joined(separator: ", ")
     }
-    
+
     var isEmpty: Bool {
-        return street.isEmpty && city.isEmpty && state.isEmpty && country.isEmpty &&
+        street.isEmpty && city.isEmpty && state.isEmpty && country.isEmpty &&
                postalCode.isEmpty && formattedAddress.isEmpty
     }
 }

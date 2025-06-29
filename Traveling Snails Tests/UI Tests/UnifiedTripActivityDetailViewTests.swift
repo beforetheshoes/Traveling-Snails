@@ -1,20 +1,19 @@
-import Testing
-import SwiftData
 import Foundation
+import SwiftData
+import Testing
 @testable import Traveling_Snails
 
 @Suite("UnifiedTripActivityDetailView Tests")
-@MainActor  
+@MainActor
 final class UnifiedTripActivityDetailViewTests: SwiftDataTestBase {
-    
     @Test("Detail view shows dynamic transportation icons in edit mode")
     func detailViewShowsDynamicTransportationIconsInEditMode() {
         // Create test trip and organization
-        let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86400))
+        let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
         let org = Organization(name: "Test Org")
         modelContext.insert(trip)
         modelContext.insert(org)
-        
+
         // Create existing transportation with specific type
         let existingTransportation = Transportation(
             name: "Flight to NYC",
@@ -25,14 +24,14 @@ final class UnifiedTripActivityDetailViewTests: SwiftDataTestBase {
         )
         existingTransportation.type = .plane
         modelContext.insert(existingTransportation)
-        
+
         // Create detail view (simulating how it would be created in the app)
         _ = UnifiedTripActivityDetailView(activity: existingTransportation)
-        
+
         // We can't easily test SwiftUI views directly, but we can test the logic
         // by creating a similar computed property and testing its behavior
         let testEditData = TripActivityEditData(from: existingTransportation)
-        
+
         // Test the icon logic that would be used in the detail view
         func computeCurrentIcon(
             isEditing: Bool,
@@ -46,7 +45,7 @@ final class UnifiedTripActivityDetailViewTests: SwiftDataTestBase {
             }
             return activity.icon
         }
-        
+
         // Test view mode (not editing) - should use static icon
         let viewModeIcon = computeCurrentIcon(
             isEditing: false,
@@ -54,7 +53,7 @@ final class UnifiedTripActivityDetailViewTests: SwiftDataTestBase {
             editData: testEditData
         )
         #expect(viewModeIcon == "airplane", "View mode should show static transportation icon")
-        
+
         // Test edit mode - should use dynamic icon based on editData
         let editModeIcon = computeCurrentIcon(
             isEditing: true,
@@ -62,18 +61,18 @@ final class UnifiedTripActivityDetailViewTests: SwiftDataTestBase {
             editData: testEditData
         )
         #expect(editModeIcon == "airplane", "Edit mode should initially show existing transportation icon")
-        
+
         // Test changing transportation type in edit mode
         var modifiedEditData = testEditData
         modifiedEditData.transportationType = .train
-        
+
         let modifiedIcon = computeCurrentIcon(
             isEditing: true,
             activity: existingTransportation,
             editData: modifiedEditData
         )
         #expect(modifiedIcon == "train.side.front.car", "Edit mode should show updated transportation icon when type changes")
-        
+
         // Test other transportation types
         modifiedEditData.transportationType = .boat
         let boatIcon = computeCurrentIcon(
@@ -83,23 +82,23 @@ final class UnifiedTripActivityDetailViewTests: SwiftDataTestBase {
         )
         #expect(boatIcon == "ferry", "Edit mode should show ferry icon for boat transportation")
     }
-    
+
     @Test("Detail view edit mode works with different starting transportation types")
     func detailViewEditModeWorksWithDifferentStartingTypes() {
         // Create test trip and organization
-        let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86400))
+        let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
         let org = Organization(name: "Test Org")
         modelContext.insert(trip)
         modelContext.insert(org)
-        
+
         let transportationTypes: [(TransportationType, String)] = [
             (.train, "train.side.front.car"),
             (.boat, "ferry"),
             (.car, "car"),
             (.bicycle, "bicycle"),
-            (.walking, "figure.walk")
+            (.walking, "figure.walk"),
         ]
-        
+
         for (initialType, expectedIcon) in transportationTypes {
             // Create transportation with specific initial type
             let transportation = Transportation(
@@ -111,9 +110,9 @@ final class UnifiedTripActivityDetailViewTests: SwiftDataTestBase {
             )
             transportation.type = initialType
             modelContext.insert(transportation)
-            
+
             let editData = TripActivityEditData(from: transportation)
-            
+
             // Test the currentIcon logic for this transportation type
             func computeCurrentIcon(
                 isEditing: Bool,
@@ -127,7 +126,7 @@ final class UnifiedTripActivityDetailViewTests: SwiftDataTestBase {
                 }
                 return activity.icon
             }
-            
+
             // Verify initial icon in edit mode
             let initialEditIcon = computeCurrentIcon(
                 isEditing: true,
@@ -135,11 +134,11 @@ final class UnifiedTripActivityDetailViewTests: SwiftDataTestBase {
                 editData: editData
             )
             #expect(initialEditIcon == expectedIcon, "Edit mode should show correct icon for \(initialType.rawValue)")
-            
+
             // Test changing to a different type
             var modifiedEditData = editData
             modifiedEditData.transportationType = .plane
-            
+
             let modifiedIcon = computeCurrentIcon(
                 isEditing: true,
                 activity: transportation,

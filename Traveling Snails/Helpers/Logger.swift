@@ -10,21 +10,21 @@ import os
 /// Centralized logging system for the application
 final class Logger {
     static let shared = Logger()
-    
+
     private let subsystem = Bundle.main.bundleIdentifier ?? "com.travelingsnails.app"
     private var loggers: [Category: os.Logger] = [:]
-    
+
     private init() {
         setupLoggers()
     }
-    
+
     enum Level: String, CaseIterable {
         case debug = "🔍"
         case info = "ℹ️"
         case warning = "⚠️"
         case error = "❌"
         case critical = "🚨"
-        
+
         var osLogType: OSLogType {
             switch self {
             case .debug: return .debug
@@ -35,7 +35,7 @@ final class Logger {
             }
         }
     }
-    
+
     enum Category: String, CaseIterable {
         case app = "App"
         case database = "Database"
@@ -54,7 +54,7 @@ final class Logger {
         case userPrefs = "UserPreferences"
         case fileManagement = "FileManagement"
         case sync = "Sync"
-        
+
         var emoji: String {
             switch self {
             case .app: return "🐌"
@@ -77,13 +77,13 @@ final class Logger {
             }
         }
     }
-    
+
     private func setupLoggers() {
         for category in Category.allCases {
             loggers[category] = os.Logger(subsystem: subsystem, category: category.rawValue)
         }
     }
-    
+
     /// Log a message with specified level and category
     func log(
         _ message: String,
@@ -95,7 +95,7 @@ final class Logger {
     ) {
         let fileName = URL(fileURLWithPath: file).lastPathComponent
         let formattedMessage = formatMessage(message, category: category, level: level, file: fileName, function: function, line: line)
-        
+
         guard let logger = loggers[category] else {
             // Only print logger errors if not in test environment
             if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
@@ -103,9 +103,9 @@ final class Logger {
             }
             return
         }
-        
+
         logger.log(level: level.osLogType, "\(formattedMessage)")
-        
+
         // Only print to console in debug builds and not during testing
         #if DEBUG
         if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil {
@@ -113,7 +113,7 @@ final class Logger {
         }
         #endif
     }
-    
+
     private func formatMessage(
         _ message: String,
         category: Category,
@@ -125,7 +125,7 @@ final class Logger {
         let timestamp = DateFormatter.logTimestamp.string(from: Date())
         return "\(timestamp) \(level.rawValue) \(category.emoji) [\(category.rawValue)] \(message) (\(file):\(line))"
     }
-    
+
     /// Log an error with automatic error details extraction
     func logError(
         _ error: Error,
@@ -137,16 +137,16 @@ final class Logger {
     ) {
         let errorMessage = message ?? "Error occurred"
         let fullMessage = "\(errorMessage): \(error.localizedDescription)"
-        
+
         log(fullMessage, category: category, level: .error, file: file, function: function, line: line)
-        
+
         // Log additional error details if available
         if let nsError = error as NSError? {
             let details = "Domain: \(nsError.domain), Code: \(nsError.code), UserInfo: \(nsError.userInfo)"
             log("Error details: \(details)", category: category, level: .debug, file: file, function: function, line: line)
         }
     }
-    
+
     /// Log a database operation
     func logDatabase(
         _ operation: String,
@@ -159,10 +159,10 @@ final class Logger {
         let level: Level = success ? .info : .error
         let message = success ? "✅ \(operation)" : "❌ \(operation) failed"
         let fullMessage = details.map { detailsText in "\(message): \(detailsText)" } ?? message
-        
+
         log(fullMessage, category: .database, level: level, file: file, function: function, line: line)
     }
-    
+
     /// Log CloudKit operations
     func logCloudKit(
         _ operation: String,
@@ -175,10 +175,10 @@ final class Logger {
         let level: Level = success ? .info : .error
         let message = success ? "☁️ \(operation)" : "☁️ \(operation) failed"
         let fullMessage = details.map { detailsText in "\(message): \(detailsText)" } ?? message
-        
+
         log(fullMessage, category: .cloudKit, level: level, file: file, function: function, line: line)
     }
-    
+
     /// Log performance metrics
     func logPerformance(
         _ operation: String,
@@ -191,7 +191,7 @@ final class Logger {
         let formattedDuration = String(format: "%.3fs", duration)
         log("⏱️ \(operation) completed in \(formattedDuration)", category: category, level: .debug, file: file, function: function, line: line)
     }
-    
+
     /// Log memory usage
     func logMemoryUsage(
         operation: String? = nil,
@@ -200,14 +200,14 @@ final class Logger {
         line: Int = #line
     ) {
         var memoryInfo = mach_task_basic_info()
-        var count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size)/4
-        
+        var count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size) / 4
+
         let result = withUnsafeMutablePointer(to: &memoryInfo) {
             $0.withMemoryRebound(to: integer_t.self, capacity: 1) {
                 task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), $0, &count)
             }
         }
-        
+
         if result == KERN_SUCCESS {
             let memoryUsage = memoryInfo.resident_size
             let memoryMB = Double(memoryUsage) / 1024.0 / 1024.0
@@ -232,7 +232,7 @@ extension Logger {
         log(message, category: category, level: .debug, file: file, function: function, line: line)
         #endif
     }
-    
+
     /// Info logging
     func info(
         _ message: String,
@@ -243,7 +243,7 @@ extension Logger {
     ) {
         log(message, category: category, level: .info, file: file, function: function, line: line)
     }
-    
+
     /// Warning logging
     func warning(
         _ message: String,
@@ -254,7 +254,7 @@ extension Logger {
     ) {
         log(message, category: category, level: .warning, file: file, function: function, line: line)
     }
-    
+
     /// Error logging
     func error(
         _ message: String,
@@ -265,7 +265,7 @@ extension Logger {
     ) {
         log(message, category: category, level: .error, file: file, function: function, line: line)
     }
-    
+
     /// Critical error logging
     func critical(
         _ message: String,
@@ -296,7 +296,7 @@ extension Logger {
         logPerformance(operation, duration: duration, category: category, file: file, function: function, line: line)
         return result
     }
-    
+
     /// Async version of measure
     func measure<T>(
         _ operation: String,

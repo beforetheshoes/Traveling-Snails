@@ -14,7 +14,7 @@ struct ActivityBasicInfoSection<T: TripActivityProtocol>: View {
     let color: Color
     let icon: String
     let attachmentCount: Int
-    
+
     init(
         activity: T? = nil,
         editData: Binding<TripActivityEditData>,
@@ -30,7 +30,7 @@ struct ActivityBasicInfoSection<T: TripActivityProtocol>: View {
         self.icon = icon
         self.attachmentCount = attachmentCount
     }
-    
+
     var body: some View {
         ActivitySectionCard(
             headerIcon: "info.circle.fill",
@@ -40,12 +40,12 @@ struct ActivityBasicInfoSection<T: TripActivityProtocol>: View {
             VStack(spacing: 16) {
                 // Header with icon and name
                 headerContent
-                
+
                 // Transportation type picker (if applicable)
                 if isEditing && (editData.transportationType != nil || activity?.hasTypeSelector == true) {
                     transportationTypePicker
                 }
-                
+
                 // Duration display (view mode only)
                 if !isEditing, let activity = activity {
                     durationDisplay(for: activity)
@@ -54,9 +54,9 @@ struct ActivityBasicInfoSection<T: TripActivityProtocol>: View {
         }
         .frame(maxWidth: .infinity)  // Force container to take full width
     }
-    
+
     // MARK: - Header Content
-    
+
     private var headerContent: some View {
         VStack(spacing: 16) {
             // Activity Icon (centered, prominent)
@@ -66,7 +66,7 @@ struct ActivityBasicInfoSection<T: TripActivityProtocol>: View {
                 .padding(12)
                 .background(color.opacity(0.1))
                 .clipShape(Circle())
-            
+
             // Name content (centered like the icon)
             VStack(spacing: 12) {
                 if isEditing {
@@ -80,12 +80,12 @@ struct ActivityBasicInfoSection<T: TripActivityProtocol>: View {
                         Text("Name")
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        
+
                         HStack {
                             Text(editData.name.isEmpty ? "Unnamed Activity" : editData.name)
                                 .font(.title2)
                                 .fontWeight(.semibold)
-                            
+
                             // Show attachment indicator if attachments exist
                             if attachmentCount > 0 {
                                 Image(systemName: "paperclip")
@@ -99,15 +99,15 @@ struct ActivityBasicInfoSection<T: TripActivityProtocol>: View {
         }
         .frame(maxWidth: .infinity)  // Force content to take full width
     }
-    
+
     // MARK: - Transportation Type Picker
-    
+
     private var transportationTypePicker: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Transportation Type")
                 .font(.caption)
                 .foregroundColor(.secondary)
-            
+
             Picker("Transportation Type", selection: Binding(
                 get: { editData.transportationType ?? .plane },
                 set: { editData.transportationType = $0 }
@@ -120,9 +120,9 @@ struct ActivityBasicInfoSection<T: TripActivityProtocol>: View {
             .pickerStyle(.segmented)
         }
     }
-    
+
     // MARK: - Duration Display
-    
+
     @ViewBuilder
     private func durationDisplay(for activity: T) -> some View {
         if activity.activityType == .lodging {
@@ -145,9 +145,9 @@ struct ActivityBasicInfoSection<T: TripActivityProtocol>: View {
             }
         }
     }
-    
+
     // MARK: - Computed Properties
-    
+
     private var activityTypeName: String {
         if let transportationType = editData.transportationType {
             return transportationType.displayName
@@ -168,7 +168,7 @@ struct ActivityBasicInfoSection<T: TripActivityProtocol>: View {
             icon: "airplane",
             attachmentCount: 2
         )
-        
+
         // View mode preview
         ActivityBasicInfoSection<Activity>(
             editData: .constant({

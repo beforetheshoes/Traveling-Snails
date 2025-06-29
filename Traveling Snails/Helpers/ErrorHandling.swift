@@ -4,8 +4,8 @@
 //
 //
 
-import SwiftUI
 import SwiftData
+import SwiftUI
 
 // MARK: - Application Errors
 
@@ -16,48 +16,48 @@ enum AppError: LocalizedError, Equatable {
     case databaseDeleteFailed(String)
     case databaseCorrupted(String)
     case relationshipIntegrityError(String)
-    
+
     // File system errors
     case fileNotFound(String)
     case filePermissionDenied(String)
     case fileCorrupted(String)
     case diskSpaceInsufficient
     case fileAlreadyExists(String)
-    
+
     // Network errors
     case networkUnavailable
     case serverError(Int, String)
     case timeoutError
     case invalidURL(String)
-    
+
     // CloudKit errors
     case cloudKitUnavailable
     case cloudKitQuotaExceeded
     case cloudKitSyncFailed(String)
     case cloudKitAuthenticationFailed
-    
+
     // Import/Export errors
     case importFailed(String)
     case exportFailed(String)
     case invalidFileFormat(String)
     case corruptedImportData(String)
-    
+
     // Validation errors
     case invalidInput(String)
     case missingRequiredField(String)
     case duplicateEntry(String)
     case invalidDateRange
-    
+
     // Organization errors
     case organizationInUse(String, Int)
     case cannotDeleteNoneOrganization
     case organizationNotFound(String)
-    
+
     // Generic errors
     case unknown(String)
     case operationCancelled
     case featureNotAvailable(String)
-    
+
     var errorDescription: String? {
         switch self {
         case .databaseSaveFailed(let details):
@@ -70,7 +70,7 @@ enum AppError: LocalizedError, Equatable {
             return "Database corruption detected: \(details)"
         case .relationshipIntegrityError(let details):
             return "Data relationship error: \(details)"
-            
+
         case .fileNotFound(let path):
             return "File not found: \(path)"
         case .filePermissionDenied(let path):
@@ -81,7 +81,7 @@ enum AppError: LocalizedError, Equatable {
             return "Insufficient disk space"
         case .fileAlreadyExists(let path):
             return "File already exists: \(path)"
-            
+
         case .networkUnavailable:
             return "Network connection unavailable"
         case .serverError(let code, let message):
@@ -90,7 +90,7 @@ enum AppError: LocalizedError, Equatable {
             return "Request timed out"
         case .invalidURL(let url):
             return "Invalid URL: \(url)"
-            
+
         case .cloudKitUnavailable:
             return "CloudKit is unavailable"
         case .cloudKitQuotaExceeded:
@@ -99,7 +99,7 @@ enum AppError: LocalizedError, Equatable {
             return "CloudKit sync failed: \(details)"
         case .cloudKitAuthenticationFailed:
             return "CloudKit authentication failed"
-            
+
         case .importFailed(let details):
             return "Import failed: \(details)"
         case .exportFailed(let details):
@@ -108,7 +108,7 @@ enum AppError: LocalizedError, Equatable {
             return "Invalid file format: \(format)"
         case .corruptedImportData(let details):
             return "Import data is corrupted: \(details)"
-            
+
         case .invalidInput(let field):
             return "Invalid input for \(field)"
         case .missingRequiredField(let field):
@@ -117,14 +117,14 @@ enum AppError: LocalizedError, Equatable {
             return "Duplicate entry: \(item)"
         case .invalidDateRange:
             return "Invalid date range: end date must be after start date"
-            
+
         case .organizationInUse(let name, let count):
             return "Cannot delete '\(name)'. It's used by \(count) items."
         case .cannotDeleteNoneOrganization:
             return "Cannot delete the default 'None' organization"
         case .organizationNotFound(let name):
             return "Organization not found: \(name)"
-            
+
         case .unknown(let details):
             return "An unexpected error occurred: \(details)"
         case .operationCancelled:
@@ -133,7 +133,7 @@ enum AppError: LocalizedError, Equatable {
             return "Feature not available: \(feature)"
         }
     }
-    
+
     var recoverySuggestion: String? {
         switch self {
         case .databaseSaveFailed, .databaseLoadFailed:
@@ -158,7 +158,7 @@ enum AppError: LocalizedError, Equatable {
             return nil
         }
     }
-    
+
     var isRecoverable: Bool {
         switch self {
         case .networkUnavailable, .timeoutError, .diskSpaceInsufficient,
@@ -170,7 +170,7 @@ enum AppError: LocalizedError, Equatable {
             return true
         }
     }
-    
+
     var category: Logger.Category {
         switch self {
         case .databaseSaveFailed, .databaseLoadFailed, .databaseDeleteFailed,
@@ -221,16 +221,16 @@ private enum ErrorMessageFormatter {
     static func formatContext(_ context: String?) -> String {
         context.map { " Context: \($0)" } ?? ""
     }
-    
+
     static func formatErrorMessage(_ error: Error, context: String?, prefix: String = "Error occurred") -> String {
         let contextString = formatContext(context)
         return "\(prefix)\(contextString): \(error.localizedDescription)"
     }
-    
+
     static func formatAppErrorMessage(_ error: AppError, context: String?) -> String {
         formatErrorMessage(error, context: context, prefix: "AppError occurred")
     }
-    
+
     static func formatUnmappedErrorMessage(_ error: Error, context: String?) -> String {
         formatErrorMessage(error, context: context, prefix: "Unmapped error occurred")
     }
@@ -242,7 +242,7 @@ private enum ErrorAlertFactory {
     static func createAlert(for error: Error) -> ErrorAlert {
         ErrorAlert(id: UUID(), message: error.localizedDescription)
     }
-    
+
     static func createAlert(for error: AppError) -> ErrorAlert {
         ErrorAlert(id: UUID(), message: error.localizedDescription)
     }
@@ -252,48 +252,48 @@ private enum ErrorAlertFactory {
 
 final class DefaultErrorHandler: ErrorHandling {
     private let logger = Logger.shared
-    
+
     func handle(_ error: AppError, context: String? = nil) {
         logAppError(error, context: context)
     }
-    
+
     func handle(_ error: Error, context: String? = nil) {
         // Convert to AppError if possible
         if let appError = error as? AppError {
             handle(appError, context: context)
             return
         }
-        
+
         // Handle SwiftData errors
         if let nsError = error as NSError? {
             let appError = mapNSErrorToAppError(nsError)
             handle(appError, context: context)
             return
         }
-        
+
         // Generic error handling
         logUnmappedError(error, context: context)
         let appError = AppError.unknown(error.localizedDescription)
         handle(appError, context: context)
     }
-    
+
     // MARK: - Private Helper Methods
-    
+
     private func logAppError(_ error: AppError, context: String?) {
         let message = ErrorMessageFormatter.formatAppErrorMessage(error, context: context)
         logger.log(message, category: error.category, level: error.isRecoverable ? .warning : .error)
-        
+
         // Log recovery suggestion if available
         if let suggestion = error.recoverySuggestion {
             logger.log("Recovery suggestion: \(suggestion)", category: error.category, level: .info)
         }
     }
-    
+
     private func logUnmappedError(_ error: Error, context: String?) {
         let message = ErrorMessageFormatter.formatUnmappedErrorMessage(error, context: context)
         logger.log(message, category: .app, level: .error)
     }
-    
+
     private func mapNSErrorToAppError(_ error: NSError) -> AppError {
         switch error.domain {
         case "NSCocoaErrorDomain":
@@ -329,11 +329,11 @@ final class DefaultErrorHandler: ErrorHandling {
 struct ErrorHandlingModifier: ViewModifier {
     @State private var errorAlert: ErrorAlert?
     private let errorHandler: ErrorHandling
-    
+
     init(errorHandler: ErrorHandling = DefaultErrorHandler()) {
         self.errorHandler = errorHandler
     }
-    
+
     func body(content: Content) -> some View {
         content
             .onReceive(NotificationCenter.default.publisher(for: .appErrorOccurred)) { notification in
@@ -353,19 +353,19 @@ struct ErrorHandlingModifier: ViewModifier {
                 )
             }
     }
-    
+
     private func handleError(_ error: AppError, context: String?) {
         errorHandler.handle(error, context: context)
-        
+
         // Show user-facing alert for non-recoverable errors
         if !error.isRecoverable {
             errorAlert = ErrorAlertFactory.createAlert(for: error)
         }
     }
-    
+
     private func handleError(_ error: Error, context: String?) {
         errorHandler.handle(error, context: context)
-        
+
         // Show generic error alert
         errorAlert = ErrorAlertFactory.createAlert(for: error)
     }
@@ -398,7 +398,7 @@ extension NotificationCenter {
             userInfo: context.map { ["context": $0] }
         )
     }
-    
+
     func postError(_ error: Error, context: String? = nil) {
         post(
             name: .appErrorOccurred,
@@ -423,13 +423,13 @@ extension ModelContext {
             return .failure(appError)
         }
     }
-    
+
     /// Safely delete an object with proper error handling
     func safeDelete<T: PersistentModel>(_ object: T, context: String? = nil) -> AppResult<Void> {
         delete(object)
         return safeSave(context: context ?? "Deleting \(type(of: object))")
     }
-    
+
     /// Safely insert an object with proper error handling
     func safeInsert<T: PersistentModel>(_ object: T, context: String? = nil) -> AppResult<Void> {
         insert(object)
@@ -453,13 +453,13 @@ extension Result where Failure == AppError {
         case .failure(let error):
             DefaultErrorHandler().handle(error, context: context)
             onFailure?(error)
-            
+
             if postNotification {
                 NotificationCenter.default.postError(error, context: context)
             }
         }
     }
-    
+
     /// Convert to a throwing function
     func throwOnFailure() throws -> Success {
         switch self {
@@ -475,11 +475,11 @@ extension Result where Failure == AppError {
 
 actor ErrorCollector {
     private var errors: [AppError] = []
-    
+
     func add(_ error: AppError) {
         errors.append(error)
     }
-    
+
     func add(_ error: Error) {
         if let appError = error as? AppError {
             errors.append(appError)
@@ -487,16 +487,16 @@ actor ErrorCollector {
             errors.append(.unknown(error.localizedDescription))
         }
     }
-    
+
     func getErrors() -> [AppError] {
-        return errors
+        errors
     }
-    
+
     func clearErrors() {
         errors.removeAll()
     }
-    
+
     func hasErrors() -> Bool {
-        return !errors.isEmpty
+        !errors.isEmpty
     }
 }

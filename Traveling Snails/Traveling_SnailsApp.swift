@@ -1,5 +1,6 @@
-import SwiftUI
+import OSLog
 import SwiftData
+import SwiftUI
 
 @main
 struct Traveling_SnailsApp: App {
@@ -20,9 +21,9 @@ struct Traveling_SnailsApp: App {
                 Transportation.self,
                 Activity.self,
                 Address.self,
-                EmbeddedFileAttachment.self
+                EmbeddedFileAttachment.self,
             ])
-            
+
             // Check if running in test environment to avoid CloudKit issues
             #if DEBUG
             let hasXCTestCase = NSClassFromString("XCTestCase") != nil
@@ -32,38 +33,37 @@ struct Traveling_SnailsApp: App {
             let hasUserDefaultFlag = UserDefaults.standard.bool(forKey: "isRunningTests")
             // Debug: Check which UserDefaults domain we're actually using
             let bundleId = Bundle.main.bundleIdentifier ?? "unknown"
-            print("🔍 Debug: Bundle ID = \(bundleId)")
+            Logger.shared.debug("Debug: Bundle ID = \(bundleId)")
             // Only consider it a test environment if we have test config OR user default flag
             // XCTestCase may be loaded in DEBUG builds from Xcode, so we ignore it unless other conditions are met
             let isInTests = hasXCTestConfig || hasUserDefaultFlag
-            
-            print("🔍 App Debug: XCTestCase=\(hasXCTestCase), XCTestConfig=\(hasXCTestConfig), UserDefault=\(hasUserDefaultFlag), isInTests=\(isInTests)")
-            
+
+            Logger.shared.debug("App Debug: XCTestCase=\(hasXCTestCase), XCTestConfig=\(hasXCTestConfig), UserDefault=\(hasUserDefaultFlag), isInTests=\(isInTests)")
+
             let modelConfiguration: ModelConfiguration
             if isInTests {
-                print("🧪 App: Test environment detected, disabling CloudKit")
+                Logger.shared.info("App: Test environment detected, disabling CloudKit")
                 modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true, cloudKitDatabase: .none)
             } else {
-                print("🐌 App: Production environment, enabling CloudKit")
+                Logger.shared.info("App: Production environment, enabling CloudKit")
                 modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false, cloudKitDatabase: .automatic)
             }
             #else
             let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false, cloudKitDatabase: .automatic)
             #endif
-            
+
             modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
-            
+
             // Configure the SyncManager only if not in tests
             #if DEBUG
             if !isInTests {
                 syncManager.configure(with: modelContainer)
             } else {
-                print("🧪 App: Skipping SyncManager configuration in test environment")
+                Logger.shared.info("App: Skipping SyncManager configuration in test environment")
             }
             #else
             syncManager.configure(with: modelContainer)
             #endif
-
         } catch {
             // This is a fatal error in a shipping app.
             fatalError("Could not create ModelContainer: \(error)")
@@ -78,7 +78,7 @@ struct Traveling_SnailsApp: App {
                     .environment(syncManager)
                     .environment(NavigationRouter.shared)
                     .opacity(showSplash ? 0 : 1) // Hide content while splash is showing
-                
+
 //                if showSplash {
 //                    SplashView(isVisible: $showSplash)
 //                        .transition(.opacity)
