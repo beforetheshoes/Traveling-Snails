@@ -45,7 +45,7 @@ extension Lodging: TripActivityProtocol {
     
     func applyEdits(from data: TripActivityEditData) {
         #if DEBUG
-        Logger.shared.debug("Lodging.applyEdits called - Current cost: \(cost), New cost: \(data.cost)")
+        Logger.shared.debug("Lodging.applyEdits called - cost field updated")
         #endif
         
         name = data.name
@@ -63,7 +63,7 @@ extension Lodging: TripActivityProtocol {
         hideLocation = data.hideLocation
         
         #if DEBUG
-        Logger.shared.debug("Lodging cost updated to: \(cost)")
+        Logger.shared.debug("Lodging cost field updated successfully")
         #endif
     }
 }

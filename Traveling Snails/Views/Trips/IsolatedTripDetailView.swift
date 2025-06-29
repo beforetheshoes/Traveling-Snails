@@ -86,7 +86,9 @@ struct IsolatedTripDetailView: View {
             }
         }
         .onAppear {
-            print("📱 IsolatedTripDetailView.onAppear - START for \(trip.name)")
+            #if DEBUG
+            Logger.shared.debug("IsolatedTripDetailView.onAppear - START for trip ID \(trip.id)", category: .ui)
+            #endif
             let currentTime = Date()
             lastAppearTime = currentTime
             
@@ -117,11 +119,15 @@ struct IsolatedTripDetailView: View {
                     print("📱 Fresh selection or first appearance - skipping navigation restoration")
                 }
                 
-                print("📱 IsolatedTripDetailView.onAppear - COMPLETED for \(trip.name)")
+                #if DEBUG
+                Logger.shared.debug("IsolatedTripDetailView.onAppear - COMPLETED for trip ID \(trip.id)", category: .ui)
+                #endif
             }
         }
         .onChange(of: trip.id) { _, newTripID in
-            print("📱 IsolatedTripDetailView.onChange(of: trip.id) - Trip changed to \(trip.name)")
+            #if DEBUG
+            Logger.shared.debug("IsolatedTripDetailView.onChange(of: trip.id) - Trip changed to ID \(trip.id)", category: .ui)
+            #endif
             // Reset state when trip changes - this is a fresh selection
             hasAppearedOnce = false
             lastDisappearTime = nil
@@ -134,7 +140,9 @@ struct IsolatedTripDetailView: View {
         .onDisappear {
             // Track when view disappears for tab restoration detection
             lastDisappearTime = Date()
-            print("📱 IsolatedTripDetailView disappeared for \(trip.name)")
+            #if DEBUG
+            Logger.shared.debug("IsolatedTripDetailView disappeared for trip ID \(trip.id)", category: .ui)
+            #endif
         }
         .onChange(of: navigationPath) { oldPath, newPath in
             // Clear old navigation states when user actively navigates back to root
@@ -502,7 +510,9 @@ struct IsolatedTripDetailView: View {
         cachedActivities = (lodgingActivities + transportationActivities + activityActivities)
             .sorted { $0.tripActivity.start < $1.tripActivity.start }
         
-        print("📱 Updated cachedActivities for \(trip.name): \(cachedActivities.count) activities")
+        #if DEBUG
+        Logger.shared.debug("Updated cachedActivities for trip ID \(trip.id): \(cachedActivities.count) activities", category: .ui)
+        #endif
     }
     
     // MARK: - Navigation State Management
@@ -522,7 +532,9 @@ struct IsolatedTripDetailView: View {
         // Check for activity-specific navigation state
         guard let data = UserDefaults.standard.data(forKey: "activityNavigation_\(trip.id)"),
               let activityNav = try? JSONDecoder().decode(ActivityNavigationReference.self, from: data) else {
-            print("📱 No navigation state found for trip \(trip.name)")
+            #if DEBUG
+            Logger.shared.debug("No navigation state found for trip ID \(trip.id)", category: .navigation)
+            #endif
             return
         }
         
@@ -541,7 +553,9 @@ struct IsolatedTripDetailView: View {
     
     private func clearNavigationStates() {
         UserDefaults.standard.removeObject(forKey: "activityNavigation_\(trip.id)")
-        print("📱 Cleared navigation states for trip \(trip.name)")
+        #if DEBUG
+        Logger.shared.debug("Cleared navigation states for trip ID \(trip.id)", category: .navigation)
+        #endif
     }
     
 }
