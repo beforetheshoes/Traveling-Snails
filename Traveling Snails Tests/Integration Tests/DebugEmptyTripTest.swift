@@ -6,6 +6,7 @@
 
 import Foundation
 import Testing
+import os
 
 @testable import Traveling_Snails
 
@@ -15,39 +16,48 @@ struct DebugEmptyTripIssue {
     func investigateEmptyTripActivityCount() {
         let emptyTrip = Trip(name: "")
 
-        print("DEBUG: Empty trip created")
-        print("DEBUG: emptyTrip.name = '\(emptyTrip.name)'")
-        print("DEBUG: emptyTrip.lodging = \(String(describing: emptyTrip.lodging))")
-        print("DEBUG: emptyTrip.transportation = \(String(describing: emptyTrip.transportation))")
-        print("DEBUG: emptyTrip.activity = \(String(describing: emptyTrip.activity))")
-        print("DEBUG: emptyTrip.totalActivities = \(emptyTrip.totalActivities)")
-        print("DEBUG: emptyTrip.totalCost = \(emptyTrip.totalCost)")
+        #if DEBUG
+        Logger().debug("Empty trip created with ID: \(emptyTrip.id, privacy: .public)")
+        Logger().debug("Trip lodging count: \(emptyTrip.lodging.count, privacy: .public)")
+        Logger().debug("Trip transportation count: \(emptyTrip.transportation.count, privacy: .public)")
+        Logger().debug("Trip activity count: \(emptyTrip.activity.count, privacy: .public)")
+        Logger().debug("Trip totalActivities: \(emptyTrip.totalActivities, privacy: .public)")
+        Logger().debug("Trip totalCost: \(emptyTrip.totalCost, privacy: .public)")
+        #endif
 
         // Let's check each component
         let lodgingCount = emptyTrip.lodging.count
         let transportationCount = emptyTrip.transportation.count
         let activityCount = emptyTrip.activity.count
 
-        print("DEBUG: lodging count = \(lodgingCount)")
-        print("DEBUG: transportation count = \(transportationCount)")
-        print("DEBUG: activity count = \(activityCount)")
-        print("DEBUG: manual total = \(lodgingCount + transportationCount + activityCount)")
+        #if DEBUG
+        Logger().debug("Lodging count: \(lodgingCount, privacy: .public)")
+        Logger().debug("Transportation count: \(transportationCount, privacy: .public)")
+        Logger().debug("Activity count: \(activityCount, privacy: .public)")
+        Logger().debug("Manual total: \(lodgingCount + transportationCount + activityCount, privacy: .public)")
+        #endif
 
         // Check if any arrays are non-nil but have unexpected content
-        print("DEBUG: lodging array exists with \(emptyTrip.lodging.count) items")
+        #if DEBUG
+        Logger().debug("Lodging array exists with \(emptyTrip.lodging.count, privacy: .public) items")
         for (index, item) in emptyTrip.lodging.enumerated() {
-            print("DEBUG: lodging[\(index)] = \(item.name)")
+            Logger().debug("Lodging[\(index, privacy: .public)] ID: \(item.id, privacy: .public)")
         }
+        #endif
 
-        print("DEBUG: transportation array exists with \(emptyTrip.transportation.count) items")
+        #if DEBUG
+        Logger().debug("Transportation array exists with \(emptyTrip.transportation.count, privacy: .public) items")
         for (index, item) in emptyTrip.transportation.enumerated() {
-            print("DEBUG: transportation[\(index)] = \(item.name)")
+            Logger().debug("Transportation[\(index, privacy: .public)] ID: \(item.id, privacy: .public)")
         }
+        #endif
 
-        print("DEBUG: activity array exists with \(emptyTrip.activity.count) items")
+        #if DEBUG
+        Logger().debug("Activity array exists with \(emptyTrip.activity.count, privacy: .public) items")
         for (index, item) in emptyTrip.activity.enumerated() {
-            print("DEBUG: activity[\(index)] = \(item.name)")
+            Logger().debug("Activity[\(index, privacy: .public)] ID: \(item.id, privacy: .public)")
         }
+        #endif
 
         // This test will fail until we fix the issue, but it will give us debug info
         #expect(emptyTrip.totalActivities == 0, "Expected 0 activities but got \(emptyTrip.totalActivities)")
@@ -57,23 +67,33 @@ struct DebugEmptyTripIssue {
     func compareDifferentTripCreationMethods() {
         // Method 1: Empty name
         let trip1 = Trip(name: "")
-        print("DEBUG: Trip with empty name - totalActivities = \(trip1.totalActivities)")
+        #if DEBUG
+        Logger().debug("Trip1 (empty name) ID: \(trip1.id, privacy: .public) - totalActivities: \(trip1.totalActivities, privacy: .public)")
+        #endif
 
         // Method 2: Default initializer
         let trip2 = Trip()
-        print("DEBUG: Trip with default init - totalActivities = \(trip2.totalActivities)")
+        #if DEBUG
+        Logger().debug("Trip2 (default init) ID: \(trip2.id, privacy: .public) - totalActivities: \(trip2.totalActivities, privacy: .public)")
+        #endif
 
         // Method 3: Normal name
         let trip3 = Trip(name: "Normal Trip")
-        print("DEBUG: Trip with normal name - totalActivities = \(trip3.totalActivities)")
+        #if DEBUG
+        Logger().debug("Trip3 (normal name) ID: \(trip3.id, privacy: .public) - totalActivities: \(trip3.totalActivities, privacy: .public)")
+        #endif
 
         // Method 4: With dates
         let trip4 = Trip(name: "Trip with dates", startDate: Date(), endDate: Date())
-        print("DEBUG: Trip with dates - totalActivities = \(trip4.totalActivities)")
+        #if DEBUG
+        Logger().debug("Trip4 (with dates) ID: \(trip4.id, privacy: .public) - totalActivities: \(trip4.totalActivities, privacy: .public)")
+        #endif
 
         // Check if the issue is specific to empty name or general
         let allCounts = [trip1.totalActivities, trip2.totalActivities, trip3.totalActivities, trip4.totalActivities]
-        print("DEBUG: All trip activity counts = \(allCounts)")
+        #if DEBUG
+        Logger().debug("All trip activity counts: \(allCounts, privacy: .public)")
+        #endif
     }
 
     @Test("Investigate empty activity creation")
@@ -89,14 +109,15 @@ struct DebugEmptyTripIssue {
             organization: emptyOrg
         )
 
-        print("DEBUG: Created empty activity")
-        print("DEBUG: emptyActivity.name = '\(emptyActivity.name)'")
-        print("DEBUG: emptyActivity.trip?.name = '\(emptyActivity.trip?.name ?? "nil")'")
-        print("DEBUG: emptyActivity.organization?.name = '\(emptyActivity.organization?.name ?? "nil")'")
+        #if DEBUG
+        Logger().debug("Created empty activity with ID: \(emptyActivity.id, privacy: .public)")
+        Logger().debug("Activity trip ID: \(emptyActivity.trip?.id.uuidString ?? "nil", privacy: .public)")
+        Logger().debug("Activity organization ID: \(emptyActivity.organization?.id.uuidString ?? "nil", privacy: .public)")
 
         // Check if creating the activity automatically adds it to the trip
-        print("DEBUG: After creating activity, emptyTrip.totalActivities = \(emptyTrip.totalActivities)")
-        print("DEBUG: emptyTrip.activity?.count = \(emptyTrip.activity.count)")
+        Logger().debug("After creating activity, emptyTrip.totalActivities: \(emptyTrip.totalActivities, privacy: .public)")
+        Logger().debug("EmptyTrip.activity count: \(emptyTrip.activity.count, privacy: .public)")
+        #endif
 
         // The issue might be that creating an Activity automatically adds it to the trip's activity array
     }

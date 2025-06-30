@@ -70,6 +70,9 @@ public class TestLogHandler {
             // Trip/Activity details
             (pattern: "trip\\.name|activity\\.name|lodging\\.name", reason: "Trip/activity names"),
             (pattern: "trip:\\s*[A-Za-z]|trip\\s+name:|trip\\s+details", reason: "Trip name exposure"),
+            (pattern: "\\]\\s*=\\s*[A-Za-z]", reason: "Array item name exposure"),
+            (pattern: "emptyTrip\\.name", reason: "Trip name exposure"),
+            (pattern: "trip\\.name", reason: "Trip name exposure"),
             (pattern: "description:|notes:", reason: "Personal descriptions/notes"),
             (pattern: "cost:|price:|amount:", reason: "Financial information"),
             

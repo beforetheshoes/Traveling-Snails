@@ -16,7 +16,6 @@ struct BiometricLockView: View {
     }
 
     var body: some View {
-        // print("🔒 BiometricLockView.body for \(trip.name) - isAuthenticating: \(isAuthenticating)")
         VStack(spacing: 24) {
             Spacer()
 
