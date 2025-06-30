@@ -8,6 +8,11 @@
 import Foundation
 import Testing
 
+// Process is only available on macOS, so disable Process tests on iOS
+#if os(macOS)
+import Darwin
+#endif
+
 @Suite("SwiftLint Integration Tests")
 struct SwiftLintIntegrationTests {
     @Test("SwiftLint configuration file exists")
@@ -107,6 +112,7 @@ struct SwiftLintIntegrationTests {
         #expect(scriptContent.contains("Security violations detected"), "Build script should check for security violations")
     }
 
+    #if os(macOS)
     @Test("SwiftLint can execute successfully")
     func swiftLintCanExecuteSuccessfully() async throws {
         let process = Process()
@@ -137,6 +143,7 @@ struct SwiftLintIntegrationTests {
             Issue.record("SwiftLint execution failed: \(error)")
         }
     }
+    #endif
     
     @Test("Custom security rules are properly configured")
     func customSecurityRulesAreProperlyConfigured() async throws {
@@ -260,6 +267,7 @@ struct SwiftLintIntegrationTests {
         #expect(configContent.range(of: observableRulePattern, options: .regularExpression) != nil, "Old observable patterns should be error severity")
     }
     
+    #if os(macOS)
     @Test("Print statement rule detects violations correctly")
     func printStatementRuleDetectsViolationsCorrectly() async throws {
         let projectRoot = URL(fileURLWithPath: #file)
@@ -301,7 +309,9 @@ struct SwiftLintIntegrationTests {
         #expect(output.contains("print"), "SwiftLint should detect print statement violations")
         #expect(output.contains("no_print_statements"), "Violation should reference the correct rule")
     }
+    #endif
     
+    #if os(macOS)
     @Test("Sensitive logging rule detects violations correctly")
     func sensitiveLoggingRuleDetectsViolationsCorrectly() async throws {
         let projectRoot = URL(fileURLWithPath: #file)
@@ -346,7 +356,9 @@ struct SwiftLintIntegrationTests {
         #expect(output.contains("password") || output.contains("apiKey"), "SwiftLint should detect sensitive data logging violations")
         #expect(output.contains("no_sensitive_logging"), "Violation should reference the correct rule")
     }
+    #endif
     
+    #if os(macOS)
     @Test("NavigationStack rule detects deprecated NavigationView")
     func navigationStackRuleDetectsDeprecatedNavigationView() async throws {
         let projectRoot = URL(fileURLWithPath: #file)
@@ -390,7 +402,9 @@ struct SwiftLintIntegrationTests {
         #expect(output.contains("NavigationView") || output.contains("NavigationStack"), "SwiftLint should detect deprecated NavigationView usage")
         #expect(output.contains("use_navigation_stack"), "Violation should reference the correct rule")
     }
+    #endif
     
+    #if os(macOS)
     @Test("StateObject rule detects deprecated observable patterns")
     func stateObjectRuleDetectsDeprecatedObservablePatterns() async throws {
         let projectRoot = URL(fileURLWithPath: #file)
@@ -435,7 +449,9 @@ struct SwiftLintIntegrationTests {
         #expect(output.contains("@StateObject") || output.contains("@ObservableObject"), "SwiftLint should detect deprecated observable patterns")
         #expect(output.contains("no_state_object"), "Violation should reference the correct rule")
     }
+    #endif
     
+    #if os(macOS)
     @Test("SwiftData parameter passing rule detects anti-patterns")
     func swiftDataParameterPassingRuleDetectsAntiPatterns() async throws {
         let projectRoot = URL(fileURLWithPath: #file)
@@ -486,7 +502,9 @@ struct SwiftLintIntegrationTests {
         #expect(output.contains("Trip") || output.contains("Activity"), "SwiftLint should detect SwiftData model parameter passing")
         #expect(output.contains("no_swiftdata_parameter_passing"), "Violation should reference the correct rule")
     }
+    #endif
     
+    #if os(macOS)
     @Test("JSON output format works correctly")
     func jsonOutputFormatWorksCorrectly() async throws {
         let projectRoot = URL(fileURLWithPath: #file)
@@ -538,4 +556,5 @@ struct SwiftLintIntegrationTests {
             Issue.record("JSON parsing failed: \\(error)")
         }
     }
+    #endif
 }
