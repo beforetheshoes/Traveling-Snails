@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **SwiftLint Integration with Security Rules (Issue #44)**: Comprehensive code quality and security enforcement with custom security-focused rules, automated checks, and CI/CD integration
 - **Enhanced Sync Reliability (Issue #16)**: Comprehensive CloudKit synchronization improvements with robust conflict resolution, exponential backoff retry logic, and real-time diagnostic tools
 - **Comprehensive Logging Security Framework (Issue #39)**: Complete security overhaul preventing sensitive data exposure in logs with Logger framework integration, automated sensitive data detection, and secure coding patterns
+- **Enhanced Test Runner Script (Issue #52)**: Added test category filtering options to run-all-tests.sh script with --unit-only, --integration-only, and --performance-only flags for improved developer workflow and CI/CD efficiency
 
 ### Changed
 - **Navigation Architecture Migration (Issue #35)**: Migrated trip selection navigation from notification-based to environment-based architecture following modern SwiftUI patterns. Enhanced NavigationRouter with @Observable pattern, providing type-safe navigation coordination, improved testability, and better debuggability while maintaining backward compatibility during transition

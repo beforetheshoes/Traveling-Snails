@@ -150,6 +150,99 @@ run_security_tests() {
     echo ""
 }
 
+# Function to run unit tests only
+run_unit_tests() {
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+    echo -e "${BLUE}                 Running Unit Tests${NC}"
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+    echo ""
+    
+    local unit_test_command="xcodebuild test \
+        -project \"$PROJECT_NAME.xcodeproj\" \
+        -scheme \"$SCHEME_NAME\" \
+        -destination \"platform=iOS Simulator,name=$SIMULATOR_NAME\" \
+        -only-testing:\"Traveling Snails Tests/Unit Tests\""
+    
+    # Add xcbeautify if available
+    if command -v xcbeautify &> /dev/null; then
+        unit_test_command="$unit_test_command | xcbeautify"
+    else
+        # Without xcbeautify, at least filter for test results
+        unit_test_command="$unit_test_command 2>&1 | grep -E \"Test Suite|Test Case|passed|failed|error\""
+    fi
+    
+    if eval "$unit_test_command"; then
+        echo -e "${GREEN}✓ All unit tests passed!${NC}"
+    else
+        echo -e "${RED}✗ Some unit tests failed${NC}"
+        EXIT_CODE=1
+    fi
+    
+    echo ""
+}
+
+# Function to run integration tests only
+run_integration_tests() {
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+    echo -e "${BLUE}              Running Integration Tests${NC}"
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+    echo ""
+    
+    local integration_test_command="xcodebuild test \
+        -project \"$PROJECT_NAME.xcodeproj\" \
+        -scheme \"$SCHEME_NAME\" \
+        -destination \"platform=iOS Simulator,name=$SIMULATOR_NAME\" \
+        -only-testing:\"Traveling Snails Tests/Integration Tests\""
+    
+    # Add xcbeautify if available
+    if command -v xcbeautify &> /dev/null; then
+        integration_test_command="$integration_test_command | xcbeautify"
+    else
+        # Without xcbeautify, at least filter for test results
+        integration_test_command="$integration_test_command 2>&1 | grep -E \"Test Suite|Test Case|passed|failed|error\""
+    fi
+    
+    if eval "$integration_test_command"; then
+        echo -e "${GREEN}✓ All integration tests passed!${NC}"
+    else
+        echo -e "${RED}✗ Some integration tests failed${NC}"
+        EXIT_CODE=1
+    fi
+    
+    echo ""
+}
+
+# Function to run performance tests only
+run_performance_tests() {
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+    echo -e "${BLUE}              Running Performance Tests${NC}"
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+    echo ""
+    
+    local performance_test_command="xcodebuild test \
+        -project \"$PROJECT_NAME.xcodeproj\" \
+        -scheme \"$SCHEME_NAME\" \
+        -destination \"platform=iOS Simulator,name=$SIMULATOR_NAME\" \
+        -only-testing:\"Traveling Snails Tests/Stress Tests\""
+    
+    # Add xcbeautify if available
+    if command -v xcbeautify &> /dev/null; then
+        performance_test_command="$performance_test_command | xcbeautify"
+    else
+        # Without xcbeautify, at least filter for test results
+        performance_test_command="$performance_test_command 2>&1 | grep -E \"Test Suite|Test Case|passed|failed|error\""
+    fi
+    
+    if eval "$performance_test_command"; then
+        echo -e "${GREEN}✓ All performance tests passed!${NC}"
+    else
+        echo -e "${RED}✗ Some performance tests failed${NC}"
+        EXIT_CODE=1
+    fi
+    
+    echo ""
+}
+
 # Function to run SwiftLint
 run_swiftlint() {
     echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
@@ -308,19 +401,29 @@ show_usage() {
     echo "Usage: $0 [options]"
     echo ""
     echo "Options:"
-    echo "  --no-clean       Skip cleaning derived data"
-    echo "  --lint-only      Run only SwiftLint checks"
-    echo "  --test-only      Run only tests (no linting)"
-    echo "  --security-only  Run only security tests"
-    echo "  --quick          Skip dependency resolution"
-    echo "  -h, --help       Show this help message"
+    echo "  --no-clean           Skip cleaning derived data"
+    echo "  --lint-only          Run only SwiftLint checks"
+    echo "  --test-only          Run only tests (no linting)"
+    echo "  --security-only      Run only security tests"
+    echo "  --unit-only          Run only unit tests"
+    echo "  --integration-only   Run only integration tests"
+    echo "  --performance-only   Run only performance tests"
+    echo "  --quick              Skip dependency resolution"
+    echo "  -h, --help           Show this help message"
+    echo ""
+    echo "Test Category Options:"
+    echo "  The --unit-only, --integration-only, --performance-only, and --security-only"
+    echo "  options are mutually exclusive. Only one can be used at a time."
     echo ""
     echo "Examples:"
-    echo "  $0                    # Run all checks"
-    echo "  $0 --lint-only        # Run only SwiftLint"
-    echo "  $0 --test-only        # Run only tests"
-    echo "  $0 --security-only    # Run only security tests"
-    echo "  $0 --no-clean --quick # Fast run without cleanup"
+    echo "  $0                        # Run all checks"
+    echo "  $0 --lint-only            # Run only SwiftLint"
+    echo "  $0 --test-only            # Run only tests"
+    echo "  $0 --security-only        # Run only security tests"
+    echo "  $0 --unit-only            # Run only unit tests"
+    echo "  $0 --integration-only     # Run only integration tests"
+    echo "  $0 --performance-only     # Run only performance tests"
+    echo "  $0 --no-clean --quick     # Fast run without cleanup"
 }
 
 # Parse command line arguments
@@ -328,6 +431,9 @@ SKIP_CLEAN=false
 LINT_ONLY=false
 TEST_ONLY=false
 SECURITY_ONLY=false
+UNIT_ONLY=false
+INTEGRATION_ONLY=false
+PERFORMANCE_ONLY=false
 QUICK_RUN=false
 
 while [[ $# -gt 0 ]]; do
@@ -348,6 +454,18 @@ while [[ $# -gt 0 ]]; do
             SECURITY_ONLY=true
             shift
             ;;
+        --unit-only)
+            UNIT_ONLY=true
+            shift
+            ;;
+        --integration-only)
+            INTEGRATION_ONLY=true
+            shift
+            ;;
+        --performance-only)
+            PERFORMANCE_ONLY=true
+            shift
+            ;;
         --quick)
             QUICK_RUN=true
             shift
@@ -364,8 +482,43 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Check for mutually exclusive test category options
+check_mutual_exclusivity() {
+    local count=0
+    local selected_options=""
+    
+    if [ "$SECURITY_ONLY" = true ]; then
+        count=$((count + 1))
+        selected_options="$selected_options --security-only"
+    fi
+    
+    if [ "$UNIT_ONLY" = true ]; then
+        count=$((count + 1))
+        selected_options="$selected_options --unit-only"
+    fi
+    
+    if [ "$INTEGRATION_ONLY" = true ]; then
+        count=$((count + 1))
+        selected_options="$selected_options --integration-only"
+    fi
+    
+    if [ "$PERFORMANCE_ONLY" = true ]; then
+        count=$((count + 1))
+        selected_options="$selected_options --performance-only"
+    fi
+    
+    if [ $count -gt 1 ]; then
+        echo -e "${RED}Error: Test category options are mutually exclusive${NC}"
+        echo -e "${RED}You specified:$selected_options${NC}"
+        echo "Please use only one of: --security-only, --unit-only, --integration-only, or --performance-only"
+        exit 1
+    fi
+}
+
 # Main execution
 main() {
+    # Check for mutually exclusive options
+    check_mutual_exclusivity
     # Check dependencies first
     check_dependencies
     
@@ -379,13 +532,34 @@ main() {
         resolve_dependencies
     fi
     
-    # Handle security-only mode
+    # Handle specific test category modes
     if [ "$SECURITY_ONLY" = true ]; then
         build_project
         if [ $EXIT_CODE -eq 0 ]; then
             run_security_tests
         else
             echo -e "${YELLOW}⚠️  Skipping security tests due to build failure${NC}"
+        fi
+    elif [ "$UNIT_ONLY" = true ]; then
+        build_project
+        if [ $EXIT_CODE -eq 0 ]; then
+            run_unit_tests
+        else
+            echo -e "${YELLOW}⚠️  Skipping unit tests due to build failure${NC}"
+        fi
+    elif [ "$INTEGRATION_ONLY" = true ]; then
+        build_project
+        if [ $EXIT_CODE -eq 0 ]; then
+            run_integration_tests
+        else
+            echo -e "${YELLOW}⚠️  Skipping integration tests due to build failure${NC}"
+        fi
+    elif [ "$PERFORMANCE_ONLY" = true ]; then
+        build_project
+        if [ $EXIT_CODE -eq 0 ]; then
+            run_performance_tests
+        else
+            echo -e "${YELLOW}⚠️  Skipping performance tests due to build failure${NC}"
         fi
     else
         # Run SwiftLint if not test-only
