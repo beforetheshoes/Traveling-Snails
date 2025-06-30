@@ -86,6 +86,7 @@ A comprehensive travel planning and management app built with SwiftUI for iOS 18
 - **`@Observable` Classes**: Modern observation system replacing `@ObservableObject`
 - **`@State` Properties**: Latest property wrapper patterns
 - **NavigationStack**: Modern navigation using NavigationStack instead of deprecated NavigationView
+- **Environment-Based Navigation**: Type-safe navigation coordination through `@Environment` instead of NotificationCenter
 - **SwiftData Integration**: Native Core Data replacement for iOS 17+
 - **CloudKit Sync**: Seamless cross-device synchronization with CloudKit
 - **Structured Concurrency**: Async/await throughout the codebase
@@ -295,7 +296,27 @@ struct FeatureTests {
 }
 ```
 
-### Running Specific Test Suites
+### Running Tests with Test Runner Script
+
+The project includes a comprehensive test runner script that provides advanced testing options:
+
+```bash
+# Run all tests and checks
+./Scripts/run-all-tests.sh
+
+# Run specific test categories
+./Scripts/run-all-tests.sh --unit-only          # Run only unit tests
+./Scripts/run-all-tests.sh --integration-only   # Run only integration tests
+./Scripts/run-all-tests.sh --performance-only   # Run only performance tests
+./Scripts/run-all-tests.sh --security-only      # Run only security tests
+
+# Combine with other options
+./Scripts/run-all-tests.sh --unit-only --quick  # Skip dependency resolution
+./Scripts/run-all-tests.sh --lint-only          # Run only SwiftLint checks
+./Scripts/run-all-tests.sh --no-clean           # Skip cleaning derived data
+```
+
+### Running Specific Test Suites Manually
 
 ```bash
 # Run SwiftData regression tests

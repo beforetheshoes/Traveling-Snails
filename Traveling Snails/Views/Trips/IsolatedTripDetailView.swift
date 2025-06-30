@@ -7,6 +7,7 @@ import SwiftUI
 struct IsolatedTripDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.navigationContext) private var navigationContext
+    @Environment(\.navigationRouter) private var navigationRouter
 
     // Store trip data as immutable values to prevent rebuilds from Trip mutations
     let trip: Trip // Use let instead of @State!
@@ -155,19 +156,32 @@ struct IsolatedTripDetailView: View {
                 #endif
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .tripSelectedFromList)) { notification in
-            // Handle trip selection from list while in deep navigation
-            if let selectedTripId = notification.object as? UUID, selectedTripId == trip.id {
-                // Clear navigation path to return to trip root
-                let previousCount = navigationPath.count
-                if previousCount > 0 {
-                    navigationPath = NavigationPath()
-                    #if DEBUG
-                    Logger.shared.debug("Trip selected from list - cleared navigation path (was \(previousCount) deep)", category: .ui)
-                    #endif
-                }
-            }
+        .onChange(of: navigationRouter.selectedTripId) { _, newValue in
+            handleEnvironmentBasedTripSelection(newValue)
         }
+    }
+    
+    /// Handle environment-based trip selection with clear navigation path coordination
+    /// This method encapsulates the complex logic for coordinating navigation state between
+    /// the environment router and local navigation path
+    private func handleEnvironmentBasedTripSelection(_ selectedTripId: UUID?) {
+        guard let selectedTripId = selectedTripId,
+              selectedTripId == trip.id,
+              navigationRouter.shouldClearNavigationPath else {
+            return
+        }
+        
+        // Clear navigation path to return to trip root when selected from list
+        let previousCount = navigationPath.count
+        if previousCount > 0 {
+            navigationPath = NavigationPath()
+            #if DEBUG
+            Logger.shared.debug("Environment-based trip selection - cleared navigation path (was \(previousCount) deep)", category: .ui)
+            #endif
+        }
+        
+        // Acknowledge that we've cleared the navigation path
+        navigationRouter.acknowledgeNavigationPathClear()
     }
 
     @ViewBuilder
