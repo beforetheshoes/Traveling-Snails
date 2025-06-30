@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **Navigation Architecture Migration (Issue #35)**: Migrated trip selection navigation from notification-based to environment-based architecture following modern SwiftUI patterns. Enhanced NavigationRouter with @Observable pattern, providing type-safe navigation coordination, improved testability, and better debuggability while maintaining backward compatibility during transition
 
+### Changed
+- **Navigation Architecture Migration (Issue #35)**: Migrated trip selection navigation from notification-based to environment-based architecture following modern SwiftUI patterns. Enhanced NavigationRouter with @Observable pattern, providing type-safe navigation coordination, improved testability, and better debuggability while maintaining backward compatibility during transition
+
 ### Fixed
 - **Test Infrastructure Failures**: Fixed systematic test failures where multiple test suites were failing with 0.000 second runtime due to incorrect SwiftDataTestBase inheritance patterns. Converted 6 test files from class inheritance to proper struct + instance pattern, resolving infrastructure issues across ActivityMarginConsistencyTests, DataBrowserIssueDetailsTests, UnifiedTripActivityDetailViewTests, TransportationIconTests, ReactiveIconTests, and CloudKitSwiftDataConformanceTests with all nested classes
 - **Reset All Data in Tools Tab (Issue #29)**: Fixed non-functional "Reset All Data" option in Settings > Data Browser > Tools that previously only simulated deletion. Now performs actual data deletion matching the behavior of DatabaseCleanupView
