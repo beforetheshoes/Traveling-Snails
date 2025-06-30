@@ -5,14 +5,16 @@ import Testing
 
 @Suite("Transportation Icon Tests")
 @MainActor
-final class TransportationIconTests: SwiftDataTestBase {
+struct TransportationIconTests {
     @Test("Transportation activities show specific type icons in ActivityRowView")
     func transportationActivitiesShowSpecificTypeIcons() {
+        let testBase = SwiftDataTestBase()
+        
         // Create test trip and organization
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
         let org = Organization(name: "Test Org")
-        modelContext.insert(trip)
-        modelContext.insert(org)
+        testBase.modelContext.insert(trip)
+        testBase.modelContext.insert(org)
 
         // Test each transportation type shows its specific icon
         let transportationTypes: [(TransportationType, String)] = [
@@ -34,7 +36,7 @@ final class TransportationIconTests: SwiftDataTestBase {
                 organization: org
             )
             transportation.type = transportationType
-            modelContext.insert(transportation)
+            testBase.modelContext.insert(transportation)
 
             // Create ActivityWrapper
             let wrapper = ActivityWrapper(transportation)
@@ -50,11 +52,13 @@ final class TransportationIconTests: SwiftDataTestBase {
 
     @Test("ActivityWrapper preserves specific transportation icons vs generic type icons")
     func activityWrapperPreservesSpecificTransportationIcons() {
+        let testBase = SwiftDataTestBase()
+        
         // Create test trip and organization
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
         let org = Organization(name: "Test Org")
-        modelContext.insert(trip)
-        modelContext.insert(org)
+        testBase.modelContext.insert(trip)
+        testBase.modelContext.insert(org)
 
         // Create plane transportation
         let planeTransportation = Transportation(
@@ -65,7 +69,7 @@ final class TransportationIconTests: SwiftDataTestBase {
             organization: org
         )
         planeTransportation.type = .plane
-        modelContext.insert(planeTransportation)
+        testBase.modelContext.insert(planeTransportation)
 
         let wrapper = ActivityWrapper(planeTransportation)
 
@@ -81,11 +85,13 @@ final class TransportationIconTests: SwiftDataTestBase {
 
     @Test("Non-transportation activities continue using generic type icons")
     func nonTransportationActivitiesUseGenericTypeIcons() {
+        let testBase = SwiftDataTestBase()
+        
         // Create test trip and organization
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
         let org = Organization(name: "Test Org")
-        modelContext.insert(trip)
-        modelContext.insert(org)
+        testBase.modelContext.insert(trip)
+        testBase.modelContext.insert(org)
 
         // Create lodging activity
         let lodging = Lodging(
@@ -97,7 +103,7 @@ final class TransportationIconTests: SwiftDataTestBase {
             trip: trip,
             organization: org
         )
-        modelContext.insert(lodging)
+        testBase.modelContext.insert(lodging)
 
         // Create general activity
         let activity = Activity(
@@ -107,7 +113,7 @@ final class TransportationIconTests: SwiftDataTestBase {
             trip: trip,
             organization: org
         )
-        modelContext.insert(activity)
+        testBase.modelContext.insert(activity)
 
         let lodgingWrapper = ActivityWrapper(lodging)
         let activityWrapper = ActivityWrapper(activity)
@@ -122,11 +128,13 @@ final class TransportationIconTests: SwiftDataTestBase {
 
     @Test("Transportation type changes reflect in icon property")
     func transportationTypeChangesReflectInIcon() {
+        let testBase = SwiftDataTestBase()
+        
         // Create test trip and organization
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
         let org = Organization(name: "Test Org")
-        modelContext.insert(trip)
-        modelContext.insert(org)
+        testBase.modelContext.insert(trip)
+        testBase.modelContext.insert(org)
 
         // Create transportation activity
         let transportation = Transportation(
@@ -137,7 +145,7 @@ final class TransportationIconTests: SwiftDataTestBase {
             organization: org
         )
         transportation.type = .car
-        modelContext.insert(transportation)
+        testBase.modelContext.insert(transportation)
 
         let wrapper = ActivityWrapper(transportation)
 

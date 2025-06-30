@@ -1,5 +1,6 @@
 import LocalAuthentication
 import SwiftUI
+import Foundation
 
 @Observable
 @MainActor
@@ -135,7 +136,7 @@ class BiometricAuthManager {
     nonisolated func authenticateTrip(_ trip: Trip) async -> Bool {
         // Capture only the values we need to avoid Sendable issues
         let tripId = trip.id
-        let tripName = trip.name
+        _ = trip.name
         let tripIsProtected = trip.isProtected
 
         #if DEBUG

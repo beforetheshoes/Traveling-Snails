@@ -30,7 +30,10 @@ struct RealInfiniteRecreationTest {
             let bodyCallTracker: () -> Void
 
             var body: some View {
-                VStack {
+                // Track every body computation
+                bodyCallTracker()
+                
+                return VStack {
                     Text("Trip: \(trip.name)")
                     Text("Activities: \(trip.totalActivities)")
 
@@ -48,7 +51,6 @@ struct RealInfiniteRecreationTest {
                     }
                 }
                 .onAppear {
-                    bodyCallTracker()
                     // This mimics the badge count access that happens in navigation
                     _ = trip.totalActivities // This accesses relationships
                 }
@@ -121,12 +123,14 @@ struct RealInfiniteRecreationTest {
             let bodyCallTracker: () -> Void
 
             var body: some View {
-                VStack {
+                // Track every body computation
+                bodyCallTracker()
+                
+                return VStack {
                     Text("Trip: \(trip.name)")
                     Text("Activities: \(cachedActivityCount)") // Use cached value
                 }
                 .onAppear {
-                    bodyCallTracker()
                     updateCacheIfNeeded()
                 }
                 .onChange(of: trip.id) { _, _ in

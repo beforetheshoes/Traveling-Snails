@@ -8,6 +8,11 @@
 import Foundation
 import Testing
 
+// Process is only available on macOS, so disable Process tests on iOS
+#if os(macOS)
+import Darwin
+#endif
+
 @Suite("SwiftLint Integration Tests")
 struct SwiftLintIntegrationTests {
     @Test("SwiftLint configuration file exists")
@@ -23,6 +28,7 @@ struct SwiftLintIntegrationTests {
         #expect(configExists, "SwiftLint configuration file should exist at project root")
     }
 
+    #if os(macOS)
     @Test("SwiftLint configuration contains security rules")
     func swiftLintConfigurationContainsSecurityRules() async throws {
         let projectRoot = URL(fileURLWithPath: #file)
@@ -39,7 +45,9 @@ struct SwiftLintIntegrationTests {
         #expect(configContent.contains("use_navigation_stack"), "Configuration should contain use_navigation_stack rule")
         #expect(configContent.contains("no_swiftdata_parameter_passing"), "Configuration should contain no_swiftdata_parameter_passing rule")
     }
+    #endif
 
+    #if os(macOS)
     @Test("SwiftLint configuration includes project directories")
     func swiftLintConfigurationIncludesProjectDirectories() async throws {
         let projectRoot = URL(fileURLWithPath: #file)
@@ -55,7 +63,9 @@ struct SwiftLintIntegrationTests {
         #expect(configContent.contains("excluded:"), "Configuration should have exclusion rules")
         #expect(configContent.contains(".build"), "Configuration should exclude build directories")
     }
+    #endif
 
+    #if os(macOS)
     @Test("Package.swift includes SwiftLint dependency")
     func packageSwiftIncludesSwiftLintDependency() async throws {
         let projectRoot = URL(fileURLWithPath: #file)
@@ -71,6 +81,7 @@ struct SwiftLintIntegrationTests {
         #expect(packageContent.contains("SwiftLint"), "Package.swift should include SwiftLint dependency")
         #expect(packageContent.contains("realm/SwiftLint"), "Package.swift should reference correct SwiftLint repository")
     }
+    #endif
 
     @Test("Setup script exists and is executable")
     func setupScriptExistsAndIsExecutable() async throws {
@@ -91,6 +102,7 @@ struct SwiftLintIntegrationTests {
         #expect(isExecutable, "Setup script should be executable")
     }
 
+    #if os(macOS)
     @Test("SwiftLint build script exists")
     func swiftLintBuildScriptExists() async throws {
         let projectRoot = URL(fileURLWithPath: #file)
@@ -106,7 +118,9 @@ struct SwiftLintIntegrationTests {
         #expect(scriptContent.contains("SwiftLint Script for Traveling Snails"), "Build script should be properly configured")
         #expect(scriptContent.contains("Security violations detected"), "Build script should check for security violations")
     }
+    #endif
 
+    #if os(macOS)
     @Test("SwiftLint can execute successfully")
     func swiftLintCanExecuteSuccessfully() async throws {
         let process = Process()
@@ -137,7 +151,9 @@ struct SwiftLintIntegrationTests {
             Issue.record("SwiftLint execution failed: \(error)")
         }
     }
+    #endif
     
+    #if os(macOS)
     @Test("Custom security rules are properly configured")
     func customSecurityRulesAreProperlyConfigured() async throws {
         let projectRoot = URL(fileURLWithPath: #file)
@@ -159,7 +175,9 @@ struct SwiftLintIntegrationTests {
         // Verify severity levels
         #expect(configContent.contains("severity: warning") || configContent.contains("severity: error"), "Rules should have appropriate severity levels")
     }
+    #endif
     
+    #if os(macOS)
     @Test("Modern Swift rules are properly configured")
     func modernSwiftRulesAreProperlyConfigured() async throws {
         let projectRoot = URL(fileURLWithPath: #file)
@@ -179,7 +197,9 @@ struct SwiftLintIntegrationTests {
         #expect(configContent.contains("NavigationView"), "NavigationView should be flagged in rules")
         #expect(configContent.contains("@StateObject") || configContent.contains("@ObservableObject"), "Old observable patterns should be flagged")
     }
+    #endif
     
+    #if os(macOS)
     @Test("SwiftData anti-patterns are properly configured")
     func swiftDataAntiPatternsAreProperlyConfigured() async throws {
         let projectRoot = URL(fileURLWithPath: #file)
@@ -196,7 +216,9 @@ struct SwiftLintIntegrationTests {
         // Verify it checks for model types
         #expect(configContent.contains("Trip") || configContent.contains("Activity"), "Rule should check for SwiftData model types")
     }
+    #endif
     
+    #if os(macOS)
     @Test("GitHub Actions workflow includes SwiftLint")
     func gitHubActionsWorkflowIncludesSwiftLint() async throws {
         let projectRoot = URL(fileURLWithPath: #file)
@@ -217,7 +239,9 @@ struct SwiftLintIntegrationTests {
         #expect(workflowContent.contains("JSON"), "Workflow should use JSON parsing")
         #expect(workflowContent.contains("jq"), "Workflow should use jq for JSON processing")
     }
+    #endif
     
+    #if os(macOS)
     @Test("Rule regex patterns exclude test files")
     func ruleRegexPatternsExcludeTestFiles() async throws {
         let projectRoot = URL(fileURLWithPath: #file)
@@ -236,7 +260,9 @@ struct SwiftLintIntegrationTests {
         let previewExclusionPattern = ".*Preview.*\\.swift$"
         #expect(configContent.contains(previewExclusionPattern), "Rules should exclude preview files with proper regex")
     }
+    #endif
     
+    #if os(macOS)
     @Test("Rule severity levels are appropriate")
     func ruleSeverityLevelsAreAppropriate() async throws {
         let projectRoot = URL(fileURLWithPath: #file)
@@ -259,7 +285,9 @@ struct SwiftLintIntegrationTests {
         let observableRulePattern = #"no_state_object:[\s\S]*?severity:\s*error"#
         #expect(configContent.range(of: observableRulePattern, options: .regularExpression) != nil, "Old observable patterns should be error severity")
     }
+    #endif
     
+    #if os(macOS)
     @Test("Print statement rule detects violations correctly")
     func printStatementRuleDetectsViolationsCorrectly() async throws {
         let projectRoot = URL(fileURLWithPath: #file)
@@ -301,7 +329,9 @@ struct SwiftLintIntegrationTests {
         #expect(output.contains("print"), "SwiftLint should detect print statement violations")
         #expect(output.contains("no_print_statements"), "Violation should reference the correct rule")
     }
+    #endif
     
+    #if os(macOS)
     @Test("Sensitive logging rule detects violations correctly")
     func sensitiveLoggingRuleDetectsViolationsCorrectly() async throws {
         let projectRoot = URL(fileURLWithPath: #file)
@@ -346,7 +376,9 @@ struct SwiftLintIntegrationTests {
         #expect(output.contains("password") || output.contains("apiKey"), "SwiftLint should detect sensitive data logging violations")
         #expect(output.contains("no_sensitive_logging"), "Violation should reference the correct rule")
     }
+    #endif
     
+    #if os(macOS)
     @Test("NavigationStack rule detects deprecated NavigationView")
     func navigationStackRuleDetectsDeprecatedNavigationView() async throws {
         let projectRoot = URL(fileURLWithPath: #file)
@@ -390,7 +422,9 @@ struct SwiftLintIntegrationTests {
         #expect(output.contains("NavigationView") || output.contains("NavigationStack"), "SwiftLint should detect deprecated NavigationView usage")
         #expect(output.contains("use_navigation_stack"), "Violation should reference the correct rule")
     }
+    #endif
     
+    #if os(macOS)
     @Test("StateObject rule detects deprecated observable patterns")
     func stateObjectRuleDetectsDeprecatedObservablePatterns() async throws {
         let projectRoot = URL(fileURLWithPath: #file)
@@ -435,7 +469,9 @@ struct SwiftLintIntegrationTests {
         #expect(output.contains("@StateObject") || output.contains("@ObservableObject"), "SwiftLint should detect deprecated observable patterns")
         #expect(output.contains("no_state_object"), "Violation should reference the correct rule")
     }
+    #endif
     
+    #if os(macOS)
     @Test("SwiftData parameter passing rule detects anti-patterns")
     func swiftDataParameterPassingRuleDetectsAntiPatterns() async throws {
         let projectRoot = URL(fileURLWithPath: #file)
@@ -486,7 +522,9 @@ struct SwiftLintIntegrationTests {
         #expect(output.contains("Trip") || output.contains("Activity"), "SwiftLint should detect SwiftData model parameter passing")
         #expect(output.contains("no_swiftdata_parameter_passing"), "Violation should reference the correct rule")
     }
+    #endif
     
+    #if os(macOS)
     @Test("JSON output format works correctly")
     func jsonOutputFormatWorksCorrectly() async throws {
         let projectRoot = URL(fileURLWithPath: #file)
@@ -538,4 +576,5 @@ struct SwiftLintIntegrationTests {
             Issue.record("JSON parsing failed: \\(error)")
         }
     }
+    #endif
 }
