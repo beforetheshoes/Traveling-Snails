@@ -12,7 +12,6 @@ import SwiftData
 
 @Suite("Codebase Security Audit")
 struct CodebaseSecurityAuditTests {
-    let logHandler = TestLogHandler()
     
     @Suite("Actual Codebase Violations")
     struct ActualCodebaseViolations {
