@@ -406,7 +406,11 @@ Text(L(L10n.General.save))         // "Save"
 
 - **Biometric Authentication**: Touch ID/Face ID protection for sensitive data
 - **Secure File Handling**: Validated file types and sizes
-- **Privacy-First Logging**: No sensitive data in logs
+- **Privacy-First Logging**: Comprehensive security framework preventing sensitive data exposure in logs
+  - **Logger Framework Integration**: Uses iOS Logger with explicit privacy levels (`privacy: .public`) for safe data logging
+  - **Debug Guards**: All debug logs wrapped in `#if DEBUG` preprocessor directives to ensure complete removal from production builds
+  - **Sensitive Data Detection**: Automated test suites detect and prevent logging of trip names, personal information, locations, and security credentials
+  - **Secure Patterns**: ID-based logging replacing direct model object exposure
 - **Input Validation**: All user inputs are properly validated
 - **Error Sanitization**: Internal errors are not exposed to users
 
