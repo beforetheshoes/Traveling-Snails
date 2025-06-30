@@ -157,20 +157,31 @@ struct IsolatedTripDetailView: View {
             }
         }
         .onChange(of: navigationRouter.selectedTripId) { _, newValue in
-            // Handle trip selection from list while in deep navigation using environment-based pattern
-            if let selectedTripId = newValue, selectedTripId == trip.id, navigationRouter.shouldClearNavigationPath {
-                // Clear navigation path to return to trip root
-                let previousCount = navigationPath.count
-                if previousCount > 0 {
-                    navigationPath = NavigationPath()
-                    #if DEBUG
-                    Logger.shared.debug("Environment-based trip selection - cleared navigation path (was \(previousCount) deep)", category: .ui)
-                    #endif
-                }
-                // Acknowledge that we've cleared the navigation path
-                navigationRouter.acknowledgeNavigationPathClear()
-            }
+            handleEnvironmentBasedTripSelection(newValue)
         }
+    }
+    
+    /// Handle environment-based trip selection with clear navigation path coordination
+    /// This method encapsulates the complex logic for coordinating navigation state between
+    /// the environment router and local navigation path
+    private func handleEnvironmentBasedTripSelection(_ selectedTripId: UUID?) {
+        guard let selectedTripId = selectedTripId,
+              selectedTripId == trip.id,
+              navigationRouter.shouldClearNavigationPath else {
+            return
+        }
+        
+        // Clear navigation path to return to trip root when selected from list
+        let previousCount = navigationPath.count
+        if previousCount > 0 {
+            navigationPath = NavigationPath()
+            #if DEBUG
+            Logger.shared.debug("Environment-based trip selection - cleared navigation path (was \(previousCount) deep)", category: .ui)
+            #endif
+        }
+        
+        // Acknowledge that we've cleared the navigation path
+        navigationRouter.acknowledgeNavigationPathClear()
     }
 
     @ViewBuilder

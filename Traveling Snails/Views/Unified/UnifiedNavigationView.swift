@@ -211,14 +211,28 @@ struct UnifiedNavigationView<Item: NavigationItem, DetailView: View>: View {
                 }
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .clearTripSelection)) { _ in
-            // Clear the selected item when trip deletion navigation is triggered
-            print("📱 UnifiedNavigationView: Received clearTripSelection notification")
-            print("📱 UnifiedNavigationView: Current selectedItem: \(selectedItem?.displayName ?? "nil")")
-            selectedItem = nil
-            navigationPath = NavigationPath()
-            print("📱 UnifiedNavigationView: Cleared selectedItem and navigationPath for trip deletion navigation")
+        .onChange(of: navigationRouter.shouldClearNavigationPath) { _, shouldClear in
+            handleNavigationPathClear(shouldClear: shouldClear)
         }
+    }
+    
+    /// Handle environment-based navigation path clearing
+    /// This method coordinates navigation state clearing between the environment router
+    /// and local navigation state in a type-safe manner
+    private func handleNavigationPathClear(shouldClear: Bool) {
+        guard shouldClear else { return }
+        
+        Logger.shared.debug("Environment-based navigation clear - clearing selectedItem and navigationPath", category: .navigation)
+        Logger.shared.debug("Current selectedItem: \(selectedItem?.displayName ?? "nil")", category: .navigation)
+        
+        // Clear local navigation state
+        selectedItem = nil
+        navigationPath = NavigationPath()
+        
+        // Acknowledge that we've handled the navigation clear request
+        navigationRouter.acknowledgeNavigationPathClear()
+        
+        Logger.shared.debug("Cleared selectedItem and navigationPath for environment-based navigation", category: .navigation)
     }
 
     @ViewBuilder

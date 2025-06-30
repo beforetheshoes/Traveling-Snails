@@ -10,6 +10,9 @@ import SwiftUI
 /// Centralized navigation router following environment-based pattern
 @Observable
 class NavigationRouter {
+    /// Shared instance for NavigationRouter
+    /// ⚠️ IMPORTANT: Views should ALWAYS access via @Environment(\.navigationRouter) to avoid direct shared access
+    /// This prevents potential view recreation issues and ensures proper environment injection
     static let shared = NavigationRouter()
 
     // Navigation actions that can be triggered from anywhere in the app
