@@ -657,18 +657,34 @@ struct ActivityWrapper: Identifiable, Equatable {
 #### Problem Statement
 When users navigate deeply into the app (e.g., Trip → Activity Detail), selecting a different trip from the sidebar should return them to the trip detail root, not keep them on the activity detail screen.
 
-#### Solution Pattern: Notification-Based Navigation Reset
+#### Solution Pattern: Environment-Based Navigation Coordination (Modern SwiftUI)
 
 **✅ CORRECT Implementation:**
 
 ```swift
-// 1. Define notification in the detail view file
-extension Notification.Name {
-    static let tripSelectedFromList = Notification.Name("tripSelectedFromList")
+// 1. Enhanced NavigationRouter with @Observable pattern
+@Observable
+class NavigationRouter {
+    static let shared = NavigationRouter()
+    
+    // Environment-based navigation state
+    private(set) var selectedTripId: UUID?
+    private(set) var shouldClearNavigationPath = false
+    
+    // Type-safe navigation methods
+    func selectTrip(_ tripId: UUID) {
+        selectedTripId = tripId
+        shouldClearNavigationPath = true
+    }
+    
+    func acknowledgeNavigationPathClear() {
+        shouldClearNavigationPath = false
+    }
 }
 
-// 2. Listen for external selection in detail view
+// 2. Environment-based coordination in detail view
 struct IsolatedTripDetailView: View {
+    @Environment(\.navigationRouter) private var navigationRouter
     @State private var navigationPath = NavigationPath()
     let trip: Trip
     
@@ -676,52 +692,63 @@ struct IsolatedTripDetailView: View {
         NavigationStack(path: $navigationPath) {
             // ... view content
         }
-        .onReceive(NotificationCenter.default.publisher(for: .tripSelectedFromList)) { notification in
-            if let selectedTripId = notification.object as? UUID, selectedTripId == trip.id {
+        .onChange(of: navigationRouter.selectedTripId) { _, newValue in
+            if let selectedTripId = newValue, selectedTripId == trip.id, 
+               navigationRouter.shouldClearNavigationPath {
                 let previousCount = navigationPath.count
                 if previousCount > 0 {
                     navigationPath = NavigationPath()
-                    print("📱 Trip selected from list - cleared navigation path (was \(previousCount) deep)")
+                    Logger.shared.debug("Environment-based navigation cleared (\(previousCount) deep)", category: .ui)
                 }
+                navigationRouter.acknowledgeNavigationPathClear()
             }
         }
     }
 }
 
-// 3. Post notification when trip is selected from list
-struct UnifiedNavigationView<Item: NavigationItem, DetailView: View>: View {
-    // ... existing code
+// 3. Type-safe selection in navigation view
+struct UnifiedNavigationView: View {
+    @Environment(\.navigationRouter) private var navigationRouter
     
-    .onTapGesture {
-        // ... existing selection logic
-        
-        if let trip = item as? Trip {
-            selectedTrip = trip
-            // Notify detail view to reset navigation path
-            NotificationCenter.default.post(name: .tripSelectedFromList, object: trip.id)
+    var body: some View {
+        List(items) { item in
+            // ... row content
+        }
+        .onTapGesture {
+            if let trip = item as? Trip {
+                // Environment-based navigation coordination
+                navigationRouter.selectTrip(trip.id)
+            }
         }
     }
 }
 ```
 
 #### Key Benefits:
-- **Decoupled Communication**: Navigation view and detail view don't need direct references
-- **Scalable Pattern**: Can be extended for other deep navigation scenarios
+- **Type-Safe**: Compile-time checking vs. string-based notifications
+- **Better Testability**: Environment coordination is easier to test than NotificationCenter mocking
+- **Improved Debuggability**: Clear data flow through environment instead of hidden notification chains
+- **Modern SwiftUI**: Follows iOS 18+ `@Observable` patterns
+- **Backward Compatible**: Existing navigation still works during gradual migration
 - **User Experience**: Intuitive behavior - selecting trip from list goes to trip root
-- **State Management**: Preserves proper navigation state without interference
+
+#### Migration Strategy:
+- **Phase 1**: Enhanced NavigationRouter with environment methods (✅ Complete)
+- **Phase 2**: Migrate core views to environment-based coordination (✅ Complete)  
+- **Phase 3**: Centralize navigation path management for full type-safety
 
 #### When to Use This Pattern:
-- Deep navigation that should reset on external selection
-- Cross-view communication without tight coupling
-- Navigation coordination between sidebar and detail views
+- Navigation coordination between views
+- Type-safe state management
+- Modern SwiftUI architecture following iOS 18+ patterns
 - Any scenario where user expects "start fresh" behavior
 
-#### Alternative Patterns (Not Recommended):
+#### Previous Pattern (Being Phased Out):
+❌ **NotificationCenter**: String-based, harder to test, hidden dependencies
 ❌ **Binding Propagation**: Complex binding chains are fragile  
 ❌ **Direct Method Calls**: Requires tight coupling between views  
-❌ **Environment Objects**: Overkill for simple coordination  
 
-This notification pattern maintains the clean separation of concerns while providing responsive navigation behavior that meets user expectations.
+This environment-based pattern provides superior type safety, testability, and follows modern SwiftUI best practices while maintaining clean separation of concerns.
 
 ## Reusable Component Architecture Patterns
 

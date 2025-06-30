@@ -7,6 +7,7 @@ import SwiftUI
 struct IsolatedTripDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.navigationContext) private var navigationContext
+    @Environment(\.navigationRouter) private var navigationRouter
 
     // Store trip data as immutable values to prevent rebuilds from Trip mutations
     let trip: Trip // Use let instead of @State!
@@ -155,17 +156,19 @@ struct IsolatedTripDetailView: View {
                 #endif
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .tripSelectedFromList)) { notification in
-            // Handle trip selection from list while in deep navigation
-            if let selectedTripId = notification.object as? UUID, selectedTripId == trip.id {
+        .onChange(of: navigationRouter.selectedTripId) { _, newValue in
+            // Handle trip selection from list while in deep navigation using environment-based pattern
+            if let selectedTripId = newValue, selectedTripId == trip.id, navigationRouter.shouldClearNavigationPath {
                 // Clear navigation path to return to trip root
                 let previousCount = navigationPath.count
                 if previousCount > 0 {
                     navigationPath = NavigationPath()
                     #if DEBUG
-                    Logger.shared.debug("Trip selected from list - cleared navigation path (was \(previousCount) deep)", category: .ui)
+                    Logger.shared.debug("Environment-based trip selection - cleared navigation path (was \(previousCount) deep)", category: .ui)
                     #endif
                 }
+                // Acknowledge that we've cleared the navigation path
+                navigationRouter.acknowledgeNavigationPathClear()
             }
         }
     }

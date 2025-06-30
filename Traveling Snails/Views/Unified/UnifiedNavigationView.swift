@@ -59,6 +59,9 @@ struct NavigationConfiguration<Item: NavigationItem> {
 // MARK: - Unified Navigation View
 
 struct UnifiedNavigationView<Item: NavigationItem, DetailView: View>: View {
+    // Environment
+    @Environment(\.navigationRouter) private var navigationRouter
+    
     // Data
     let items: [Item]
     let configuration: NavigationConfiguration<Item>
@@ -255,9 +258,9 @@ struct UnifiedNavigationView<Item: NavigationItem, DetailView: View>: View {
                 // Update selectedTrip if this is a trip
                 if let trip = item as? Trip {
                     selectedTrip = trip
-                    // Notify the detail view to reset navigation path
-                    NotificationCenter.default.post(name: .tripSelectedFromList, object: trip.id)
-                    Logger.shared.debug("Posted tripSelectedFromList notification for trip: \(trip.name)", category: .navigation)
+                    // Use environment-based navigation instead of notifications
+                    navigationRouter.selectTrip(trip.id)
+                    Logger.shared.debug("Environment-based trip selection for trip: \(trip.name)", category: .navigation)
                 }
             }
             .listRowSeparator(.hidden) // Hide separators since we have our own styling
