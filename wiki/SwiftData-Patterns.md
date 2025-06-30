@@ -623,21 +623,38 @@ Before implementing any SwiftData-related feature:
 To prevent test data contamination in the production app, all SwiftData tests must use isolated containers:
 
 #### SwiftDataTestBase Pattern (Recommended)
+
+**⚠️ Critical: Use struct, not class inheritance**
+
+**✅ CORRECT Pattern:**
 ```swift
 @MainActor
-class MyTests {
+struct MyTests {  // ← Use struct, not class
     @Test("Isolated test example")
     func testWithIsolation() throws {
-        let testBase = SwiftDataTestBase()
+        let testBase = SwiftDataTestBase()  // ← Create instance, don't inherit
         
         // Create test data in isolated container
         let trip = Trip(name: "Test Trip")
-        testBase.modelContext.insert(trip)
+        testBase.modelContext.insert(trip)  // ← Use testBase.modelContext
         try testBase.modelContext.save()
         
         // Test business logic
         #expect(trip.name == "Test Trip")
         #expect(trip.totalActivities == 0)
+    }
+}
+```
+
+**❌ WRONG Pattern (causes 0.000s test failures):**
+```swift
+@MainActor
+final class MyTests: SwiftDataTestBase {  // ← DON'T inherit from SwiftDataTestBase
+    @Test("Broken test example")
+    func testWithBrokenPattern() throws {
+        // This pattern causes infrastructure failures:
+        modelContext.insert(trip)  // ← Direct access fails
+        try modelContext.save()    // ← Results in 0.000s test failures
     }
 }
 ```

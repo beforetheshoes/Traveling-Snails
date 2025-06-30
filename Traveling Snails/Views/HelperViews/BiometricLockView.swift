@@ -11,12 +11,11 @@ struct BiometricLockView: View {
         self._isAuthenticating = isAuthenticating
         self.onAuthenticationSuccess = onAuthenticationSuccess
         #if DEBUG
-        Logger.shared.debug("BiometricLockView.init() for trip", category: .app)
+        Logger.secure(category: .app).debug("BiometricLockView.init() for trip")
         #endif
     }
 
     var body: some View {
-        // print("🔒 BiometricLockView.body for \(trip.name) - isAuthenticating: \(isAuthenticating)")
         VStack(spacing: 24) {
             Spacer()
 
@@ -65,18 +64,18 @@ struct BiometricLockView: View {
 
     private func authenticateUser() {
         #if DEBUG
-        Logger.shared.debug("BiometricLockView.authenticateUser() - START, isAuthenticating: \(isAuthenticating)", category: .app)
+        Logger.secure(category: .app).debug("BiometricLockView.authenticateUser() - START, isAuthenticating: \(isAuthenticating, privacy: .public)")
         #endif
 
         guard !isAuthenticating else {
             #if DEBUG
-            Logger.shared.debug("Already authenticating, returning early", category: .app)
+            Logger.secure(category: .app).debug("Already authenticating, returning early")
             #endif
             return
         }
 
         #if DEBUG
-        Logger.shared.debug("Setting isAuthenticating = true", category: .app)
+        Logger.secure(category: .app).debug("Setting isAuthenticating = true")
         #endif
         isAuthenticating = true
 
@@ -85,11 +84,11 @@ struct BiometricLockView: View {
             try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
 
             #if DEBUG
-            Logger.shared.debug("Calling authManager.authenticateTrip()", category: .app)
+            Logger.secure(category: .app).debug("Calling authManager.authenticateTrip()")
             #endif
             let success = await authManager.authenticateTrip(trip)
             #if DEBUG
-            Logger.shared.debug("Authentication result: \(success)", category: .app)
+            Logger.secure(category: .app).debug("Authentication result: \(success, privacy: .public)")
             #endif
 
             await MainActor.run {
@@ -97,12 +96,12 @@ struct BiometricLockView: View {
                 // If successful, the view will automatically switch due to @Observable
                 if !success {
                     #if DEBUG
-                    Logger.shared.debug("Authentication failed, setting isAuthenticating = false", category: .app)
+                    Logger.secure(category: .app).debug("Authentication failed, setting isAuthenticating = false")
                     #endif
                     isAuthenticating = false
                 } else {
                     #if DEBUG
-                    Logger.shared.debug("Authentication successful, allowing transition", category: .app)
+                    Logger.secure(category: .app).debug("Authentication successful, allowing transition")
                     #endif
                     isAuthenticating = false
                     onAuthenticationSuccess()
@@ -110,7 +109,7 @@ struct BiometricLockView: View {
             }
 
             #if DEBUG
-            Logger.shared.debug("BiometricLockView.authenticateUser() - END", category: .app)
+            Logger.secure(category: .app).debug("BiometricLockView.authenticateUser() - END")
             #endif
         }
     }
