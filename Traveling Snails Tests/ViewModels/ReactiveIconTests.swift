@@ -5,20 +5,22 @@ import Testing
 
 @Suite("Reactive Icon Tests")
 @MainActor
-final class ReactiveIconTests: SwiftDataTestBase {
+struct ReactiveIconTests {
     @Test("View model currentIcon updates immediately when transportation type changes")
     func viewModelCurrentIconUpdatesImmediately() {
+        let testBase = SwiftDataTestBase()
+        
         // Create test trip and organization
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
         let org = Organization(name: "Test Org")
-        modelContext.insert(trip)
-        modelContext.insert(org)
+        testBase.modelContext.insert(trip)
+        testBase.modelContext.insert(org)
 
         // Create view model for new transportation activity
         let viewModel = UniversalActivityFormViewModel(
             trip: trip,
             activityType: .transportation,
-            modelContext: modelContext
+            modelContext: testBase.modelContext
         )
 
         // Initial state - should use default plane icon
@@ -52,15 +54,17 @@ final class ReactiveIconTests: SwiftDataTestBase {
 
     @Test("Non-transportation activities use static icon")
     func nonTransportationActivitiesUseStaticIcon() {
+        let testBase = SwiftDataTestBase()
+        
         // Create test trip
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
-        modelContext.insert(trip)
+        testBase.modelContext.insert(trip)
 
         // Test lodging activity
         let lodgingViewModel = UniversalActivityFormViewModel(
             trip: trip,
             activityType: .lodging,
-            modelContext: modelContext
+            modelContext: testBase.modelContext
         )
 
         // Lodging should use static icon regardless of transportation type changes
@@ -71,7 +75,7 @@ final class ReactiveIconTests: SwiftDataTestBase {
         let activityViewModel = UniversalActivityFormViewModel(
             trip: trip,
             activityType: .activity,
-            modelContext: modelContext
+            modelContext: testBase.modelContext
         )
 
         #expect(activityViewModel.currentIcon == activityViewModel.icon, "Activity should use static icon")
@@ -80,11 +84,13 @@ final class ReactiveIconTests: SwiftDataTestBase {
 
     @Test("Edit mode preserves existing transportation icon")
     func editModePreservesExistingTransportationIcon() {
+        let testBase = SwiftDataTestBase()
+        
         // Create test trip and organization
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
         let org = Organization(name: "Test Org")
-        modelContext.insert(trip)
-        modelContext.insert(org)
+        testBase.modelContext.insert(trip)
+        testBase.modelContext.insert(org)
 
         // Create existing transportation with specific type
         let existingTransportation = Transportation(
@@ -95,7 +101,7 @@ final class ReactiveIconTests: SwiftDataTestBase {
             organization: org
         )
         existingTransportation.type = .plane
-        modelContext.insert(existingTransportation)
+        testBase.modelContext.insert(existingTransportation)
 
         // Verify the transportation model itself has correct data
         #expect(existingTransportation.type == .plane, "Transportation model should have plane type")
@@ -105,7 +111,7 @@ final class ReactiveIconTests: SwiftDataTestBase {
         // Create view model for editing existing transportation
         let viewModel = UniversalActivityFormViewModel(
             existingActivity: existingTransportation,
-            modelContext: modelContext
+            modelContext: testBase.modelContext
         )
 
         // Debug: Check if edit data is initialized correctly
@@ -129,11 +135,13 @@ final class ReactiveIconTests: SwiftDataTestBase {
 
     @Test("Edit mode works with different transportation types")
     func editModeWorksWithDifferentTransportationTypes() {
+        let testBase = SwiftDataTestBase()
+        
         // Create test trip and organization
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
         let org = Organization(name: "Test Org")
-        modelContext.insert(trip)
-        modelContext.insert(org)
+        testBase.modelContext.insert(trip)
+        testBase.modelContext.insert(org)
 
         let transportationTypes: [(TransportationType, String)] = [
             (.train, "train.side.front.car"),
@@ -153,12 +161,12 @@ final class ReactiveIconTests: SwiftDataTestBase {
                 organization: org
             )
             transportation.type = transportationType
-            modelContext.insert(transportation)
+            testBase.modelContext.insert(transportation)
 
             // Create edit mode view model
             let viewModel = UniversalActivityFormViewModel(
                 existingActivity: transportation,
-                modelContext: modelContext
+                modelContext: testBase.modelContext
             )
 
             // Verify initial state

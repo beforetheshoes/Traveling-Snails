@@ -6,14 +6,16 @@ import Testing
 
 @Suite("Activity Margin Consistency Tests")
 @MainActor
-final class ActivityMarginConsistencyTests: SwiftDataTestBase {
+struct ActivityMarginConsistencyTests {
     @Test("ActivityHeaderView should use reduced icon padding for alignment consistency")
     func activityHeaderViewShouldUseReducedIconPaddingForAlignmentConsistency() {
+        let testBase = SwiftDataTestBase()
+        
         // Create test data
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
         let org = Organization(name: "Test Org")
-        modelContext.insert(trip)
-        modelContext.insert(org)
+        testBase.modelContext.insert(trip)
+        testBase.modelContext.insert(org)
 
         let activity = Activity(
             name: "Test Activity",
@@ -22,7 +24,7 @@ final class ActivityMarginConsistencyTests: SwiftDataTestBase {
             trip: trip,
             organization: org
         )
-        modelContext.insert(activity)
+        testBase.modelContext.insert(activity)
 
         // Test the ActivityHeaderView icon padding configuration
         let headerView = ActivityHeaderView(icon: "bed.double.fill", color: .blue, title: "Test")
@@ -37,14 +39,16 @@ final class ActivityMarginConsistencyTests: SwiftDataTestBase {
 
     @Test("UniversalAddActivityFormContent should maintain 16pt horizontal padding")
     func universalAddActivityFormContentShouldMaintain16ptHorizontalPadding() {
+        let testBase = SwiftDataTestBase()
+        
         // Create test data
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
-        modelContext.insert(trip)
+        testBase.modelContext.insert(trip)
 
         let viewModel = UniversalActivityFormViewModel(
             trip: trip,
             activityType: .activity,
-            modelContext: modelContext
+            modelContext: testBase.modelContext
         )
 
         // Test the padding configuration in UniversalAddActivityFormContent

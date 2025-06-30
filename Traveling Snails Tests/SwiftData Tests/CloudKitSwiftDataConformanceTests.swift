@@ -13,15 +13,17 @@ import Testing
 
 @Suite("CloudKit & SwiftData Conformance Tests")
 @MainActor
-class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
+struct CloudKitSwiftDataConformanceTests {
     @Suite("Relationship Safety Tests")
     @MainActor
-    class RelationshipSafetyTests: SwiftDataTestBase {
+    struct RelationshipSafetyTests {
         @Test("Trip relationships never return nil")
         func tripRelationshipsNeverReturnNil() async throws {
+            let testBase = SwiftDataTestBase()
+            
             let trip = Trip(name: "Test Trip")
-            modelContext.insert(trip)
-            try modelContext.save()
+            testBase.modelContext.insert(trip)
+            try testBase.modelContext.save()
 
             // Even with no data, accessors should return empty arrays, not nil
             #expect(trip.lodging.isEmpty)
@@ -40,9 +42,11 @@ class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
 
         @Test("Organization relationships never return nil")
         func organizationRelationshipsNeverReturnNil() async throws {
+            let testBase = SwiftDataTestBase()
+            
             let org = Organization(name: "Test Org")
-            modelContext.insert(org)
-            try modelContext.save()
+            testBase.modelContext.insert(org)
+            try testBase.modelContext.save()
 
             // Even with no data, accessors should return empty arrays
             #expect(org.transportation.isEmpty)
@@ -58,11 +62,13 @@ class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
 
         @Test("File attachment relationships never return nil")
         func fileAttachmentRelationshipsNeverReturnNil() async throws {
+            let testBase = SwiftDataTestBase()
+            
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")
-            modelContext.insert(trip)
-            modelContext.insert(org)
-            try modelContext.save()
+            testBase.modelContext.insert(trip)
+            testBase.modelContext.insert(org)
+            try testBase.modelContext.save()
 
             let activity = Activity(
                 name: "Test Activity",
@@ -71,7 +77,7 @@ class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
                 trip: trip,
                 organization: org
             )
-            modelContext.insert(activity)
+            testBase.modelContext.insert(activity)
 
             let lodging = Lodging(
                 name: "Test Hotel",
@@ -82,7 +88,7 @@ class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
                 trip: trip,
                 organization: org
             )
-            modelContext.insert(lodging)
+            testBase.modelContext.insert(lodging)
 
             let transportation = Transportation(
                 name: "Test Flight",
@@ -91,8 +97,8 @@ class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
                 trip: trip,
                 organization: org
             )
-            modelContext.insert(transportation)
-            try modelContext.save()
+            testBase.modelContext.insert(transportation)
+            try testBase.modelContext.save()
 
             // All should return empty arrays initially
             #expect(activity.fileAttachments.isEmpty)
@@ -112,14 +118,16 @@ class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
 
     @Suite("Relationship Append/Remove Safety Tests")
     @MainActor
-    class RelationshipAppendRemoveSafetyTests: SwiftDataTestBase {
+    struct RelationshipAppendRemoveSafetyTests {
         @Test("Trip relationship mutations work safely")
         func tripRelationshipMutationsWorkSafely() async throws {
+            let testBase = SwiftDataTestBase()
+            
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")
-            modelContext.insert(trip)
-            modelContext.insert(org)
-            try modelContext.save()
+            testBase.modelContext.insert(trip)
+            testBase.modelContext.insert(org)
+            try testBase.modelContext.save()
 
             // Should be able to append to empty arrays
             let lodging = Lodging(
@@ -131,29 +139,31 @@ class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
                 trip: trip,
                 organization: org
             )
-            modelContext.insert(lodging)
-            try modelContext.save()
+            testBase.modelContext.insert(lodging)
+            try testBase.modelContext.save()
 
             // This should work without crashes
             trip.lodging.append(lodging)
-            try modelContext.save()
+            try testBase.modelContext.save()
             #expect(trip.lodging.count == 1)
             #expect(trip.totalActivities == 1)
 
             // Should be able to remove
             trip.lodging.removeAll()
-            try modelContext.save()
+            try testBase.modelContext.save()
             #expect(trip.lodging.isEmpty)
             #expect(trip.totalActivities == 0)
         }
 
         @Test("Organization relationship mutations work safely")
         func organizationRelationshipMutationsWorkSafely() async throws {
+            let testBase = SwiftDataTestBase()
+            
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")
-            modelContext.insert(trip)
-            modelContext.insert(org)
-            try modelContext.save()
+            testBase.modelContext.insert(trip)
+            testBase.modelContext.insert(org)
+            try testBase.modelContext.save()
 
             let transportation = Transportation(
                 name: "Flight",
@@ -162,12 +172,12 @@ class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
                 trip: trip,
                 organization: org
             )
-            modelContext.insert(transportation)
-            try modelContext.save()
+            testBase.modelContext.insert(transportation)
+            try testBase.modelContext.save()
 
             // Setting relationship should work
             transportation.organization = org
-            try modelContext.save()
+            try testBase.modelContext.save()
 
             // Organization should reflect the relationship
             #expect(org.transportation.contains { $0.id == transportation.id })
@@ -177,11 +187,13 @@ class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
 
         @Test("File attachment mutations work safely")
         func fileAttachmentMutationsWorkSafely() async throws {
+            let testBase = SwiftDataTestBase()
+            
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")
-            modelContext.insert(trip)
-            modelContext.insert(org)
-            try modelContext.save()
+            testBase.modelContext.insert(trip)
+            testBase.modelContext.insert(org)
+            try testBase.modelContext.save()
 
             let activity = Activity(
                 name: "Test Activity",
@@ -190,25 +202,25 @@ class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
                 trip: trip,
                 organization: org
             )
-            modelContext.insert(activity)
-            try modelContext.save()
+            testBase.modelContext.insert(activity)
+            try testBase.modelContext.save()
 
             let attachment = EmbeddedFileAttachment(
                 fileName: "test.pdf",
                 originalFileName: "Test.pdf"
             )
-            modelContext.insert(attachment)
-            try modelContext.save()
+            testBase.modelContext.insert(attachment)
+            try testBase.modelContext.save()
 
             // Should be able to append
             activity.fileAttachments.append(attachment)
-            try modelContext.save()
+            try testBase.modelContext.save()
             #expect(activity.hasAttachments == true)
             #expect(activity.attachmentCount == 1)
 
             // Should be able to remove
             activity.fileAttachments.removeAll()
-            try modelContext.save()
+            try testBase.modelContext.save()
             #expect(activity.hasAttachments == false)
             #expect(activity.attachmentCount == 0)
         }
@@ -216,30 +228,34 @@ class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
 
     @Suite("None Organization Safety Tests")
     @MainActor
-    class NoneOrganizationSafetyTests: SwiftDataTestBase {
+    struct NoneOrganizationSafetyTests {
         @Test("None organization creation is safe")
         func noneOrganizationCreationIsSafe() async throws {
+            let testBase = SwiftDataTestBase()
+            
             // Should not crash when accessing isNone property
             let noneOrg = Organization(name: "None")
-            modelContext.insert(noneOrg)
-            try modelContext.save()
+            testBase.modelContext.insert(noneOrg)
+            try testBase.modelContext.save()
             #expect(noneOrg.isNone == true)
             #expect(noneOrg.canBeDeleted == false)
 
             let regularOrg = Organization(name: "Regular")
-            modelContext.insert(regularOrg)
-            try modelContext.save()
+            testBase.modelContext.insert(regularOrg)
+            try testBase.modelContext.save()
             #expect(regularOrg.isNone == false)
             #expect(regularOrg.canBeDeleted == true)
         }
 
         @Test("None organization relationship handling")
         func noneOrganizationRelationshipHandling() async throws {
+            let testBase = SwiftDataTestBase()
+            
             let trip = Trip(name: "Test Trip")
             let noneOrg = Organization(name: "None")
-            modelContext.insert(trip)
-            modelContext.insert(noneOrg)
-            try modelContext.save()
+            testBase.modelContext.insert(trip)
+            testBase.modelContext.insert(noneOrg)
+            try testBase.modelContext.save()
 
             let activity = Activity(
                 name: "Test Activity",
@@ -248,8 +264,8 @@ class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
                 trip: trip,
                 organization: noneOrg
             )
-            modelContext.insert(activity)
-            try modelContext.save()
+            testBase.modelContext.insert(activity)
+            try testBase.modelContext.save()
 
             // Should handle None organization relationships safely
             #expect(activity.organization?.isNone == true)
@@ -259,19 +275,21 @@ class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
 
     @Suite("CloudKit Compatibility Tests")
     @MainActor
-    class CloudKitCompatibilityTests: SwiftDataTestBase {
+    struct CloudKitCompatibilityTests {
         @Test("Empty relationships are efficiently stored")
         func emptyRelationshipsAreEfficientlyStored() async throws {
+            let testBase = SwiftDataTestBase()
+            
             let trip = Trip(name: "Empty Trip")
-            modelContext.insert(trip)
-            try modelContext.save()
+            testBase.modelContext.insert(trip)
+            try testBase.modelContext.save()
 
             // Empty arrays should not waste CloudKit storage
             // Our setter should convert empty arrays to nil
             trip.lodging = []
             trip.transportation = []
             trip.activity = []
-            try modelContext.save()
+            try testBase.modelContext.save()
 
             // But getters should still return empty arrays
             #expect(trip.lodging.isEmpty)
@@ -281,11 +299,13 @@ class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
 
         @Test("Relationships handle CloudKit sync scenarios")
         func relationshipsHandleCloudKitSyncScenarios() async throws {
+            let testBase = SwiftDataTestBase()
+            
             let trip = Trip(name: "Sync Test Trip")
             let org = Organization(name: "Sync Test Org")
-            modelContext.insert(trip)
-            modelContext.insert(org)
-            try modelContext.save()
+            testBase.modelContext.insert(trip)
+            testBase.modelContext.insert(org)
+            try testBase.modelContext.save()
 
             // Simulate CloudKit sync: relationships might be nil initially
             // Our accessors should handle this gracefully
@@ -302,11 +322,11 @@ class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
                 trip: trip,
                 organization: org
             )
-            modelContext.insert(lodging)
-            try modelContext.save()
+            testBase.modelContext.insert(lodging)
+            try testBase.modelContext.save()
 
             trip.lodging.append(lodging)
-            try modelContext.save()
+            try testBase.modelContext.save()
             #expect(trip.lodging.count == 1)
             #expect(trip.totalActivities == 1)
         }
@@ -314,14 +334,16 @@ class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
 
     @Suite("Data Consistency Tests")
     @MainActor
-    class DataConsistencyTests: SwiftDataTestBase {
+    struct DataConsistencyTests {
         @Test("Relationship bidirectionality is maintained")
         func relationshipBidirectionalityIsMaintained() async throws {
+            let testBase = SwiftDataTestBase()
+            
             let trip = Trip(name: "Bidirectional Test")
             let org = Organization(name: "Test Org")
-            modelContext.insert(trip)
-            modelContext.insert(org)
-            try modelContext.save()
+            testBase.modelContext.insert(trip)
+            testBase.modelContext.insert(org)
+            try testBase.modelContext.save()
 
             let activity = Activity(
                 name: "Test Activity",
@@ -330,13 +352,13 @@ class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
                 trip: trip,
                 organization: org
             )
-            modelContext.insert(activity)
-            try modelContext.save()
+            testBase.modelContext.insert(activity)
+            try testBase.modelContext.save()
 
             // Set the "to-one" relationships
             activity.trip = trip
             activity.organization = org
-            try modelContext.save()
+            try testBase.modelContext.save()
 
             // The "to-many" relationships should be updated automatically by SwiftData
             // Note: In real SwiftData, this happens automatically with inverse relationships
@@ -347,13 +369,15 @@ class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
 
         @Test("Complex relationship scenarios work")
         func complexRelationshipScenariosWork() async throws {
+            let testBase = SwiftDataTestBase()
+            
             let trip = Trip(name: "Complex Trip")
             let org1 = Organization(name: "Airline")
             let org2 = Organization(name: "Hotel")
-            modelContext.insert(trip)
-            modelContext.insert(org1)
-            modelContext.insert(org2)
-            try modelContext.save()
+            testBase.modelContext.insert(trip)
+            testBase.modelContext.insert(org1)
+            testBase.modelContext.insert(org2)
+            try testBase.modelContext.save()
 
             // Multiple activities with different organizations
             let flight = Transportation(
@@ -363,7 +387,7 @@ class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
                 trip: trip,
                 organization: org1
             )
-            modelContext.insert(flight)
+            testBase.modelContext.insert(flight)
 
             let hotel = Lodging(
                 name: "Hotel Stay",
@@ -374,7 +398,7 @@ class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
                 trip: trip,
                 organization: org2
             )
-            modelContext.insert(hotel)
+            testBase.modelContext.insert(hotel)
 
             let activity = Activity(
                 name: "Sightseeing",
@@ -384,14 +408,14 @@ class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
                 trip: trip,
                 organization: org2
             )
-            modelContext.insert(activity)
-            try modelContext.save()
+            testBase.modelContext.insert(activity)
+            try testBase.modelContext.save()
 
             // Manually set up relationships for testing
             trip.transportation.append(flight)
             trip.lodging.append(hotel)
             trip.activity.append(activity)
-            try modelContext.save()
+            try testBase.modelContext.save()
 
             // Should calculate totals correctly
             #expect(trip.totalActivities == 3)
@@ -401,7 +425,7 @@ class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
             org1.transportation.append(flight)
             org2.lodging.append(hotel)
             org2.activity.append(activity)
-            try modelContext.save()
+            try testBase.modelContext.save()
 
             #expect(org1.hasTransportation == true)
             #expect(org1.canBeDeleted == false)
@@ -413,14 +437,16 @@ class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
 
     @Suite("Performance and Memory Tests")
     @MainActor
-    class PerformanceAndMemoryTests: SwiftDataTestBase {
+    struct PerformanceAndMemoryTests {
         @Test("Large relationship collections perform well")
         func largeRelationshipCollectionsPerformWell() async throws {
+            let testBase = SwiftDataTestBase()
+            
             let trip = Trip(name: "Large Trip")
             let org = Organization(name: "Large Org")
-            modelContext.insert(trip)
-            modelContext.insert(org)
-            try modelContext.save()
+            testBase.modelContext.insert(trip)
+            testBase.modelContext.insert(org)
+            try testBase.modelContext.save()
 
             let startTime = Date()
 
@@ -434,12 +460,12 @@ class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
                     trip: trip,
                     organization: org
                 )
-                modelContext.insert(activity)
+                testBase.modelContext.insert(activity)
 
                 trip.activity.append(activity)
                 org.activity.append(activity)
             }
-            try modelContext.save()
+            try testBase.modelContext.save()
 
             let creationTime = Date().timeIntervalSince(startTime)
             #expect(creationTime < 6.0, "Creating 100 activities took \(creationTime) seconds")
@@ -453,6 +479,8 @@ class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
 
         @Test("Memory usage is efficient with empty relationships")
         func memoryUsageIsEfficientWithEmptyRelationships() async throws {
+            let testBase = SwiftDataTestBase()
+            
             // Create many objects with no relationships
             var trips: [Trip] = []
             var orgs: [Organization] = []
@@ -460,13 +488,13 @@ class CloudKitSwiftDataConformanceTests: SwiftDataTestBase {
             for i in 0..<50 {
                 let trip = Trip(name: "Trip \(i)")
                 let org = Organization(name: "Org \(i)")
-                modelContext.insert(trip)
-                modelContext.insert(org)
+                testBase.modelContext.insert(trip)
+                testBase.modelContext.insert(org)
 
                 trips.append(trip)
                 orgs.append(org)
             }
-            try modelContext.save()
+            try testBase.modelContext.save()
 
             // All should have empty relationships without memory bloat
             for trip in trips {

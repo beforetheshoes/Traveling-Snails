@@ -6,17 +6,19 @@ import Testing
 
 @Suite("DataBrowser Issue Details Tests")
 @MainActor
-class DataBrowserIssueDetailsTests: SwiftDataTestBase {
+struct DataBrowserIssueDetailsTests {
     // MARK: - Test Issue Detail Display Functions
 
     @Test("getDetailedItems returns correct format for blank entries")
     func getDetailedItemsFormatForBlankEntries() {
+        let testBase = SwiftDataTestBase()
+        
         // Create test diagnostic results with blank entries
         var results = DataBrowserView.DiagnosticResults()
 
         // Create mock blank transportation
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
-        modelContext.insert(trip)
+        testBase.modelContext.insert(trip)
 
         let blankTransportation = Transportation(
             type: .plane,
@@ -108,9 +110,11 @@ class DataBrowserIssueDetailsTests: SwiftDataTestBase {
 
     @Test("Issue description generation works correctly")
     func issueDescriptionGenerationWorksCorrectly() {
+        let testBase = SwiftDataTestBase()
+        
         // Create test data
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
-        modelContext.insert(trip)
+        testBase.modelContext.insert(trip)
 
         var results = DataBrowserView.DiagnosticResults()
 
@@ -136,6 +140,8 @@ class DataBrowserIssueDetailsTests: SwiftDataTestBase {
 
     @Test("DataBrowserIssuesTab should show expandable details")
     func dataBrowserIssuesTabShouldShowExpandableDetails() {
+        let testBase = SwiftDataTestBase()
+        
         // This test documents the requirement for the UI enhancement
         // The DataBrowserIssuesTab currently only shows:
         // - Issue type name
@@ -149,7 +155,7 @@ class DataBrowserIssueDetailsTests: SwiftDataTestBase {
 
         // Create test data to validate the enhancement
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
-        modelContext.insert(trip)
+        testBase.modelContext.insert(trip)
 
         var results = DataBrowserView.DiagnosticResults()
 
@@ -171,11 +177,13 @@ class DataBrowserIssueDetailsTests: SwiftDataTestBase {
 
     @Test("UI should handle large lists with truncation")
     func uiShouldHandleLargeListsWithTruncation() {
+        let testBase = SwiftDataTestBase()
+        
         // Test the truncation pattern used in AllIssuesFixerContent
         // Shows first 10 items + "... and X more" pattern
 
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
-        modelContext.insert(trip)
+        testBase.modelContext.insert(trip)
 
         var results = DataBrowserView.DiagnosticResults()
 

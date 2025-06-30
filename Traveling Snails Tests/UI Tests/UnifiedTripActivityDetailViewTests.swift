@@ -5,14 +5,16 @@ import Testing
 
 @Suite("UnifiedTripActivityDetailView Tests")
 @MainActor
-final class UnifiedTripActivityDetailViewTests: SwiftDataTestBase {
+struct UnifiedTripActivityDetailViewTests {
     @Test("Detail view shows dynamic transportation icons in edit mode")
     func detailViewShowsDynamicTransportationIconsInEditMode() {
+        let testBase = SwiftDataTestBase()
+        
         // Create test trip and organization
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
         let org = Organization(name: "Test Org")
-        modelContext.insert(trip)
-        modelContext.insert(org)
+        testBase.modelContext.insert(trip)
+        testBase.modelContext.insert(org)
 
         // Create existing transportation with specific type
         let existingTransportation = Transportation(
@@ -23,7 +25,7 @@ final class UnifiedTripActivityDetailViewTests: SwiftDataTestBase {
             organization: org
         )
         existingTransportation.type = .plane
-        modelContext.insert(existingTransportation)
+        testBase.modelContext.insert(existingTransportation)
 
         // Create detail view (simulating how it would be created in the app)
         _ = UnifiedTripActivityDetailView(activity: existingTransportation)
@@ -85,11 +87,13 @@ final class UnifiedTripActivityDetailViewTests: SwiftDataTestBase {
 
     @Test("Detail view edit mode works with different starting transportation types")
     func detailViewEditModeWorksWithDifferentStartingTypes() {
+        let testBase = SwiftDataTestBase()
+        
         // Create test trip and organization
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
         let org = Organization(name: "Test Org")
-        modelContext.insert(trip)
-        modelContext.insert(org)
+        testBase.modelContext.insert(trip)
+        testBase.modelContext.insert(org)
 
         let transportationTypes: [(TransportationType, String)] = [
             (.train, "train.side.front.car"),
@@ -109,7 +113,7 @@ final class UnifiedTripActivityDetailViewTests: SwiftDataTestBase {
                 organization: org
             )
             transportation.type = initialType
-            modelContext.insert(transportation)
+            testBase.modelContext.insert(transportation)
 
             let editData = TripActivityEditData(from: transportation)
 
