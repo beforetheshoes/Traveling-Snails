@@ -26,14 +26,21 @@ This document provides comprehensive security guidelines for logging in the Trav
 
 ### 1. Use Logger Framework (NOT print statements)
 
-✅ **CORRECT:**
+✅ **CORRECT (Standardized Pattern):**
 ```swift
 import os
 
 #if DEBUG
-Logger().debug("Trip operation completed for ID: \(trip.id, privacy: .public)")
-Logger().debug("Activity count: \(activities.count, privacy: .public)")
-Logger().debug("Sync status: \(syncStatus, privacy: .public)")
+Logger.secure(category: .app).debug("Trip operation completed for ID: \(trip.id, privacy: .public)")
+Logger.secure(category: .debug).debug("Activity count: \(activities.count, privacy: .public)")
+Logger.secure(category: .sync).debug("Sync status: \(syncStatus, privacy: .public)")
+#endif
+```
+
+✅ **ALSO ACCEPTABLE (Legacy Pattern):**
+```swift
+#if DEBUG
+Logger.shared.debug("Operation completed", category: .app)
 #endif
 ```
 
@@ -63,12 +70,12 @@ This ensures logs are completely removed from production builds.
 
 ```swift
 // ✅ Safe patterns
-Logger().debug("Operation completed for ID: \(id, privacy: .public)")
-Logger().debug("Found \(count, privacy: .public) items")
-Logger().debug("Status: \(status, privacy: .public)")
+Logger.secure(category: .app).debug("Operation completed for ID: \(id, privacy: .public)")
+Logger.secure(category: .database).debug("Found \(count, privacy: .public) items")
+Logger.secure(category: .sync).debug("Status: \(status, privacy: .public)")
 
 // ❌ NEVER do this
-Logger().debug("Trip name: \(trip.name, privacy: .private)")  // Still wrong!
+Logger.secure(category: .app).debug("Trip name: \(trip.name, privacy: .private)")  // Still wrong!
 ```
 
 ### 4. Safe Model Logging Patterns
@@ -77,8 +84,8 @@ Logger().debug("Trip name: \(trip.name, privacy: .private)")  // Still wrong!
 ```swift
 // ✅ CORRECT
 #if DEBUG
-Logger().debug("Trip created with ID: \(trip.id, privacy: .public)")
-Logger().debug("Trip has \(trip.activities.count, privacy: .public) activities")
+Logger.secure(category: .trip).debug("Trip created with ID: \(trip.id, privacy: .public)")
+Logger.secure(category: .trip).debug("Trip has \(trip.activities.count, privacy: .public) activities")
 #endif
 
 // ❌ WRONG
@@ -90,8 +97,8 @@ print("Trip name: \(trip.name)")
 ```swift
 // ✅ CORRECT
 #if DEBUG
-Logger().debug("Activity saved with ID: \(activity.id, privacy: .public)")
-Logger().debug("Activity cost range: \(costCategory, privacy: .public)")  // e.g., "low", "medium", "high"
+Logger.secure(category: .app).debug("Activity saved with ID: \(activity.id, privacy: .public)")
+Logger.secure(category: .app).debug("Activity cost range: \(costCategory, privacy: .public)")  // e.g., "low", "medium", "high"
 #endif
 
 // ❌ WRONG

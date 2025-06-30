@@ -8,6 +8,22 @@ import Foundation
 import os
 
 /// Centralized logging system for the application
+///
+/// RECOMMENDED USAGE PATTERNS:
+/// 
+/// 1. For privacy-aware logging (Apple's recommended pattern):
+///    ```swift
+///    #if DEBUG
+///    Logger.secure(category: .app).debug("Trip created with ID: \(trip.id, privacy: .public)")
+///    #endif
+///    ```
+///
+/// 2. For convenience logging (existing pattern):
+///    ```swift
+///    Logger.shared.debug("Message", category: .app)
+///    ```
+///
+/// Pattern 1 is preferred for new code as it aligns with Apple's privacy guidelines.
 final class Logger {
     static let shared = Logger()
 
@@ -275,6 +291,19 @@ extension Logger {
         line: Int = #line
     ) {
         log(message, category: category, level: .critical, file: file, function: function, line: line)
+    }
+}
+
+// MARK: - Apple Logger Pattern Convenience
+
+extension Logger {
+    /// Creates an Apple os.Logger with proper subsystem and category for secure logging with privacy levels
+    /// This is the recommended Apple pattern for privacy-aware logging
+    ///
+    /// Usage: Logger.secure(category: .app).debug("Message with \(data, privacy: .public)")
+    static func secure(category: Category = .app) -> os.Logger {
+        let subsystem = Bundle.main.bundleIdentifier ?? "com.travelingsnails.app"
+        return os.Logger(subsystem: subsystem, category: category.rawValue)
     }
 }
 

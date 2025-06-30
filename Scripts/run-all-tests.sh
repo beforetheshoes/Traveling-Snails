@@ -118,6 +118,38 @@ resolve_dependencies() {
         "swift package resolve"
 }
 
+# Function to run security tests only
+run_security_tests() {
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+    echo -e "${BLUE}                 Running Security Tests${NC}"
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+    echo ""
+    
+    local security_test_command="xcodebuild test \
+        -project \"$PROJECT_NAME.xcodeproj\" \
+        -scheme \"$SCHEME_NAME\" \
+        -destination \"platform=iOS Simulator,name=$SIMULATOR_NAME\" \
+        -only-testing:\"Traveling Snails Tests/LoggingSecurityTests\" \
+        -only-testing:\"Traveling Snails Tests/CodebaseSecurityAuditTests\""
+    
+    # Add xcbeautify if available
+    if command -v xcbeautify &> /dev/null; then
+        security_test_command="$security_test_command | xcbeautify"
+    else
+        # Without xcbeautify, at least filter for test results
+        security_test_command="$security_test_command 2>&1 | grep -E \"Test Suite|Test Case|passed|failed|error\""
+    fi
+    
+    if eval "$security_test_command"; then
+        echo -e "${GREEN}✓ All security tests passed!${NC}"
+    else
+        echo -e "${RED}✗ Some security tests failed${NC}"
+        EXIT_CODE=1
+    fi
+    
+    echo ""
+}
+
 # Function to run SwiftLint
 run_swiftlint() {
     echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
@@ -279,6 +311,7 @@ show_usage() {
     echo "  --no-clean       Skip cleaning derived data"
     echo "  --lint-only      Run only SwiftLint checks"
     echo "  --test-only      Run only tests (no linting)"
+    echo "  --security-only  Run only security tests"
     echo "  --quick          Skip dependency resolution"
     echo "  -h, --help       Show this help message"
     echo ""
@@ -286,6 +319,7 @@ show_usage() {
     echo "  $0                    # Run all checks"
     echo "  $0 --lint-only        # Run only SwiftLint"
     echo "  $0 --test-only        # Run only tests"
+    echo "  $0 --security-only    # Run only security tests"
     echo "  $0 --no-clean --quick # Fast run without cleanup"
 }
 
@@ -293,6 +327,7 @@ show_usage() {
 SKIP_CLEAN=false
 LINT_ONLY=false
 TEST_ONLY=false
+SECURITY_ONLY=false
 QUICK_RUN=false
 
 while [[ $# -gt 0 ]]; do
@@ -307,6 +342,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --test-only)
             TEST_ONLY=true
+            shift
+            ;;
+        --security-only)
+            SECURITY_ONLY=true
             shift
             ;;
         --quick)
@@ -340,18 +379,28 @@ main() {
         resolve_dependencies
     fi
     
-    # Run SwiftLint if not test-only
-    if [ "$TEST_ONLY" = false ]; then
-        run_swiftlint
-    fi
-    
-    # Build and test if not lint-only
-    if [ "$LINT_ONLY" = false ]; then
+    # Handle security-only mode
+    if [ "$SECURITY_ONLY" = true ]; then
         build_project
         if [ $EXIT_CODE -eq 0 ]; then
-            run_tests
+            run_security_tests
         else
-            echo -e "${YELLOW}⚠️  Skipping tests due to build failure${NC}"
+            echo -e "${YELLOW}⚠️  Skipping security tests due to build failure${NC}"
+        fi
+    else
+        # Run SwiftLint if not test-only
+        if [ "$TEST_ONLY" = false ]; then
+            run_swiftlint
+        fi
+        
+        # Build and test if not lint-only
+        if [ "$LINT_ONLY" = false ]; then
+            build_project
+            if [ $EXIT_CODE -eq 0 ]; then
+                run_tests
+            else
+                echo -e "${YELLOW}⚠️  Skipping tests due to build failure${NC}"
+            fi
         fi
     fi
     
