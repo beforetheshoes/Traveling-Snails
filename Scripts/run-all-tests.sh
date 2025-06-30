@@ -18,7 +18,14 @@ PROJECT_NAME="Traveling Snails"
 SCHEME_NAME="Traveling Snails"
 SIMULATOR_NAME="iPhone 16"
 TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
+START_EPOCH=$(date +%s)
 EXIT_CODE=0
+
+# Test target configuration
+TEST_TARGET="Traveling Snails Tests"
+UNIT_TEST_PATH="Unit Tests"
+INTEGRATION_TEST_PATH="Integration Tests"
+PERFORMANCE_TEST_PATH="Stress Tests"
 
 # Change to project root
 cd "$PROJECT_ROOT"
@@ -118,6 +125,68 @@ resolve_dependencies() {
         "swift package resolve"
 }
 
+# Function to validate test targets exist
+validate_test_targets() {
+    echo -e "${CYAN}Validating test targets...${NC}"
+    
+    local validation_failed=false
+    
+    # Check if the main test target exists
+    if ! xcodebuild -project "$PROJECT_NAME.xcodeproj" -list 2>/dev/null | grep -q "$TEST_TARGET"; then
+        echo -e "${RED}❌ Test target '$TEST_TARGET' not found in project${NC}"
+        validation_failed=true
+    else
+        echo -e "${GREEN}✓ Found test target: $TEST_TARGET${NC}"
+    fi
+    
+    # Function to validate individual test categories can be run
+    validate_test_category() {
+        local category_name="$1"
+        local test_path="$2"
+        
+        # Check if test directory exists
+        if [ ! -d "$PROJECT_ROOT/$TEST_TARGET/$test_path" ]; then
+            echo -e "${RED}❌ $category_name directory not found: $test_path${NC}"
+            return 1
+        fi
+        
+        # Check if directory contains Swift test files
+        if ! ls "$PROJECT_ROOT/$TEST_TARGET/$test_path"/*.swift >/dev/null 2>&1; then
+            echo -e "${YELLOW}⚠️  Warning: No Swift test files found in $category_name directory${NC}"
+            return 1
+        fi
+        
+        echo -e "${GREEN}✓ Found $category_name with test files${NC}"
+        return 0
+    }
+    
+    # Validate each test category
+    validate_test_category "Unit Tests" "$UNIT_TEST_PATH"
+    validate_test_category "Integration Tests" "$INTEGRATION_TEST_PATH" 
+    validate_test_category "Performance Tests" "$PERFORMANCE_TEST_PATH"
+    
+    # Additional validation: Try a dry-run test command to verify xcodebuild can find the targets
+    echo -e "${CYAN}Performing dry-run validation...${NC}"
+    if xcodebuild test \
+        -project "$PROJECT_NAME.xcodeproj" \
+        -scheme "$SCHEME_NAME" \
+        -destination "platform=iOS Simulator,name=$SIMULATOR_NAME" \
+        -only-testing:"$TEST_TARGET/$UNIT_TEST_PATH" \
+        -dry-run >/dev/null 2>&1; then
+        echo -e "${GREEN}✓ xcodebuild can locate test targets${NC}"
+    else
+        echo -e "${YELLOW}⚠️  xcodebuild dry-run failed - test targets may not be properly configured${NC}"
+        echo -e "${CYAN}Tip: Run 'xcodebuild test -project \"$PROJECT_NAME.xcodeproj\" -scheme \"$SCHEME_NAME\" -showBuildSettings' to debug${NC}"
+    fi
+    
+    if [ "$validation_failed" = true ]; then
+        echo -e "${RED}Test target validation failed. Please check your project configuration.${NC}"
+        exit 1
+    fi
+    
+    echo ""
+}
+
 # Function to run security tests only
 run_security_tests() {
     echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
@@ -129,8 +198,8 @@ run_security_tests() {
         -project \"$PROJECT_NAME.xcodeproj\" \
         -scheme \"$SCHEME_NAME\" \
         -destination \"platform=iOS Simulator,name=$SIMULATOR_NAME\" \
-        -only-testing:\"Traveling Snails Tests/LoggingSecurityTests\" \
-        -only-testing:\"Traveling Snails Tests/CodebaseSecurityAuditTests\""
+        -only-testing:\"$TEST_TARGET/LoggingSecurityTests\" \
+        -only-testing:\"$TEST_TARGET/CodebaseSecurityAuditTests\""
     
     # Add xcbeautify if available
     if command -v xcbeautify &> /dev/null; then
@@ -161,7 +230,7 @@ run_unit_tests() {
         -project \"$PROJECT_NAME.xcodeproj\" \
         -scheme \"$SCHEME_NAME\" \
         -destination \"platform=iOS Simulator,name=$SIMULATOR_NAME\" \
-        -only-testing:\"Traveling Snails Tests/Unit Tests\""
+        -only-testing:\"$TEST_TARGET/$UNIT_TEST_PATH\""
     
     # Add xcbeautify if available
     if command -v xcbeautify &> /dev/null; then
@@ -171,11 +240,30 @@ run_unit_tests() {
         unit_test_command="$unit_test_command 2>&1 | grep -E \"Test Suite|Test Case|passed|failed|error\""
     fi
     
-    if eval "$unit_test_command"; then
-        echo -e "${GREEN}✓ All unit tests passed!${NC}"
+    if command -v xcbeautify &> /dev/null; then
+        if xcodebuild test \
+            -project "$PROJECT_NAME.xcodeproj" \
+            -scheme "$SCHEME_NAME" \
+            -destination "platform=iOS Simulator,name=$SIMULATOR_NAME" \
+            -only-testing:"$TEST_TARGET/$UNIT_TEST_PATH" | xcbeautify; then
+            echo -e "${GREEN}✓ All unit tests passed!${NC}"
+        else
+            echo -e "${RED}✗ Some unit tests failed${NC}"
+            echo -e "${CYAN}Command: $unit_test_command${NC}"
+            EXIT_CODE=1
+        fi
     else
-        echo -e "${RED}✗ Some unit tests failed${NC}"
-        EXIT_CODE=1
+        if xcodebuild test \
+            -project "$PROJECT_NAME.xcodeproj" \
+            -scheme "$SCHEME_NAME" \
+            -destination "platform=iOS Simulator,name=$SIMULATOR_NAME" \
+            -only-testing:"$TEST_TARGET/$UNIT_TEST_PATH" 2>&1 | grep -E "Test Suite|Test Case|passed|failed|error"; then
+            echo -e "${GREEN}✓ All unit tests passed!${NC}"
+        else
+            echo -e "${RED}✗ Some unit tests failed${NC}"
+            echo -e "${CYAN}Command: $unit_test_command${NC}"
+            EXIT_CODE=1
+        fi
     fi
     
     echo ""
@@ -192,7 +280,7 @@ run_integration_tests() {
         -project \"$PROJECT_NAME.xcodeproj\" \
         -scheme \"$SCHEME_NAME\" \
         -destination \"platform=iOS Simulator,name=$SIMULATOR_NAME\" \
-        -only-testing:\"Traveling Snails Tests/Integration Tests\""
+        -only-testing:\"$TEST_TARGET/$INTEGRATION_TEST_PATH\""
     
     # Add xcbeautify if available
     if command -v xcbeautify &> /dev/null; then
@@ -202,11 +290,30 @@ run_integration_tests() {
         integration_test_command="$integration_test_command 2>&1 | grep -E \"Test Suite|Test Case|passed|failed|error\""
     fi
     
-    if eval "$integration_test_command"; then
-        echo -e "${GREEN}✓ All integration tests passed!${NC}"
+    if command -v xcbeautify &> /dev/null; then
+        if xcodebuild test \
+            -project "$PROJECT_NAME.xcodeproj" \
+            -scheme "$SCHEME_NAME" \
+            -destination "platform=iOS Simulator,name=$SIMULATOR_NAME" \
+            -only-testing:"$TEST_TARGET/$INTEGRATION_TEST_PATH" | xcbeautify; then
+            echo -e "${GREEN}✓ All integration tests passed!${NC}"
+        else
+            echo -e "${RED}✗ Some integration tests failed${NC}"
+            echo -e "${CYAN}Command: $integration_test_command${NC}"
+            EXIT_CODE=1
+        fi
     else
-        echo -e "${RED}✗ Some integration tests failed${NC}"
-        EXIT_CODE=1
+        if xcodebuild test \
+            -project "$PROJECT_NAME.xcodeproj" \
+            -scheme "$SCHEME_NAME" \
+            -destination "platform=iOS Simulator,name=$SIMULATOR_NAME" \
+            -only-testing:"$TEST_TARGET/$INTEGRATION_TEST_PATH" 2>&1 | grep -E "Test Suite|Test Case|passed|failed|error"; then
+            echo -e "${GREEN}✓ All integration tests passed!${NC}"
+        else
+            echo -e "${RED}✗ Some integration tests failed${NC}"
+            echo -e "${CYAN}Command: $integration_test_command${NC}"
+            EXIT_CODE=1
+        fi
     fi
     
     echo ""
@@ -223,7 +330,7 @@ run_performance_tests() {
         -project \"$PROJECT_NAME.xcodeproj\" \
         -scheme \"$SCHEME_NAME\" \
         -destination \"platform=iOS Simulator,name=$SIMULATOR_NAME\" \
-        -only-testing:\"Traveling Snails Tests/Stress Tests\""
+        -only-testing:\"$TEST_TARGET/$PERFORMANCE_TEST_PATH\""
     
     # Add xcbeautify if available
     if command -v xcbeautify &> /dev/null; then
@@ -233,11 +340,30 @@ run_performance_tests() {
         performance_test_command="$performance_test_command 2>&1 | grep -E \"Test Suite|Test Case|passed|failed|error\""
     fi
     
-    if eval "$performance_test_command"; then
-        echo -e "${GREEN}✓ All performance tests passed!${NC}"
+    if command -v xcbeautify &> /dev/null; then
+        if xcodebuild test \
+            -project "$PROJECT_NAME.xcodeproj" \
+            -scheme "$SCHEME_NAME" \
+            -destination "platform=iOS Simulator,name=$SIMULATOR_NAME" \
+            -only-testing:"$TEST_TARGET/$PERFORMANCE_TEST_PATH" | xcbeautify; then
+            echo -e "${GREEN}✓ All performance tests passed!${NC}"
+        else
+            echo -e "${RED}✗ Some performance tests failed${NC}"
+            echo -e "${CYAN}Command: $performance_test_command${NC}"
+            EXIT_CODE=1
+        fi
     else
-        echo -e "${RED}✗ Some performance tests failed${NC}"
-        EXIT_CODE=1
+        if xcodebuild test \
+            -project "$PROJECT_NAME.xcodeproj" \
+            -scheme "$SCHEME_NAME" \
+            -destination "platform=iOS Simulator,name=$SIMULATOR_NAME" \
+            -only-testing:"$TEST_TARGET/$PERFORMANCE_TEST_PATH" 2>&1 | grep -E "Test Suite|Test Case|passed|failed|error"; then
+            echo -e "${GREEN}✓ All performance tests passed!${NC}"
+        else
+            echo -e "${RED}✗ Some performance tests failed${NC}"
+            echo -e "${CYAN}Command: $performance_test_command${NC}"
+            EXIT_CODE=1
+        fi
     fi
     
     echo ""
@@ -366,7 +492,7 @@ generate_summary() {
     echo ""
     
     local end_timestamp=$(date +"%Y-%m-%d %H:%M:%S")
-    local total_duration=$(($(date +%s) - $(date -j -f "%Y-%m-%d %H:%M:%S" "$TIMESTAMP" +%s 2>/dev/null || date -d "$TIMESTAMP" +%s)))
+    local total_duration=$(($(date +%s) - START_EPOCH))
     
     echo -e "${CYAN}Test Suite Execution Summary${NC}"
     echo -e "Start Time: $TIMESTAMP"
@@ -408,6 +534,7 @@ show_usage() {
     echo "  --unit-only          Run only unit tests"
     echo "  --integration-only   Run only integration tests"
     echo "  --performance-only   Run only performance tests"
+    echo "  --no-build           Skip building project (tests only)"
     echo "  --quick              Skip dependency resolution"
     echo "  -h, --help           Show this help message"
     echo ""
@@ -423,6 +550,7 @@ show_usage() {
     echo "  $0 --unit-only            # Run only unit tests"
     echo "  $0 --integration-only     # Run only integration tests"
     echo "  $0 --performance-only     # Run only performance tests"
+    echo "  $0 --unit-only --no-build # Run unit tests without rebuilding"
     echo "  $0 --no-clean --quick     # Fast run without cleanup"
 }
 
@@ -435,6 +563,7 @@ UNIT_ONLY=false
 INTEGRATION_ONLY=false
 PERFORMANCE_ONLY=false
 QUICK_RUN=false
+NO_BUILD=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -464,6 +593,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --performance-only)
             PERFORMANCE_ONLY=true
+            shift
+            ;;
+        --no-build)
+            NO_BUILD=true
             shift
             ;;
         --quick)
@@ -522,6 +655,11 @@ main() {
     # Check dependencies first
     check_dependencies
     
+    # Validate test targets exist (unless running lint-only)
+    if [ "$LINT_ONLY" = false ]; then
+        validate_test_targets
+    fi
+    
     # Clean if not skipped
     if [ "$SKIP_CLEAN" = false ] && [ "$QUICK_RUN" = false ]; then
         clean_derived_data
@@ -534,28 +672,36 @@ main() {
     
     # Handle specific test category modes
     if [ "$SECURITY_ONLY" = true ]; then
-        build_project
+        if [ "$NO_BUILD" = false ]; then
+            build_project
+        fi
         if [ $EXIT_CODE -eq 0 ]; then
             run_security_tests
         else
             echo -e "${YELLOW}⚠️  Skipping security tests due to build failure${NC}"
         fi
     elif [ "$UNIT_ONLY" = true ]; then
-        build_project
+        if [ "$NO_BUILD" = false ]; then
+            build_project
+        fi
         if [ $EXIT_CODE -eq 0 ]; then
             run_unit_tests
         else
             echo -e "${YELLOW}⚠️  Skipping unit tests due to build failure${NC}"
         fi
     elif [ "$INTEGRATION_ONLY" = true ]; then
-        build_project
+        if [ "$NO_BUILD" = false ]; then
+            build_project
+        fi
         if [ $EXIT_CODE -eq 0 ]; then
             run_integration_tests
         else
             echo -e "${YELLOW}⚠️  Skipping integration tests due to build failure${NC}"
         fi
     elif [ "$PERFORMANCE_ONLY" = true ]; then
-        build_project
+        if [ "$NO_BUILD" = false ]; then
+            build_project
+        fi
         if [ $EXIT_CODE -eq 0 ]; then
             run_performance_tests
         else
