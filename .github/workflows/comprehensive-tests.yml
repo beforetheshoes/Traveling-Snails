@@ -264,7 +264,7 @@ jobs:
             echo "| Warnings | $WARNING_COUNT |" >> $GITHUB_STEP_SUMMARY
             echo "| Security Issues | $SECURITY_COUNT |" >> $GITHUB_STEP_SUMMARY
             
-            # Fail if there are errors or security violations
+            # Only fail on errors or security violations (not warnings)
             if [ "$ERROR_COUNT" -gt 0 ] || [ "$SECURITY_COUNT" -gt 0 ]; then
               echo "❌ Critical violations found!"
               
@@ -286,9 +286,13 @@ jobs:
               
               exit 1
             else
-              echo "✅ No critical violations found"
+              echo "✅ No critical violations found (Errors: $ERROR_COUNT, Security: $SECURITY_COUNT)"
               echo "" >> $GITHUB_STEP_SUMMARY
-              echo "✅ **All SwiftLint checks passed!**" >> $GITHUB_STEP_SUMMARY
+              echo "✅ **Critical SwiftLint checks passed!**" >> $GITHUB_STEP_SUMMARY
+              if [ "$WARNING_COUNT" -gt 0 ]; then
+                echo "" >> $GITHUB_STEP_SUMMARY
+                echo "⚠️ Note: $WARNING_COUNT formatting warnings exist but do not block CI" >> $GITHUB_STEP_SUMMARY
+              fi
             fi
           else
             echo "⚠️  jq not available or no SwiftLint results, falling back to standard output"
