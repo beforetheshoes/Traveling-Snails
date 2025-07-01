@@ -97,7 +97,7 @@ struct NavigationRowView<Item: NavigationItem>: View {
     let onTap: () -> Void
 
     @Environment(\.colorScheme) private var colorScheme
-    private let authManager = BiometricAuthManager.shared
+    @Environment(ModernBiometricAuthManager.self) private var authManager
 
     var body: some View {
         HStack(spacing: 16) {

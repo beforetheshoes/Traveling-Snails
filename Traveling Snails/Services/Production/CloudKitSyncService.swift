@@ -27,7 +27,7 @@ class CloudKitSyncService: SyncService {
     var syncProtectedTrips: Bool = true
 
     // Network and retry state
-    private var networkStatus: NetworkStatus = .online
+    var networkStatus: NetworkStatus = .online
     private var retryAttempts: Int = 0
     private let syncConfig = AppConfiguration.syncRetry
 
@@ -47,6 +47,7 @@ class CloudKitSyncService: SyncService {
     private var isInitialized = false
 
     init(modelContainer: ModelContainer) {
+        Logger.shared.info("CloudKitSyncService initializing", category: .sync)
         self.modelContainer = modelContainer
         // CRITICAL: Do NOT call setupCloudKitNotifications() here during app startup
         // This will be called lazily when sync operations begin to prevent crashes

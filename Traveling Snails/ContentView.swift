@@ -12,8 +12,8 @@ struct ContentView: View {
     @Query private var trips: [Trip]
     @Query private var organizations: [Organization]
 
-    // App settings for color scheme
-    @Environment(AppSettings.self) private var appSettings
+    // Modern app settings for color scheme
+    @Environment(ModernAppSettings.self) private var appSettings
 
     // Navigation state
     @State private var selectedTab = 0
@@ -26,7 +26,7 @@ struct ContentView: View {
 
     // Remote change detection
     @State private var syncTimer: Timer?
-    @Environment(SyncManager.self) private var syncManager
+    @Environment(ModernSyncManager.self) private var syncManager
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -173,7 +173,9 @@ struct ContentView: View {
         Logger.shared.info("Starting periodic sync check on \(deviceType) (every \(interval)s)", category: .sync)
         syncTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { _ in
             Logger.shared.debug("Periodic sync check triggered on \(deviceType)", category: .sync)
-            syncManager.triggerSync()
+            Task { @MainActor in
+                syncManager.triggerSync()
+            }
         }
         #endif
     }

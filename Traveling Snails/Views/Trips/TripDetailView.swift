@@ -3,7 +3,7 @@ import SwiftUI
 
 struct TripDetailView: View {
     let trip: Trip
-    private let authManager = BiometricAuthManager.shared
+    @Environment(ModernBiometricAuthManager.self) private var authManager
     @State private var showingLodgingSheet: Bool = false
     @State private var showingTransportationSheet: Bool = false
     @State private var showingActivitySheet: Bool = false

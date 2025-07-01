@@ -292,7 +292,7 @@ struct EnhancedItemRowView<Item: NavigationItem>: View {
     let item: Item
     let isSelected: Bool
     @Environment(\.colorScheme) private var colorScheme
-    private let authManager = BiometricAuthManager.shared
+    @Environment(ModernBiometricAuthManager.self) private var authManager
 
     var body: some View {
         HStack(spacing: 16) {

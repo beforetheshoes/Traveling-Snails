@@ -62,6 +62,11 @@ class ModernSyncManager {
         }
     }
 
+    /// Current network status
+    var networkStatus: NetworkStatus {
+        syncService.networkStatus
+    }
+
     /// Trigger a sync operation
     func triggerSync() {
         syncService.triggerSync()

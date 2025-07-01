@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Modern Dependency Injection Architecture**: Complete migration from singleton-based architecture to modern dependency injection pattern across all core managers
+  - **SyncManager → ModernSyncManager**: Eliminated 872-line singleton SyncManager in favor of 182-line dependency injection-based ModernSyncManager with ServiceContainer integration
+  - **BiometricAuthManager → ModernBiometricAuthManager**: Migrated all 9 source files from `BiometricAuthManager.shared` to environment-injected `ModernBiometricAuthManager` for consistent architectural patterns
+  - **Complete Singleton Elimination**: Removed all legacy singleton pattern files and updated environment injection throughout SwiftUI views
+  - **ServiceContainer Architecture**: Centralized dependency registration and resolution with production, test, and preview container factories for clean separation of concerns
 - **Centralized Constants Management (Issue #42)**: Comprehensive constants consolidation following TDD methodology to eliminate scattered magic numbers and string literals throughout the codebase
   - `UserDefaultsConstants.swift`: Type-safe UserDefaults key management for settings like colorScheme, biometricTimeoutMinutes, and test environment detection
   - `UIConstants.swift`: Centralized spacing values (4pt-20pt), icon sizes (16pt-50pt), and timing constants with SwiftUI helper extensions for consistent design

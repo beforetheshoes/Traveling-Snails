@@ -16,7 +16,7 @@ struct EditTripView: View {
     private var modelContext
     @Environment(\.navigationRouter)
     private var navigationRouter
-    @Environment(SyncManager.self)
+    @Environment(ModernSyncManager.self)
     private var syncManager
 
     // Local state for editing

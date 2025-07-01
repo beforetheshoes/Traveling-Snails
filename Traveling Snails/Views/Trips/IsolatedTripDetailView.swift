@@ -8,6 +8,7 @@ struct IsolatedTripDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.navigationContext) private var navigationContext
     @Environment(\.navigationRouter) private var navigationRouter
+    @Environment(ModernBiometricAuthManager.self) private var authManager
 
     // Store trip data as immutable values to prevent rebuilds from Trip mutations
     let trip: Trip // Use let instead of @State!
@@ -306,7 +307,6 @@ struct IsolatedTripDetailView: View {
              titleVisibility: .visible
          ) {
              Button("Remove Protection", role: .destructive) {
-                 let authManager = BiometricAuthManager.shared
                  authManager.toggleProtection(for: trip)
                  // Update local state based on new protection status
                  isTripProtected = authManager.isProtected(trip)
@@ -362,7 +362,6 @@ struct IsolatedTripDetailView: View {
                     if canUseBiometrics && biometricAuthEnabled {
                         if isTripProtected && isLocallyAuthenticated {
                             Button {
-                                let authManager = BiometricAuthManager.shared
                                 authManager.lockTrip(trip)
                                 isLocallyAuthenticated = false
                                 needsAuthentication = true
@@ -380,7 +379,6 @@ struct IsolatedTripDetailView: View {
                                 showingRemoveProtectionConfirmation = true
                             } else {
                                 // No confirmation needed for adding protection
-                                let authManager = BiometricAuthManager.shared
                                 authManager.toggleProtection(for: trip)
                                 // Update local state based on new protection status
                                 isTripProtected = authManager.isProtected(trip)
@@ -472,7 +470,6 @@ struct IsolatedTripDetailView: View {
         #endif
         isAuthenticating = true
 
-        let authManager = BiometricAuthManager.shared
         let success = await authManager.authenticateTrip(trip)
         #if DEBUG
         Logger.shared.debug("Authentication process completed", category: .ui)
@@ -500,8 +497,6 @@ struct IsolatedTripDetailView: View {
         #if DEBUG
         Logger.shared.debug("Updating view state for trip ID: \(trip.id)", category: .ui)
         #endif
-
-        let authManager = BiometricAuthManager.shared
 
         isLocallyAuthenticated = authManager.isAuthenticated(for: trip)
         isTripProtected = authManager.isProtected(trip)

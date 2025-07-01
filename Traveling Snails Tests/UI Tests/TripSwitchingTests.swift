@@ -16,9 +16,8 @@ struct TripSwitchingTests {
 
     /// Clean up shared state to prevent test contamination
     static func cleanupSharedState() {
-        #if DEBUG
-        BiometricAuthManager.shared.resetForTesting()
-        #endif
+        // Legacy BiometricAuthManager.shared.resetForTesting() call removed
+        // ModernBiometricAuthManager uses dependency injection and doesn't need global reset
 
         // Ensure test environment is properly detected
         UserDefaults.standard.set(true, forKey: "isRunningTests")

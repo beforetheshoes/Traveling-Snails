@@ -7,7 +7,7 @@
 import SwiftUI
 
 struct SyncDiagnosticView: View {
-    @Environment(SyncManager.self) private var syncManager
+    @Environment(ModernSyncManager.self) private var syncManager
     @State private var showingAdvancedMetrics = false
     @State private var refreshTrigger = false
 
@@ -84,7 +84,7 @@ struct SyncDiagnosticView: View {
             Section(header: Text("Protected Trip Sync")) {
                 Toggle(isOn: Binding(
                     get: { syncManager.syncProtectedTrips },
-                    set: { syncManager.setSyncProtectedTrips($0) }
+                    set: { syncManager.syncProtectedTrips = $0 }
                 )) {
                     VStack(alignment: .leading) {
                         Text("Sync Protected Trips")
@@ -176,7 +176,7 @@ struct SyncStatusRow: View {
 }
 
 struct AdvancedMetricsView: View {
-    let syncManager: SyncManager
+    let syncManager: ModernSyncManager
     @State private var recordCounts: [String: Int] = [:]
     @State private var isLoadingCounts = false
 
@@ -259,6 +259,6 @@ struct AdvancedMetricsView: View {
 #Preview {
     NavigationStack {
         SyncDiagnosticView()
-            .environment(SyncManager.shared)
+            .environment(ModernSyncManager.from(container: DefaultServiceContainerFactory.createPreviewContainer()))
     }
 }

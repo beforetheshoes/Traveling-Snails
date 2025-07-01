@@ -4,7 +4,7 @@ struct BiometricLockView: View {
     let trip: Trip
     @Binding var isAuthenticating: Bool
     let onAuthenticationSuccess: () -> Void
-    private let authManager = BiometricAuthManager.shared
+    @Environment(ModernBiometricAuthManager.self) private var authManager
 
     init(trip: Trip, isAuthenticating: Binding<Bool>, onAuthenticationSuccess: @escaping () -> Void = {}) {
         self.trip = trip

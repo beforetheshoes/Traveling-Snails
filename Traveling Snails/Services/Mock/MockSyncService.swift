@@ -126,6 +126,10 @@ final class MockSyncService: SyncService, Sendable {
         }
     }
 
+    var networkStatus: NetworkStatus {
+        lock.withLock { _mockNetworkStatus }
+    }
+
     func triggerSync() {
         lock.withLock { _triggerSyncCallCount += 1 }
         lock.withLock { _isSyncing = true }

@@ -65,32 +65,34 @@ struct NotificationNamesTests {
     
     @Test("Notifications can be posted and observed")
     func testNotificationPosting() async {
-        let testObject = "testData"
-        var receivedObject: String?
-        var notificationReceived = false
-        
-        // Set up observer
-        let observer = NotificationCenter.default.addObserver(
-            forName: .syncDidStart,
-            object: nil,
-            queue: .main
-        ) { notification in
-            receivedObject = notification.object as? String
-            notificationReceived = true
+        await MainActor.run {
+            let testObject = "testData"
+            var receivedObject: String?
+            var notificationReceived = false
+            
+            // Set up observer
+            let observer = NotificationCenter.default.addObserver(
+                forName: .syncDidStart,
+                object: nil,
+                queue: .main
+            ) { notification in
+                receivedObject = notification.object as? String
+                notificationReceived = true
+            }
+            
+            // Post notification
+            NotificationCenter.default.post(name: .syncDidStart, object: testObject)
+            
+            // Process run loop to ensure notification is delivered
+            RunLoop.current.run(mode: .default, before: Date(timeIntervalSinceNow: 0.1))
+            
+            // Verify
+            #expect(notificationReceived == true)
+            #expect(receivedObject == testObject)
+            
+            // Clean up
+            NotificationCenter.default.removeObserver(observer)
         }
-        
-        // Post notification
-        NotificationCenter.default.post(name: .syncDidStart, object: testObject)
-        
-        // Give notification time to process
-        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 second
-        
-        // Verify
-        #expect(notificationReceived == true)
-        #expect(receivedObject == testObject)
-        
-        // Clean up
-        NotificationCenter.default.removeObserver(observer)
     }
     
     @Test("All notification names are unique")

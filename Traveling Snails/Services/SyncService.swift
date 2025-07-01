@@ -26,6 +26,9 @@ protocol SyncService: Sendable {
     /// Whether protected trips should be synced
     @MainActor var syncProtectedTrips: Bool { get set }
 
+    /// Current network status
+    @MainActor var networkStatus: NetworkStatus { get }
+
     /// Trigger a sync operation
     @MainActor func triggerSync()
 

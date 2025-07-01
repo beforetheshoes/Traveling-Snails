@@ -88,7 +88,7 @@ struct NavigationSplitTripView: View {
 // Trip row for NavigationSplitView (no custom tap handling needed)
 struct NavigationSplitTripRowView: View {
     let trip: Trip
-    private let authManager = BiometricAuthManager.shared
+    @Environment(ModernBiometricAuthManager.self) private var authManager
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {

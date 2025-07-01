@@ -43,22 +43,5 @@ struct ModernAppStartupTest {
         print("✅ ServiceContainer works correctly")
     }
 
-    @Test("BackwardCompatibilityAdapter async configuration")
-    @MainActor func testBackwardCompatibilityAsync() async throws {
-        // Test the async configuration pattern
-        let adapter = BackwardCompatibilityAdapter()
-        let container = ServiceContainer()
-
-        // Register mock services for testing
-        container.register(MockAuthenticationService(), as: AuthenticationService.self)
-        container.register(MockCloudStorageService(), as: CloudStorageService.self)
-        container.register(MockPhotoLibraryService(), as: PhotoLibraryService.self)
-        container.register(MockPermissionService(), as: PermissionService.self)
-
-        // Configure adapter
-        adapter.configure(with: container)
-
-        #expect(adapter.isPartiallyConfigured)
-        print("✅ BackwardCompatibilityAdapter async configuration works")
-    }
+    // BackwardCompatibilityAdapter test removed - adapter no longer exists after migration to pure dependency injection
 }

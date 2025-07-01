@@ -11,7 +11,7 @@ struct TripContentView: View {
     @Binding var showingActivitySheet: Bool
     @Binding var showingEditTripSheet: Bool
     @Binding var showingCalendarView: Bool
-    private let authManager = BiometricAuthManager.shared
+    @Environment(ModernBiometricAuthManager.self) private var authManager
     let onLockTrip: () -> Void
 
     @State private var showingRemoveProtectionConfirmation: Bool = false

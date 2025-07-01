@@ -66,7 +66,7 @@ struct SettingsContentView: View {
 
 struct AppearanceSection: View {
     @Bindable var viewModel: SettingsViewModel
-    @Environment(AppSettings.self) private var appSettings
+    @Environment(ModernAppSettings.self) private var appSettings
 
     var body: some View {
         Section("Appearance") {
@@ -202,7 +202,7 @@ struct FileAttachmentsSection: View {
 
 struct SecuritySection: View {
     @Bindable var viewModel: SettingsViewModel
-    private let authManager = BiometricAuthManager.shared
+    @Environment(ModernBiometricAuthManager.self) private var authManager
 
     var body: some View {
         Section {

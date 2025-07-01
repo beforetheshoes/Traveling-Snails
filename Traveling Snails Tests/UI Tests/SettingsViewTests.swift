@@ -190,7 +190,9 @@ struct SettingsViewTests {
     struct SecuritySettingsTests {
         @Test("Biometric authentication settings")
         @MainActor func testBiometricAuthenticationSettings() async {
-            let authManager = BiometricAuthManager.shared
+            // Create auth manager via dependency injection
+            let container = DefaultServiceContainerFactory.createTestContainer()
+            let authManager = ModernBiometricAuthManager.from(container: container)
             _ = AppSettings.shared // AppSettings exists but no longer has biometric settings
 
             // Test biometric availability check (properly awaited)
@@ -394,7 +396,8 @@ struct SettingsViewTests {
             appSettings.colorScheme = originalScheme
 
             // 2. Biometric authentication is now always enabled when available
-            let authManager = BiometricAuthManager.shared
+            let container = DefaultServiceContainerFactory.createTestContainer()
+            let authManager = ModernBiometricAuthManager.from(container: container)
             #expect(authManager.isEnabled == authManager.canUseBiometrics())
 
             // 3. Test data management trigger

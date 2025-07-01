@@ -97,41 +97,7 @@ struct DependencyInjectionTests {
         #expect(appSettings.biometricTimeoutMinutes >= 0) // Should be non-negative
     }
 
-    @Test("BackwardCompatibilityAdapter configures correctly")
-    @MainActor
-    func testBackwardCompatibilityAdapter() throws {
-        // Clean up state before test
-        Self.cleanupSharedState()
-        defer { Self.cleanupSharedState() }
-
-        let adapter = BackwardCompatibilityAdapter()
-        let container = DefaultServiceContainerFactory.createProductionContainer()
-
-        // Configure adapter
-        adapter.configure(with: container)
-
-        // Verify configuration state (these should not trigger LAContext)
-        #expect(adapter.isPartiallyConfigured)
-        #expect(!adapter.isFullyConfigured) // Missing sync manager until ModelContainer is provided
-
-        // Test service resolution works (without accessing LAContext-dependent properties)
-        let authManager = adapter.biometricAuthManager
-        let appSettings = adapter.appSettings
-
-        // Test AppSettings works (no LAContext dependency)
-        #expect(appSettings.biometricTimeoutMinutes >= 0) // Should have valid timeout value
-        let originalTimeout = appSettings.biometricTimeoutMinutes
-        appSettings.biometricTimeoutMinutes = 10
-        #expect(appSettings.biometricTimeoutMinutes == 10)
-        appSettings.biometricTimeoutMinutes = originalTimeout // Reset
-
-        // Test basic AuthManager state management (no LAContext calls)
-        authManager.lockAllTrips() // Should not crash
-        #expect(authManager.allTripsLocked) // Should now be locked
-
-        authManager.resetSession() // Should not crash  
-        #expect(authManager.allTripsLocked) // Should still be locked after reset
-    }
+    // BackwardCompatibilityAdapter test removed - adapter no longer exists after migration to pure dependency injection
 
     @Test("Service factory methods work correctly")
     @MainActor
