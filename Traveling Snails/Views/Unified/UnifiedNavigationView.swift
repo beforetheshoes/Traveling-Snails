@@ -61,7 +61,7 @@ struct NavigationConfiguration<Item: NavigationItem> {
 struct UnifiedNavigationView<Item: NavigationItem, DetailView: View>: View {
     // Environment
     @Environment(\.navigationRouter) private var navigationRouter
-    
+
     // Data
     let items: [Item]
     let configuration: NavigationConfiguration<Item>
@@ -215,23 +215,23 @@ struct UnifiedNavigationView<Item: NavigationItem, DetailView: View>: View {
             handleNavigationPathClear(shouldClear: shouldClear)
         }
     }
-    
+
     /// Handle environment-based navigation path clearing
     /// This method coordinates navigation state clearing between the environment router
     /// and local navigation state in a type-safe manner
     private func handleNavigationPathClear(shouldClear: Bool) {
         guard shouldClear else { return }
-        
+
         Logger.shared.debug("Environment-based navigation clear - clearing selectedItem and navigationPath", category: .navigation)
         Logger.shared.debug("Current selectedItem: \(selectedItem?.displayName ?? "nil")", category: .navigation)
-        
+
         // Clear local navigation state
         selectedItem = nil
         navigationPath = NavigationPath()
-        
+
         // Acknowledge that we've handled the navigation clear request
         navigationRouter.acknowledgeNavigationPathClear()
-        
+
         Logger.shared.debug("Cleared selectedItem and navigationPath for environment-based navigation", category: .navigation)
     }
 

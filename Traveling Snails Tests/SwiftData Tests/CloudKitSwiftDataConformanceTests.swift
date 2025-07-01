@@ -20,7 +20,7 @@ struct CloudKitSwiftDataConformanceTests {
         @Test("Trip relationships never return nil")
         func tripRelationshipsNeverReturnNil() async throws {
             let testBase = SwiftDataTestBase()
-            
+
             let trip = Trip(name: "Test Trip")
             testBase.modelContext.insert(trip)
             try testBase.modelContext.save()
@@ -43,7 +43,7 @@ struct CloudKitSwiftDataConformanceTests {
         @Test("Organization relationships never return nil")
         func organizationRelationshipsNeverReturnNil() async throws {
             let testBase = SwiftDataTestBase()
-            
+
             let org = Organization(name: "Test Org")
             testBase.modelContext.insert(org)
             try testBase.modelContext.save()
@@ -63,7 +63,7 @@ struct CloudKitSwiftDataConformanceTests {
         @Test("File attachment relationships never return nil")
         func fileAttachmentRelationshipsNeverReturnNil() async throws {
             let testBase = SwiftDataTestBase()
-            
+
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")
             testBase.modelContext.insert(trip)
@@ -122,7 +122,7 @@ struct CloudKitSwiftDataConformanceTests {
         @Test("Trip relationship mutations work safely")
         func tripRelationshipMutationsWorkSafely() async throws {
             let testBase = SwiftDataTestBase()
-            
+
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")
             testBase.modelContext.insert(trip)
@@ -158,7 +158,7 @@ struct CloudKitSwiftDataConformanceTests {
         @Test("Organization relationship mutations work safely")
         func organizationRelationshipMutationsWorkSafely() async throws {
             let testBase = SwiftDataTestBase()
-            
+
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")
             testBase.modelContext.insert(trip)
@@ -188,7 +188,7 @@ struct CloudKitSwiftDataConformanceTests {
         @Test("File attachment mutations work safely")
         func fileAttachmentMutationsWorkSafely() async throws {
             let testBase = SwiftDataTestBase()
-            
+
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")
             testBase.modelContext.insert(trip)
@@ -232,7 +232,7 @@ struct CloudKitSwiftDataConformanceTests {
         @Test("None organization creation is safe")
         func noneOrganizationCreationIsSafe() async throws {
             let testBase = SwiftDataTestBase()
-            
+
             // Should not crash when accessing isNone property
             let noneOrg = Organization(name: "None")
             testBase.modelContext.insert(noneOrg)
@@ -250,7 +250,7 @@ struct CloudKitSwiftDataConformanceTests {
         @Test("None organization relationship handling")
         func noneOrganizationRelationshipHandling() async throws {
             let testBase = SwiftDataTestBase()
-            
+
             let trip = Trip(name: "Test Trip")
             let noneOrg = Organization(name: "None")
             testBase.modelContext.insert(trip)
@@ -279,7 +279,7 @@ struct CloudKitSwiftDataConformanceTests {
         @Test("Empty relationships are efficiently stored")
         func emptyRelationshipsAreEfficientlyStored() async throws {
             let testBase = SwiftDataTestBase()
-            
+
             let trip = Trip(name: "Empty Trip")
             testBase.modelContext.insert(trip)
             try testBase.modelContext.save()
@@ -300,7 +300,7 @@ struct CloudKitSwiftDataConformanceTests {
         @Test("Relationships handle CloudKit sync scenarios")
         func relationshipsHandleCloudKitSyncScenarios() async throws {
             let testBase = SwiftDataTestBase()
-            
+
             let trip = Trip(name: "Sync Test Trip")
             let org = Organization(name: "Sync Test Org")
             testBase.modelContext.insert(trip)
@@ -338,7 +338,7 @@ struct CloudKitSwiftDataConformanceTests {
         @Test("Relationship bidirectionality is maintained")
         func relationshipBidirectionalityIsMaintained() async throws {
             let testBase = SwiftDataTestBase()
-            
+
             let trip = Trip(name: "Bidirectional Test")
             let org = Organization(name: "Test Org")
             testBase.modelContext.insert(trip)
@@ -370,7 +370,7 @@ struct CloudKitSwiftDataConformanceTests {
         @Test("Complex relationship scenarios work")
         func complexRelationshipScenariosWork() async throws {
             let testBase = SwiftDataTestBase()
-            
+
             let trip = Trip(name: "Complex Trip")
             let org1 = Organization(name: "Airline")
             let org2 = Organization(name: "Hotel")
@@ -441,7 +441,7 @@ struct CloudKitSwiftDataConformanceTests {
         @Test("Large relationship collections perform well")
         func largeRelationshipCollectionsPerformWell() async throws {
             let testBase = SwiftDataTestBase()
-            
+
             let trip = Trip(name: "Large Trip")
             let org = Organization(name: "Large Org")
             testBase.modelContext.insert(trip)
@@ -480,7 +480,7 @@ struct CloudKitSwiftDataConformanceTests {
         @Test("Memory usage is efficient with empty relationships")
         func memoryUsageIsEfficientWithEmptyRelationships() async throws {
             let testBase = SwiftDataTestBase()
-            
+
             // Create many objects with no relationships
             var trips: [Trip] = []
             var orgs: [Organization] = []

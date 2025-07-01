@@ -1,6 +1,6 @@
+import Foundation
 import LocalAuthentication
 import SwiftUI
-import Foundation
 
 @Observable
 @MainActor
@@ -121,7 +121,7 @@ class BiometricAuthManager {
         #if DEBUG
         Logger.shared.debug("BiometricAuthManager.isAuthenticated for trip ID \(trip.id): \(result)", category: .app)
         #endif
-        
+
         return result
     }
 

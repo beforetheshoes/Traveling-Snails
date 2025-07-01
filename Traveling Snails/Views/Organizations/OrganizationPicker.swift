@@ -107,10 +107,10 @@ struct OrganizationPicker: View {
         .sheet(isPresented: $showingAddOrganization) {
             AddOrganizationForm(
                 prefilledName: searchText.isEmpty ? nil : searchText
-            )                { newOrg in
+            ) { newOrg in
                     selectedOrganization = newOrg
                     showingAddOrganization = false
-                }
+            }
         }
     }
 }

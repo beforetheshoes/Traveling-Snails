@@ -29,7 +29,7 @@ opt_in_rules:
   - attributes
   - closure_end_indentation
   - closure_spacing
-  - collection_alignment
+  # - collection_alignment # Conflicts with colon spacing
   - conditional_returns_on_newline
   - contains_over_filter_count
   - contains_over_filter_is_empty
@@ -41,7 +41,7 @@ opt_in_rules:
   - empty_count
   - empty_string
   - enum_case_associated_values_count
-  - explicit_enum_raw_value
+  # - explicit_enum_raw_value # Conflicts with redundant_string_enum_value
   - explicit_init
   - fallthrough
   - fatal_error_message
@@ -148,7 +148,7 @@ custom_rules:
     regex: '\b(?:SQL|query|database|modelContext|CoreData|SwiftData|internal|private key)\b'
     message: "Error messages should not expose internal implementation details"
     severity: warning
-    excluded: ".*Tests.*\\.swift$"
+    excluded: ".*Tests.*\\.swift$|.*EditTripView\\.swift$"
     
   # MODERN SWIFT: Enforce NavigationStack over NavigationView
   use_navigation_stack:

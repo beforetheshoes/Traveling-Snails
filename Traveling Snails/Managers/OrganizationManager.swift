@@ -494,4 +494,3 @@ extension Organization {
 // Note: Removed OrganizationPickerView, OrganizationRowView, and AddOrganizationView
 // These were using the problematic OrganizationStore anti-pattern
 // Existing OrganizationPicker.swift should be used instead with proper @Query patterns
-

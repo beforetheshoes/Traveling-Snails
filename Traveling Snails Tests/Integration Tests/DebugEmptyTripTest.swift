@@ -5,8 +5,8 @@
 //
 
 import Foundation
-import Testing
 import os
+import Testing
 
 @testable import Traveling_Snails
 

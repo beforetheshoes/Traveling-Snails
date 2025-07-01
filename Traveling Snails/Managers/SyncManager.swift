@@ -137,7 +137,7 @@ class SyncManager {
             name: NSNotification.Name.CKAccountChanged,
             object: nil
         )
-        
+
         #if DEBUG
         Logger.shared.debug("SyncManager: CloudKit monitoring setup complete", category: .sync)
         #endif
@@ -158,7 +158,7 @@ class SyncManager {
         #if DEBUG
         Logger.shared.debug("SyncManager: Remote store change detected", category: .sync)
         #endif
-        
+
         // Extract change information from notification
         if let changeToken = notification.userInfo?[NSPersistentHistoryTokenKey] as? NSPersistentHistoryToken {
             Logger.shared.info("Processing remote changes with token: \(changeToken)", category: .sync)
@@ -166,7 +166,7 @@ class SyncManager {
             Logger.shared.debug("SyncManager: Processing remote changes with change token", category: .sync)
             #endif
         }
-        
+
         // Log notification for debugging
         if notification.userInfo != nil {
             #if DEBUG
@@ -181,7 +181,7 @@ class SyncManager {
             #if DEBUG
             Logger.shared.debug("SyncManager: Remote change notification processed", category: .sync)
             #endif
-            
+
             await processRemoteChanges(from: notification)
         }
     }
@@ -453,7 +453,7 @@ class SyncManager {
         #if DEBUG
         Logger.shared.debug("SyncManager: Processing remote changes from CloudKit", category: .sync)
         #endif
-        
+
         // In a real implementation, this would:
         // 1. Extract the NSPersistentHistoryToken from the notification
         // 2. Fetch changes since the last token
@@ -599,7 +599,7 @@ class SyncManager {
                     for i in 1..<sortedTrips.count {
                         modelContainer.mainContext.delete(sortedTrips[i])
                     }
-                    
+
                     Logger.shared.info("Kept trip (ID: \(winningTrip.id)) as conflict resolution winner", category: .sync)
                 }
             }
@@ -708,7 +708,7 @@ class SyncManager {
                         }
                         existingCloudTrip.startDate = trip.startDate
                         existingCloudTrip.endDate = trip.endDate
-                        
+
                         Logger.shared.info("Updated trip (ID: \(trip.id)) in cloud with merged changes", category: .sync)
                     } else {
                         // Create a copy for cross-device storage
@@ -739,7 +739,7 @@ class SyncManager {
                             // Merge notes from both devices
                             existingLocalTrip.notes = existingLocalTrip.notes + "\n" + cloudTrip.notes
                         }
-                        
+
                         Logger.shared.info("Merged cloud changes into local trip (ID: \(existingLocalTrip.id))", category: .sync)
                     } else {
                         // Create local copy for new trip

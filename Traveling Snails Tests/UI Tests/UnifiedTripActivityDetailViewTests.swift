@@ -9,7 +9,7 @@ struct UnifiedTripActivityDetailViewTests {
     @Test("Detail view shows dynamic transportation icons in edit mode")
     func detailViewShowsDynamicTransportationIconsInEditMode() {
         let testBase = SwiftDataTestBase()
-        
+
         // Create test trip and organization
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
         let org = Organization(name: "Test Org")
@@ -88,7 +88,7 @@ struct UnifiedTripActivityDetailViewTests {
     @Test("Detail view edit mode works with different starting transportation types")
     func detailViewEditModeWorksWithDifferentStartingTypes() {
         let testBase = SwiftDataTestBase()
-        
+
         // Create test trip and organization
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
         let org = Organization(name: "Test Org")

@@ -80,7 +80,7 @@ struct NavigationListView<Item: NavigationItem>: View {
             NavigationRowView(
                 item: item,
                 isSelected: selectedItem?.id == item.id
-            )                { onItemTap(item) }
+            ) { onItemTap(item) }
             .listRowSeparator(.hidden)
             .listRowBackground(Color.clear)
             .listRowInsets(EdgeInsets(top: 6, leading: 8, bottom: 6, trailing: 8))

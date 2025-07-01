@@ -87,7 +87,7 @@ struct InfiniteRecreationTests {
             organizations: organizations,
             addresses: addresses,
             attachments: attachments
-        )            { creationCount += 1 }
+        ) { creationCount += 1 }
 
         // Simulate adding a new activity (which would trigger SwiftData updates)
         let newActivity = Activity(name: "New Activity", start: Date(), end: Date().addingTimeInterval(1800))
@@ -106,7 +106,7 @@ struct InfiniteRecreationTests {
             organizations: organizations,
             addresses: addresses,
             attachments: attachments
-        )            { creationCount += 1 }
+        ) { creationCount += 1 }
 
         // Verify the anti-pattern behavior
         #expect(creationCount == 2, "View should recreate when model arrays change")
