@@ -203,7 +203,7 @@ struct UnifiedFilePicker: View {
             try await processFile(url: tempURL, originalName: originalName)
         } catch {
             Logger.shared.error("Photo selection failed: \(error.localizedDescription)", category: .filePicker)
-            handleError("Failed to process photo: \(error.localizedDescription)")
+            handleError(L(L10n.File.photoFailed))
         }
     }
 
@@ -223,13 +223,13 @@ struct UnifiedFilePicker: View {
                     try await processFile(url: url, originalName: originalName)
                 } catch {
                     Logger.shared.error("Document processing failed: \(error.localizedDescription)", category: .filePicker)
-                    handleError("Failed to process document: \(error.localizedDescription)")
+                    handleError(L(L10n.File.documentFailed))
                 }
             }
 
         case .failure(let error):
             Logger.shared.error("Document picker failed: \(error.localizedDescription)", category: .filePicker)
-            handleError("Document selection failed: \(error.localizedDescription)")
+            handleError(L(L10n.File.selectionFailed))
         }
     }
 
@@ -313,7 +313,8 @@ enum FilePickerError: LocalizedError {
         case .failedToCreateAttachment:
             return "Failed to create file attachment"
         case .failedToSaveToDatabase(let error):
-            return "Failed to save to database: \(error.localizedDescription)"
+            Logger.shared.error("Failed to save file to database: \(error.localizedDescription)", category: .filePicker)
+            return L(L10n.File.databaseSaveFailed)
         case .permissionDenied:
             return "Photo library access denied. Please enable photo access in Settings to add photos to your trips."
         case .permissionRestricted:

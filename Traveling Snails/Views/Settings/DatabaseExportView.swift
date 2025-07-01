@@ -332,9 +332,10 @@ struct DatabaseExportView: View {
 
         do {
             let jsonData = try JSONSerialization.data(withJSONObject: exportStructure, options: .prettyPrinted)
-            return String(data: jsonData, encoding: .utf8) ?? "Error generating JSON"
+            return String(data: jsonData, encoding: .utf8) ?? L(L10n.Database.Operations.exportFailed)
         } catch {
-            return "Error: \(error.localizedDescription)"
+            Logger.shared.error("Failed to generate JSON export: \(error.localizedDescription)", category: .export)
+            return L(L10n.Database.Operations.exportFailed)
         }
     }
 

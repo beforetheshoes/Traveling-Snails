@@ -278,7 +278,8 @@ enum ActivitySaveError: Error, LocalizedError {
         case .unsupportedActivityType:
             return "Unsupported activity type"
         case .saveFailed(let error):
-            return "Failed to save: \(error.localizedDescription)"
+            Logger.shared.error("Activity save failed: \(error.localizedDescription)", category: .database)
+            return L(L10n.Save.activityFailed)
         }
     }
 }

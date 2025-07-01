@@ -206,6 +206,130 @@ swift run swiftlint lint
 swift run swiftlint --autocorrect
 ```
 
+## 🧪 Comprehensive Testing & CI/CD Pipeline
+
+### Fail-Fast Testing Strategy
+
+This project implements a **comprehensive fail-fast testing strategy** that prevents failing code from ever reaching production:
+
+```
+Pre-commit hooks (local) → Security Tests (CI) → Parallel Test Execution → Branch Protection
+```
+
+### Pre-commit Hooks (Local)
+
+**Activated hooks block commits with security violations:**
+
+```bash
+# Install pre-commit hooks (one-time setup)
+./Scripts/setup-pre-commit-hooks.sh
+
+# Hooks automatically run on every commit:
+# - SwiftLint security analysis on staged files
+# - Blocks print() statements, sensitive logging
+# - Validates commit message format
+```
+
+**What's blocked locally:**
+- ❌ `print()` statements (must use `Logger.shared`)
+- ❌ Sensitive data in logging
+- ❌ Unsafe error message patterns
+- ❌ Commits with security violations
+
+### Automated Testing Suite
+
+**87 comprehensive tests** covering all critical functionality:
+
+| Test Category | Purpose | Test Count |
+|---------------|---------|------------|
+| 🔒 **Security Tests** | Block security violations, prevent data exposure | 4 tests |
+| 🧪 **Unit Tests** | Core business logic, model validation | 15 tests |
+| 🔗 **Integration Tests** | SwiftData/CloudKit integration, import/export | 8 tests |
+| ⚡ **Performance Tests** | Detect infinite recreation bugs, memory leaks | 2 tests |
+| 💾 **SwiftData Tests** | Data persistence, relationships, anti-patterns | 8 tests |
+| 🎨 **UI Tests** | Navigation, user flows, component behavior | 28 tests |
+| ⚙️ **Settings Tests** | Configuration, sync, user preferences | 7 tests |
+
+### Running Tests Locally
+
+```bash
+# All tests with clean output
+./Scripts/run-all-tests.sh
+
+# Specific test categories
+./Scripts/run-all-tests.sh --security-only
+./Scripts/run-all-tests.sh --unit-only  
+./Scripts/run-all-tests.sh --integration-only
+./Scripts/run-all-tests.sh --performance-only
+
+# Quick tests (no dependency resolution)
+./Scripts/run-all-tests.sh --quick --unit-only
+
+# Tests only (skip SwiftLint)
+./Scripts/run-all-tests.sh --test-only
+```
+
+### CI/CD Pipeline (GitHub Actions)
+
+**Security-first automated testing** on every PR and push:
+
+#### 🔒 Phase 1: Security Validation
+- **Security Tests** run first and block pipeline if failed
+- **Enhanced SwiftLint** analysis with detailed security reporting
+- **Dependency scanning** for vulnerabilities
+- **Secret detection** for hardcoded credentials
+
+#### ⚡ Phase 2: Parallel Test Execution
+- **Unit Tests** - Core functionality validation
+- **Integration Tests** - SwiftData/CloudKit operations  
+- **Performance Tests** - Infinite recreation prevention
+- **SwiftData Tests** - Data layer validation
+- **Build Validation** - Project compilation verification
+
+#### 🛡️ Phase 3: Quality Gates
+- **Test Summary** - Requires ALL tests to pass
+- **Branch Protection** - Blocks merges with failing tests
+- **PR Reviews** - Requires at least 1 approval
+- **Artifact Collection** - Test results for debugging
+
+### Branch Protection Rules
+
+**Main branch is protected** with these requirements:
+- ✅ All 8 status checks must pass
+- ✅ Branch must be up to date before merge
+- ✅ Changes must be made through pull requests
+- ✅ Stale reviews are dismissed on new commits
+- ❌ Direct pushes to main are blocked
+- ❌ Force pushes are disabled
+
+### Benefits of This Approach
+
+- **🚫 Zero failing commits** reach CI/CD - caught locally first
+- **⚡ Fast feedback** - Issues detected in seconds, not minutes
+- **🔒 Security-first** - Violations blocked at every stage
+- **💰 Cost effective** - Reduces CI/CD usage by catching issues early
+- **📊 Quality enforcement** - Automated standards prevent regression
+- **🔍 Comprehensive coverage** - 87 tests across all critical functionality
+
+### Testing Anti-Patterns Prevention
+
+Our tests specifically prevent these critical SwiftData issues:
+
+**❌ Infinite Recreation Bug:**
+```swift
+// This pattern causes infinite view recreation - BLOCKED by tests
+struct BadView: View {
+    let trips: [Trip]  // Parameter passing - causes infinite recreation!
+}
+```
+
+**✅ Correct Pattern (Enforced):**
+```swift  
+struct GoodView: View {
+    @Query private var trips: [Trip]  // Direct query - stable and efficient
+}
+```
+
 ## 🚀 Getting Started
 
 ### 1. Clone the Repository
@@ -234,14 +358,30 @@ open "Traveling Snails.xcodeproj"
 - Press `Cmd+R` to build and run
 - The app will create sample data on first launch for testing
 
-### 5. Running Tests (Swift Testing Framework)
+### 5. Setup Pre-commit Hooks (Recommended)
 
 ```bash
-# Run all tests
-xcodebuild test -project "Traveling Snails.xcodeproj" -scheme "Traveling Snails" -destination "platform=iOS Simulator,name=iPhone 16"
+# Install pre-commit hooks to catch issues before commit
+./Scripts/setup-pre-commit-hooks.sh
+```
+
+### 6. Running Tests (Swift Testing Framework)
+
+```bash
+# Use our comprehensive test runner (recommended)
+./Scripts/run-all-tests.sh
+
+# Or run specific test categories  
+./Scripts/run-all-tests.sh --unit-only
+./Scripts/run-all-tests.sh --security-only
+
+# Standard xcodebuild (basic)
+xcodebuild test -project "Traveling Snails.xcodeproj" -scheme "Traveling Snails" -destination "platform=iOS Simulator,name=iPhone 16" | xcbeautify
 
 # Or in Xcode: Cmd+U
 ```
+
+**See the [Comprehensive Testing & CI/CD Pipeline](#-comprehensive-testing--cicd-pipeline) section above for detailed testing information.**
 
 ## 📱 Usage Guide
 

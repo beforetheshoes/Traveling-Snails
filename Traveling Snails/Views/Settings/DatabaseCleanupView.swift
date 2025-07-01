@@ -155,8 +155,9 @@ struct DatabaseCleanupView: View {
                     isDeleting = false
                 }
             } catch {
+                Logger.shared.error("Failed to remove test data: \(error.localizedDescription)", category: .database)
                 await MainActor.run {
-                    deleteResult = "Error removing test data: \(error.localizedDescription)"
+                    deleteResult = L(L10n.Database.Operations.cleanupFailed)
                     isDeleting = false
                 }
             }
@@ -197,8 +198,9 @@ struct DatabaseCleanupView: View {
                     isDeleting = false
                 }
             } catch {
+                Logger.shared.error("Failed to reset data: \(error.localizedDescription)", category: .database)
                 await MainActor.run {
-                    deleteResult = "Error resetting data: \(error.localizedDescription)"
+                    deleteResult = L(L10n.Database.Operations.resetFailed)
                     isDeleting = false
                 }
             }

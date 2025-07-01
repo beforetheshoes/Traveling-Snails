@@ -32,7 +32,7 @@ struct SimpleTimeZonePicker: View {
                 Spacer()
 
                 Button("Change") {
-                    print("DEBUG: \(label) - Change button tapped")
+                    Logger.shared.debug("Change button tapped for \(label)", category: .ui)
                     showingAllTimeZones = true
                 }
                 .font(.caption)
@@ -44,15 +44,15 @@ struct SimpleTimeZonePicker: View {
             .cornerRadius(8)
         }
         .sheet(isPresented: $showingAllTimeZones) {
-            print("DEBUG: \(label) - Sheet dismissed")
+            Logger.shared.debug("Sheet dismissed for \(label)", category: .ui)
         } content: {
             TimeZonePickerSheet(selectedTimeZoneId: $selectedTimeZoneId)
         }
         .onChange(of: selectedTimeZoneId) { oldValue, newValue in
-            print("DEBUG: \(label) - Timezone changed from \(oldValue) to \(newValue)")
+            Logger.shared.debug("Timezone changed for \(label) from \(oldValue) to \(newValue)", category: .ui)
         }
         .onChange(of: showingAllTimeZones) { oldValue, newValue in
-            print("DEBUG: \(label) - Sheet state changed from \(oldValue) to \(newValue)")
+            Logger.shared.debug("Sheet state changed for \(label) from \(oldValue) to \(newValue)", category: .ui)
         }
     }
 }

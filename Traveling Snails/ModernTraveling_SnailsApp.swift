@@ -90,7 +90,8 @@ struct ModernTraveling_SnailsApp: App {
             
             Logger.shared.info("Modern App: All services initialized successfully", category: .app)
         } catch {
-            fatalError("Could not create ModelContainer: \(error)")
+            Logger.shared.critical("Could not create ModelContainer: \(error)", category: .app)
+            fatalError("Could not create ModelContainer")
         }
     }
 

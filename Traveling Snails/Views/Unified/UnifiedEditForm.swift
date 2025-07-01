@@ -292,7 +292,7 @@ struct UnifiedEditForm: View {
             Logger.shared.info("Form saved successfully", category: .ui)
             dismiss()
         } catch {
-            formState.saveError = error.localizedDescription
+            formState.saveError = L(L10n.Save.failed)
             Logger.shared.logError(error, message: "Form save failed", category: .ui)
         }
 
@@ -309,7 +309,7 @@ struct UnifiedEditForm: View {
             Logger.shared.info("Item deleted successfully", category: .ui)
             dismiss()
         } catch {
-            formState.saveError = error.localizedDescription
+            formState.saveError = L(L10n.Delete.failed)
             Logger.shared.logError(error, message: "Delete failed", category: .ui)
         }
 

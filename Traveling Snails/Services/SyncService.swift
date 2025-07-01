@@ -106,7 +106,8 @@ enum SyncError: Error, LocalizedError, Sendable {
         case .dataCorruption:
             return "Data corruption detected during sync"
         case .unknown(let error):
-            return "Unknown sync error: \(error.localizedDescription)"
+            Logger.shared.error("Unknown sync error: \(error.localizedDescription)", category: .sync)
+            return L(L10n.Errors.unknown)
         }
     }
 }
