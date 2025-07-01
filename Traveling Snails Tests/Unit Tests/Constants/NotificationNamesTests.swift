@@ -27,7 +27,6 @@ struct NotificationNamesTests {
     
     @Test("Sync notification names exist and match expected values")
     func testSyncNotifications() {
-        // These tests will initially fail - we need to add these to NotificationNames.swift
         #expect(Notification.Name.syncDidStart.rawValue == "SyncManagerDidStartSync")
         #expect(Notification.Name.syncDidComplete.rawValue == "SyncManagerDidCompleteSync")
         #expect(Notification.Name.crossDeviceSyncDidStart.rawValue == "SyncManagerCrossDeviceSyncDidStart")

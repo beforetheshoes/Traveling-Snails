@@ -20,6 +20,13 @@ import UIKit
 
 /// Enhanced SyncManager with comprehensive sync functionality
 /// Supports both singleton pattern (for app use) and direct initialization (for testing)
+/// 
+/// TODO: This file is 872 lines and violates CLAUDE.md guidelines (< 400 lines typically).
+/// Consider splitting into focused components:
+/// - SyncManager (core orchestration) 
+/// - SyncConflictResolver (conflict resolution logic)
+/// - CrossDeviceSyncSimulator (test-only cross-device simulation)
+/// - SyncRetryHandler (retry logic and exponential backoff)
 @Observable
 class SyncManager {
     // MARK: - Singleton for App Use
@@ -94,13 +101,20 @@ class SyncManager {
         self.modelContainer = modelContainer
         startMonitoringRemoteChanges()
     }
+    
+    // MARK: - Cleanup
+    
+    deinit {
+        // Remove NotificationCenter observers to prevent memory leaks
+        NotificationCenter.default.removeObserver(self)
+    }
 
     // MARK: - Remote Change Monitoring
 
     private func startMonitoringRemoteChanges() {
         // Skip CloudKit monitoring during tests to prevent hanging
         #if DEBUG
-        let isRunningTests = UserDefaults.standard.bool(forKey: "isRunningTests") ||
+        let isRunningTests = UserDefaults.standard.bool(forKey: UserDefaultsConstants.isRunningTests) ||
                            NSClassFromString("XCTestCase") != nil ||
                            ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
         if isRunningTests {
@@ -139,7 +153,7 @@ class SyncManager {
     @objc private func remoteStoreDidChange(notification: NSNotification) {
         // Skip CloudKit operations during tests
         #if DEBUG
-        let isRunningTests = UserDefaults.standard.bool(forKey: "isRunningTests") ||
+        let isRunningTests = UserDefaults.standard.bool(forKey: UserDefaultsConstants.isRunningTests) ||
                            NSClassFromString("XCTestCase") != nil ||
                            ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
         if isRunningTests {
@@ -153,8 +167,8 @@ class SyncManager {
         #endif
 
         // Extract change information from notification
-        if let changeToken = notification.userInfo?[NSPersistentHistoryTokenKey] as? NSPersistentHistoryToken {
-            Logger.secure(category: .sync).info("Processing remote changes with token: \(changeToken, privacy: .public)")
+        if notification.userInfo?[NSPersistentHistoryTokenKey] as? NSPersistentHistoryToken != nil {
+            Logger.secure(category: .sync).info("Processing remote changes with change token")
             #if DEBUG
             Logger.secure(category: .sync).debug("SyncManager: Processing remote changes with change token")
             #endif
@@ -182,7 +196,7 @@ class SyncManager {
     @objc private func cloudKitAccountChanged(notification: NSNotification) {
         // Skip CloudKit operations during tests
         #if DEBUG
-        let isRunningTests = UserDefaults.standard.bool(forKey: "isRunningTests") ||
+        let isRunningTests = UserDefaults.standard.bool(forKey: UserDefaultsConstants.isRunningTests) ||
                            NSClassFromString("XCTestCase") != nil ||
                            ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
         if isRunningTests {
@@ -469,8 +483,8 @@ class SyncManager {
 
         if let notification = notification {
             // Process specific changes from the notification
-            if let userInfo = notification.userInfo {
-                Logger.secure(category: .sync).info("Remote change details: \(userInfo, privacy: .public)")
+            if notification.userInfo != nil {
+                Logger.secure(category: .sync).info("Remote change notification received with user info")
                 #if DEBUG
                 Logger.secure(category: .sync).debug("SyncManager: Remote change userInfo processed")
                 #endif
@@ -518,7 +532,7 @@ class SyncManager {
     private func waitForCloudKitSync() async {
         // Wait for CloudKit to process the save operation
         // In real implementation, this could monitor CloudKit sync progress
-        try? await Task.sleep(for: .milliseconds(200))
+        try? await Task.sleep(for: .milliseconds(UIConstants.Timing.cloudKitProcessingDelayMilliseconds))
     }
 
     @MainActor
@@ -587,9 +601,9 @@ class SyncManager {
             }
 
             // Resolve conflicts using last-writer-wins policy
-            for (tripId, conflictingTrips) in tripGroups {
+            for (_, conflictingTrips) in tripGroups {
                 if conflictingTrips.count > 1 {
-                    Logger.secure(category: .sync).info("Resolving conflict for trip ID: \(tripId, privacy: .public)")
+                    Logger.secure(category: .sync).info("Resolving conflict for trip")
 
                     // Sort by modification date to find the latest
                     let sortedTrips = conflictingTrips.sorted { trip1, trip2 in
@@ -600,14 +614,14 @@ class SyncManager {
                     }
 
                     // Keep the most recent version
-                    let winningTrip = sortedTrips.first!
+                    _ = sortedTrips.first!
 
                     // Remove the older versions
                     for i in 1..<sortedTrips.count {
                         modelContainer.mainContext.delete(sortedTrips[i])
                     }
                     
-                    Logger.secure(category: .sync).info("Kept trip (ID: \(winningTrip.id, privacy: .public)) as conflict resolution winner")
+                    Logger.secure(category: .sync).info("Kept trip as conflict resolution winner")
                 }
             }
 
@@ -685,9 +699,9 @@ class SyncManager {
             SyncManager.crossDeviceTestData.removeAll { cloudTrip in
                 let shouldRemove = !localTripIds.contains(cloudTrip.id)
                 if shouldRemove {
-                    Logger.secure(category: .sync).info("Removing deleted trip (ID: \(cloudTrip.id, privacy: .public)) from cloud test data")
+                    Logger.secure(category: .sync).info("Removing deleted trip from cloud test data")
                     #if DEBUG
-                    Logger.secure(category: .sync).debug("SyncManager: Removing deleted trip (ID: \(cloudTrip.id, privacy: .public)) from cloud data")
+                    Logger.secure(category: .sync).debug("SyncManager: Removing deleted trip from cloud data")
                     #endif
                 }
                 return shouldRemove
@@ -716,7 +730,7 @@ class SyncManager {
                         existingCloudTrip.startDate = trip.startDate
                         existingCloudTrip.endDate = trip.endDate
                         
-                        Logger.secure(category: .sync).info("Updated trip (ID: \(trip.id, privacy: .public)) in cloud with merged changes")
+                        Logger.secure(category: .sync).info("Updated trip in cloud with merged changes")
                     } else {
                         // Create a copy for cross-device storage
                         let cloudTrip = Trip(name: trip.name, isProtected: trip.isProtected)
@@ -725,7 +739,7 @@ class SyncManager {
                         cloudTrip.startDate = trip.startDate
                         cloudTrip.endDate = trip.endDate
                         SyncManager.crossDeviceTestData.append(cloudTrip)
-                        Logger.secure(category: .sync).info("Uploaded trip (ID: \(trip.id, privacy: .public)) to cloud")
+                        Logger.secure(category: .sync).info("Uploaded trip to cloud")
                     }
                 }
             }
@@ -747,7 +761,7 @@ class SyncManager {
                             existingLocalTrip.notes = existingLocalTrip.notes + "\n" + cloudTrip.notes
                         }
                         
-                        Logger.secure(category: .sync).info("Merged cloud changes into local trip (ID: \(existingLocalTrip.id, privacy: .public))")
+                        Logger.secure(category: .sync).info("Merged cloud changes into local trip")
                     } else {
                         // Create local copy for new trip
                         let localTrip = Trip(name: cloudTrip.name, isProtected: cloudTrip.isProtected)
@@ -756,7 +770,7 @@ class SyncManager {
                         localTrip.startDate = cloudTrip.startDate
                         localTrip.endDate = cloudTrip.endDate
                         modelContainer.mainContext.insert(localTrip)
-                        Logger.secure(category: .sync).info("Downloaded trip (ID: \(cloudTrip.id, privacy: .public)) from cloud")
+                        Logger.secure(category: .sync).info("Downloaded trip from cloud")
                     }
                 }
             }
@@ -797,7 +811,7 @@ class SyncManager {
             for otherSyncManager in devicesToNotify {
                 // Schedule async sync with significant delay for controlled propagation
                 Task {
-                    try? await Task.sleep(nanoseconds: 200_000_000) // 200ms delay
+                    try? await Task.sleep(nanoseconds: UIConstants.Timing.crossDeviceSyncDelayNanoseconds)
                     await otherSyncManager.simulateCrossDeviceSync()
                 }
             }

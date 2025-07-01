@@ -64,9 +64,9 @@ extension UserDefaults {
     
     // MARK: - Test Environment
     
-    /// Check if the app is running in test mode
+    /// Get the test running flag
     /// - Returns: true if running tests, false otherwise
-    func isRunningTests() -> Bool {
+    func getIsRunningTests() -> Bool {
         return bool(forKey: UserDefaultsConstants.isRunningTests)
     }
     

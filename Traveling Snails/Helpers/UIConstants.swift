@@ -59,6 +59,12 @@ enum UIConstants {
         
         /// Nanosecond multiplier for sleep operations
         static let nanosecondMultiplier: UInt64 = 1_000_000_000
+        
+        /// Cross-device sync propagation delay in nanoseconds (200ms)
+        static let crossDeviceSyncDelayNanoseconds: UInt64 = 200_000_000
+        
+        /// CloudKit processing delay in milliseconds
+        static let cloudKitProcessingDelayMilliseconds: Int = 200
     }
 }
 
