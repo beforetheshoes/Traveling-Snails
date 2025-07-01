@@ -479,11 +479,6 @@ extension View {
     }
 }
 
-// MARK: - Notification Extension
-
-extension Notification.Name {
-    static let languageChanged = Notification.Name("LanguageChanged")
-}
 
 // MARK: - Language Picker View
 

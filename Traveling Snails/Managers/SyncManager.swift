@@ -17,13 +17,6 @@ import UIKit
 // - NetworkStatus  
 // - SyncProgress
 
-// MARK: - Sync Notification Names
-extension Notification.Name {
-    static let syncDidStart = Notification.Name("SyncManagerDidStartSync")
-    static let syncDidComplete = Notification.Name("SyncManagerDidCompleteSync")
-    static let crossDeviceSyncDidStart = Notification.Name("SyncManagerCrossDeviceSyncDidStart")
-    static let crossDeviceSyncDidComplete = Notification.Name("SyncManagerCrossDeviceSyncDidComplete")
-}
 
 /// Enhanced SyncManager with comprehensive sync functionality
 /// Supports both singleton pattern (for app use) and direct initialization (for testing)
@@ -394,18 +387,23 @@ class SyncManager {
         var currentAttempt = 0
         let startTime = Date()
 
-        while currentAttempt < syncConfig.maxAttempts {
-            if retryAttempts > 0 {
-                // Simulate network interruption for testing
-                retryAttempts -= 1
-                currentAttempt += 1
+        // First handle simulated network interruptions for testing
+        while retryAttempts > 0 {
+            retryAttempts -= 1
 
-                // Use configured delay
-                let delay = syncConfig.delay(for: currentAttempt)
-                Logger.secure(category: .sync).info("Network interruption, retrying in \(delay, privacy: .public)s (attempt \(currentAttempt, privacy: .public))")
+            // Use configured delay for simulated interruption
+            let delay = syncConfig.delay(for: currentAttempt + 1)
+            Logger.secure(category: .sync).info("Network interruption, retrying in \(delay, privacy: .public)s (attempt \(currentAttempt + 1, privacy: .public))")
 
-                try? await Task.sleep(for: .seconds(delay))
-                continue
+            try? await Task.sleep(for: .seconds(delay))
+        }
+
+        // Now perform actual sync attempts with real error handling
+        // Always allow at least one sync attempt, regardless of simulated interruptions
+        repeat {
+            // Clear any previous sync error before attempting sync
+            await MainActor.run {
+                syncError = nil
             }
 
             // Actual sync attempt
@@ -418,21 +416,27 @@ class SyncManager {
                 return
             }
 
-            // Handle specific error types
+            // Handle specific error types for real errors (not simulated ones)
             if let error = syncError as? SyncError {
                 switch error {
                 case .networkUnavailable:
                     currentAttempt += 1
+                    if currentAttempt >= syncConfig.maxAttempts {
+                        break
+                    }
                     let delay = syncConfig.delay(for: currentAttempt)
                     Logger.secure(category: .sync).warning("Network unavailable, retrying in \(delay, privacy: .public)s")
                     try? await Task.sleep(for: .seconds(delay))
                 case .cloudKitQuotaExceeded:
+                    currentAttempt += 1
+                    if currentAttempt >= syncConfig.maxAttempts {
+                        break
+                    }
                     // Use quota-specific configuration
                     let quotaConfig = AppConfiguration.quotaExceededRetry
                     let delay = quotaConfig.delay(for: currentAttempt)
                     Logger.secure(category: .sync).warning("CloudKit quota exceeded, waiting \(delay, privacy: .public)s")
                     try? await Task.sleep(for: .seconds(delay))
-                    currentAttempt += 1
                 default:
                     Logger.secure(category: .sync).error("Sync failed with unrecoverable error: \(error.localizedDescription, privacy: .public)")
                     return
@@ -440,12 +444,12 @@ class SyncManager {
             } else {
                 currentAttempt += 1
             }
-        }
+        } while currentAttempt < syncConfig.maxAttempts
 
         await MainActor.run {
             syncError = SyncError.networkUnavailable
         }
-        Logger.secure(category: .sync).error("Sync failed after \(syncConfig.maxAttempts, privacy: .public) attempts")
+        Logger.secure(category: .sync).error("Sync failed after \(self.syncConfig.maxAttempts, privacy: .public) attempts")
     }
 
     // MARK: - Private Helper Methods

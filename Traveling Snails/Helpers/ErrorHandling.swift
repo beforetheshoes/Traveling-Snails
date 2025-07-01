@@ -384,11 +384,6 @@ private struct ErrorAlert: Identifiable {
     let message: String
 }
 
-// MARK: - Error Notification Extension
-
-extension Notification.Name {
-    static let appErrorOccurred = Notification.Name("AppErrorOccurred")
-}
 
 extension NotificationCenter {
     func postError(_ error: AppError, context: String? = nil) {

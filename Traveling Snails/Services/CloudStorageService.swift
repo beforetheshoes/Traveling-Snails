@@ -67,10 +67,6 @@ protocol CloudStorageService: Sendable {
     var isAvailable: Bool { get }
 }
 
-/// Notification names for cloud storage changes
-extension Notification.Name {
-    static let cloudStorageDidChangeExternally = Notification.Name("CloudStorageDidChangeExternally")
-}
 
 /// Keys for cloud storage change notifications
 struct CloudStorageNotificationKey {
