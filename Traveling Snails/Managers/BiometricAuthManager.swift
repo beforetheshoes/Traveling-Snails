@@ -12,9 +12,9 @@ class BiometricAuthManager {
                            NSClassFromString("XCTestCase") != nil ||
                            ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
         if isRunningTests {
-            Logger.shared.warning("⚠️ BiometricAuthManager.shared accessed during test execution! This bypasses dependency injection and may cause hanging. Use injected AuthenticationService instead.")
+            Logger.secure(category: .app).warning("⚠️ BiometricAuthManager.shared accessed during test execution! This bypasses dependency injection and may cause hanging. Use injected AuthenticationService instead.")
             // Print stack trace for debugging
-            Thread.callStackSymbols.forEach { Logger.shared.debug("  \($0)") }
+            Thread.callStackSymbols.forEach { Logger.secure(category: .app).debug("  \($0, privacy: .public)") }
         }
         #endif
         return BiometricAuthManager()
@@ -119,7 +119,7 @@ class BiometricAuthManager {
 
         // Only log when state actually changes to reduce noise
         #if DEBUG
-        Logger.shared.debug("BiometricAuthManager.isAuthenticated for trip ID \(trip.id): \(result)", category: .app)
+        Logger.secure(category: .app).debug("BiometricAuthManager.isAuthenticated for trip ID \(trip.id, privacy: .public): \(result, privacy: .public)")
         #endif
 
         return result
@@ -128,7 +128,7 @@ class BiometricAuthManager {
     func isProtected(_ trip: Trip) -> Bool {
         let result = isEnabled && trip.isProtected
         #if DEBUG
-        Logger.shared.debug("BiometricAuthManager.isProtected for trip ID \(trip.id): \(result)", category: .app)
+        Logger.secure(category: .app).debug("BiometricAuthManager.isProtected for trip ID \(trip.id, privacy: .public): \(result, privacy: .public)")
         #endif
         return result
     }
@@ -140,7 +140,7 @@ class BiometricAuthManager {
         let tripIsProtected = trip.isProtected
 
         #if DEBUG
-        Logger.shared.debug("BiometricAuthManager.authenticateTrip for trip ID: \(tripId) - START")
+        Logger.secure(category: .app).debug("BiometricAuthManager.authenticateTrip for trip ID: \(tripId, privacy: .public) - START")
         #endif
 
         // CRITICAL: Test detection FIRST before any LAContext creation
@@ -152,7 +152,7 @@ class BiometricAuthManager {
                            Bundle.main.bundleIdentifier?.contains("Tests") == true
         if isRunningTests {
             #if DEBUG
-            Logger.shared.debug("Test environment detected, skipping biometric authentication")
+            Logger.secure(category: .app).debug("Test environment detected, skipping biometric authentication")
             #endif
             _ = await MainActor.run {
                 self.authenticatedTripIDs.insert(tripId)
@@ -169,7 +169,7 @@ class BiometricAuthManager {
         // If trip is not protected, always return true
         guard effectivelyProtected else {
             #if DEBUG
-            Logger.shared.debug("Trip not protected, returning true")
+            Logger.secure(category: .app).debug("Trip not protected, returning true")
             #endif
             return true
         }
@@ -181,7 +181,7 @@ class BiometricAuthManager {
 
         if alreadyAuthenticated {
             #if DEBUG
-            Logger.shared.debug("Trip already authenticated, returning true")
+            Logger.secure(category: .app).debug("Trip already authenticated, returning true")
             #endif
             return true
         }
@@ -190,7 +190,7 @@ class BiometricAuthManager {
         #if targetEnvironment(simulator)
         // On simulator, ALWAYS skip biometric authentication to prevent hanging
         #if DEBUG
-        Logger.shared.debug("Simulator environment detected, skipping biometric authentication")
+        Logger.secure(category: .app).debug("Simulator environment detected, skipping biometric authentication")
         #endif
         _ = await MainActor.run {
             self.authenticatedTripIDs.insert(tripId)
@@ -199,7 +199,7 @@ class BiometricAuthManager {
         #else
         // Real device - perform actual biometric authentication
         #if DEBUG
-        Logger.shared.debug("Real device detected, proceeding with actual biometric authentication")
+        Logger.secure(category: .app).debug("Real device detected, proceeding with actual biometric authentication")
         #endif
 
         // Perform biometric authentication with fresh context
@@ -210,17 +210,17 @@ class BiometricAuthManager {
         guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
             #if DEBUG
             if let error = error {
-                Logger.shared.debug("Biometrics not available: \(error.localizedDescription)")
-                Logger.shared.debug("Error code: \(error.code)")
+                Logger.secure(category: .app).debug("Biometrics not available: \(error.localizedDescription, privacy: .public)")
+                Logger.secure(category: .app).debug("Error code: \(error.code, privacy: .public)")
             } else {
-                Logger.shared.debug("Biometrics not available, returning false")
+                Logger.secure(category: .app).debug("Biometrics not available, returning false")
             }
             #endif
             return false
         }
 
         #if DEBUG
-        Logger.shared.debug("Starting biometric authentication with timeout protection...")
+        Logger.secure(category: .app).debug("Starting biometric authentication with timeout protection...")
         #endif
 
         // Add timeout protection to prevent indefinite hanging
@@ -236,66 +236,66 @@ class BiometricAuthManager {
                     )
 
                     #if DEBUG
-                    Logger.shared.debug("Biometric authentication result: \(result)")
+                    Logger.secure(category: .app).debug("Biometric authentication result: \(result, privacy: .public)")
                     #endif
 
                     if result {
                         await MainActor.run {
                             self.authenticatedTripIDs.insert(tripId)
                             #if DEBUG
-                            Logger.shared.debug("Added trip \(tripId) to authenticated set")
-                            Logger.shared.debug("Updated authenticatedTripIDs: \(self.authenticatedTripIDs)")
+                            Logger.secure(category: .app).debug("Added trip \(tripId, privacy: .public) to authenticated set")
+                            Logger.secure(category: .app).debug("Updated authenticatedTripIDs: \(self.authenticatedTripIDs, privacy: .public)")
                             #endif
                         }
                         return true
                     }
                     #if DEBUG
-                    Logger.shared.debug("Authentication failed, returning false")
+                    Logger.secure(category: .app).debug("Authentication failed, returning false")
                     #endif
                     return false
                 } catch {
                     #if DEBUG
-                    Logger.shared.debug("Authentication error: \(error)")
+                    Logger.secure(category: .app).debug("Authentication error: \(error.localizedDescription, privacy: .public)")
                     if let laError = error as? LAError {
                         #if DEBUG
-                        Logger.shared.debug("LAError code: \(laError.code.rawValue)")
+                        Logger.secure(category: .app).debug("LAError code: \(laError.code.rawValue, privacy: .public)")
                         #endif
                         switch laError.code {
                         case .biometryNotAvailable:
                             #if DEBUG
-                            Logger.shared.debug("Biometry not available on this device")
+                            Logger.secure(category: .app).debug("Biometry not available on this device")
                             #endif
                         case .biometryNotEnrolled:
                             #if DEBUG
-                            Logger.shared.debug("User has not enrolled biometrics")
+                            Logger.secure(category: .app).debug("User has not enrolled biometrics")
                             #endif
                         case .biometryLockout:
                             #if DEBUG
-                            Logger.shared.debug("Biometry is locked out")
+                            Logger.secure(category: .app).debug("Biometry is locked out")
                             #endif
                         case .userCancel:
                             #if DEBUG
-                            Logger.shared.debug("User cancelled authentication")
+                            Logger.secure(category: .app).debug("User cancelled authentication")
                             #endif
                         case .userFallback:
                             #if DEBUG
-                            Logger.shared.debug("User chose fallback method")
+                            Logger.secure(category: .app).debug("User chose fallback method")
                             #endif
                         case .appCancel:
                             #if DEBUG
-                            Logger.shared.debug("App cancelled authentication")
+                            Logger.secure(category: .app).debug("App cancelled authentication")
                             #endif
                         case .invalidContext:
                             #if DEBUG
-                            Logger.shared.debug("Invalid context")
+                            Logger.secure(category: .app).debug("Invalid context")
                             #endif
                         case .notInteractive:
                             #if DEBUG
-                            Logger.shared.debug("Not interactive")
+                            Logger.secure(category: .app).debug("Not interactive")
                             #endif
                         default:
                             #if DEBUG
-                            Logger.shared.debug("Other LAError: \(laError.localizedDescription)")
+                            Logger.secure(category: .app).debug("Other LAError: \(laError.localizedDescription, privacy: .public)")
                             #endif
                         }
                     }
@@ -308,7 +308,7 @@ class BiometricAuthManager {
             group.addTask {
                 try? await Task.sleep(nanoseconds: timeoutSeconds * 1_000_000_000)
                 #if DEBUG
-                Logger.shared.debug("Authentication timed out after \(timeoutSeconds) seconds")
+                Logger.secure(category: .app).debug("Authentication timed out after \(timeoutSeconds, privacy: .public) seconds")
                 #endif
                 return false
             }
@@ -325,12 +325,12 @@ class BiometricAuthManager {
 
     func lockTrip(_ trip: Trip) {
         #if DEBUG
-        Logger.shared.debug("BiometricAuthManager.lockTrip for trip ID: \(trip.id)")
-        Logger.shared.debug("Before: authenticatedTripIDs = \(authenticatedTripIDs)")
+        Logger.secure(category: .app).debug("BiometricAuthManager.lockTrip for trip ID: \(trip.id, privacy: .public)")
+        Logger.secure(category: .app).debug("Before: authenticatedTripIDs = \(self.authenticatedTripIDs, privacy: .public)")
         #endif
         authenticatedTripIDs.remove(trip.id)
         #if DEBUG
-        Logger.shared.debug("After: authenticatedTripIDs = \(authenticatedTripIDs)")
+        Logger.secure(category: .app).debug("After: authenticatedTripIDs = \(self.authenticatedTripIDs, privacy: .public)")
         #endif
         // Don't notify state change here - let the view manage its own state
         // notifyStateChange(for: trip.id)
@@ -338,23 +338,23 @@ class BiometricAuthManager {
 
     func toggleProtection(for trip: Trip) {
         #if DEBUG
-        Logger.shared.debug("BiometricAuthManager.toggleProtection for trip ID: \(trip.id))")
-        Logger.shared.debug("Before: trip.isProtected = \(trip.isProtected)")
+        Logger.secure(category: .app).debug("BiometricAuthManager.toggleProtection for trip ID: \(trip.id, privacy: .public))")
+        Logger.secure(category: .app).debug("Before: trip.isProtected = \(trip.isProtected, privacy: .public)")
         #endif
         trip.isProtected.toggle()
         #if DEBUG
-        Logger.shared.debug("After: trip.isProtected = \(trip.isProtected)")
+        Logger.secure(category: .app).debug("After: trip.isProtected = \(trip.isProtected, privacy: .public)")
         #endif
 
         // If removing protection, also remove from authenticated trips
         if !trip.isProtected {
             #if DEBUG
-            Logger.shared.debug("Removing from authenticated trips")
+            Logger.secure(category: .app).debug("Removing from authenticated trips")
             #endif
             authenticatedTripIDs.remove(trip.id)
         }
         #if DEBUG
-        Logger.shared.debug("Final authenticatedTripIDs = \(authenticatedTripIDs)")
+        Logger.secure(category: .app).debug("Final authenticatedTripIDs = \(self.authenticatedTripIDs, privacy: .public)")
         #endif
     }
 
@@ -369,7 +369,7 @@ class BiometricAuthManager {
                            NSClassFromString("XCTestCase") != nil ||
                            ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
         if isRunningTests {
-            Logger.shared.warning("⚠️ BiometricAuthManager.allTripsLocked accessed during test execution! This bypasses dependency injection and may cause hanging. Use injected AuthenticationService instead.")
+            Logger.secure(category: .app).warning("⚠️ BiometricAuthManager.allTripsLocked accessed during test execution! This bypasses dependency injection and may cause hanging. Use injected AuthenticationService instead.")
         }
         #endif
         return authenticatedTripIDs.isEmpty

@@ -21,14 +21,14 @@ class EmbeddedFileAttachmentManager {
         case .success(let attachment):
             return attachment
         case .failure(let error):
-            Logger.shared.error("File save failed: \(error.localizedDescription)")
+            Logger.secure(category: .fileAttachment).error("File save failed: \(error.localizedDescription, privacy: .public)")
             return nil
         }
     }
 
     func saveFileWithResult(from sourceURL: URL, originalName: String) -> Result<EmbeddedFileAttachment, FileAttachmentError> {
         #if DEBUG
-        Logger.shared.debug("Embedding file from: \(sourceURL.path)")
+        Logger.secure(category: .fileAttachment).debug("Embedding file from: \(sourceURL.path, privacy: .public)")
         #endif
 
         // Check if this is a temporary file (created by us) or a security scoped resource
@@ -47,9 +47,9 @@ class EmbeddedFileAttachmentManager {
         }
 
         guard hasAccess else {
-            Logger.shared.error("Failed to access security scoped resource for file: \(sourceURL.path)")
-            Logger.shared.error("This typically happens when the file was selected through a file picker but the security scope has expired")
-            Logger.shared.error("User should try selecting the file again through the document picker")
+            Logger.secure(category: .fileAttachment).error("Failed to access security scoped resource for file: \(sourceURL.path, privacy: .public)")
+            Logger.secure(category: .fileAttachment).error("This typically happens when the file was selected through a file picker but the security scope has expired")
+            Logger.secure(category: .fileAttachment).error("User should try selecting the file again through the document picker")
             return .failure(.securityScopedResourceAccessDenied(filename: originalName))
         }
 
@@ -57,11 +57,11 @@ class EmbeddedFileAttachmentManager {
             // Read the file data
             let fileData = try Data(contentsOf: sourceURL)
             #if DEBUG
-            Logger.shared.debug("File data read successfully. Size: \(fileData.count) bytes")
+            Logger.secure(category: .fileAttachment).debug("File data read successfully. Size: \(fileData.count, privacy: .public) bytes")
             #endif
 
             guard !fileData.isEmpty else {
-                Logger.shared.error("File data is empty for file: \(sourceURL.path)")
+                Logger.secure(category: .fileAttachment).error("File data is empty for file: \(sourceURL.path, privacy: .public)")
                 return .failure(.fileDataEmpty(filename: originalName))
             }
 
@@ -71,7 +71,7 @@ class EmbeddedFileAttachmentManager {
             let mimeType = getMimeType(for: sourceURL)
 
             #if DEBUG
-            Logger.shared.debug("File details - Extension: \(fileExtension), MIME: \(mimeType), Original: \(originalName)")
+            Logger.secure(category: .fileAttachment).debug("File details - Extension: \(fileExtension, privacy: .public), MIME: \(mimeType, privacy: .public), Original: \(originalName, privacy: .public)")
             #endif
 
             // Create file attachment with embedded data
@@ -85,20 +85,20 @@ class EmbeddedFileAttachmentManager {
             )
 
             #if DEBUG
-            Logger.shared.debug("EmbeddedFileAttachment created successfully")
-            Logger.shared.debug("ID: \(attachment.id)")
+            Logger.secure(category: .fileAttachment).debug("EmbeddedFileAttachment created successfully")
+            Logger.secure(category: .fileAttachment).debug("ID: \(attachment.id, privacy: .public)")
             #endif
             #if DEBUG
-            Logger.shared.debug("File attachment created - Extension: \(attachment.fileExtension), Size: \(attachment.fileSize) bytes", category: .fileAttachment)
+            Logger.secure(category: .fileAttachment).debug("File attachment created - Extension: \(attachment.fileExtension, privacy: .public), Size: \(attachment.fileSize, privacy: .public) bytes")
             #endif
 
             return .success(attachment)
         } catch {
-            Logger.shared.error("Failed to read file data", category: .fileAttachment)
-            Logger.shared.error("File read error: \(error.localizedDescription)", category: .fileAttachment)
+            Logger.secure(category: .fileAttachment).error("Failed to read file data")
+            Logger.secure(category: .fileAttachment).error("File read error: \(error.localizedDescription, privacy: .public)")
             #if DEBUG
             if let nsError = error as NSError? {
-                Logger.shared.debug("NSError domain: \(nsError.domain), code: \(nsError.code)", category: .fileAttachment)
+                Logger.secure(category: .fileAttachment).debug("NSError domain: \(nsError.domain, privacy: .public), code: \(nsError.code, privacy: .public)")
             }
             #endif
             return .failure(.fileReadError(filename: originalName, underlying: error))

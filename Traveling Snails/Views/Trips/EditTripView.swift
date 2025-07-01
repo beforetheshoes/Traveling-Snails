@@ -516,7 +516,7 @@ struct EditTripView: View {
 
     func deleteTrip() {
         #if DEBUG
-        Logger.shared.debug("EditTripView: Starting trip deletion for ID: \(trip.id)", category: .dataImport)
+        Logger.secure(category: .dataImport).debug("EditTripView: Starting trip deletion for ID: \(trip.id, privacy: .public)")
         #endif
 
         // Store trip ID for logging
@@ -528,7 +528,7 @@ struct EditTripView: View {
         do {
             try modelContext.save()
             #if DEBUG
-            Logger.shared.debug("EditTripView: Trip (ID: \(tripId)) deleted and saved successfully", category: .dataImport)
+            Logger.secure(category: .dataImport).debug("EditTripView: Trip (ID: \(tripId, privacy: .public)) deleted and saved successfully")
             #endif
 
             // CRITICAL: Wait a moment for the deletion to be committed before triggering sync
@@ -540,14 +540,14 @@ struct EditTripView: View {
                 await MainActor.run {
                     syncManager.triggerSync()
                     #if DEBUG
-                    Logger.shared.debug("EditTripView: Triggered explicit sync for trip deletion after delay", category: .sync)
+                    Logger.secure(category: .sync).debug("EditTripView: Triggered explicit sync for trip deletion after delay")
                     #endif
                 }
 
                 // Additional wait for CloudKit to process the deletion
                 try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 more seconds
                 #if DEBUG
-                Logger.shared.debug("EditTripView: CloudKit deletion processing delay completed for trip ID: \(tripId)", category: .sync)
+                Logger.secure(category: .sync).debug("EditTripView: CloudKit deletion processing delay completed for trip ID: \(tripId, privacy: .public)")
                 #endif
             }
 
@@ -555,7 +555,7 @@ struct EditTripView: View {
             navigationRouter.navigate(.navigateToTripList)
             dismiss()
         } catch {
-            Logger.shared.error("EditTripView: Failed to save after trip deletion", category: .dataImport)
+            Logger.secure(category: .dataImport).error("EditTripView: Failed to save after trip deletion: \(error.localizedDescription, privacy: .public)")
             // If save failed, don't navigate - stay on the edit view
         }
     }
