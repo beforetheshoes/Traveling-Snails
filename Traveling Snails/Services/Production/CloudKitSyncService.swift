@@ -29,7 +29,7 @@ class CloudKitSyncService: SyncService {
     // Network and retry state
     private var networkStatus: NetworkStatus = .online
     private var retryAttempts: Int = 0
-    private let maxRetryAttempts: Int = 3
+    private let syncConfig = AppConfiguration.syncRetry
 
     // Statistics tracking
     private var stats = SyncStatistics(
@@ -69,13 +69,14 @@ class CloudKitSyncService: SyncService {
             }
 
             group.addTask {
-                // Timeout after 30 seconds
+                // Timeout after configured duration
                 do {
-                    try await Task.sleep(nanoseconds: 30_000_000_000)
+                    let timeoutNanos = UInt64(self.syncConfig.operationTimeout * 1_000_000_000)
+                    try await Task.sleep(nanoseconds: timeoutNanos)
                     await MainActor.run {
                         self.syncError = SyncError.operationTimeout
                         self.isSyncing = false
-                        Logger.shared.error("Sync operation timed out after 30 seconds", category: .sync)
+                        Logger.shared.error("Sync operation timed out after \(self.syncConfig.operationTimeout) seconds", category: .sync)
                     }
                 } catch {
                     // Task was cancelled - sync completed first
@@ -101,13 +102,14 @@ class CloudKitSyncService: SyncService {
             }
 
             group.addTask {
-                // Timeout after 30 seconds
+                // Timeout after configured duration
                 do {
-                    try await Task.sleep(nanoseconds: 30_000_000_000)
+                    let timeoutNanos = UInt64(self.syncConfig.operationTimeout * 1_000_000_000)
+                    try await Task.sleep(nanoseconds: timeoutNanos)
                     await MainActor.run {
                         self.syncError = SyncError.operationTimeout
                         self.isSyncing = false
-                        Logger.shared.error("processPendingChanges operation timed out after 30 seconds", category: .sync)
+                        Logger.shared.error("processPendingChanges operation timed out after \(self.syncConfig.operationTimeout) seconds", category: .sync)
                     }
                 } catch {
                     // Task was cancelled - operation completed first
@@ -131,13 +133,14 @@ class CloudKitSyncService: SyncService {
             }
 
             group.addTask {
-                // Timeout after 60 seconds (longer for large datasets)
+                // Timeout after configured duration (longer for large datasets)
                 do {
-                    try await Task.sleep(nanoseconds: 60_000_000_000)
+                    let timeoutNanos = UInt64(self.syncConfig.operationTimeout * 2 * 1_000_000_000)
+                    try await Task.sleep(nanoseconds: timeoutNanos)
                     await MainActor.run {
                         self.syncError = SyncError.operationTimeout
                         self.isSyncing = false
-                        Logger.shared.error("syncWithProgress operation timed out after 60 seconds", category: .sync)
+                        Logger.shared.error("syncWithProgress operation timed out after \(self.syncConfig.operationTimeout * 2) seconds", category: .sync)
                     }
                 } catch {
                     // Task was cancelled - operation completed first
@@ -162,13 +165,14 @@ class CloudKitSyncService: SyncService {
             }
 
             group.addTask {
-                // Timeout after 30 seconds
+                // Timeout after configured duration
                 do {
-                    try await Task.sleep(nanoseconds: 30_000_000_000)
+                    let timeoutNanos = UInt64(self.syncConfig.operationTimeout * 1_000_000_000)
+                    try await Task.sleep(nanoseconds: timeoutNanos)
                     await MainActor.run {
                         self.syncError = SyncError.operationTimeout
                         self.isSyncing = false
-                        Logger.shared.error("syncAndResolveConflicts operation timed out after 30 seconds", category: .sync)
+                        Logger.shared.error("syncAndResolveConflicts operation timed out after \(self.syncConfig.operationTimeout) seconds", category: .sync)
                     }
                 } catch {
                     // Task was cancelled - operation completed first
@@ -187,13 +191,14 @@ class CloudKitSyncService: SyncService {
             }
 
             group.addTask {
-                // Timeout after 120 seconds (longer for retry operations)
+                // Timeout after configured duration (longer for retry operations)
                 do {
-                    try await Task.sleep(nanoseconds: 120_000_000_000)
+                    let timeoutNanos = UInt64(self.syncConfig.operationTimeout * 4 * 1_000_000_000)
+                    try await Task.sleep(nanoseconds: timeoutNanos)
                     await MainActor.run {
                         self.syncError = SyncError.operationTimeout
                         self.isSyncing = false
-                        Logger.shared.error("triggerSyncWithRetry operation timed out after 120 seconds", category: .sync)
+                        Logger.shared.error("triggerSyncWithRetry operation timed out after \(self.syncConfig.operationTimeout * 4) seconds", category: .sync)
                     }
                 } catch {
                     // Task was cancelled - operation completed first
@@ -281,9 +286,10 @@ class CloudKitSyncService: SyncService {
     }
 
     private func performSyncWithProgress() async -> SyncProgress {
-        // Calculate batches based on CloudKit 400 record limit
+        // Calculate batches based on configured batch size
+        let batchConfig = AppConfiguration.cloudKitBatch
         let totalRecords = await getTotalRecordCount()
-        let totalBatches = max(1, (totalRecords + 399) / 400)
+        let totalBatches = max(1, (totalRecords + batchConfig.maxRecordsPerBatch - 1) / batchConfig.maxRecordsPerBatch)
 
         Logger.shared.info("Starting batch sync: \(totalRecords) records in \(totalBatches) batches", category: .sync)
 
@@ -302,8 +308,8 @@ class CloudKitSyncService: SyncService {
                 )
                 notifyObservers(.progress(progress))
 
-                // Add realistic delay for CloudKit processing
-                try await Task.sleep(for: .milliseconds(500))
+                // Add configured delay for CloudKit processing
+                try await Task.sleep(for: .milliseconds(batchConfig.batchDelay))
 
                 Logger.shared.info("Completed batch \(batch)/\(totalBatches)", category: .sync)
             } catch {
@@ -332,14 +338,14 @@ class CloudKitSyncService: SyncService {
         var currentAttempt = 0
         let startTime = Date()
 
-        while currentAttempt < maxRetryAttempts {
+        while currentAttempt < syncConfig.maxAttempts {
             if retryAttempts > 0 {
                 // Simulate network interruption for testing
                 retryAttempts -= 1
                 currentAttempt += 1
 
-                // Exponential backoff: 2^attempt seconds (2s, 4s, 8s...)
-                let delay = pow(2.0, Double(currentAttempt))
+                // Use configured delay
+                let delay = syncConfig.delay(for: currentAttempt)
                 Logger.shared.info("Network interruption, retrying in \(delay)s (attempt \(currentAttempt))", category: .sync)
 
                 try? await Task.sleep(for: .seconds(delay))
@@ -361,12 +367,13 @@ class CloudKitSyncService: SyncService {
                 switch error {
                 case .networkUnavailable:
                     currentAttempt += 1
-                    let delay = pow(2.0, Double(currentAttempt))
+                    let delay = syncConfig.delay(for: currentAttempt)
                     Logger.shared.warning("Network unavailable, retrying in \(delay)s", category: .sync)
                     try? await Task.sleep(for: .seconds(delay))
                 case .cloudKitQuotaExceeded:
-                    // Wait longer for quota exceeded
-                    let delay = 60.0 * Double(currentAttempt + 1) // 1min, 2min, 3min
+                    // Use quota-specific configuration
+                    let quotaConfig = AppConfiguration.quotaExceededRetry
+                    let delay = quotaConfig.delay(for: currentAttempt)
                     Logger.shared.warning("CloudKit quota exceeded, waiting \(delay)s", category: .sync)
                     try? await Task.sleep(for: .seconds(delay))
                     currentAttempt += 1
@@ -382,7 +389,7 @@ class CloudKitSyncService: SyncService {
         await MainActor.run {
             syncError = SyncError.networkUnavailable
         }
-        Logger.shared.error("Sync failed after \(maxRetryAttempts) attempts", category: .sync)
+        Logger.shared.error("Sync failed after \(syncConfig.maxAttempts) attempts", category: .sync)
     }
 
     // MARK: - Helper Methods
@@ -505,7 +512,8 @@ class CloudKitSyncService: SyncService {
         Logger.shared.info("Processing sync batch \(batchNumber)", category: .sync)
 
         // Simulate CloudKit network delay
-        try await Task.sleep(for: .milliseconds(100))
+        let batchConfig = AppConfiguration.cloudKitBatch
+        try await Task.sleep(for: .milliseconds(min(batchConfig.batchDelay, 100)))
 
         // Simulate potential CloudKit errors
         if batchNumber == 3 && retryAttempts > 0 {

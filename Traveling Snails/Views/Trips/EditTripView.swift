@@ -38,6 +38,10 @@ struct EditTripView: View {
     @State private var saveRetryCount = 0
     @State private var isOffline = false
 
+    // Operation queuing to prevent race conditions
+    @State private var saveOperationQueue = OperationQueue()
+    @State private var currentSaveTask: Task<Void, Never>?
+
     var body: some View {
         Form {
             Section("Trip Details") {
@@ -199,8 +203,17 @@ struct EditTripView: View {
             }
         }
         .onAppear {
+            // Configure operation queue to prevent concurrent saves
+            saveOperationQueue.maxConcurrentOperationCount = 1
+            saveOperationQueue.qualityOfService = .userInitiated
+
             // Monitor network status
             updateNetworkStatus()
+        }
+        .onDisappear {
+            // Cancel any pending save operations to prevent crashes
+            currentSaveTask?.cancel()
+            currentSaveTask = nil
         }
     }
 
@@ -215,7 +228,19 @@ struct EditTripView: View {
     }
 
     private func performSave() {
-        Task {
+        // Cancel any existing save operation to prevent race conditions
+        currentSaveTask?.cancel()
+
+        // Create new save task with proper queuing
+        currentSaveTask = Task { @MainActor in
+            // Ensure only one save operation runs at a time
+            guard !isSaving else {
+                #if DEBUG
+                Logger.secure(category: .app).debug("EditTripView: Save operation already in progress, ignoring request")
+                #endif
+                return
+            }
+
             await performSaveWithRetry()
         }
     }
@@ -282,7 +307,7 @@ struct EditTripView: View {
             return .success(())
         case .failure(let error):
             #if DEBUG
-            Logger.secure(category: .app).error("EditTripView: Save failed: \(error.localizedDescription, privacy: .public)")
+            Logger.secure(category: .app).error("EditTripView: Save failed: \(error, privacy: .private)")
             #endif
             return .failure(error)
         }
@@ -293,7 +318,8 @@ struct EditTripView: View {
         saveRetryCount += 1
 
         // Create error state based on error type and retry count
-        if error.isRecoverable && saveRetryCount <= 3 {
+        let maxRetries = AppConfiguration.networkRetry.maxAttempts
+        if error.isRecoverable && saveRetryCount < maxRetries {
             errorState = TripEditErrorState(
                 error: error,
                 retryCount: saveRetryCount,
@@ -314,18 +340,34 @@ struct EditTripView: View {
         showErrorAlert = true
 
         // For network errors, check if we should attempt automatic retry
-        if error.isRecoverable && saveRetryCount <= 3 {
+        let config = AppConfiguration.networkRetry
+        if error.isRecoverable && saveRetryCount < config.maxAttempts {
             switch error {
             case .networkUnavailable, .timeoutError:
-                // Automatic retry with exponential backoff for network errors
-                let delay = pow(2.0, Double(saveRetryCount - 1)) // 1s, 2s, 4s
-                try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                // Automatic retry with configured delay
+                let delay = config.delay(for: saveRetryCount)
 
                 #if DEBUG
-                Logger.secure(category: .app).debug("EditTripView: Attempting automatic retry (\(saveRetryCount)/3) after \(delay)s delay")
+                Logger.secure(category: .app).debug("EditTripView: Scheduling automatic retry (\(saveRetryCount)/\(config.maxAttempts)) after \(delay)s delay")
                 #endif
 
-                await performSaveWithRetry()
+                // Cancel any existing save task before scheduling retry
+                currentSaveTask?.cancel()
+
+                // Schedule retry with proper queuing to prevent race conditions
+                currentSaveTask = Task { @MainActor in
+                    try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+
+                    // Double-check we're still in a valid state for retry
+                    guard !Task.isCancelled, !isSaving else {
+                        #if DEBUG
+                        Logger.secure(category: .app).debug("EditTripView: Automatic retry cancelled or save already in progress")
+                        #endif
+                        return
+                    }
+
+                    await performSaveWithRetry()
+                }
             default:
                 break
             }
@@ -345,7 +387,7 @@ struct EditTripView: View {
         case .cloudKitQuotaExceeded:
             return "Your iCloud storage is full. Please free up space or upgrade your storage plan."
         default:
-            return error.localizedDescription
+            return "An unexpected error occurred. Please try again."
         }
     }
 
@@ -368,10 +410,18 @@ struct EditTripView: View {
         switch action {
         case .retry:
             saveRetryCount = 0 // Reset retry count for manual retry
-            performSave()
+            performSave() // This already has race condition protection
         case .workOffline:
-            // Continue working offline - save locally
-            Task {
+            // Continue working offline - save locally with race condition protection
+            currentSaveTask?.cancel()
+            currentSaveTask = Task { @MainActor in
+                guard !isSaving else {
+                    #if DEBUG
+                    Logger.secure(category: .app).debug("EditTripView: Offline save already in progress, ignoring request")
+                    #endif
+                    return
+                }
+
                 let result = await performActualSave()
                 if case .success = result {
                     dismiss()
@@ -505,18 +555,22 @@ struct EditTripView: View {
             navigationRouter.navigate(.navigateToTripList)
             dismiss()
         } catch {
-            Logger.shared.error("EditTripView: Failed to save after trip deletion: \(error.localizedDescription)", category: .dataImport)
+            Logger.shared.error("EditTripView: Failed to save after trip deletion", category: .dataImport)
             // If save failed, don't navigate - stay on the edit view
         }
     }
 }
 
 #Preview {
-    let config = ModelConfiguration(isStoredInMemoryOnly: true)
-    let container = try! ModelContainer(for: Trip.self, configurations: config)
-    let trip = Trip(name: "Test Trip")
-    return NavigationStack {
-        EditTripView(trip: trip)
+    do {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: Trip.self, configurations: config)
+        let trip = Trip(name: "Test Trip")
+        return NavigationStack {
+            EditTripView(trip: trip)
+        }
+        .modelContainer(container)
+    } catch {
+        return Text(L(L10n.Errors.unknown))
     }
-    .modelContainer(container)
 }

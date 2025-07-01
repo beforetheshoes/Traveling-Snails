@@ -30,7 +30,7 @@ struct TripEditErrorState {
     }
 
     var isStale: Bool {
-        Date().timeIntervalSince(timestamp) > 300 // 5 minutes
+        Date().timeIntervalSince(timestamp) > AppConfiguration.errorState.staleTimeout
     }
 }
 
@@ -90,27 +90,30 @@ enum TripEditErrorRecovery {
     static func generateRecoveryPlan(for error: AppError, retryCount: Int) -> TripEditRecoveryPlan {
         switch error {
         case .networkUnavailable:
+            let config = AppConfiguration.networkRetry
             return TripEditRecoveryPlan(
                 primaryAction: .workOffline,
                 alternativeActions: [.retry, .cancel],
-                autoRetry: retryCount <= 2,
-                retryDelay: pow(2.0, Double(retryCount)), // Exponential backoff
+                autoRetry: retryCount < config.maxAttempts,
+                retryDelay: config.delay(for: retryCount),
                 userGuidance: "Your changes will be saved locally and synced when you're back online."
             )
         case .timeoutError:
+            let config = AppConfiguration.networkRetry
             return TripEditRecoveryPlan(
                 primaryAction: .retry,
                 alternativeActions: [.saveAsDraft, .cancel],
-                autoRetry: retryCount <= 3,
-                retryDelay: 2.0,
+                autoRetry: retryCount < config.maxAttempts,
+                retryDelay: config.baseDelay,
                 userGuidance: "The operation took too long. Retrying may help."
             )
         case .databaseSaveFailed:
+            let config = AppConfiguration.databaseRetry
             return TripEditRecoveryPlan(
                 primaryAction: .retry,
                 alternativeActions: [.saveAsDraft, .cancel],
-                autoRetry: retryCount <= 2,
-                retryDelay: 1.0,
+                autoRetry: retryCount < config.maxAttempts,
+                retryDelay: config.delay(for: retryCount),
                 userGuidance: "There was a problem saving your changes. Your data is still safe."
             )
         case .missingRequiredField:
@@ -122,19 +125,21 @@ enum TripEditErrorRecovery {
                 userGuidance: "Please complete all required fields before saving."
             )
         case .cloudKitQuotaExceeded:
+            let config = AppConfiguration.quotaExceededRetry
             return TripEditRecoveryPlan(
                 primaryAction: .manageStorage,
                 alternativeActions: [.upgradeStorage, .saveAsDraft, .cancel],
                 autoRetry: false,
-                retryDelay: 0,
+                retryDelay: config.baseDelay,
                 userGuidance: "Your iCloud storage is full. Free up space or upgrade your plan to continue syncing."
             )
         default:
+            let config = AppConfiguration.networkRetry
             return TripEditRecoveryPlan(
                 primaryAction: .retry,
                 alternativeActions: [.cancel],
-                autoRetry: retryCount <= 1,
-                retryDelay: 2.0,
+                autoRetry: retryCount < 2,
+                retryDelay: config.baseDelay,
                 userGuidance: "An unexpected error occurred. Please try again."
             )
         }
@@ -153,19 +158,25 @@ struct TripEditRecoveryPlan {
 
 enum TripEditErrorAnalytics {
     private static var errorHistory: [TripEditErrorEvent] = []
+    private static let config = AppConfiguration.errorAnalytics
+    private static var lastCleanup = Date()
 
     static func recordError(_ error: AppError, context: String, retryCount: Int) {
+        // Perform periodic cleanup before adding new events
+        cleanupStaleEventsIfNeeded()
+        
         let event = TripEditErrorEvent(
-            error: error,
+            errorCategory: error.category,
+            errorType: TripEditErrorType.from(error),
             context: context,
             retryCount: retryCount,
             timestamp: Date()
         )
         errorHistory.append(event)
 
-        // Keep only last 100 events
-        if errorHistory.count > 100 {
-            errorHistory.removeFirst(errorHistory.count - 100)
+        // Keep only the most recent events
+        if errorHistory.count > config.maxHistorySize {
+            errorHistory.removeFirst(errorHistory.count - config.maxHistorySize)
         }
 
         #if DEBUG
@@ -174,32 +185,121 @@ enum TripEditErrorAnalytics {
     }
 
     static func getErrorPatterns() -> [String] {
+        cleanupStaleEventsIfNeeded()
         let recentErrors = errorHistory.suffix(10)
         var patterns: [String] = []
 
         // Detect rapid consecutive errors
-        if recentErrors.count >= 3 {
+        if recentErrors.count >= config.minPatternCount {
             let timeSpan = recentErrors.last!.timestamp.timeIntervalSince(recentErrors.first!.timestamp)
-            if timeSpan < 60 { // Within 1 minute
+            if timeSpan < config.rapidErrorWindow {
                 patterns.append("rapid_consecutive_errors")
             }
         }
 
         // Detect repeated error types
-        let errorTypes = recentErrors.map { $0.error.category }
-        if Set(errorTypes).count == 1 && errorTypes.count >= 3 {
+        let errorTypes = recentErrors.map { $0.errorCategory }
+        if Set(errorTypes).count == 1 && errorTypes.count >= config.minPatternCount {
             patterns.append("repeated_\(errorTypes.first!)")
         }
 
         return patterns
     }
+    
+    /// Manually trigger cleanup for testing or when memory pressure is detected
+    static func cleanup() {
+        let cutoffDate = Date().addingTimeInterval(-config.maxEventAge)
+        errorHistory.removeAll { $0.timestamp < cutoffDate }
+        lastCleanup = Date()
+    }
+    
+    /// Reset all analytics state - useful for testing
+    static func reset() {
+        errorHistory.removeAll()
+        lastCleanup = Date()
+    }
+    
+    /// Get current analytics state for debugging
+    static func getAnalyticsState() -> TripEditAnalyticsState {
+        cleanupStaleEventsIfNeeded()
+        return TripEditAnalyticsState(
+            eventCount: errorHistory.count,
+            oldestEventAge: errorHistory.first?.timestamp.timeIntervalSinceNow.magnitude,
+            newestEventAge: errorHistory.last?.timestamp.timeIntervalSinceNow.magnitude,
+            lastCleanup: lastCleanup
+        )
+    }
+    
+    private static func cleanupStaleEventsIfNeeded() {
+        let now = Date()
+        
+        // Only cleanup if enough time has passed since last cleanup
+        guard now.timeIntervalSince(lastCleanup) > config.cleanupInterval else { return }
+        
+        let cutoffDate = now.addingTimeInterval(-config.maxEventAge)
+        let originalCount = errorHistory.count
+        
+        errorHistory.removeAll { $0.timestamp < cutoffDate }
+        lastCleanup = now
+        
+        #if DEBUG
+        let removedCount = originalCount - errorHistory.count
+        if removedCount > 0 {
+            Logger.secure(category: .app).debug("TripEditErrorAnalytics: Cleaned up \(removedCount) stale error events")
+        }
+        #endif
+    }
 }
 
+/// Lightweight error event that stores only essential data to reduce memory footprint
 struct TripEditErrorEvent {
-    let error: AppError
+    let errorCategory: Logger.Category
+    let errorType: TripEditErrorType
     let context: String
     let retryCount: Int
     let timestamp: Date
+}
+
+/// Simplified error type enum to avoid holding full AppError instances
+enum TripEditErrorType: String, CaseIterable {
+    case database = "database"
+    case network = "network"
+    case cloudKit = "cloudKit"
+    case fileSystem = "fileSystem"
+    case validation = "validation"
+    case organization = "organization"
+    case importExport = "importExport"
+    case unknown = "unknown"
+    
+    static func from(_ error: AppError) -> TripEditErrorType {
+        switch error {
+        case .databaseSaveFailed, .databaseLoadFailed, .databaseDeleteFailed, 
+             .databaseCorrupted, .relationshipIntegrityError:
+            return .database
+        case .networkUnavailable, .serverError, .timeoutError, .invalidURL:
+            return .network
+        case .cloudKitUnavailable, .cloudKitQuotaExceeded, .cloudKitSyncFailed, .cloudKitAuthenticationFailed:
+            return .cloudKit
+        case .fileNotFound, .filePermissionDenied, .fileCorrupted, .diskSpaceInsufficient, .fileAlreadyExists:
+            return .fileSystem
+        case .invalidInput, .missingRequiredField, .duplicateEntry, .invalidDateRange:
+            return .validation
+        case .organizationInUse, .cannotDeleteNoneOrganization, .organizationNotFound:
+            return .organization
+        case .importFailed, .exportFailed, .invalidFileFormat, .corruptedImportData:
+            return .importExport
+        case .unknown, .operationCancelled, .featureNotAvailable:
+            return .unknown
+        }
+    }
+}
+
+/// Analytics state for debugging and monitoring
+struct TripEditAnalyticsState {
+    let eventCount: Int
+    let oldestEventAge: TimeInterval?
+    let newestEventAge: TimeInterval?
+    let lastCleanup: Date
 }
 
 // MARK: - User Feedback Components
@@ -219,7 +319,7 @@ struct TripEditErrorBanner: View {
                         .font(.caption)
                         .foregroundColor(.primary)
                     if errorState.canRetry {
-                        Text("Retry attempt \(errorState.retryCount)/3")
+                        Text("Retry attempt \(errorState.retryCount)/\(AppConfiguration.errorState.maxVisibleRetries)")
                             .font(.caption2)
                             .foregroundColor(.secondary)
                     }
