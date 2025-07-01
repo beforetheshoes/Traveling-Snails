@@ -74,17 +74,17 @@ struct DateTimeZoneSection: View {
             // 3. The values actually changed (avoid infinite loops)
             // 4. We're not currently in the middle of a user selection
             if syncTimezones && !hasUserSetEndTimeZone && oldValue != newValue && endTimeZoneId != newValue {
-                print("DEBUG: Syncing end timezone from \(endTimeZoneId) to \(newValue)")
+                Logger.shared.debug("Syncing end timezone from \(endTimeZoneId) to \(newValue)", category: .ui)
                 endTimeZoneId = newValue
             } else {
-                print("DEBUG: NOT syncing timezones - syncTimezones: \(syncTimezones), hasUserSetEndTimeZone: \(hasUserSetEndTimeZone), oldValue: \(oldValue), newValue: \(newValue), endTimeZoneId: \(endTimeZoneId)")
+                Logger.shared.debug("NOT syncing timezones - syncTimezones: \(syncTimezones), hasUserSetEndTimeZone: \(hasUserSetEndTimeZone)", category: .ui)
             }
         }
         .onChange(of: endTimeZoneId) { oldValue, newValue in
             // Track when user manually changes end timezone
             // Only relevant when syncTimezones is enabled and the values actually changed
             if syncTimezones && oldValue != newValue && newValue != startTimeZoneId {
-                print("DEBUG: User manually set end timezone to \(newValue)")
+                Logger.shared.debug("User manually set end timezone to \(newValue)", category: .ui)
                 hasUserSetEndTimeZone = true
             }
         }

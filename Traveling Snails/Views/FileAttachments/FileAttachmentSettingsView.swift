@@ -191,7 +191,7 @@ struct FileAttachmentSettingsView: View {
 
             Logger.shared.info("Orphaned attachments cleanup completed: \(orphanedCount) files removed", category: .fileManagement)
         } catch {
-            errorMessage = "Failed to cleanup orphaned attachments: \(error.localizedDescription)"
+            errorMessage = L(L10n.Database.Operations.cleanupFailed)
             showingErrorAlert = true
             Logger.shared.error("Failed to cleanup orphaned attachments: \(error)", category: .fileManagement)
         }
@@ -219,7 +219,7 @@ struct FileAttachmentSettingsView: View {
 
             Logger.shared.info("All attachments cleared: \(totalCount) files removed", category: .fileManagement)
         } catch {
-            errorMessage = "Failed to clear all attachments: \(error.localizedDescription)"
+            errorMessage = L(L10n.Database.Operations.cleanupFailed)
             showingErrorAlert = true
             Logger.shared.error("Failed to clear all attachments: \(error)", category: .fileManagement)
         }

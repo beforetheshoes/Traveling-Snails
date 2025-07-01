@@ -216,7 +216,7 @@ class ModernSettingsViewModel {
             } else if description.contains("not found") || description.contains("does not exist") {
                 return "The selected file could not be found. Please try selecting it again."
             } else {
-                return "An error occurred while importing: \(error.localizedDescription)"
+                return L(L10n.Settings.Import.failed)
             }
         }
     }

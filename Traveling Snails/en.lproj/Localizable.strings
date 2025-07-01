@@ -228,3 +228,35 @@
 "database.status.corrupted" = "Corrupted";
 "database.status.optimizing" = "Optimizing";
 "database.status.repairing" = "Repairing";
+
+// Database Operations
+"database.operations.reset_failed" = "Failed to reset database";
+"database.operations.compact_failed" = "Failed to compact database";
+"database.operations.rebuild_failed" = "Failed to rebuild relationships";
+"database.operations.export_failed" = "Failed to export data";
+"database.operations.cleanup_failed" = "Failed to cleanup data";
+
+// Save Operations
+"save.failed" = "Failed to save changes";
+"save.organization_failed" = "Failed to save organization";
+"save.activity_failed" = "Failed to save activity";
+"save.attachment_failed" = "Failed to save attachment";
+"save.trip_failed" = "Failed to save trip";
+
+// Delete Operations
+"delete.failed" = "Failed to delete item";
+"delete.organization_failed" = "Failed to delete organization";
+"delete.attachment_failed" = "Failed to remove attachment";
+
+// File Operations
+"file.access_failed" = "Failed to access file";
+"file.processing_failed" = "Failed to process file";
+"file.selection_failed" = "Failed to select file";
+"file.photo_failed" = "Failed to process photo";
+"file.document_failed" = "Failed to process document";
+"file.database_save_failed" = "Failed to save file to database";
+
+// Generic Operations
+"operation.failed" = "Operation failed";
+"operation.cancelled" = "Operation was cancelled";
+"operation.completed_with_errors" = "Operation completed with errors";

@@ -313,7 +313,7 @@ struct IsolatedTripDetailView: View {
                  isLocallyAuthenticated = authManager.isAuthenticated(for: trip)
                  needsAuthentication = isTripProtected && !isLocallyAuthenticated
                  #if DEBUG
-                 print("🔧 Protection removed - isLocallyAuthenticated: \(isLocallyAuthenticated)")
+                 Logger.shared.debug("Protection removed - isLocallyAuthenticated: \(isLocallyAuthenticated)", category: .ui)
                  #endif
              }
              Button("Cancel", role: .cancel) { }
@@ -366,7 +366,7 @@ struct IsolatedTripDetailView: View {
                                 isLocallyAuthenticated = false
                                 needsAuthentication = true
                                 #if DEBUG
-                                print("🔒 Manual lock - setting isLocallyAuthenticated = false")
+                                Logger.shared.debug("Manual lock - setting isLocallyAuthenticated = false")
                                 #endif
                             } label: {
                                 Label("Lock Trip Now", systemImage: "lock.fill")
@@ -385,7 +385,7 @@ struct IsolatedTripDetailView: View {
                                 isLocallyAuthenticated = authManager.isAuthenticated(for: trip)
                                 needsAuthentication = isTripProtected && !isLocallyAuthenticated
                                 #if DEBUG
-                                print("🔧 Protection toggled - isLocallyAuthenticated: \(isLocallyAuthenticated)")
+                                Logger.shared.debug("Protection toggled - isLocallyAuthenticated: \(isLocallyAuthenticated)", category: .ui)
                                 #endif
                             }
                         } label: {
@@ -466,7 +466,7 @@ struct IsolatedTripDetailView: View {
         guard !isAuthenticating else { return }
 
         #if DEBUG
-        print("🔓 IsolatedTripDetailView.authenticateUser() - START")
+        Logger.shared.debug("IsolatedTripDetailView.authenticateUser() - START")
         #endif
         isAuthenticating = true
 

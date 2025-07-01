@@ -257,24 +257,102 @@ run_unit_tests() {
 
 # Function to run integration tests only
 run_integration_tests() {
-    local xcodebuild_command="xcodebuild test \
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+    echo -e "${BLUE}              Running Integration Tests${NC}"
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+    echo ""
+    
+    local integration_test_command="xcodebuild test \
         -project \"$PROJECT_NAME.xcodeproj\" \
         -scheme \"$SCHEME_NAME\" \
         -destination \"platform=iOS Simulator,name=$SIMULATOR_NAME\" \
         -only-testing:\"$TEST_TARGET/$INTEGRATION_TEST_PATH\""
     
-    execute_test_with_xcbeautify "Integration Tests" "$xcodebuild_command"
+    # Add xcbeautify if available
+    if command -v xcbeautify &> /dev/null; then
+        integration_test_command="$integration_test_command | xcbeautify"
+    else
+        # Without xcbeautify, at least filter for test results
+        integration_test_command="$integration_test_command 2>&1 | grep -E \"Test Suite|Test Case|passed|failed|error\""
+    fi
+    
+    if command -v xcbeautify &> /dev/null; then
+        if xcodebuild test \
+            -project "$PROJECT_NAME.xcodeproj" \
+            -scheme "$SCHEME_NAME" \
+            -destination "platform=iOS Simulator,name=$SIMULATOR_NAME" \
+            -only-testing:"$TEST_TARGET/$INTEGRATION_TEST_PATH" | xcbeautify; then
+            echo -e "${GREEN}✓ All integration tests passed!${NC}"
+        else
+            echo -e "${RED}✗ Some integration tests failed${NC}"
+            echo -e "${CYAN}Command: $integration_test_command${NC}"
+            EXIT_CODE=1
+        fi
+    else
+        if xcodebuild test \
+            -project "$PROJECT_NAME.xcodeproj" \
+            -scheme "$SCHEME_NAME" \
+            -destination "platform=iOS Simulator,name=$SIMULATOR_NAME" \
+            -only-testing:"$TEST_TARGET/$INTEGRATION_TEST_PATH" 2>&1 | grep -E "Test Suite|Test Case|passed|failed|error"; then
+            echo -e "${GREEN}✓ All integration tests passed!${NC}"
+        else
+            echo -e "${RED}✗ Some integration tests failed${NC}"
+            echo -e "${CYAN}Command: $integration_test_command${NC}"
+            EXIT_CODE=1
+        fi
+    fi
+    
+    echo ""
 }
 
 # Function to run performance tests only
 run_performance_tests() {
-    local xcodebuild_command="xcodebuild test \
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+    echo -e "${BLUE}              Running Performance Tests${NC}"
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+    echo ""
+    
+    local performance_test_command="xcodebuild test \
         -project \"$PROJECT_NAME.xcodeproj\" \
         -scheme \"$SCHEME_NAME\" \
         -destination \"platform=iOS Simulator,name=$SIMULATOR_NAME\" \
         -only-testing:\"$TEST_TARGET/$PERFORMANCE_TEST_PATH\""
     
-    execute_test_with_xcbeautify "Performance Tests" "$xcodebuild_command"
+    # Add xcbeautify if available
+    if command -v xcbeautify &> /dev/null; then
+        performance_test_command="$performance_test_command | xcbeautify"
+    else
+        # Without xcbeautify, at least filter for test results
+        performance_test_command="$performance_test_command 2>&1 | grep -E \"Test Suite|Test Case|passed|failed|error\""
+    fi
+    
+    if command -v xcbeautify &> /dev/null; then
+        if xcodebuild test \
+            -project "$PROJECT_NAME.xcodeproj" \
+            -scheme "$SCHEME_NAME" \
+            -destination "platform=iOS Simulator,name=$SIMULATOR_NAME" \
+            -only-testing:"$TEST_TARGET/$PERFORMANCE_TEST_PATH" | xcbeautify; then
+            echo -e "${GREEN}✓ All performance tests passed!${NC}"
+        else
+            echo -e "${RED}✗ Some performance tests failed${NC}"
+            echo -e "${CYAN}Command: $performance_test_command${NC}"
+            EXIT_CODE=1
+        fi
+    else
+        if xcodebuild test \
+            -project "$PROJECT_NAME.xcodeproj" \
+            -scheme "$SCHEME_NAME" \
+            -destination "platform=iOS Simulator,name=$SIMULATOR_NAME" \
+            -only-testing:"$TEST_TARGET/$PERFORMANCE_TEST_PATH" 2>&1 | grep -E "Test Suite|Test Case|passed|failed|error"; then
+            echo -e "${GREEN}✓ All performance tests passed!${NC}"
+        else
+            echo -e "${RED}✗ Some performance tests failed${NC}"
+            echo -e "${CYAN}Command: $performance_test_command${NC}"
+            EXIT_CODE=1
+        fi
+    fi
+    
+    echo ""
 }
 
 # Function to run SwiftLint
@@ -560,7 +638,6 @@ check_mutual_exclusivity() {
 main() {
     # Check for mutually exclusive options
     check_mutual_exclusivity
-    
     # Check dependencies first
     check_dependencies
     

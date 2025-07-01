@@ -25,11 +25,9 @@ jobs:
         with:
           xcode-version: latest-stable
           
-      - name: Install xcbeautify
-        run: brew install xcbeautify
-        
-      - name: Install jq for security analysis
-        run: brew install jq
+      - name: Install dependencies
+        run: |
+          brew install xcbeautify jq
         
       - name: Cache Swift packages
         uses: actions/cache@v4
@@ -41,25 +39,62 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-swift-
             
-      - name: Resolve dependencies
-        run: swift package resolve
-        
+      - name: Validate script exists
+        run: |
+          if [ ! -f "./Scripts/run-all-tests.sh" ]; then
+            echo "❌ Test script not found"
+            exit 1
+          fi
+          chmod +x ./Scripts/run-all-tests.sh
+          
       - name: Run security tests
         run: ./Scripts/run-all-tests.sh --security-only
         
-      - name: Security scan for sensitive data
+      - name: Enhanced security scan for sensitive data
         run: |
           echo "🔍 Scanning for potential security issues..."
-          # Check for hardcoded credentials, API keys, etc.
-          if grep -r -E "(password|secret|key|token)\s*=\s*['\"][^'\"]*['\"]" \
+          SECURITY_ISSUES=0
+          
+          # Enhanced patterns for better detection
+          echo "Checking for hardcoded credentials..."
+          if grep -r -E "(password|secret|key|token|api_key|auth_token)\s*[:=]\s*['\"][^'\"]{8,}['\"]" \
              --include="*.swift" \
              --exclude-dir=".git" \
              --exclude-dir=".build" \
              --exclude-dir="Traveling Snails Tests" \
-             . || true; then
-            echo "⚠️  Potential hardcoded credentials found above"
+             . 2>/dev/null || true; then
+            echo "⚠️  Potential hardcoded credentials found"
+            SECURITY_ISSUES=$((SECURITY_ISSUES + 1))
+          fi
+          
+          echo "Checking for base64 encoded secrets..."
+          if grep -r -E "[A-Za-z0-9+/]{40,}={0,2}" \
+             --include="*.swift" \
+             --exclude-dir=".git" \
+             --exclude-dir=".build" \
+             --exclude-dir="Traveling Snails Tests" \
+             . 2>/dev/null | grep -v "example\|test\|demo" || true; then
+            echo "⚠️  Potential base64 encoded data found"
+            SECURITY_ISSUES=$((SECURITY_ISSUES + 1))
+          fi
+          
+          echo "Checking for environment variable leaks..."
+          if grep -r -E "process\.env\[|getenv\(|ENV\[" \
+             --include="*.swift" \
+             --exclude-dir=".git" \
+             --exclude-dir=".build" \
+             --exclude-dir="Traveling Snails Tests" \
+             . 2>/dev/null | grep -v "test\|example" || true; then
+            echo "⚠️  Potential environment variable access found"
+            SECURITY_ISSUES=$((SECURITY_ISSUES + 1))
+          fi
+          
+          if [ $SECURITY_ISSUES -gt 0 ]; then
+            echo "❌ Security scan found $SECURITY_ISSUES potential issues"
+            echo "Please review the above findings before proceeding"
+            exit 1
           else
-            echo "✅ No obvious hardcoded credentials detected"
+            echo "✅ No obvious security issues detected"
           fi
           
       - name: Upload security test results
@@ -72,92 +107,16 @@ jobs:
             *.log
           retention-days: 7
 
-  # Unit tests run in parallel with integration tests
-  unit-tests:
-    name: Unit Tests
-    runs-on: macos-latest
-    needs: security-tests
-    timeout-minutes: 15
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: latest-stable
-          
-      - name: Install xcbeautify
-        run: brew install xcbeautify
-        
-      - name: Cache Swift packages
-        uses: actions/cache@v4
-        with:
-          path: |
-            .build
-            ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-swift-${{ hashFiles('**/Package.resolved') }}
-          restore-keys: |
-            ${{ runner.os }}-swift-
-            
-      - name: Run unit tests
-        run: ./Scripts/run-all-tests.sh --unit-only
-        
-      - name: Upload unit test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: unit-test-results
-          path: |
-            *.log
-          retention-days: 7
-
-  # Integration tests run in parallel with unit tests
-  integration-tests:
-    name: Integration Tests
-    runs-on: macos-latest
-    needs: security-tests
-    timeout-minutes: 20
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: latest-stable
-          
-      - name: Install xcbeautify
-        run: brew install xcbeautify
-        
-      - name: Cache Swift packages
-        uses: actions/cache@v4
-        with:
-          path: |
-            .build
-            ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-swift-${{ hashFiles('**/Package.resolved') }}
-          restore-keys: |
-            ${{ runner.os }}-swift-
-            
-      - name: Run integration tests
-        run: ./Scripts/run-all-tests.sh --integration-only
-        
-      - name: Upload integration test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: integration-test-results
-          path: |
-            *.log
-          retention-days: 7
-
-  # Performance tests run separately due to their nature
-  performance-tests:
-    name: Performance Tests
+  # Test matrix for parallel execution - reduces from 7 jobs to 4
+  test-matrix:
+    name: ${{ matrix.test-type }} Tests
     runs-on: macos-latest
     needs: security-tests
     timeout-minutes: 25
+    strategy:
+      matrix:
+        test-type: [unit, integration, performance, swiftdata]
+      fail-fast: false
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -170,7 +129,7 @@ jobs:
       - name: Install xcbeautify
         run: brew install xcbeautify
         
-      - name: Cache Swift packages
+      - name: Cache Swift packages (shared across matrix)
         uses: actions/cache@v4
         with:
           path: |
@@ -180,64 +139,46 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-swift-
             
-      - name: Run performance tests
-        run: ./Scripts/run-all-tests.sh --performance-only
-        
-      - name: Upload performance test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: performance-test-results
-          path: |
-            *.log
-          retention-days: 7
-
-  # SwiftData tests (critical for app functionality)
-  swiftdata-tests:
-    name: SwiftData Tests
-    runs-on: macos-latest
-    needs: security-tests
-    timeout-minutes: 20
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        
-      - name: Setup Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: latest-stable
-          
-      - name: Install xcbeautify
-        run: brew install xcbeautify
-        
-      - name: Cache Swift packages
-        uses: actions/cache@v4
-        with:
-          path: |
-            .build
-            ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-swift-${{ hashFiles('**/Package.resolved') }}
-          restore-keys: |
-            ${{ runner.os }}-swift-
-            
-      - name: Run SwiftData tests
+      - name: Validate script exists
         run: |
-          xcodebuild test \
-            -project "Traveling Snails.xcodeproj" \
-            -scheme "Traveling Snails" \
-            -destination "platform=iOS Simulator,name=iPhone 16" \
-            -only-testing:"Traveling Snails Tests/SwiftData Tests" | xcbeautify
+          if [ ! -f "./Scripts/run-all-tests.sh" ]; then
+            echo "❌ Test script not found"
+            exit 1
+          fi
+          chmod +x ./Scripts/run-all-tests.sh
             
-      - name: Upload SwiftData test results
+      - name: Run ${{ matrix.test-type }} tests
+        run: |
+          case "${{ matrix.test-type }}" in
+            "unit")
+              ./Scripts/run-all-tests.sh --unit-only
+              ;;
+            "integration")
+              ./Scripts/run-all-tests.sh --integration-only
+              ;;
+            "performance")
+              ./Scripts/run-all-tests.sh --performance-only
+              ;;
+            "swiftdata")
+              # Run SwiftData tests specifically
+              xcodebuild test \
+                -project "Traveling Snails.xcodeproj" \
+                -scheme "Traveling Snails" \
+                -destination "platform=iOS Simulator,name=iPhone 15" \
+                -only-testing:"Traveling Snails Tests/SwiftData Tests" | xcbeautify
+              ;;
+          esac
+        
+      - name: Upload ${{ matrix.test-type }} test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: swiftdata-test-results
+          name: ${{ matrix.test-type }}-test-results
           path: |
             *.log
           retention-days: 7
 
-  # Build validation - ensures project builds successfully
+  # Build validation runs in parallel with tests
   build-validation:
     name: Build Validation
     runs-on: macos-latest
@@ -270,9 +211,9 @@ jobs:
           xcodebuild build \
             -project "Traveling Snails.xcodeproj" \
             -scheme "Traveling Snails" \
-            -destination "platform=iOS Simulator,name=iPhone 16" | xcbeautify
+            -destination "platform=iOS Simulator,name=iPhone 15" | xcbeautify
 
-  # Enhanced SwiftLint analysis (extends existing workflow)
+  # Enhanced SwiftLint analysis (consolidated with better error handling)
   enhanced-linting:
     name: Enhanced Linting
     runs-on: macos-latest
@@ -280,7 +221,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         
-      - name: Install jq for analysis
+      - name: Install analysis tools
         run: brew install jq
         
       - name: Cache Swift packages
@@ -296,12 +237,12 @@ jobs:
       - name: Resolve dependencies for SwiftLint
         run: swift package resolve
         
-      - name: Run enhanced SwiftLint analysis
+      - name: Run comprehensive SwiftLint analysis
         run: |
           echo "🚀 Running comprehensive SwiftLint analysis..."
           swift run swiftlint lint --config .swiftlint.yml --reporter json > swiftlint-detailed.json || true
           
-          # Analyze results with detailed reporting
+          # Analyze results with enhanced reporting
           if command -v jq &> /dev/null && [ -f "swiftlint-detailed.json" ]; then
             TOTAL_VIOLATIONS=$(jq 'length' swiftlint-detailed.json 2>/dev/null || echo "0")
             ERROR_COUNT=$(jq '[.[] | select(.severity == "error")] | length' swiftlint-detailed.json 2>/dev/null || echo "0")
@@ -314,14 +255,40 @@ jobs:
             echo "  Warnings: $WARNING_COUNT"
             echo "  Security issues: $SECURITY_COUNT"
             
+            # Generate summary for GitHub
+            echo "## SwiftLint Analysis Summary" >> $GITHUB_STEP_SUMMARY
+            echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| Total Violations | $TOTAL_VIOLATIONS |" >> $GITHUB_STEP_SUMMARY
+            echo "| Errors | $ERROR_COUNT |" >> $GITHUB_STEP_SUMMARY
+            echo "| Warnings | $WARNING_COUNT |" >> $GITHUB_STEP_SUMMARY
+            echo "| Security Issues | $SECURITY_COUNT |" >> $GITHUB_STEP_SUMMARY
+            
             # Fail if there are errors or security violations
             if [ "$ERROR_COUNT" -gt 0 ] || [ "$SECURITY_COUNT" -gt 0 ]; then
               echo "❌ Critical violations found!"
-              echo "Security violations:"
-              jq -r '.[] | select(.rule_id | test("print_statements|sensitive_logging|safe_error_messages")) | "\(.file):\(.line) - \(.rule_id): \(.reason)"' swiftlint-detailed.json 2>/dev/null || true
-              echo "Error violations:"
-              jq -r '.[] | select(.severity == "error") | "\(.file):\(.line) - \(.rule_id): \(.reason)"' swiftlint-detailed.json 2>/dev/null | head -10 || true
+              
+              if [ "$SECURITY_COUNT" -gt 0 ]; then
+                echo "" >> $GITHUB_STEP_SUMMARY
+                echo "### 🚨 Security Violations" >> $GITHUB_STEP_SUMMARY
+                echo '```' >> $GITHUB_STEP_SUMMARY
+                jq -r '.[] | select(.rule_id | test("print_statements|sensitive_logging|safe_error_messages")) | "\(.file):\(.line) - \(.rule_id): \(.reason)"' swiftlint-detailed.json 2>/dev/null >> $GITHUB_STEP_SUMMARY || true
+                echo '```' >> $GITHUB_STEP_SUMMARY
+              fi
+              
+              if [ "$ERROR_COUNT" -gt 0 ]; then
+                echo "" >> $GITHUB_STEP_SUMMARY
+                echo "### ❌ Error Violations (Top 10)" >> $GITHUB_STEP_SUMMARY
+                echo '```' >> $GITHUB_STEP_SUMMARY
+                jq -r '.[] | select(.severity == "error") | "\(.file):\(.line) - \(.rule_id): \(.reason)"' swiftlint-detailed.json 2>/dev/null | head -10 >> $GITHUB_STEP_SUMMARY || true
+                echo '```' >> $GITHUB_STEP_SUMMARY
+              fi
+              
               exit 1
+            else
+              echo "✅ No critical violations found"
+              echo "" >> $GITHUB_STEP_SUMMARY
+              echo "✅ **All SwiftLint checks passed!**" >> $GITHUB_STEP_SUMMARY
             fi
           else
             echo "⚠️  jq not available or no SwiftLint results, falling back to standard output"
@@ -342,7 +309,7 @@ jobs:
   test-summary:
     name: Test Summary
     runs-on: macos-latest
-    needs: [security-tests, unit-tests, integration-tests, performance-tests, swiftdata-tests, build-validation, enhanced-linting]
+    needs: [security-tests, test-matrix, build-validation, enhanced-linting]
     if: always()
     steps:
       - name: Check test results
@@ -350,31 +317,41 @@ jobs:
           echo "🎯 Comprehensive Test Pipeline Summary"
           echo "======================================"
           
+          # Create comprehensive summary
+          echo "## 🎯 Test Pipeline Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Tests | ${{ needs.security-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Matrix | ${{ needs.test-matrix.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build Validation | ${{ needs.build-validation.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Enhanced Linting | ${{ needs.enhanced-linting.result }} |" >> $GITHUB_STEP_SUMMARY
+          
           # Check if all required jobs passed
           if [[ "${{ needs.security-tests.result }}" == "success" && \
-                "${{ needs.unit-tests.result }}" == "success" && \
-                "${{ needs.integration-tests.result }}" == "success" && \
-                "${{ needs.performance-tests.result }}" == "success" && \
-                "${{ needs.swiftdata-tests.result }}" == "success" && \
+                "${{ needs.test-matrix.result }}" == "success" && \
                 "${{ needs.build-validation.result }}" == "success" && \
                 "${{ needs.enhanced-linting.result }}" == "success" ]]; then
             echo "✅ ALL TESTS PASSED!"
             echo "🚀 Codebase is ready for deployment"
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "## ✅ All Tests Passed!" >> $GITHUB_STEP_SUMMARY
+            echo "🚀 **Codebase is ready for deployment**" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ SOME TESTS FAILED!"
             echo "Security Tests: ${{ needs.security-tests.result }}"
-            echo "Unit Tests: ${{ needs.unit-tests.result }}"
-            echo "Integration Tests: ${{ needs.integration-tests.result }}"
-            echo "Performance Tests: ${{ needs.performance-tests.result }}"
-            echo "SwiftData Tests: ${{ needs.swiftdata-tests.result }}"
+            echo "Test Matrix: ${{ needs.test-matrix.result }}"
             echo "Build Validation: ${{ needs.build-validation.result }}"
             echo "Enhanced Linting: ${{ needs.enhanced-linting.result }}"
             echo ""
             echo "Please fix the failing tests before merging."
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "## ❌ Some Tests Failed" >> $GITHUB_STEP_SUMMARY
+            echo "**Please fix the failing tests before merging.**" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
 
-  # Dependency vulnerability scanning
+  # Dependency vulnerability scanning (runs independently)
   dependency-scan:
     name: Dependency Security Scan
     runs-on: macos-latest
@@ -387,34 +364,47 @@ jobs:
         with:
           xcode-version: latest-stable
           
-      - name: Scan Swift Package dependencies
+      - name: Install analysis tools
+        run: brew install jq
+          
+      - name: Comprehensive dependency security scan
         run: |
           echo "🔍 Scanning Swift Package dependencies for vulnerabilities..."
           
           # Extract package dependencies
           if [ -f "Package.resolved" ]; then
             echo "📦 Found Package.resolved - analyzing dependencies:"
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "## 📦 Dependency Analysis" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
             
-            # List all dependencies
-            jq -r '.pins[] | "\(.identity): \(.state.version // .state.revision)"' Package.resolved || \
-            cat Package.resolved | grep -E '"identity"|"version"|"revision"' || \
-            echo "Unable to parse Package.resolved with jq, showing raw content:"
+            # List all dependencies in summary
+            echo "### Dependencies Found:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            jq -r '.pins[] | "\(.identity): \(.state.version // .state.revision)"' Package.resolved 2>/dev/null >> $GITHUB_STEP_SUMMARY || \
+            cat Package.resolved | grep -E '"identity"|"version"|"revision"' >> $GITHUB_STEP_SUMMARY || \
+            echo "Unable to parse Package.resolved" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
             
-            echo ""
-            echo "⚠️  Manual security review recommended for:"
-            echo "  - SwiftLint and its dependencies"
-            echo "  - Any third-party packages"
-            echo "  - Check for known vulnerabilities in these versions"
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### ⚠️ Manual Security Review Recommended For:" >> $GITHUB_STEP_SUMMARY
+            echo "- SwiftLint and its dependencies" >> $GITHUB_STEP_SUMMARY
+            echo "- Any third-party packages" >> $GITHUB_STEP_SUMMARY
+            echo "- Check for known vulnerabilities in these versions" >> $GITHUB_STEP_SUMMARY
           else
             echo "📦 No Package.resolved found - checking Package.swift"
             if [ -f "Package.swift" ]; then
-              grep -E "url:|from:|exact:" Package.swift || echo "No external dependencies found in Package.swift"
+              echo "### Package.swift Dependencies:" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              grep -E "url:|from:|exact:" Package.swift >> $GITHUB_STEP_SUMMARY || echo "No external dependencies found in Package.swift" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
             fi
           fi
           
           echo ""
           echo "✅ Dependency scan completed"
-          echo "💡 For comprehensive vulnerability scanning, consider integrating:"
-          echo "   - GitHub's Dependabot"
-          echo "   - OWASP dependency-check"
-          echo "   - Snyk or similar tools"
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 💡 For Comprehensive Vulnerability Scanning, Consider:" >> $GITHUB_STEP_SUMMARY
+          echo "- GitHub's Dependabot" >> $GITHUB_STEP_SUMMARY
+          echo "- OWASP dependency-check" >> $GITHUB_STEP_SUMMARY
+          echo "- Snyk or similar tools" >> $GITHUB_STEP_SUMMARY

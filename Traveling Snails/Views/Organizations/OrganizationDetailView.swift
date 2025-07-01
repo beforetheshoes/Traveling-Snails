@@ -261,7 +261,8 @@ struct OrganizationDetailView: View {
 
             // REMOVED: Custom sync triggers - let SwiftData+CloudKit handle automatically
         } catch {
-            saveErrorMessage = "Failed to save changes: \(error.localizedDescription)"
+            Logger.shared.error("Failed to save organization: \(error.localizedDescription)", category: .database)
+            saveErrorMessage = L(L10n.Save.organizationFailed)
             showingSaveError = true
         }
     }
@@ -281,7 +282,8 @@ struct OrganizationDetailView: View {
 
                 // REMOVED: Custom sync triggers - let SwiftData+CloudKit handle automatically
             } catch {
-                saveErrorMessage = "Failed to delete organization: \(error.localizedDescription)"
+                Logger.shared.error("Failed to delete organization: \(error.localizedDescription)", category: .database)
+                saveErrorMessage = L(L10n.Delete.organizationFailed)
                 showingSaveError = true
             }
         } else {

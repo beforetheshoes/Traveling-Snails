@@ -94,7 +94,8 @@ enum AuthenticationError: LocalizedError, Sendable {
         case .timeout:
             return "Authentication timed out"
         case .unknown(let error):
-            return "Unknown authentication error: \(error.localizedDescription)"
+            Logger.shared.error("Unknown authentication error: \(error.localizedDescription)", category: .app)
+            return L(L10n.Errors.unknown)
         }
     }
 }

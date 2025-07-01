@@ -122,7 +122,7 @@ class UniversalActivityFormViewModel {
 
     func handleAttachmentError(_ error: String) {
         // Store the error for UI display
-        saveError = NSError(domain: "AttachmentError", code: 1, userInfo: [NSLocalizedDescriptionKey: error])
+        saveError = NSError(domain: "AttachmentError", code: 1, userInfo: [NSLocalizedDescriptionKey: "Failed to process attachment"])
         Logger.shared.error("Attachment error: \(error)", category: .fileAttachment)
     }
 

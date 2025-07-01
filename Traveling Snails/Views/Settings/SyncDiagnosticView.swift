@@ -25,12 +25,12 @@ struct SyncDiagnosticView: View {
 
                 SyncStatusRow(title: "Pending Changes", value: "\(syncManager.pendingChangesCount)")
 
-                if let error = syncManager.syncError {
+                if syncManager.syncError != nil {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Error")
                             .font(.headline)
                             .foregroundColor(.red)
-                        Text(error.localizedDescription)
+                        Text(L(L10n.Errors.unknown))
                             .font(.caption)
                             .foregroundColor(.red)
                             .multilineTextAlignment(.leading)

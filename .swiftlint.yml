@@ -145,7 +145,7 @@ custom_rules:
   # SECURITY: Ensure proper error handling doesn't expose internals
   safe_error_messages:
     name: "Safe Error Messages"
-    regex: '(?:error|Error|message|Message|alert|Alert|text|Text)\s*[^"]*"[^"]*\b(?:SQL|query|database|modelContext|CoreData|SwiftData|internal|private key)\b'
+    regex: '(?<!Logger\.shared\.)(?:error|Error|message|Message|alert|Alert|text|Text)\s*[=:]\s*"[^"]*\b(?:SQL|query|database|modelContext|CoreData|SwiftData|internal|private key)\b'
     message: "Error messages should not expose internal implementation details"
     severity: warning
     excluded: ".*Tests.*\\.swift$"

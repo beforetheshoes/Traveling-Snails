@@ -166,7 +166,8 @@ enum PermissionError: LocalizedError {
         case .temporarilyUnavailable:
             return "Permission service is temporarily unavailable"
         case .unknown(let error):
-            return "Unknown permission error: \(error.localizedDescription)"
+            Logger.shared.error("Unknown permission error: \(error.localizedDescription)", category: .app)
+            return L(L10n.Errors.permissionDenied)
         }
     }
 }

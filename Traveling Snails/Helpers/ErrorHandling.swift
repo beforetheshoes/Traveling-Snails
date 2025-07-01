@@ -240,11 +240,21 @@ private enum ErrorMessageFormatter {
 
 private enum ErrorAlertFactory {
     static func createAlert(for error: Error) -> ErrorAlert {
-        ErrorAlert(id: UUID(), message: error.localizedDescription)
+        // Log the technical details but show generic message to user
+        Logger.shared.error("Error alert created: \(error.localizedDescription)", category: .app)
+        
+        // Show generic user-friendly message
+        let userMessage = "An unexpected error occurred. Please try again."
+        return ErrorAlert(id: UUID(), message: userMessage)
     }
 
     static func createAlert(for error: AppError) -> ErrorAlert {
-        ErrorAlert(id: UUID(), message: error.localizedDescription)
+        // Log the technical details
+        Logger.shared.error("AppError alert created: \(error.localizedDescription)", category: error.category)
+        
+        // Use AppError's user-friendly message or fallback to generic
+        let userMessage = error.recoverySuggestion ?? "An error occurred. Please try again."
+        return ErrorAlert(id: UUID(), message: userMessage)
     }
 }
 

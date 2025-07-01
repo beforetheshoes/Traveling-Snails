@@ -80,7 +80,8 @@ struct ImprovedQuickLookView: View {
 
             isLoading = false
         } catch {
-            loadError = "Error accessing file: \(error.localizedDescription)"
+            Logger.shared.error("Error accessing file: \(error.localizedDescription)", category: .fileAttachment)
+            loadError = L(L10n.File.accessFailed)
         }
     }
 }
