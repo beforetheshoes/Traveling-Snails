@@ -196,6 +196,3 @@ struct ImportStatCard: View {
     }
 }
 
-extension Notification.Name {
-    static let importCompleted = Notification.Name("importCompleted")
-}

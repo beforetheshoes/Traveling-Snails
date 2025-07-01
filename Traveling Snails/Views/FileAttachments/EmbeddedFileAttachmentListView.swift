@@ -379,13 +379,6 @@ extension EmbeddedFileAttachment {
     }
 }
 
-// MARK: - Notification Names
-
-extension Notification.Name {
-    static let fileAttachmentAdded = Notification.Name("FileAttachmentAdded")
-    static let fileAttachmentRemoved = Notification.Name("FileAttachmentRemoved")
-    static let fileAttachmentUpdated = Notification.Name("FileAttachmentUpdated")
-}
 
 // MARK: - Preview
 

@@ -17,16 +17,25 @@ import UIKit
 // - NetworkStatus  
 // - SyncProgress
 
-// MARK: - Sync Notification Names
-extension Notification.Name {
-    static let syncDidStart = Notification.Name("SyncManagerDidStartSync")
-    static let syncDidComplete = Notification.Name("SyncManagerDidCompleteSync")
-    static let crossDeviceSyncDidStart = Notification.Name("SyncManagerCrossDeviceSyncDidStart")
-    static let crossDeviceSyncDidComplete = Notification.Name("SyncManagerCrossDeviceSyncDidComplete")
-}
 
 /// Enhanced SyncManager with comprehensive sync functionality
 /// Supports both singleton pattern (for app use) and direct initialization (for testing)
+/// 
+/// TODO: This file is 872 lines and violates CLAUDE.md guidelines (< 400 lines typically).
+/// 
+/// ARCHITECTURE NOTE: This is the legacy singleton-based SyncManager. A modern dependency injection-based
+/// ModernSyncManager (182 lines) exists that delegates to injected services, but the app still uses this
+/// legacy version in production. Consider completing the migration to ModernSyncManager which would:
+/// - Eliminate the 872-line file size violation
+/// - Improve testability through dependency injection
+/// - Follow modern architecture patterns
+/// - Reduce complexity by delegating to focused services
+/// 
+/// Alternative: Split this legacy implementation into focused components:
+/// - SyncManager (core orchestration) 
+/// - SyncConflictResolver (conflict resolution logic)
+/// - CrossDeviceSyncSimulator (test-only cross-device simulation)
+/// - SyncRetryHandler (retry logic and exponential backoff)
 @Observable
 class SyncManager {
     // MARK: - Singleton for App Use
@@ -101,13 +110,20 @@ class SyncManager {
         self.modelContainer = modelContainer
         startMonitoringRemoteChanges()
     }
+    
+    // MARK: - Cleanup
+    
+    deinit {
+        // Remove NotificationCenter observers to prevent memory leaks
+        NotificationCenter.default.removeObserver(self)
+    }
 
     // MARK: - Remote Change Monitoring
 
     private func startMonitoringRemoteChanges() {
         // Skip CloudKit monitoring during tests to prevent hanging
         #if DEBUG
-        let isRunningTests = UserDefaults.standard.bool(forKey: "isRunningTests") ||
+        let isRunningTests = UserDefaults.standard.bool(forKey: UserDefaultsConstants.isRunningTests) ||
                            NSClassFromString("XCTestCase") != nil ||
                            ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
         if isRunningTests {
@@ -120,7 +136,7 @@ class SyncManager {
         #if DEBUG
         Logger.secure(category: .sync).debug("SyncManager: Setting up CloudKit monitoring")
         #endif
-        Logger.secure(category: .sync).info("Setting up CloudKit monitoring on \(deviceType, privacy: .public) - \(self.deviceIdentifier, privacy: .public)")
+        Logger.secure(category: .sync).info("Setting up CloudKit monitoring on \(deviceType, privacy: .public) - \(self.deviceIdentifier, privacy: .private)")
 
         // Monitor CloudKit remote changes - SwiftData uses NSPersistentCloudKitContainer under the hood
         NotificationCenter.default.addObserver(
@@ -146,7 +162,7 @@ class SyncManager {
     @objc private func remoteStoreDidChange(notification: NSNotification) {
         // Skip CloudKit operations during tests
         #if DEBUG
-        let isRunningTests = UserDefaults.standard.bool(forKey: "isRunningTests") ||
+        let isRunningTests = UserDefaults.standard.bool(forKey: UserDefaultsConstants.isRunningTests) ||
                            NSClassFromString("XCTestCase") != nil ||
                            ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
         if isRunningTests {
@@ -154,14 +170,14 @@ class SyncManager {
         }
         #endif
 
-        Logger.secure(category: .sync).info("🔄 Remote store change detected on device: \(self.deviceIdentifier, privacy: .public)")
+        Logger.secure(category: .sync).info("🔄 Remote store change detected on device: \(self.deviceIdentifier, privacy: .private)")
         #if DEBUG
         Logger.secure(category: .sync).debug("SyncManager: Remote store change detected")
         #endif
 
         // Extract change information from notification
-        if let changeToken = notification.userInfo?[NSPersistentHistoryTokenKey] as? NSPersistentHistoryToken {
-            Logger.secure(category: .sync).info("Processing remote changes with token: \(changeToken, privacy: .public)")
+        if notification.userInfo?[NSPersistentHistoryTokenKey] as? NSPersistentHistoryToken != nil {
+            Logger.secure(category: .sync).info("Processing remote changes with change token")
             #if DEBUG
             Logger.secure(category: .sync).debug("SyncManager: Processing remote changes with change token")
             #endif
@@ -189,7 +205,7 @@ class SyncManager {
     @objc private func cloudKitAccountChanged(notification: NSNotification) {
         // Skip CloudKit operations during tests
         #if DEBUG
-        let isRunningTests = UserDefaults.standard.bool(forKey: "isRunningTests") ||
+        let isRunningTests = UserDefaults.standard.bool(forKey: UserDefaultsConstants.isRunningTests) ||
                            NSClassFromString("XCTestCase") != nil ||
                            ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
         if isRunningTests {
@@ -210,7 +226,7 @@ class SyncManager {
         #if DEBUG
         Logger.secure(category: .sync).debug("SyncManager: triggerSync() called")
         #endif
-        Logger.secure(category: .sync).info("Sync triggered on \(deviceType, privacy: .public) - \(self.deviceIdentifier, privacy: .public)")
+        Logger.secure(category: .sync).info("Sync triggered on \(deviceType, privacy: .public) - \(self.deviceIdentifier, privacy: .private)")
 
         Task {
             await performSync()
@@ -394,18 +410,23 @@ class SyncManager {
         var currentAttempt = 0
         let startTime = Date()
 
-        while currentAttempt < syncConfig.maxAttempts {
-            if retryAttempts > 0 {
-                // Simulate network interruption for testing
-                retryAttempts -= 1
-                currentAttempt += 1
+        // First handle simulated network interruptions for testing
+        while retryAttempts > 0 {
+            retryAttempts -= 1
 
-                // Use configured delay
-                let delay = syncConfig.delay(for: currentAttempt)
-                Logger.secure(category: .sync).info("Network interruption, retrying in \(delay, privacy: .public)s (attempt \(currentAttempt, privacy: .public))")
+            // Use configured delay for simulated interruption
+            let delay = syncConfig.delay(for: currentAttempt + 1)
+            Logger.secure(category: .sync).info("Network interruption, retrying in \(delay, privacy: .public)s (attempt \(currentAttempt + 1, privacy: .public))")
 
-                try? await Task.sleep(for: .seconds(delay))
-                continue
+            try? await Task.sleep(for: .seconds(delay))
+        }
+
+        // Now perform actual sync attempts with real error handling
+        // Always allow at least one sync attempt, regardless of simulated interruptions
+        repeat {
+            // Clear any previous sync error before attempting sync
+            await MainActor.run {
+                syncError = nil
             }
 
             // Actual sync attempt
@@ -418,21 +439,27 @@ class SyncManager {
                 return
             }
 
-            // Handle specific error types
+            // Handle specific error types for real errors (not simulated ones)
             if let error = syncError as? SyncError {
                 switch error {
                 case .networkUnavailable:
                     currentAttempt += 1
+                    if currentAttempt >= syncConfig.maxAttempts {
+                        break
+                    }
                     let delay = syncConfig.delay(for: currentAttempt)
                     Logger.secure(category: .sync).warning("Network unavailable, retrying in \(delay, privacy: .public)s")
                     try? await Task.sleep(for: .seconds(delay))
                 case .cloudKitQuotaExceeded:
+                    currentAttempt += 1
+                    if currentAttempt >= syncConfig.maxAttempts {
+                        break
+                    }
                     // Use quota-specific configuration
                     let quotaConfig = AppConfiguration.quotaExceededRetry
                     let delay = quotaConfig.delay(for: currentAttempt)
                     Logger.secure(category: .sync).warning("CloudKit quota exceeded, waiting \(delay, privacy: .public)s")
                     try? await Task.sleep(for: .seconds(delay))
-                    currentAttempt += 1
                 default:
                     Logger.secure(category: .sync).error("Sync failed with unrecoverable error: \(error.localizedDescription, privacy: .public)")
                     return
@@ -440,12 +467,12 @@ class SyncManager {
             } else {
                 currentAttempt += 1
             }
-        }
+        } while currentAttempt < syncConfig.maxAttempts
 
         await MainActor.run {
             syncError = SyncError.networkUnavailable
         }
-        Logger.secure(category: .sync).error("Sync failed after \(syncConfig.maxAttempts, privacy: .public) attempts")
+        Logger.secure(category: .sync).error("Sync failed after \(self.syncConfig.maxAttempts, privacy: .public) attempts")
     }
 
     // MARK: - Private Helper Methods
@@ -465,8 +492,8 @@ class SyncManager {
 
         if let notification = notification {
             // Process specific changes from the notification
-            if let userInfo = notification.userInfo {
-                Logger.secure(category: .sync).info("Remote change details: \(userInfo, privacy: .public)")
+            if notification.userInfo != nil {
+                Logger.secure(category: .sync).info("Remote change notification received with user info")
                 #if DEBUG
                 Logger.secure(category: .sync).debug("SyncManager: Remote change userInfo processed")
                 #endif
@@ -514,7 +541,7 @@ class SyncManager {
     private func waitForCloudKitSync() async {
         // Wait for CloudKit to process the save operation
         // In real implementation, this could monitor CloudKit sync progress
-        try? await Task.sleep(for: .milliseconds(200))
+        try? await Task.sleep(for: .milliseconds(UIConstants.Timing.cloudKitProcessingDelayMilliseconds))
     }
 
     @MainActor
@@ -583,9 +610,9 @@ class SyncManager {
             }
 
             // Resolve conflicts using last-writer-wins policy
-            for (tripId, conflictingTrips) in tripGroups {
+            for (_, conflictingTrips) in tripGroups {
                 if conflictingTrips.count > 1 {
-                    Logger.secure(category: .sync).info("Resolving conflict for trip ID: \(tripId, privacy: .public)")
+                    Logger.secure(category: .sync).info("Resolving conflict for trip")
 
                     // Sort by modification date to find the latest
                     let sortedTrips = conflictingTrips.sorted { trip1, trip2 in
@@ -596,14 +623,14 @@ class SyncManager {
                     }
 
                     // Keep the most recent version
-                    let winningTrip = sortedTrips.first!
+                    _ = sortedTrips.first!
 
                     // Remove the older versions
                     for i in 1..<sortedTrips.count {
                         modelContainer.mainContext.delete(sortedTrips[i])
                     }
                     
-                    Logger.secure(category: .sync).info("Kept trip (ID: \(winningTrip.id, privacy: .public)) as conflict resolution winner")
+                    Logger.secure(category: .sync).info("Kept trip as conflict resolution winner")
                 }
             }
 
@@ -661,7 +688,7 @@ class SyncManager {
     private func simulateCrossDeviceSync() async {
         // Prevent infinite recursion - check if already syncing from this device
         if isCrossDeviceSyncing || SyncManager.activeCrossDeviceSyncs.contains(deviceIdentifier) {
-            Logger.secure(category: .sync).info("Skipping cross-device sync - already in progress for device \(self.deviceIdentifier, privacy: .public)")
+            Logger.secure(category: .sync).info("Skipping cross-device sync - already in progress for device \(self.deviceIdentifier, privacy: .private)")
             return
         }
 
@@ -681,9 +708,9 @@ class SyncManager {
             SyncManager.crossDeviceTestData.removeAll { cloudTrip in
                 let shouldRemove = !localTripIds.contains(cloudTrip.id)
                 if shouldRemove {
-                    Logger.secure(category: .sync).info("Removing deleted trip (ID: \(cloudTrip.id, privacy: .public)) from cloud test data")
+                    Logger.secure(category: .sync).info("Removing deleted trip from cloud test data")
                     #if DEBUG
-                    Logger.secure(category: .sync).debug("SyncManager: Removing deleted trip (ID: \(cloudTrip.id, privacy: .public)) from cloud data")
+                    Logger.secure(category: .sync).debug("SyncManager: Removing deleted trip from cloud data")
                     #endif
                 }
                 return shouldRemove
@@ -712,7 +739,7 @@ class SyncManager {
                         existingCloudTrip.startDate = trip.startDate
                         existingCloudTrip.endDate = trip.endDate
                         
-                        Logger.secure(category: .sync).info("Updated trip (ID: \(trip.id, privacy: .public)) in cloud with merged changes")
+                        Logger.secure(category: .sync).info("Updated trip in cloud with merged changes")
                     } else {
                         // Create a copy for cross-device storage
                         let cloudTrip = Trip(name: trip.name, isProtected: trip.isProtected)
@@ -721,7 +748,7 @@ class SyncManager {
                         cloudTrip.startDate = trip.startDate
                         cloudTrip.endDate = trip.endDate
                         SyncManager.crossDeviceTestData.append(cloudTrip)
-                        Logger.secure(category: .sync).info("Uploaded trip (ID: \(trip.id, privacy: .public)) to cloud")
+                        Logger.secure(category: .sync).info("Uploaded trip to cloud")
                     }
                 }
             }
@@ -743,7 +770,7 @@ class SyncManager {
                             existingLocalTrip.notes = existingLocalTrip.notes + "\n" + cloudTrip.notes
                         }
                         
-                        Logger.secure(category: .sync).info("Merged cloud changes into local trip (ID: \(existingLocalTrip.id, privacy: .public))")
+                        Logger.secure(category: .sync).info("Merged cloud changes into local trip")
                     } else {
                         // Create local copy for new trip
                         let localTrip = Trip(name: cloudTrip.name, isProtected: cloudTrip.isProtected)
@@ -752,7 +779,7 @@ class SyncManager {
                         localTrip.startDate = cloudTrip.startDate
                         localTrip.endDate = cloudTrip.endDate
                         modelContainer.mainContext.insert(localTrip)
-                        Logger.secure(category: .sync).info("Downloaded trip (ID: \(cloudTrip.id, privacy: .public)) from cloud")
+                        Logger.secure(category: .sync).info("Downloaded trip from cloud")
                     }
                 }
             }
@@ -793,7 +820,7 @@ class SyncManager {
             for otherSyncManager in devicesToNotify {
                 // Schedule async sync with significant delay for controlled propagation
                 Task {
-                    try? await Task.sleep(nanoseconds: 200_000_000) // 200ms delay
+                    try? await Task.sleep(nanoseconds: UIConstants.Timing.crossDeviceSyncDelayNanoseconds)
                     await otherSyncManager.simulateCrossDeviceSync()
                 }
             }
