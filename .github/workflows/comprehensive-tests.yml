@@ -55,36 +55,43 @@ jobs:
           echo "🔍 Scanning for potential security issues..."
           SECURITY_ISSUES=0
           
-          # Enhanced patterns for better detection
+          # Enhanced patterns for better detection with iOS-specific exclusions
           echo "Checking for hardcoded credentials..."
+          # Exclude legitimate iOS constants and mock service keys
           if grep -r -E "(password|secret|key|token|api_key|auth_token)\s*[:=]\s*['\"][^'\"]{8,}['\"]" \
              --include="*.swift" \
              --exclude-dir=".git" \
              --exclude-dir=".build" \
              --exclude-dir="Traveling Snails Tests" \
-             . 2>/dev/null || true; then
+             --exclude-dir="Mock" \
+             . 2>/dev/null | \
+             grep -v -E "(photoLibrary|microphone|camera|location|test|mock|example|demo|NSUbiquitous|PHPhoto|NSLocation|Bundle\.main)" 2>/dev/null; then
             echo "⚠️  Potential hardcoded credentials found"
             SECURITY_ISSUES=$((SECURITY_ISSUES + 1))
           fi
           
           echo "Checking for base64 encoded secrets..."
+          # Exclude known iOS system constants and legitimate long strings
           if grep -r -E "[A-Za-z0-9+/]{40,}={0,2}" \
              --include="*.swift" \
              --exclude-dir=".git" \
              --exclude-dir=".build" \
              --exclude-dir="Traveling Snails Tests" \
-             . 2>/dev/null | grep -v "example\|test\|demo" || true; then
+             . 2>/dev/null | \
+             grep -v -E "(example|test|demo|mock|NSUbiquitous|PHPhoto|Bundle\.main|forInfoDictionaryKey|mediaTypesRequiring)" 2>/dev/null; then
             echo "⚠️  Potential base64 encoded data found"
             SECURITY_ISSUES=$((SECURITY_ISSUES + 1))
           fi
           
           echo "Checking for environment variable leaks..."
+          # More specific pattern to avoid false positives with iOS APIs
           if grep -r -E "process\.env\[|getenv\(|ENV\[" \
              --include="*.swift" \
              --exclude-dir=".git" \
              --exclude-dir=".build" \
              --exclude-dir="Traveling Snails Tests" \
-             . 2>/dev/null | grep -v "test\|example" || true; then
+             . 2>/dev/null | \
+             grep -v -E "(test|example|mock|forInfoDictionaryKey|Bundle\.main)" 2>/dev/null; then
             echo "⚠️  Potential environment variable access found"
             SECURITY_ISSUES=$((SECURITY_ISSUES + 1))
           fi
@@ -164,7 +171,7 @@ jobs:
               xcodebuild test \
                 -project "Traveling Snails.xcodeproj" \
                 -scheme "Traveling Snails" \
-                -destination "platform=iOS Simulator,name=iPhone 15" \
+                -destination "platform=iOS Simulator,name=iPhone 16" \
                 -only-testing:"Traveling Snails Tests/SwiftData Tests" | xcbeautify
               ;;
           esac
@@ -211,7 +218,7 @@ jobs:
           xcodebuild build \
             -project "Traveling Snails.xcodeproj" \
             -scheme "Traveling Snails" \
-            -destination "platform=iOS Simulator,name=iPhone 15" | xcbeautify
+            -destination "platform=iOS Simulator,name=iPhone 16" | xcbeautify
 
   # Enhanced SwiftLint analysis (consolidated with better error handling)
   enhanced-linting:
