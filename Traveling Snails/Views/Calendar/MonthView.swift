@@ -39,7 +39,7 @@ struct MonthView: View {
                             activities: activitiesForDate(date),
                             isCurrentMonth: calendar.isDate(date, equalTo: currentDisplayDate, toGranularity: .month),
                             isToday: calendar.isDateInToday(date)
-                        )                            { onDayTap(date) }
+                        ) { onDayTap(date) }
                         .frame(minHeight: 90, maxHeight: 120)
                         .clipped()
                     } else {

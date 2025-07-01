@@ -64,7 +64,7 @@ struct ActivitySubmitButton: View {
             isSaving: false,
             color: .blue,
             saveError: nil
-        )            {}
+        ) {}
 
         ActivitySubmitButton(
             title: "Save Lodging",
@@ -72,7 +72,7 @@ struct ActivitySubmitButton: View {
             isSaving: false,
             color: .green,
             saveError: nil
-        )            {}
+        ) {}
 
         ActivitySubmitButton(
             title: "Save Transportation",
@@ -80,7 +80,7 @@ struct ActivitySubmitButton: View {
             isSaving: true,
             color: .orange,
             saveError: nil
-        )            {}
+        ) {}
 
         ActivitySubmitButton(
             title: "Save Activity",
@@ -88,7 +88,7 @@ struct ActivitySubmitButton: View {
             isSaving: false,
             color: .blue,
             saveError: NSError(domain: "Test", code: 1, userInfo: [NSLocalizedDescriptionKey: "Test error message"])
-        )            {}
+        ) {}
     }
     .padding()
 }

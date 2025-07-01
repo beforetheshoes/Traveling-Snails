@@ -9,7 +9,7 @@ struct ReactiveIconTests {
     @Test("View model currentIcon updates immediately when transportation type changes")
     func viewModelCurrentIconUpdatesImmediately() {
         let testBase = SwiftDataTestBase()
-        
+
         // Create test trip and organization
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
         let org = Organization(name: "Test Org")
@@ -55,7 +55,7 @@ struct ReactiveIconTests {
     @Test("Non-transportation activities use static icon")
     func nonTransportationActivitiesUseStaticIcon() {
         let testBase = SwiftDataTestBase()
-        
+
         // Create test trip
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
         testBase.modelContext.insert(trip)
@@ -85,7 +85,7 @@ struct ReactiveIconTests {
     @Test("Edit mode preserves existing transportation icon")
     func editModePreservesExistingTransportationIcon() {
         let testBase = SwiftDataTestBase()
-        
+
         // Create test trip and organization
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
         let org = Organization(name: "Test Org")
@@ -136,7 +136,7 @@ struct ReactiveIconTests {
     @Test("Edit mode works with different transportation types")
     func editModeWorksWithDifferentTransportationTypes() {
         let testBase = SwiftDataTestBase()
-        
+
         // Create test trip and organization
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
         let org = Organization(name: "Test Org")

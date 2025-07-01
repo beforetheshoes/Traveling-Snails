@@ -92,6 +92,8 @@ final class LocalizationManager {
             return "Delete"
         case "general.untitled":
             return "Untitled"
+        case "errors.network_offline_label":
+            return "No internet connection"
         default:
             return nil
         }
@@ -321,6 +323,7 @@ enum L10n {
         static let title = "errors.title"
         static let unknown = "errors.unknown"
         static let networkUnavailable = "errors.network_unavailable"
+        static let networkOfflineLabel = "errors.network_offline_label"
         static let databaseError = "errors.database_error"
         static let fileError = "errors.file_error"
         static let validationError = "errors.validation_error"

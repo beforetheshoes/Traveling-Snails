@@ -95,7 +95,7 @@ struct ActivityFormButton: View {
         ActivityFormButton(
             label: "Organization",
             value: "Select Organization"
-        )            {}
+        ) {}
     }
     .padding()
 }

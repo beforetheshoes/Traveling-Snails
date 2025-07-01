@@ -119,13 +119,13 @@ struct IsolatedTripDetailView: View {
                     Logger.shared.debug("Fresh selection or first appearance - skipping navigation restoration", category: .ui)
                     #endif
                 }
-                
+
                 #if DEBUG
                 Logger.shared.debug("IsolatedTripDetailView.onAppear - COMPLETED for trip ID \(trip.id)", category: .ui)
                 #endif
             }
         }
-        .onChange(of: trip.id) { _, newTripID in
+        .onChange(of: trip.id) { _, _ in
             #if DEBUG
             Logger.shared.debug("IsolatedTripDetailView.onChange(of: trip.id) - Trip changed to ID \(trip.id)", category: .ui)
             #endif
@@ -160,7 +160,7 @@ struct IsolatedTripDetailView: View {
             handleEnvironmentBasedTripSelection(newValue)
         }
     }
-    
+
     /// Handle environment-based trip selection with clear navigation path coordination
     /// This method encapsulates the complex logic for coordinating navigation state between
     /// the environment router and local navigation path
@@ -170,7 +170,7 @@ struct IsolatedTripDetailView: View {
               navigationRouter.shouldClearNavigationPath else {
             return
         }
-        
+
         // Clear navigation path to return to trip root when selected from list
         let previousCount = navigationPath.count
         if previousCount > 0 {
@@ -179,7 +179,7 @@ struct IsolatedTripDetailView: View {
             Logger.shared.debug("Environment-based trip selection - cleared navigation path (was \(previousCount) deep)", category: .ui)
             #endif
         }
-        
+
         // Acknowledge that we've cleared the navigation path
         navigationRouter.acknowledgeNavigationPathClear()
     }
@@ -500,16 +500,16 @@ struct IsolatedTripDetailView: View {
         #if DEBUG
         Logger.shared.debug("Updating view state for trip ID: \(trip.id)", category: .ui)
         #endif
-        
+
         let authManager = BiometricAuthManager.shared
-        
+
         isLocallyAuthenticated = authManager.isAuthenticated(for: trip)
         isTripProtected = authManager.isProtected(trip)
         needsAuthentication = isTripProtected && !isLocallyAuthenticated
         canUseBiometrics = authManager.canUseBiometrics()
         biometricAuthEnabled = authManager.isEnabled
         isFaceID = authManager.biometricType == .faceID
-        
+
         #if DEBUG
         Logger.shared.debug("View state updated, updating cached activities", category: .ui)
         #endif
@@ -524,7 +524,7 @@ struct IsolatedTripDetailView: View {
 
         cachedActivities = (lodgingActivities + transportationActivities + activityActivities)
             .sorted { $0.tripActivity.start < $1.tripActivity.start }
-        
+
         #if DEBUG
         Logger.shared.debug("Updated cachedActivities for trip ID \(trip.id): \(cachedActivities.count) activities", category: .ui)
         #endif
@@ -538,7 +538,7 @@ struct IsolatedTripDetailView: View {
         if let encoded = try? JSONEncoder().encode(activityData) {
             UserDefaults.standard.set(encoded, forKey: "activityNavigation_\(trip.id)")
         }
-        
+
         #if DEBUG
         Logger.shared.debug("Saved activity navigation state", category: .navigation)
         #endif

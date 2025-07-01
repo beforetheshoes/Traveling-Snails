@@ -82,7 +82,7 @@ struct UniversalAddActivityFormContent: View {
                 ActivityFormButton(
                     label: "Organization",
                     value: viewModel.editData.organization?.name ?? "Select Organization"
-                )                    { viewModel.showingOrganizationPicker = true }
+                ) { viewModel.showingOrganizationPicker = true }
 
                 if viewModel.supportsCustomLocation {
                     if viewModel.editData.organization?.isNone == true {
@@ -286,7 +286,7 @@ struct UniversalAddActivityFormContent: View {
             isSaving: viewModel.isSaving,
             color: colorFromString(viewModel.color),
             saveError: viewModel.saveError
-        )            {
+        ) {
                 Task { @MainActor in
                     do {
                         try await viewModel.save()
@@ -295,7 +295,7 @@ struct UniversalAddActivityFormContent: View {
                         // Error is stored in viewModel.saveError
                     }
                 }
-            }
+        }
     }
 
     // Helper function to convert color strings to SwiftUI Colors

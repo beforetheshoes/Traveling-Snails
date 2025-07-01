@@ -12,7 +12,7 @@ struct DataBrowserIssueDetailsTests {
     @Test("getDetailedItems returns correct format for blank entries")
     func getDetailedItemsFormatForBlankEntries() {
         let testBase = SwiftDataTestBase()
-        
+
         // Create test diagnostic results with blank entries
         var results = DataBrowserView.DiagnosticResults()
 
@@ -111,7 +111,7 @@ struct DataBrowserIssueDetailsTests {
     @Test("Issue description generation works correctly")
     func issueDescriptionGenerationWorksCorrectly() {
         let testBase = SwiftDataTestBase()
-        
+
         // Create test data
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
         testBase.modelContext.insert(trip)
@@ -141,7 +141,7 @@ struct DataBrowserIssueDetailsTests {
     @Test("DataBrowserIssuesTab should show expandable details")
     func dataBrowserIssuesTabShouldShowExpandableDetails() {
         let testBase = SwiftDataTestBase()
-        
+
         // This test documents the requirement for the UI enhancement
         // The DataBrowserIssuesTab currently only shows:
         // - Issue type name
@@ -178,7 +178,7 @@ struct DataBrowserIssueDetailsTests {
     @Test("UI should handle large lists with truncation")
     func uiShouldHandleLargeListsWithTruncation() {
         let testBase = SwiftDataTestBase()
-        
+
         // Test the truncation pattern used in AllIssuesFixerContent
         // Shows first 10 items + "... and X more" pattern
 

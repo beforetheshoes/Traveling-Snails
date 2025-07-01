@@ -91,7 +91,7 @@ class EmbeddedFileAttachmentManager {
             #if DEBUG
             Logger.shared.debug("File attachment created - Extension: \(attachment.fileExtension), Size: \(attachment.fileSize) bytes", category: .fileAttachment)
             #endif
-            
+
             return .success(attachment)
         } catch {
             Logger.shared.error("Failed to read file data", category: .fileAttachment)

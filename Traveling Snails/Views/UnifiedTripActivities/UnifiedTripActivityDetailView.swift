@@ -206,7 +206,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
         #if DEBUG
         Logger.shared.debug("Activity edit data updated", category: .ui)
         #endif
-        
+
         // Update the activity with the edit data
         updateActivityFromEditData()
 

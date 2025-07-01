@@ -103,9 +103,9 @@ struct UnifiedFilePicker: View {
         .permissionEducationAlert(
             isPresented: $showingPermissionAlert,
             permissionType: .photoLibrary
-        )            {
+        ) {
                 permissionManager.openAppSettings()
-            }
+        }
     }
 
     // MARK: - Permission Handling

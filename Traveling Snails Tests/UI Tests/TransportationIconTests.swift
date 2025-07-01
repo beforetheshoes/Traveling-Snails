@@ -9,7 +9,7 @@ struct TransportationIconTests {
     @Test("Transportation activities show specific type icons in ActivityRowView")
     func transportationActivitiesShowSpecificTypeIcons() {
         let testBase = SwiftDataTestBase()
-        
+
         // Create test trip and organization
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
         let org = Organization(name: "Test Org")
@@ -53,7 +53,7 @@ struct TransportationIconTests {
     @Test("ActivityWrapper preserves specific transportation icons vs generic type icons")
     func activityWrapperPreservesSpecificTransportationIcons() {
         let testBase = SwiftDataTestBase()
-        
+
         // Create test trip and organization
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
         let org = Organization(name: "Test Org")
@@ -86,7 +86,7 @@ struct TransportationIconTests {
     @Test("Non-transportation activities continue using generic type icons")
     func nonTransportationActivitiesUseGenericTypeIcons() {
         let testBase = SwiftDataTestBase()
-        
+
         // Create test trip and organization
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
         let org = Organization(name: "Test Org")
@@ -129,7 +129,7 @@ struct TransportationIconTests {
     @Test("Transportation type changes reflect in icon property")
     func transportationTypeChangesReflectInIcon() {
         let testBase = SwiftDataTestBase()
-        
+
         // Create test trip and organization
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date().addingTimeInterval(86_400))
         let org = Organization(name: "Test Org")

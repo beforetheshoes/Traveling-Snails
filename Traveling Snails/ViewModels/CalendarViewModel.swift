@@ -96,21 +96,21 @@ class CalendarViewModel {
         eventHandler.handleDayTap(
             date: date,
             activities: allActivities
-        )            { [weak self] newDate, activities in
+        ) { [weak self] newDate, activities in
                 self?.selectedDate = newDate
                 self?.selectedDayActivities = activities
                 self?.showingDayDetail = true
-            }
+        }
     }
 
     func handleLongPress(at point: CGPoint, time: Date) {
         eventHandler.handleLongPress(
             at: point,
             time: time
-        )            { [weak self] pendingData in
+        ) { [weak self] pendingData in
                 self?.pendingActivityData = pendingData
                 self?.showingActivityTypeSelector = true
-            }
+        }
     }
 
     func handleActivityTap(_ activity: any TripActivityProtocol) {
@@ -122,12 +122,12 @@ class CalendarViewModel {
         eventHandler.handleDragStart(
             at: point,
             time: time
-        )            { [weak self] dragState in
+        ) { [weak self] dragState in
                 self?.dragStartTime = dragState.startTime
                 self?.isDragging = dragState.isDragging
                 self?.showingDragPreview = dragState.showingPreview
                 self?.dragPreviewFrame = dragState.previewFrame
-            }
+        }
     }
 
     func handleDragUpdate(to point: CGPoint, time: Date) {
@@ -138,10 +138,10 @@ class CalendarViewModel {
             time: time,
             startTime: startTime,
             currentFrame: dragPreviewFrame
-        )            { [weak self] newFrame in
+        ) { [weak self] newFrame in
                 self?.dragEndTime = time
                 self?.dragPreviewFrame = newFrame
-            }
+        }
     }
 
     func handleDragEnd(at point: CGPoint, time: Date) {
@@ -151,7 +151,7 @@ class CalendarViewModel {
             at: point,
             time: time,
             startTime: startTime
-        )            { [weak self] pendingData in
+        ) { [weak self] pendingData in
                 self?.isDragging = false
                 self?.showingDragPreview = false
                 self?.dragStartTime = nil
@@ -161,7 +161,7 @@ class CalendarViewModel {
                     self?.pendingActivityData = pendingData
                     self?.showingActivityTypeSelector = true
                 }
-            }
+        }
     }
 
     func createQuickActivity() {

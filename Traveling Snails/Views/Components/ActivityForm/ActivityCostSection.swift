@@ -52,7 +52,7 @@ struct ActivityCostSection<T: TripActivityProtocol>: View {
                     .foregroundColor(.secondary)
 
                 CurrencyTextField(value: $editData.cost, color: color)
-                    .onChange(of: editData.cost) { _, newValue in
+                    .onChange(of: editData.cost) { _, _ in
                         #if DEBUG
                         Logger.shared.debug("Cost field updated", category: .ui)
                         #endif

@@ -211,7 +211,7 @@ struct UnifiedNavigationViewRefactoringTests {
             _ = NavigationRowView(
                 item: item,
                 isSelected: false
-            )                { }
+            ) { }
 
             // Should be able to create row view with item data
             #expect(item.displayName == "Test Item")

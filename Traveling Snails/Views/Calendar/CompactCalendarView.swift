@@ -215,9 +215,9 @@ struct CompactCalendarView: View {
                 CompactFullDayEventBar(
                     wrapper: wrapper,
                     visibleDates: visibleDateRange
-                )                    {
+                ) {
                         onActivityTap(wrapper.tripActivity)
-                    }
+                }
             }
         }
         .padding(.horizontal)

@@ -170,7 +170,13 @@ final class MockSyncService: SyncService, Sendable {
                 _mockSyncError = nil
             }
         } else {
-            lock.withLock { _mockSyncError = SyncError.networkUnavailable }
+            // Use the configured error if one was set, otherwise default to networkUnavailable
+            lock.withLock {
+                if _mockSyncError == nil {
+                    _mockSyncError = SyncError.networkUnavailable
+                }
+                // Otherwise keep the configured error
+            }
         }
     }
 
@@ -234,7 +240,13 @@ final class MockSyncService: SyncService, Sendable {
                 _mockSyncError = nil
             }
         } else {
-            lock.withLock { _mockSyncError = SyncError.networkUnavailable }
+            // Use the configured error if one was set, otherwise default to networkUnavailable
+            lock.withLock {
+                if _mockSyncError == nil {
+                    _mockSyncError = SyncError.networkUnavailable
+                }
+                // Otherwise keep the configured error
+            }
         }
 
         return finalProgress

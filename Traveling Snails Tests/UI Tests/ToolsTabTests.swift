@@ -41,7 +41,7 @@ struct ToolsTabTests {
 
         // Act - Test the ToolsTab reset functionality by directly calling the reset logic
         var dataChangedCallbackCalled = false
-        
+
         // Simulate the actual reset operation that ToolsTab.resetAllData() performs
         await simulateProperResetAllData(context: context) {
             dataChangedCallbackCalled = true
@@ -59,7 +59,7 @@ struct ToolsTabTests {
         // Organizations should only contain "None" organization after reset
         let nonNoneOrgs = orgsAfterReset.filter { !$0.isNone }
         #expect(nonNoneOrgs.count == 0, "All non-None organizations should be deleted after reset")
-        
+
         // Verify callback was called during reset process
         #expect(dataChangedCallbackCalled, "Data change callback should be triggered during reset")
     }
@@ -127,7 +127,7 @@ private func simulateProperResetAllData(context: ModelContext, onDataChanged: @e
         }
 
         try context.save()
-        
+
         // Call the callback like the actual ToolsTab implementation does
         onDataChanged()
     } catch {

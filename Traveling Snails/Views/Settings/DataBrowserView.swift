@@ -138,7 +138,7 @@ struct DataBrowserView: View {
                     results: diagnosticResults,
                     isRunning: isRunning,
                     onRunDiagnostic: runComprehensiveDiagnostic
-                )                    { showingFixOptions = true }
+                ) { showingFixOptions = true }
                 .tabItem {
                     Label("Overview", systemImage: "chart.pie")
                 }
@@ -185,11 +185,11 @@ struct DataBrowserView: View {
                     results: diagnosticResults,
                     selectedIssue: selectedIssue,
                     modelContext: modelContext
-                )                    {
+                ) {
                         showingFixOptions = false
                         selectedIssue = nil
                         Task { await runComprehensiveDiagnostic() }
-                    }
+                }
             }
         }
         .onAppear {
@@ -637,13 +637,13 @@ struct DataBrowserIssueFixerSheet: View {
                         results: results,
                         isFixing: isFixing,
                         fixResults: fixResults
-                    )                        { await fixIssue(issue) }
+                    ) { await fixIssue(issue) }
                 } else {
                     AllIssuesFixerContent(
                         results: results,
                         isFixing: isFixing,
                         fixResults: fixResults
-                    )                        { await fixAllIssues() }
+                    ) { await fixAllIssues() }
                 }
             }
             .navigationTitle(selectedIssue?.rawValue ?? "Fix All Issues")

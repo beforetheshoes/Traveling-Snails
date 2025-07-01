@@ -32,7 +32,7 @@ struct RealInfiniteRecreationTest {
             var body: some View {
                 // Track every body computation
                 bodyCallTracker()
-                
+
                 return VStack {
                     Text("Trip: \(trip.name)")
                     Text("Activities: \(trip.totalActivities)")
@@ -125,7 +125,7 @@ struct RealInfiniteRecreationTest {
             var body: some View {
                 // Track every body computation
                 bodyCallTracker()
-                
+
                 return VStack {
                     Text("Trip: \(trip.name)")
                     Text("Activities: \(cachedActivityCount)") // Use cached value

@@ -126,7 +126,7 @@ struct ActivityDetailsSection<T: TripActivityProtocol>: View {
                             icon: "phone.fill",
                             label: "Phone",
                             value: organization.phone
-                        )                            { callPhone(organization.phone) }
+                        ) { callPhone(organization.phone) }
                     }
 
                     if organization.hasEmail {
@@ -134,7 +134,7 @@ struct ActivityDetailsSection<T: TripActivityProtocol>: View {
                             icon: "envelope.fill",
                             label: "Email",
                             value: organization.email
-                        )                            { sendEmail(organization.email) }
+                        ) { sendEmail(organization.email) }
                     }
 
                     if organization.hasWebsite {
@@ -142,7 +142,7 @@ struct ActivityDetailsSection<T: TripActivityProtocol>: View {
                             icon: "globe",
                             label: "Website",
                             value: organization.website
-                        )                            { openWebsite(organization.website) }
+                        ) { openWebsite(organization.website) }
                     }
                 }
             }

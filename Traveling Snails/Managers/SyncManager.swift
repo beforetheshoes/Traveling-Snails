@@ -57,7 +57,7 @@ class SyncManager {
     private var modelContainer: ModelContainer
     private var syncQueue = DispatchQueue(label: "com.travelingsnails.sync", qos: .utility)
     private var retryAttempts: Int = 0
-    private let maxRetryAttempts: Int = 3
+    private let syncConfig = AppConfiguration.syncRetry
 
     // MARK: - Test Completion Handlers
     /// Completion handler called when sync completes (for testing)
@@ -137,7 +137,7 @@ class SyncManager {
             name: NSNotification.Name.CKAccountChanged,
             object: nil
         )
-        
+
         #if DEBUG
         Logger.shared.debug("SyncManager: CloudKit monitoring setup complete", category: .sync)
         #endif
@@ -158,7 +158,7 @@ class SyncManager {
         #if DEBUG
         Logger.shared.debug("SyncManager: Remote store change detected", category: .sync)
         #endif
-        
+
         // Extract change information from notification
         if let changeToken = notification.userInfo?[NSPersistentHistoryTokenKey] as? NSPersistentHistoryToken {
             Logger.shared.info("Processing remote changes with token: \(changeToken)", category: .sync)
@@ -166,7 +166,7 @@ class SyncManager {
             Logger.shared.debug("SyncManager: Processing remote changes with change token", category: .sync)
             #endif
         }
-        
+
         // Log notification for debugging
         if notification.userInfo != nil {
             #if DEBUG
@@ -181,7 +181,7 @@ class SyncManager {
             #if DEBUG
             Logger.shared.debug("SyncManager: Remote change notification processed", category: .sync)
             #endif
-            
+
             await processRemoteChanges(from: notification)
         }
     }
@@ -331,9 +331,10 @@ class SyncManager {
 
     @MainActor
     private func performSyncWithProgress() async -> SyncProgress {
-        // Calculate batches based on CloudKit 400 record limit
+        // Calculate batches based on configured batch size
+        let batchConfig = AppConfiguration.cloudKitBatch
         let totalRecords = await getTotalRecordCount()
-        let totalBatches = max(1, (totalRecords + 399) / 400)
+        let totalBatches = max(1, (totalRecords + batchConfig.maxRecordsPerBatch - 1) / batchConfig.maxRecordsPerBatch)
 
         Logger.shared.info("Starting batch sync: \(totalRecords) records in \(totalBatches) batches", category: .sync)
 
@@ -345,8 +346,8 @@ class SyncManager {
                 try await processBatch(batch)
                 completedBatches += 1
 
-                // Add realistic delay for CloudKit processing
-                try await Task.sleep(for: .milliseconds(500))
+                // Add configured delay for CloudKit processing
+                try await Task.sleep(for: .milliseconds(batchConfig.batchDelay))
 
                 Logger.shared.info("Completed batch \(batch)/\(totalBatches)", category: .sync)
             } catch {
@@ -393,14 +394,14 @@ class SyncManager {
         var currentAttempt = 0
         let startTime = Date()
 
-        while currentAttempt < maxRetryAttempts {
+        while currentAttempt < syncConfig.maxAttempts {
             if retryAttempts > 0 {
                 // Simulate network interruption for testing
                 retryAttempts -= 1
                 currentAttempt += 1
 
-                // Exponential backoff: 2^attempt seconds (2s, 4s, 8s...)
-                let delay = pow(2.0, Double(currentAttempt))
+                // Use configured delay
+                let delay = syncConfig.delay(for: currentAttempt)
                 Logger.shared.info("Network interruption, retrying in \(delay)s (attempt \(currentAttempt))", category: .sync)
 
                 try? await Task.sleep(for: .seconds(delay))
@@ -422,12 +423,13 @@ class SyncManager {
                 switch error {
                 case .networkUnavailable:
                     currentAttempt += 1
-                    let delay = pow(2.0, Double(currentAttempt))
+                    let delay = syncConfig.delay(for: currentAttempt)
                     Logger.shared.warning("Network unavailable, retrying in \(delay)s", category: .sync)
                     try? await Task.sleep(for: .seconds(delay))
                 case .cloudKitQuotaExceeded:
-                    // Wait longer for quota exceeded
-                    let delay = 60.0 * Double(currentAttempt + 1) // 1min, 2min, 3min
+                    // Use quota-specific configuration
+                    let quotaConfig = AppConfiguration.quotaExceededRetry
+                    let delay = quotaConfig.delay(for: currentAttempt)
                     Logger.shared.warning("CloudKit quota exceeded, waiting \(delay)s", category: .sync)
                     try? await Task.sleep(for: .seconds(delay))
                     currentAttempt += 1
@@ -443,7 +445,7 @@ class SyncManager {
         await MainActor.run {
             syncError = SyncError.networkUnavailable
         }
-        Logger.shared.error("Sync failed after \(maxRetryAttempts) attempts", category: .sync)
+        Logger.shared.error("Sync failed after \(syncConfig.maxAttempts) attempts", category: .sync)
     }
 
     // MARK: - Private Helper Methods
@@ -453,7 +455,7 @@ class SyncManager {
         #if DEBUG
         Logger.shared.debug("SyncManager: Processing remote changes from CloudKit", category: .sync)
         #endif
-        
+
         // In a real implementation, this would:
         // 1. Extract the NSPersistentHistoryToken from the notification
         // 2. Fetch changes since the last token
@@ -554,7 +556,8 @@ class SyncManager {
         // 5. Update local sync tokens
 
         // Simulate CloudKit network delay
-        try await Task.sleep(for: .milliseconds(100))
+        let batchConfig = AppConfiguration.cloudKitBatch
+        try await Task.sleep(for: .milliseconds(min(batchConfig.batchDelay, 100)))
 
         // Simulate potential CloudKit errors
         if batchNumber == 3 && retryAttempts > 0 {
@@ -599,7 +602,7 @@ class SyncManager {
                     for i in 1..<sortedTrips.count {
                         modelContainer.mainContext.delete(sortedTrips[i])
                     }
-                    
+
                     Logger.shared.info("Kept trip (ID: \(winningTrip.id)) as conflict resolution winner", category: .sync)
                 }
             }
@@ -708,7 +711,7 @@ class SyncManager {
                         }
                         existingCloudTrip.startDate = trip.startDate
                         existingCloudTrip.endDate = trip.endDate
-                        
+
                         Logger.shared.info("Updated trip (ID: \(trip.id)) in cloud with merged changes", category: .sync)
                     } else {
                         // Create a copy for cross-device storage
@@ -739,7 +742,7 @@ class SyncManager {
                             // Merge notes from both devices
                             existingLocalTrip.notes = existingLocalTrip.notes + "\n" + cloudTrip.notes
                         }
-                        
+
                         Logger.shared.info("Merged cloud changes into local trip (ID: \(existingLocalTrip.id))", category: .sync)
                     } else {
                         // Create local copy for new trip
