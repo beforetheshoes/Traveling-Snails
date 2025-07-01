@@ -22,7 +22,16 @@ import UIKit
 /// Supports both singleton pattern (for app use) and direct initialization (for testing)
 /// 
 /// TODO: This file is 872 lines and violates CLAUDE.md guidelines (< 400 lines typically).
-/// Consider splitting into focused components:
+/// 
+/// ARCHITECTURE NOTE: This is the legacy singleton-based SyncManager. A modern dependency injection-based
+/// ModernSyncManager (182 lines) exists that delegates to injected services, but the app still uses this
+/// legacy version in production. Consider completing the migration to ModernSyncManager which would:
+/// - Eliminate the 872-line file size violation
+/// - Improve testability through dependency injection
+/// - Follow modern architecture patterns
+/// - Reduce complexity by delegating to focused services
+/// 
+/// Alternative: Split this legacy implementation into focused components:
 /// - SyncManager (core orchestration) 
 /// - SyncConflictResolver (conflict resolution logic)
 /// - CrossDeviceSyncSimulator (test-only cross-device simulation)
@@ -127,7 +136,7 @@ class SyncManager {
         #if DEBUG
         Logger.secure(category: .sync).debug("SyncManager: Setting up CloudKit monitoring")
         #endif
-        Logger.secure(category: .sync).info("Setting up CloudKit monitoring on \(deviceType, privacy: .public) - \(self.deviceIdentifier, privacy: .public)")
+        Logger.secure(category: .sync).info("Setting up CloudKit monitoring on \(deviceType, privacy: .public) - \(self.deviceIdentifier, privacy: .private)")
 
         // Monitor CloudKit remote changes - SwiftData uses NSPersistentCloudKitContainer under the hood
         NotificationCenter.default.addObserver(
@@ -161,7 +170,7 @@ class SyncManager {
         }
         #endif
 
-        Logger.secure(category: .sync).info("🔄 Remote store change detected on device: \(self.deviceIdentifier, privacy: .public)")
+        Logger.secure(category: .sync).info("🔄 Remote store change detected on device: \(self.deviceIdentifier, privacy: .private)")
         #if DEBUG
         Logger.secure(category: .sync).debug("SyncManager: Remote store change detected")
         #endif
@@ -217,7 +226,7 @@ class SyncManager {
         #if DEBUG
         Logger.secure(category: .sync).debug("SyncManager: triggerSync() called")
         #endif
-        Logger.secure(category: .sync).info("Sync triggered on \(deviceType, privacy: .public) - \(self.deviceIdentifier, privacy: .public)")
+        Logger.secure(category: .sync).info("Sync triggered on \(deviceType, privacy: .public) - \(self.deviceIdentifier, privacy: .private)")
 
         Task {
             await performSync()
@@ -679,7 +688,7 @@ class SyncManager {
     private func simulateCrossDeviceSync() async {
         // Prevent infinite recursion - check if already syncing from this device
         if isCrossDeviceSyncing || SyncManager.activeCrossDeviceSyncs.contains(deviceIdentifier) {
-            Logger.secure(category: .sync).info("Skipping cross-device sync - already in progress for device \(self.deviceIdentifier, privacy: .public)")
+            Logger.secure(category: .sync).info("Skipping cross-device sync - already in progress for device \(self.deviceIdentifier, privacy: .private)")
             return
         }
 
