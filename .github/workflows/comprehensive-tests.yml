@@ -5,10 +5,11 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
+    types: [ opened, synchronize, reopened ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   # Security tests run first and block everything if they fail
@@ -116,14 +117,14 @@ jobs:
 
   # Test matrix for parallel execution - reduces from 7 jobs to 4
   test-matrix:
-    name: ${{ matrix.test-type }} Tests
+    name: Test Matrix
     runs-on: macos-latest
     needs: security-tests
     timeout-minutes: 25
     strategy:
       matrix:
         test-type: [unit, integration, performance, swiftdata]
-      fail-fast: false
+      fail-fast: true
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -154,7 +155,7 @@ jobs:
           fi
           chmod +x ./Scripts/run-all-tests.sh
             
-      - name: Run ${{ matrix.test-type }} tests
+      - name: Run matrix tests
         run: |
           case "${{ matrix.test-type }}" in
             "unit")
@@ -320,7 +321,7 @@ jobs:
   test-summary:
     name: Test Summary
     runs-on: macos-latest
-    needs: [security-tests, test-matrix, build-validation, enhanced-linting]
+    needs: [security-tests, test-matrix, build-validation, enhanced-linting, dependency-scan]
     if: always()
     steps:
       - name: Check test results
@@ -337,35 +338,47 @@ jobs:
           echo "| Test Matrix | ${{ needs.test-matrix.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Build Validation | ${{ needs.build-validation.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Enhanced Linting | ${{ needs.enhanced-linting.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Dependency Scan | ${{ needs.dependency-scan.result }} |" >> $GITHUB_STEP_SUMMARY
           
-          # Check if all required jobs passed
+          # Check if all required jobs passed (treat cancelled as failure)
           if [[ "${{ needs.security-tests.result }}" == "success" && \
                 "${{ needs.test-matrix.result }}" == "success" && \
                 "${{ needs.build-validation.result }}" == "success" && \
-                "${{ needs.enhanced-linting.result }}" == "success" ]]; then
+                "${{ needs.enhanced-linting.result }}" == "success" && \
+                "${{ needs.dependency-scan.result }}" == "success" ]]; then
             echo "✅ ALL TESTS PASSED!"
             echo "🚀 Codebase is ready for deployment"
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "## ✅ All Tests Passed!" >> $GITHUB_STEP_SUMMARY
             echo "🚀 **Codebase is ready for deployment**" >> $GITHUB_STEP_SUMMARY
           else
-            echo "❌ SOME TESTS FAILED!"
+            echo "❌ SOME TESTS FAILED OR WERE CANCELLED!"
             echo "Security Tests: ${{ needs.security-tests.result }}"
             echo "Test Matrix: ${{ needs.test-matrix.result }}"
             echo "Build Validation: ${{ needs.build-validation.result }}"
             echo "Enhanced Linting: ${{ needs.enhanced-linting.result }}"
+            echo "Dependency Scan: ${{ needs.dependency-scan.result }}"
             echo ""
-            echo "Please fix the failing tests before merging."
+            
+            # Check for cancelled jobs specifically
+            if [[ "${{ needs.test-matrix.result }}" == "cancelled" || \
+                  "${{ needs.build-validation.result }}" == "cancelled" ]]; then
+              echo "⚠️  Jobs were cancelled - likely due to a newer commit or workflow trigger."
+              echo "This can happen with rapid commits or concurrent workflow runs."
+            fi
+            
+            echo "Please ensure all tests complete successfully before merging."
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "## ❌ Some Tests Failed" >> $GITHUB_STEP_SUMMARY
             echo "**Please fix the failing tests before merging.**" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
 
-  # Dependency vulnerability scanning (runs independently)
+  # Dependency vulnerability scanning (runs with enhanced linting to reduce parallel jobs)
   dependency-scan:
     name: Dependency Security Scan
     runs-on: macos-latest
+    needs: security-tests
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

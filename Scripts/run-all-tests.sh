@@ -50,9 +50,9 @@ execute_test_with_xcbeautify() {
     # Check for simulator availability and fallback
     local simulator="$SIMULATOR_NAME"
     if ! xcrun simctl list devices | grep -q "$simulator"; then
-        echo -e "${YELLOW}⚠️  $simulator not available, checking for iPhone 14...${NC}"
-        if xcrun simctl list devices | grep -q "iPhone 14"; then
-            simulator="iPhone 14"
+        echo -e "${YELLOW}⚠️  $simulator not available, checking for iPhone 15...${NC}"
+        if xcrun simctl list devices | grep -q "iPhone 15"; then
+            simulator="iPhone 15"
             echo -e "${GREEN}✓ Using $simulator instead${NC}"
         else
             echo -e "${RED}❌ No compatible simulator found${NC}"
