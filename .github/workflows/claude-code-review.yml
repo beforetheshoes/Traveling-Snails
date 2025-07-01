@@ -2,34 +2,37 @@ name: Claude Code Review
 
 on:
   pull_request:
-    types: [opened, synchronize]
-    # Optional: Only run on specific file changes
-    # paths:
-    #   - "src/**/*.ts"
-    #   - "src/**/*.tsx"
-    #   - "src/**/*.js"
-    #   - "src/**/*.jsx"
+    branches: [main, develop]
+    types: [opened, synchronize, reopened]
+    # Focus on Swift/SwiftUI code changes
+    paths:
+      - "**/*.swift"
+      - "**/*.yml"
+      - "**/*.yaml"
+      - "Scripts/**"
+      - ".github/workflows/**"
+
+# Separate concurrency group for reviews to avoid conflicts with testing pipeline
+concurrency:
+  group: claude-review-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   claude-review:
-    # Optional: Filter by PR author
-    # if: |
-    #   github.event.pull_request.user.login == 'external-contributor' ||
-    #   github.event.pull_request.user.login == 'new-developer' ||
-    #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
-    
+    name: Claude Code Review
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read
-      pull-requests: read
-      issues: read
-      id-token: write
+      pull-requests: write
+      issues: write
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 1
+          # Fetch more history for better context
+          fetch-depth: 0
 
       - name: Run Claude Code Review
         id: claude-review
@@ -37,39 +40,71 @@ jobs:
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           
-          # Optional: Specify model (defaults to Claude Sonnet 4, uncomment for Claude Opus 4)
-          # model: "claude-opus-4-20250514"
+          # Use Claude Sonnet 4 for comprehensive Swift/SwiftUI analysis
+          model: "claude-sonnet-4-20250514"
           
-          # Direct prompt for automated review (no @claude mention needed)
+          # Swift/SwiftUI specific review prompt
           direct_prompt: |
-            Please review this pull request and provide feedback on:
-            - Code quality and best practices
-            - Potential bugs or issues
-            - Performance considerations
-            - Security concerns
-            - Test coverage
+            You are conducting a comprehensive code review for a SwiftUI travel planning app called "Traveling Snails". 
+            This app uses SwiftData + CloudKit for data persistence and follows modern iOS 18+ patterns.
             
-            Be constructive and helpful in your feedback.
+            🔍 **CRITICAL ANALYSIS AREAS:**
+            
+            🔒 **SECURITY REVIEW:**
+            - Hardcoded secrets, API keys, or sensitive data exposure
+            - Input validation and sanitization
+            - Secure data handling patterns
+            - Logger usage instead of print() statements
+            - CloudKit data privacy considerations
+            
+            🐛 **SWIFTUI/SWIFTDATA BUG DETECTION:**
+            - SwiftData infinite recreation anti-patterns (passing model arrays as view parameters)
+            - Improper @State/@Observable/@Query usage
+            - NavigationView usage (should be NavigationStack)
+            - Memory leaks and retain cycles
+            - Threading issues with @MainActor
+            - CloudKit sync compatibility issues
+            
+            📱 **MODERN SWIFT PATTERNS:**
+            - iOS 18+ SwiftUI patterns compliance
+            - Swift Testing instead of XCTest usage
+            - Proper async/await and structured concurrency
+            - SwiftData relationship patterns
+            - Error handling with Result types
+            
+            🏗️ **ARCHITECTURE & PATTERNS:**
+            - MVVM adherence and dependency injection
+            - Service layer organization
+            - Protocol usage and testability
+            - Separation of concerns
+            
+            ⚡ **PERFORMANCE:**
+            - Main thread blocking operations
+            - Inefficient SwiftData queries
+            - View update optimizations
+            - CloudKit sync performance
+            
+            🧪 **TEST COVERAGE:**
+            - Missing test scenarios
+            - Test isolation and SwiftDataTestBase usage
+            - Mock service integration
+            
+            📋 **OUTPUT FORMAT:**
+            Please structure your review as:
+            1. **Overall Assessment** (1-2 sentences)
+            2. **Critical Issues** (❌ Must fix before merge)
+            3. **Recommendations** (⚠️ Should consider)
+            4. **Positive Observations** (✅ Good patterns)
+            5. **File-Specific Notes** (with file:line references)
+            
+            Be thorough, constructive, and specific. Focus on preventing the SwiftData infinite recreation bug and ensuring modern Swift patterns.
           
-          # Optional: Customize review based on file types
-          # direct_prompt: |
-          #   Review this PR focusing on:
-          #   - For TypeScript files: Type safety and proper interface usage
-          #   - For API endpoints: Security, input validation, and error handling
-          #   - For React components: Performance, accessibility, and best practices
-          #   - For tests: Coverage, edge cases, and test quality
+          # Enable tools for comprehensive analysis
+          allowed_tools: "Read,Grep,Glob,Bash(swift --version),Bash(xcodebuild -version)"
           
-          # Optional: Different prompts for different authors
-          # direct_prompt: |
-          #   ${{ github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR' && 
-          #   'Welcome! Please review this PR from a first-time contributor. Be encouraging and provide detailed explanations for any suggestions.' ||
-          #   'Please provide a thorough code review focusing on our coding standards and best practices.' }}
-          
-          # Optional: Add specific tools for running tests or linting
-          # allowed_tools: "Bash(npm run test),Bash(npm run lint),Bash(npm run typecheck)"
-          
-          # Optional: Skip review for certain conditions
-          # if: |
-          #   !contains(github.event.pull_request.title, '[skip-review]') &&
-          #   !contains(github.event.pull_request.title, '[WIP]')
+          # Skip review for certain conditions
+          if: |
+            !contains(github.event.pull_request.title, '[skip-review]') &&
+            !contains(github.event.pull_request.title, '[WIP]') &&
+            !contains(github.event.pull_request.title, 'WIP:')
 
