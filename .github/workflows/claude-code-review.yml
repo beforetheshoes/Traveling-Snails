@@ -31,6 +31,7 @@ jobs:
       contents: read
       pull-requests: write
       issues: write
+      id-token: write
     
     steps:
       - name: Checkout repository
@@ -50,7 +51,7 @@ jobs:
           secrets_admin_pat: ${{ secrets.SECRETS_ADMIN_PAT }}
           
           # Swift/SwiftUI specific review prompt
-          prompt: |
+          direct_prompt: |
             You are conducting a comprehensive code review for a SwiftUI travel planning app called "Traveling Snails". 
             This app uses SwiftData + CloudKit for data persistence and follows modern iOS 18+ patterns.
             
