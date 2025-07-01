@@ -22,6 +22,11 @@ jobs:
     name: Claude Code Review
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # Skip review for certain conditions
+    if: |
+      !contains(github.event.pull_request.title, '[skip-review]') &&
+      !contains(github.event.pull_request.title, '[WIP]') &&
+      !contains(github.event.pull_request.title, 'WIP:')
     permissions:
       contents: read
       pull-requests: write
@@ -36,15 +41,16 @@ jobs:
 
       - name: Run Claude Code Review
         id: claude-review
-        uses: anthropics/claude-code-action@beta
+        uses: grll/claude-code-action@beta
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          
-          # Use Claude Sonnet 4 for comprehensive Swift/SwiftUI analysis
-          model: "claude-sonnet-4-20250514"
+          use_oauth: true
+          claude_access_token: ${{ secrets.CLAUDE_ACCESS_TOKEN }}
+          claude_refresh_token: ${{ secrets.CLAUDE_REFRESH_TOKEN }}
+          claude_expires_at: ${{ secrets.CLAUDE_EXPIRES_AT }}
+          secrets_admin_pat: ${{ secrets.SECRETS_ADMIN_PAT }}
           
           # Swift/SwiftUI specific review prompt
-          direct_prompt: |
+          prompt: |
             You are conducting a comprehensive code review for a SwiftUI travel planning app called "Traveling Snails". 
             This app uses SwiftData + CloudKit for data persistence and follows modern iOS 18+ patterns.
             
@@ -98,13 +104,4 @@ jobs:
             5. **File-Specific Notes** (with file:line references)
             
             Be thorough, constructive, and specific. Focus on preventing the SwiftData infinite recreation bug and ensuring modern Swift patterns.
-          
-          # Enable tools for comprehensive analysis
-          allowed_tools: "Read,Grep,Glob,Bash(swift --version),Bash(xcodebuild -version)"
-          
-          # Skip review for certain conditions
-          if: |
-            !contains(github.event.pull_request.title, '[skip-review]') &&
-            !contains(github.event.pull_request.title, '[WIP]') &&
-            !contains(github.event.pull_request.title, 'WIP:')
 
