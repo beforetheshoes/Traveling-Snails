@@ -29,6 +29,15 @@ jobs:
       - name: Install dependencies
         run: |
           brew install xcbeautify jq
+          
+      - name: Debug available simulators
+        run: |
+          echo "Available Xcode version:"
+          xcodebuild -version
+          echo "\nAvailable simulators:"
+          xcrun simctl list devices | grep "iPhone"
+          echo "\nFull device list:"
+          xcodebuild -showdestinations -scheme "Traveling Snails" | head -20
         
       - name: Cache Swift packages
         uses: actions/cache@v4
@@ -172,7 +181,7 @@ jobs:
               xcodebuild test \
                 -project "Traveling Snails.xcodeproj" \
                 -scheme "Traveling Snails" \
-                -destination "platform=iOS Simulator,id=dvtdevice-DVTiOSDeviceSimulatorPlaceholder-iphonesimulator:placeholder" \
+                -destination "platform=iOS Simulator,name=iPhone 15" \
                 -only-testing:"Traveling Snails Tests/SwiftData Tests" | xcbeautify
               ;;
           esac
@@ -219,7 +228,7 @@ jobs:
           xcodebuild build \
             -project "Traveling Snails.xcodeproj" \
             -scheme "Traveling Snails" \
-            -destination "platform=iOS Simulator,id=dvtdevice-DVTiOSDeviceSimulatorPlaceholder-iphonesimulator:placeholder" | xcbeautify
+            -destination "platform=iOS Simulator,name=iPhone 15" | xcbeautify
 
   # Enhanced SwiftLint analysis (consolidated with better error handling)
   enhanced-linting:
