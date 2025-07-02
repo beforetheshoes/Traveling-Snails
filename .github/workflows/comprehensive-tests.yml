@@ -1,4 +1,4 @@
-name: Comprehensive Testing Pipeline
+name: Build Validation Pipeline
 
 on:
   push:
