@@ -194,6 +194,28 @@ custom_rules:
     message: "Sensitive input fields should include validation"
     severity: warning
     excluded: ".*Tests.*\\.swift$|.*Preview.*\\.swift$"
+    
+  # TESTING: Detect #expect(false) anti-pattern
+  no_expect_false:
+    name: "No expect(false) Pattern"
+    regex: '#expect\\(\\s*false\\s*[,)]'
+    message: "Use Issue.record() instead of #expect(false) to avoid compiler warnings"
+    severity: error
+
+  # CODE QUALITY: Detect unused variables in tests
+  no_unused_test_variables:
+    name: "No Unused Test Variables"
+    regex: '(?:let|var)\s+\w+\s*=\s*(?:true|false|\"\w+\")\s*\n(?:[^=\n]*\n)*\s*(?:let|var|\#expect|\})'
+    message: "Unused variable detected - remove or use with '_ = variableName' if intentionally unused"
+    severity: warning
+    included: ".*Tests.*\\.swift$"
+
+  # CODE QUALITY: Detect unnecessarily mutable variables
+  prefer_let_over_var:
+    name: "Prefer let over var when not mutated"
+    regex: 'var\s+(\w+)\s*:\s*\[.*?\]\s*=\s*\[(?:[^\]]*\n)*[^\]]*\](?!\s*\.\w+\s*=)(?!\s*\[)'
+    message: "Use 'let' instead of 'var' for immutable collections"
+    severity: warning
 
 # Rule configurations
 accessibility_label_for_image:
@@ -368,5 +390,6 @@ trailing_whitespace:
 
 vertical_whitespace:
   max_empty_lines: 2
+
 
 warning_threshold: 2500

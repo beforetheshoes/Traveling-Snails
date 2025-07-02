@@ -62,32 +62,32 @@ struct ModernTraveling_SnailsApp: App {
             #endif
 
             modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
-            
+
             // Initialize ServiceContainer and register all services
             serviceContainer = ServiceContainer()
-            
+
             // Register production services
             let authService = ProductionAuthenticationService()
             serviceContainer.register(authService, as: AuthenticationService.self)
-            
+
             let cloudService = iCloudStorageService()
             serviceContainer.register(cloudService, as: CloudStorageService.self)
-            
+
             let photoService = SystemPhotoLibraryService()
             serviceContainer.register(photoService, as: PhotoLibraryService.self)
-            
+
             let permissionService = SystemPermissionService()
             serviceContainer.register(permissionService, as: PermissionService.self)
-            
+
             // Register sync service with model container
             let syncService = CloudKitSyncService(modelContainer: modelContainer)
             serviceContainer.register(syncService, as: SyncService.self)
-            
+
             // Create modern managers from service container
             modernSyncManager = ModernSyncManager.from(container: serviceContainer)
             modernAppSettings = ModernAppSettings.from(container: serviceContainer)
             modernBiometricAuthManager = ModernBiometricAuthManager.from(container: serviceContainer)
-            
+
             Logger.shared.info("Modern App: All services initialized successfully", category: .app)
         } catch {
             Logger.shared.critical("Could not create ModelContainer: \(error)", category: .app)

@@ -31,9 +31,9 @@ cat > "${PRE_COMMIT_HOOK}" << 'EOF'
 #!/bin/bash
 
 # Pre-commit hook for Traveling Snails
-# Runs SwiftLint on staged Swift files to prevent security and quality issues
+# Runs SwiftLint and critical regression tests to prevent security and quality issues
 
-echo "🔍 Running pre-commit SwiftLint checks..."
+echo "🔍 Running pre-commit checks (SwiftLint + Critical Tests)..."
 
 # Get the project root directory
 PROJECT_ROOT="$(git rev-parse --show-toplevel)"
@@ -71,19 +71,21 @@ done
 # Run SwiftLint on staged files with optimized settings
 echo "🚀 Running SwiftLint with security-focused rules..."
 
-# Check for critical security violations first
-SECURITY_VIOLATIONS=$(cd "$TEMP_DIR" && swift run --package-path "$PROJECT_ROOT" swiftlint lint --config "$PROJECT_ROOT/.swiftlint.yml" --reporter json . 2>/dev/null | jq -r '.[] | select(.rule_id | test("no_print_statements|no_sensitive_logging|safe_error_messages")) | "\(.file):\(.line): \(.reason)"' 2>/dev/null || echo "")
+# Check for critical violations first (security + code quality)
+CRITICAL_VIOLATIONS=$(cd "$TEMP_DIR" && swift run --package-path "$PROJECT_ROOT" swiftlint lint --config "$PROJECT_ROOT/.swiftlint.yml" --reporter json . 2>/dev/null | jq -r '.[] | select(.rule_id | test("no_print_statements|no_sensitive_logging|safe_error_messages|unreachable_code|no_impossible_test_conditions|no_expect_false")) | "\(.file):\(.line): [\(.rule_id)] \(.reason)"' 2>/dev/null || echo "")
 
-if [ ! -z "$SECURITY_VIOLATIONS" ]; then
+if [ ! -z "$CRITICAL_VIOLATIONS" ]; then
     echo ""
-    echo "🚨 SECURITY VIOLATIONS DETECTED:"
-    echo "$SECURITY_VIOLATIONS"
+    echo "🚨 CRITICAL VIOLATIONS DETECTED:"
+    echo "$CRITICAL_VIOLATIONS"
     echo ""
-    echo "❌ Commit blocked due to security violations."
+    echo "❌ Commit blocked due to critical violations."
     echo "   Please fix these issues before committing:"
     echo "   - Replace print() statements with Logger.shared"
     echo "   - Remove sensitive data from logging"
     echo "   - Use safe error messages"
+    echo "   - Fix unreachable code (remove impossible conditions)"
+    echo "   - Replace #expect(false) with Issue.record()"
     echo ""
     exit 1
 fi
@@ -115,7 +117,146 @@ if [ "$WARNING_COUNT" -gt 0 ]; then
     echo ""
 fi
 
-echo "✅ SwiftLint checks passed! Proceeding with commit."
+echo "✅ SwiftLint checks passed! Now running critical regression tests..."
+
+# Run critical tests that prevent regression of recently fixed issues
+echo "🧪 Running regression prevention tests..."
+if xcodebuild test \
+    -project "Traveling Snails.xcodeproj" \
+    -scheme "Traveling Snails" \
+    -destination "platform=iOS Simulator,OS=latest" \
+    -only-testing:"Traveling Snails Tests/Security Tests/TestRegressionPreventionTests" \
+    >/dev/null 2>&1; then
+    echo "✅ Regression tests passed!"
+else
+    echo "❌ Regression tests failed! This indicates a critical issue."
+    echo "   Please run: ./run_tests.sh \"Traveling Snails Tests/Security Tests/TestRegressionPreventionTests\""
+    echo "   to see the specific failures."
+    exit 1
+fi
+
+# Run specific critical tests that were recently fixed
+echo "🔬 Running critical integration tests..."
+CRITICAL_TESTS=(
+    "Traveling Snails Tests/AdvancedIntegrationTests/testSyncAuthenticationInteraction"
+    "Traveling Snails Tests/FileAttachmentExportImportBugTests/exportExcludesFileDataWhenToggleDisabled"
+    "Traveling Snails Tests/DateConflictCachingTests/testCacheInvalidationOnActivityRemoval"
+)
+
+for test in "${CRITICAL_TESTS[@]}"; do
+    echo "  Testing: $(basename "$test")"
+    if ! xcodebuild test \
+        -project "Traveling Snails.xcodeproj" \
+        -scheme "Traveling Snails" \
+        -destination "platform=iOS Simulator,OS=latest" \
+        -only-testing:"$test" \
+        >/dev/null 2>&1; then
+        echo "❌ Critical test failed: $test"
+        echo "   This test was recently fixed and should not be failing."
+        echo "   Please run: ./run_tests.sh \"$test\" to debug."
+        exit 1
+    fi
+done
+
+echo "⚙️  Running comprehensive compiler warning check..."
+
+# Build project and capture all compiler warnings
+BUILD_LOG=$(mktemp)
+XCODEBUILD_CMD="xcodebuild build \
+    -project \"Traveling Snails.xcodeproj\" \
+    -scheme \"Traveling Snails\" \
+    -destination \"platform=iOS Simulator,OS=latest\""
+
+# Capture build output and warnings
+if ! eval "$XCODEBUILD_CMD" > "$BUILD_LOG" 2>&1; then
+    echo "❌ Build failed during pre-commit check"
+    echo "Build log (last 20 lines):"
+    tail -20 "$BUILD_LOG"
+    rm -f "$BUILD_LOG"
+    exit 1
+fi
+
+# Check for unused variable warnings
+UNUSED_VAR_WARNINGS=$(grep -E "warning:.*initialization of.*was never used|warning:.*immutable value.*was never used" "$BUILD_LOG" || true)
+if [ -n "$UNUSED_VAR_WARNINGS" ]; then
+    echo "❌ Unused variable warnings detected:"
+    echo "$UNUSED_VAR_WARNINGS"
+    echo ""
+    echo "These warnings must be fixed before committing."
+    echo "Remove unused variables or add '_ = variableName' if the variable is intentionally unused."
+    rm -f "$BUILD_LOG"
+    exit 1
+fi
+
+# Check for implicit coercion warnings  
+COERCION_WARNINGS=$(grep -E "warning:.*coercion.*String.*Any" "$BUILD_LOG" || true)
+if [ -n "$COERCION_WARNINGS" ]; then
+    echo "❌ Implicit coercion warnings detected:"
+    echo "$COERCION_WARNINGS"
+    echo ""
+    echo "Use explicit 'as Any' casting to resolve these warnings."
+    rm -f "$BUILD_LOG"
+    exit 1
+fi
+
+# Check for other critical warnings
+CRITICAL_WARNINGS=$(grep -E "warning:.*unreachable code|warning:.*will never be executed" "$BUILD_LOG" || true)
+if [ -n "$CRITICAL_WARNINGS" ]; then
+    echo "❌ Critical code warnings detected:"
+    echo "$CRITICAL_WARNINGS"
+    echo ""
+    echo "Fix unreachable code issues before committing."
+    rm -f "$BUILD_LOG"
+    exit 1
+fi
+
+# Check for performance or memory warnings
+PERFORMANCE_WARNINGS=$(grep -E "warning:.*performance|warning:.*memory" "$BUILD_LOG" || true)
+if [ -n "$PERFORMANCE_WARNINGS" ]; then
+    echo "⚠️  Performance warnings detected (review recommended):"
+    echo "$PERFORMANCE_WARNINGS"
+    echo ""
+fi
+
+# Check for performance test date range logic issues
+echo "⚙️  Validating performance test date logic..."
+PERF_TEST_ISSUES=$(grep -r "performance" "Traveling Snails Tests/Performance Tests/" 2>/dev/null | grep -E "date.*value.*[0-9]+.*day" | while read line; do
+    # Extract numeric values from date calculations
+    if echo "$line" | grep -q "value: [0-9]\+, to:"; then
+        days=$(echo "$line" | sed -n 's/.*value: \([0-9]\+\), to:.*/\1/p')
+        if [ "$days" -lt 45 ]; then
+            echo "⚠️  Potential date range issue in: $line"
+            echo "   Performance tests with 1000+ activities need trip dates spanning 45+ days"
+        fi
+    fi
+done)
+
+if [ -n "$PERF_TEST_ISSUES" ]; then
+    echo "⚠️  Performance test date range validation warnings:"
+    echo "$PERF_TEST_ISSUES"
+    echo ""
+    echo "Review these warnings - they may indicate insufficient date ranges for large activity sets."
+fi
+
+# Clean up
+rm -f "$BUILD_LOG"
+
+# MANDATORY COMPLETE TEST VALIDATION BEFORE COMMIT
+echo "🧪 Running MANDATORY complete test suite validation..."
+echo "⚠️  Per CLAUDE.md: ZERO EXCEPTIONS. ZERO SHORTCUTS. ZERO ASSUMPTIONS."
+
+# Run complete test suite 
+if ! ./Scripts/run-all-tests.sh >/dev/null 2>&1; then
+    echo "❌ COMPLETE TEST SUITE FAILED"
+    echo "Per CLAUDE.md mandatory validation: ALL tests must pass before commit."
+    echo "Run './Scripts/run-all-tests.sh' to see failures and fix them."
+    echo ""
+    echo "🛑 COMMIT BLOCKED: Tests failing"
+    exit 1
+fi
+
+echo "✅ All tests pass! Pre-commit validation complete."
+echo "✅ All pre-commit checks passed! Proceeding with commit."
 EOF
 
 # Make the hook executable

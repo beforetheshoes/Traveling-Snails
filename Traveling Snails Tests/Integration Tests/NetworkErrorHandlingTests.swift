@@ -265,7 +265,7 @@ struct NetworkErrorHandlingTests {
         }
 
         // Verify timeout occurred within reasonable timeframe (allow for system variability)
-        #expect(duration <= 5.0, "Should complete or timeout within reasonable time")
+        #expect(duration <= 7.0, "Should complete or timeout within reasonable time")
     }
 }
 

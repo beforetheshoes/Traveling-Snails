@@ -409,7 +409,7 @@ enum L10n {
             static let optimizing = "database.status.optimizing"
             static let repairing = "database.status.repairing"
         }
-        
+
         enum Operations {
             static let resetFailed = "database.operations.reset_failed"
             static let compactFailed = "database.operations.compact_failed"
@@ -418,7 +418,7 @@ enum L10n {
             static let cleanupFailed = "database.operations.cleanup_failed"
         }
     }
-    
+
     // MARK: - Operations
     enum Save {
         static let failed = "save.failed"
@@ -427,13 +427,13 @@ enum L10n {
         static let attachmentFailed = "save.attachment_failed"
         static let tripFailed = "save.trip_failed"
     }
-    
+
     enum Delete {
         static let failed = "delete.failed"
         static let organizationFailed = "delete.organization_failed"
         static let attachmentFailed = "delete.attachment_failed"
     }
-    
+
     enum File {
         static let accessFailed = "file.access_failed"
         static let processingFailed = "file.processing_failed"
@@ -442,7 +442,7 @@ enum L10n {
         static let documentFailed = "file.document_failed"
         static let databaseSaveFailed = "file.database_save_failed"
     }
-    
+
     enum Operation {
         static let failed = "operation.failed"
         static let cancelled = "operation.cancelled"
