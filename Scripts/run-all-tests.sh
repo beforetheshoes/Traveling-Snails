@@ -18,7 +18,7 @@ PROJECT_NAME="Traveling Snails"
 SCHEME_NAME="Traveling Snails"
 # Use generic simulator for better CI compatibility
 SIMULATOR_NAME="iPhone 16" 
-GENERIC_SIMULATOR="platform=iOS Simulator,name=iPhone 15"
+GENERIC_SIMULATOR="platform=macOS,arch=arm64,variant=Designed for [iPad,iPhone]"
 TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
 START_EPOCH=$(date +%s)
 EXIT_CODE=0
