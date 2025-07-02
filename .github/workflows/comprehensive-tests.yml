@@ -224,6 +224,8 @@ jobs:
   enhanced-linting:
     name: Enhanced Linting
     runs-on: macos-latest
+    needs: security-build-validation
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -377,6 +379,7 @@ jobs:
     name: Dependency Security Scan
     runs-on: macos-latest
     needs: security-build-validation
+    timeout-minutes: 8
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
