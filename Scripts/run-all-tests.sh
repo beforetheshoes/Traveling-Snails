@@ -16,7 +16,9 @@ NC='\033[0m' # No Color
 PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PROJECT_NAME="Traveling Snails"
 SCHEME_NAME="Traveling Snails"
+# Use generic simulator for better CI compatibility
 SIMULATOR_NAME="iPhone 16"
+GENERIC_SIMULATOR="platform=iOS Simulator,OS=latest"
 TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
 START_EPOCH=$(date +%s)
 EXIT_CODE=0
@@ -64,20 +66,50 @@ execute_test_with_xcbeautify() {
     # Update command with correct simulator
     local updated_command=$(echo "$xcodebuild_command" | sed "s/name=$SIMULATOR_NAME/name=$simulator/g")
     
-    # Add xcbeautify if available
+    # Store the base command for error handling
+    local base_command="$updated_command"
+    
+    # Add xcbeautify if available, but preserve exit codes
     if command -v xcbeautify &> /dev/null; then
-        updated_command="$updated_command | xcbeautify"
+        # Use set -o pipefail to preserve xcodebuild exit code through pipe
+        updated_command="set -o pipefail && $updated_command | xcbeautify"
     else
-        # Without xcbeautify, filter for test results
-        updated_command="$updated_command 2>&1 | grep -E \"Test Suite|Test Case|passed|failed|error\""
+        # Without xcbeautify, still preserve exit code
+        updated_command="set -o pipefail && $updated_command 2>&1 | tee /dev/stderr | grep -E \"Test Suite|Test Case|passed|failed|error\" || true"
     fi
     
+    # Execute and capture exit code
     if eval "$updated_command"; then
         echo -e "${GREEN}✓ All $test_name passed!${NC}"
     else
-        echo -e "${RED}✗ Some $test_name failed${NC}"
-        echo -e "${CYAN}Command: $updated_command${NC}"
+        local exit_status=$?
+        echo -e "${RED}✗ $test_name execution failed with exit code: $exit_status${NC}"
+        echo -e "${CYAN}Command: $base_command${NC}"
+        
+        # Check if it's a simulator issue
+        if [[ $exit_status -eq 70 ]] || grep -q "Unable to find a destination" <<< "$base_command"; then
+            echo -e "${YELLOW}⚠️  Simulator issue detected. Retrying with generic destination...${NC}"
+            
+            # Retry with generic simulator
+            local generic_command=$(echo "$base_command" | sed "s/-destination \"[^\"]*\"/-destination \"$GENERIC_SIMULATOR\"/g")
+            echo -e "${CYAN}Retry command: $generic_command${NC}"
+            
+            if command -v xcbeautify &> /dev/null; then
+                generic_command="set -o pipefail && $generic_command | xcbeautify"
+            fi
+            
+            if eval "$generic_command"; then
+                echo -e "${GREEN}✓ All $test_name passed with generic simulator!${NC}"
+                return 0
+            else
+                echo -e "${RED}✗ $test_name failed even with generic simulator${NC}"
+                EXIT_CODE=1
+                return 1
+            fi
+        fi
+        
         EXIT_CODE=1
+        return 1
     fi
     
     echo ""
@@ -133,6 +165,21 @@ check_dependencies() {
     if ! command -v jq &> /dev/null; then
         echo -e "${YELLOW}⚠️  jq not found. Install with: brew install jq${NC}"
         echo -e "${YELLOW}   Some SwiftLint analysis features will be limited.${NC}"
+    fi
+    
+    # Check for available iOS simulators
+    if command -v xcodebuild &> /dev/null; then
+        echo -e "${CYAN}Checking available iOS simulators...${NC}"
+        local available_sims=$(xcodebuild -showdestinations -scheme "$SCHEME_NAME" 2>/dev/null | grep "platform:iOS Simulator" | head -5 || true)
+        if [[ -z "$available_sims" ]]; then
+            echo -e "${YELLOW}⚠️  No iOS simulators found. Tests may fail.${NC}"
+            echo -e "${YELLOW}   Try: sudo xcode-select -s /Applications/Xcode.app${NC}"
+        else
+            echo -e "${GREEN}✓ iOS simulators available${NC}"
+            if ! echo "$available_sims" | grep -q "$SIMULATOR_NAME"; then
+                echo -e "${YELLOW}⚠️  '$SIMULATOR_NAME' simulator not found. Will use generic destination.${NC}"
+            fi
+        fi
     fi
     
     if [ ${#missing_deps[@]} -gt 0 ]; then
