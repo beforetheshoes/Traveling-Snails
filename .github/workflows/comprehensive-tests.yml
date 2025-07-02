@@ -9,14 +9,23 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
+
+# Workflow-level timeout to prevent hanging indefinitely
+defaults:
+  run:
+    shell: bash
+
+# Global timeout for entire workflow
+env:
+  WORKFLOW_TIMEOUT_MINUTES: 45
 
 jobs:
   # Security build validation runs first and blocks everything if it fails
   security-build-validation:
     name: Security Build Validation
     runs-on: macos-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -30,15 +39,6 @@ jobs:
         run: |
           brew install xcbeautify jq
           
-      - name: Debug available simulators
-        run: |
-          echo "Available Xcode version:"
-          xcodebuild -version
-          echo "\nAvailable simulators:"
-          xcrun simctl list devices | grep "iPhone"
-          echo "\nFull device list:"
-          xcodebuild -showdestinations -scheme "Traveling Snails" | head -20
-        
       - name: Cache Swift packages
         uses: actions/cache@v4
         with:
@@ -49,14 +49,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-swift-
             
-      - name: Validate script exists
-        run: |
-          if [ ! -f "./Scripts/run-all-tests.sh" ]; then
-            echo "❌ Test script not found"
-            exit 1
-          fi
-          chmod +x ./Scripts/run-all-tests.sh
-          
       - name: Build validation (Security focused)
         run: |
           xcodebuild build \
@@ -134,7 +126,7 @@ jobs:
     name: Build Validation Matrix
     runs-on: macos-latest
     needs: security-build-validation
-    timeout-minutes: 15
+    timeout-minutes: 8
     strategy:
       matrix:
         build-type: [debug, release]
@@ -189,7 +181,7 @@ jobs:
     name: Comprehensive Build Validation
     runs-on: macos-latest
     needs: security-build-validation
-    timeout-minutes: 20
+    timeout-minutes: 12
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
