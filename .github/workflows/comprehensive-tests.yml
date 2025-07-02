@@ -30,6 +30,14 @@ jobs:
         run: |
           brew install xcbeautify jq
           
+      - name: Launch iOS Simulator
+        uses: futureware-tech/simulator-action@v4
+        with:
+          model: 'iPhone 15'
+          os_version: '>=17.0'
+          erase_before_boot: true
+          shutdown_after_job: true
+          
       - name: Debug available simulators
         run: |
           echo "Available Xcode version:"
@@ -143,6 +151,14 @@ jobs:
         with:
           xcode-version: latest-stable
           
+      - name: Launch iOS Simulator
+        uses: futureware-tech/simulator-action@v4
+        with:
+          model: 'iPhone 15'
+          os_version: '>=17.0'
+          erase_before_boot: true
+          shutdown_after_job: true
+          
       - name: Install xcbeautify
         run: brew install xcbeautify
         
@@ -181,7 +197,7 @@ jobs:
               xcodebuild test \
                 -project "Traveling Snails.xcodeproj" \
                 -scheme "Traveling Snails" \
-                -destination "platform=macOS,arch=arm64,variant=Designed for [iPad,iPhone]" \
+                -destination "platform=iOS Simulator,name=iPhone 15" \
                 -only-testing:"Traveling Snails Tests/SwiftData Tests" | xcbeautify
               ;;
           esac
@@ -210,6 +226,14 @@ jobs:
         with:
           xcode-version: latest-stable
           
+      - name: Launch iOS Simulator
+        uses: futureware-tech/simulator-action@v4
+        with:
+          model: 'iPhone 15'
+          os_version: '>=17.0'
+          erase_before_boot: true
+          shutdown_after_job: true
+          
       - name: Install xcbeautify
         run: brew install xcbeautify
         
@@ -228,7 +252,7 @@ jobs:
           xcodebuild build \
             -project "Traveling Snails.xcodeproj" \
             -scheme "Traveling Snails" \
-            -destination "platform=macOS,arch=arm64,variant=Designed for [iPad,iPhone]" | xcbeautify
+            -destination "platform=iOS Simulator,name=iPhone 15" | xcbeautify
 
   # Enhanced SwiftLint analysis (consolidated with better error handling)
   enhanced-linting:

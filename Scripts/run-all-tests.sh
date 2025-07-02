@@ -18,7 +18,7 @@ PROJECT_NAME="Traveling Snails"
 SCHEME_NAME="Traveling Snails"
 # Use generic simulator for better CI compatibility
 SIMULATOR_NAME="iPhone 16" 
-GENERIC_SIMULATOR="platform=macOS,arch=arm64,variant=Designed for [iPad,iPhone]"
+GENERIC_SIMULATOR="platform=iOS Simulator,name=iPhone 15"
 TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
 START_EPOCH=$(date +%s)
 EXIT_CODE=0
@@ -263,7 +263,7 @@ validate_test_targets() {
     if xcodebuild test \
         -project "$PROJECT_NAME.xcodeproj" \
         -scheme "$SCHEME_NAME" \
-        -destination "platform=macOS,arch=arm64,variant=Designed for [iPad,iPhone]" \
+        -destination "platform=iOS Simulator,name=iPhone 15" \
         -only-testing:"$TEST_TARGET/$UNIT_TEST_PATH" \
         -dry-run >/dev/null 2>&1; then
         echo -e "${GREEN}✓ xcodebuild can locate test targets${NC}"
@@ -285,7 +285,7 @@ run_security_tests() {
     local xcodebuild_command="xcodebuild test \
         -project \"$PROJECT_NAME.xcodeproj\" \
         -scheme \"$SCHEME_NAME\" \
-        -destination \"platform=macOS,arch=arm64,variant=Designed for [iPad,iPhone]\" \
+        -destination \"platform=iOS Simulator,name=iPhone 15\" \
         -only-testing:\"$TEST_TARGET/Security Tests\""
     
     execute_test_with_xcbeautify "Security Tests" "$xcodebuild_command"
@@ -296,7 +296,7 @@ run_unit_tests() {
     local xcodebuild_command="xcodebuild test \
         -project \"$PROJECT_NAME.xcodeproj\" \
         -scheme \"$SCHEME_NAME\" \
-        -destination \"platform=macOS,arch=arm64,variant=Designed for [iPad,iPhone]\" \
+        -destination \"platform=iOS Simulator,name=iPhone 15\" \
         -only-testing:\"$TEST_TARGET/$UNIT_TEST_PATH\""
     
     execute_test_with_xcbeautify "Unit Tests" "$xcodebuild_command"
@@ -307,7 +307,7 @@ run_integration_tests() {
     local xcodebuild_command="xcodebuild test \
         -project \"$PROJECT_NAME.xcodeproj\" \
         -scheme \"$SCHEME_NAME\" \
-        -destination \"platform=macOS,arch=arm64,variant=Designed for [iPad,iPhone]\" \
+        -destination \"platform=iOS Simulator,name=iPhone 15\" \
         -only-testing:\"$TEST_TARGET/$INTEGRATION_TEST_PATH\""
     
     execute_test_with_xcbeautify "Integration Tests" "$xcodebuild_command"
@@ -318,7 +318,7 @@ run_performance_tests() {
     local xcodebuild_command="xcodebuild test \
         -project \"$PROJECT_NAME.xcodeproj\" \
         -scheme \"$SCHEME_NAME\" \
-        -destination \"platform=macOS,arch=arm64,variant=Designed for [iPad,iPhone]\" \
+        -destination \"platform=iOS Simulator,name=iPhone 15\" \
         -only-testing:\"$TEST_TARGET/$PERFORMANCE_TEST_PATH\""
     
     execute_test_with_xcbeautify "Performance Tests" "$xcodebuild_command"
@@ -399,7 +399,7 @@ build_project() {
     local build_command="xcodebuild build \
         -project \"$PROJECT_NAME.xcodeproj\" \
         -scheme \"$SCHEME_NAME\" \
-        -destination \"platform=macOS,arch=arm64,variant=Designed for [iPad,iPhone]\""
+        -destination \"platform=iOS Simulator,name=iPhone 15\""
     
     # Add xcbeautify if available
     if command -v xcbeautify &> /dev/null; then
@@ -419,7 +419,7 @@ run_tests() {
     local test_command="xcodebuild test \
         -project \"$PROJECT_NAME.xcodeproj\" \
         -scheme \"$SCHEME_NAME\" \
-        -destination \"platform=macOS,arch=arm64,variant=Designed for [iPad,iPhone]\""
+        -destination \"platform=iOS Simulator,name=iPhone 15\""
     
     # Add xcbeautify if available
     if command -v xcbeautify &> /dev/null; then
