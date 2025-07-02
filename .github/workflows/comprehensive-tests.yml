@@ -172,7 +172,7 @@ jobs:
               xcodebuild test \
                 -project "Traveling Snails.xcodeproj" \
                 -scheme "Traveling Snails" \
-                -destination "id=dvtdevice-DVTiOSDeviceSimulatorPlaceholder-iphonesimulator:placeholder" \
+                -destination "platform=iOS Simulator,id=dvtdevice-DVTiOSDeviceSimulatorPlaceholder-iphonesimulator:placeholder" \
                 -only-testing:"Traveling Snails Tests/SwiftData Tests" | xcbeautify
               ;;
           esac
@@ -219,7 +219,7 @@ jobs:
           xcodebuild build \
             -project "Traveling Snails.xcodeproj" \
             -scheme "Traveling Snails" \
-            -destination "id=dvtdevice-DVTiOSDeviceSimulatorPlaceholder-iphonesimulator:placeholder" | xcbeautify
+            -destination "platform=iOS Simulator,id=dvtdevice-DVTiOSDeviceSimulatorPlaceholder-iphonesimulator:placeholder" | xcbeautify
 
   # Enhanced SwiftLint analysis (consolidated with better error handling)
   enhanced-linting:
