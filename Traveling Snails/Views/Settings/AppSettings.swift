@@ -300,9 +300,9 @@ class AppSettings {
         #endif
 
         // Check iCloud availability
-        if let token = FileManager.default.ubiquityIdentityToken {
+        if FileManager.default.ubiquityIdentityToken != nil {
             #if DEBUG
-            Logger.shared.debug("iCloud available, token: \(token)")
+            Logger.shared.debug("iCloud available - identity verification successful")
             #endif
         } else {
             #if DEBUG

@@ -495,8 +495,9 @@ class DatabaseImportManager {
                 isImporting = false
             }
         } catch {
+            Logger.shared.error("Import failed: \(error.localizedDescription)", category: .dataImport)
             await MainActor.run {
-                importError = "Import failed: \(error.localizedDescription)"
+                importError = L(L10n.Settings.Import.failed)
                 isImporting = false
             }
         }

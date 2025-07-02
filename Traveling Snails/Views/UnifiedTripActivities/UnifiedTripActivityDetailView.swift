@@ -212,13 +212,13 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
 
         do {
             try modelContext.save()
-            print("=== DEBUG: Changes saved successfully ===")
+            Logger.shared.info("Changes saved successfully")
 
             withAnimation {
                 isEditing = false
             }
         } catch {
-            print("=== ERROR: Failed to save changes: \(error) ===")
+            Logger.shared.error("Failed to save changes in UnifiedTripActivityDetailView: \(error.localizedDescription)", category: .ui)
         }
     }
 
@@ -309,7 +309,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
             try modelContext.save()
             dismiss()
         } catch {
-            Logger.shared.error("Failed to delete activity: \(error.localizedDescription)", category: .database)
+            Logger.shared.error("Failed to delete activity", category: .database)
         }
     }
 
@@ -349,7 +349,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
         do {
             try modelContext.save()
         } catch {
-            print("Failed to save attachment relationship: \(error)")
+            Logger.shared.error("Failed to save attachment relationship in UnifiedTripActivityDetailView: \(error.localizedDescription)", category: .database)
         }
     }
 

@@ -801,7 +801,8 @@ struct DataBrowserIssueFixerSheet: View {
             try modelContext.save()
             results.append("✅ All changes saved successfully")
         } catch {
-            results.append("❌ Error saving changes: \(error.localizedDescription)")
+            Logger.shared.error("Failed to save changes in DataBrowserView: \(error.localizedDescription)", category: .database)
+            results.append("❌ \(L(L10n.Save.failed))")
         }
 
         await MainActor.run {

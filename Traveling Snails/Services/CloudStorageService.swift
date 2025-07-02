@@ -101,7 +101,8 @@ enum CloudStorageError: LocalizedError {
         case .networkUnavailable:
             return "Network is unavailable for cloud storage"
         case .unknown(let error):
-            return "Unknown cloud storage error: \(error.localizedDescription)"
+            Logger.shared.error("Unknown cloud storage error: \(error.localizedDescription)", category: .cloudKit)
+            return L(L10n.Errors.unknown)
         }
     }
 }

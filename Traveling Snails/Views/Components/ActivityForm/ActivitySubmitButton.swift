@@ -37,12 +37,12 @@ struct ActivitySubmitButton: View {
             }
             .disabled(!isValid || isSaving)
 
-            if let error = saveError {
+            if saveError != nil {
                 HStack {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundColor(.red)
 
-                    Text("Error: \(error.localizedDescription)")
+                    Text(L(L10n.Save.activityFailed))
                         .foregroundColor(.red)
                         .font(.caption)
                 }

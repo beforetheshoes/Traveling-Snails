@@ -138,7 +138,8 @@ struct EmbeddedFileAttachmentListView: View {
             },
             onFailure: { error in
                 isProcessing = false
-                handleError("Failed to remove attachment: \(error.localizedDescription)")
+                Logger.shared.error("Failed to remove attachment: \(error.localizedDescription)", category: .fileAttachment)
+                handleError(L(L10n.Delete.attachmentFailed))
             }
         )
     }

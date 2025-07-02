@@ -86,7 +86,8 @@ struct CrossDeviceEditFileAttachmentView: View {
             try modelContext.save()
             dismiss()
         } catch {
-            saveError = "Failed to save: \(error.localizedDescription)"
+            Logger.shared.error("Failed to save file attachment: \(error.localizedDescription)", category: .fileAttachment)
+            saveError = L(L10n.Save.attachmentFailed)
             isSaving = false
         }
     }

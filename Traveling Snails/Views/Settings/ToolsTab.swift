@@ -240,9 +240,10 @@ struct ToolsTab: View {
             }
         } catch {
             await MainActor.run {
-                operationStatus = "Error resetting data: \(error.localizedDescription)"
+                operationStatus = L(L10n.Database.Operations.resetFailed)
                 isPerformingOperation = false
             }
+            Logger.shared.error("Failed to reset data: \(error.localizedDescription)", category: .database)
         }
     }
 }
