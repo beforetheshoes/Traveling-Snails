@@ -164,7 +164,19 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
         .onAppear {
             // Initialize edit data and attachments from activity
             editData = TripActivityEditData(from: activity)
-            attachments = activity.fileAttachments
+            refreshAttachments()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .importCompleted)) { _ in
+            // Refresh attachments when import completes to show newly imported files
+            refreshAttachments()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .fileAttachmentAdded)) { _ in
+            // Refresh attachments when new files are added
+            refreshAttachments()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .fileAttachmentRemoved)) { _ in
+            // Refresh attachments when files are removed
+            refreshAttachments()
         }
         // Smooth transition animations for edit mode
     }
@@ -188,7 +200,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
 
     private func startEditing() {
         editData = TripActivityEditData(from: activity)
-        attachments = activity.fileAttachments
+        refreshAttachments()
         withAnimation {
             isEditing = true
         }
@@ -196,7 +208,7 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
 
     private func cancelEditing() {
         editData = TripActivityEditData(from: activity)
-        attachments = activity.fileAttachments
+        refreshAttachments()
         withAnimation {
             isEditing = false
         }
@@ -324,6 +336,12 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
     }
 
     // MARK: - File Attachment Management
+
+    /// Refreshes the attachments array from the activity's current fileAttachments
+    /// This ensures the UI shows the latest attachment state after imports or other changes
+    private func refreshAttachments() {
+        attachments = activity.fileAttachments
+    }
 
     private func addAttachmentToActivity(_ attachment: EmbeddedFileAttachment) {
         switch activity.activityType {

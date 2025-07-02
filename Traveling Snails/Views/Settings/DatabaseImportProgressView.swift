@@ -195,4 +195,3 @@ struct ImportStatCard: View {
         .cornerRadius(8)
     }
 }
-
