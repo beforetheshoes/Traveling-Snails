@@ -384,7 +384,7 @@ jobs:
   dependency-scan:
     name: Dependency Security Scan
     runs-on: macos-latest
-    needs: security-tests
+    needs: security-build-validation
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
