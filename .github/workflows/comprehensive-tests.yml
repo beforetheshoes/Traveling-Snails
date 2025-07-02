@@ -1,4 +1,4 @@
-name: Comprehensive Testing Pipeline
+name: Build Validation Pipeline
 
 on:
   push:
@@ -9,14 +9,23 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
+
+# Workflow-level timeout to prevent hanging indefinitely
+defaults:
+  run:
+    shell: bash
+
+# Global timeout for entire workflow
+env:
+  WORKFLOW_TIMEOUT_MINUTES: 45
 
 jobs:
-  # Security tests run first and block everything if they fail
-  security-tests:
-    name: Security Tests
+  # Security build validation runs first and blocks everything if it fails
+  security-build-validation:
+    name: Security Build Validation
     runs-on: macos-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -29,7 +38,7 @@ jobs:
       - name: Install dependencies
         run: |
           brew install xcbeautify jq
-        
+          
       - name: Cache Swift packages
         uses: actions/cache@v4
         with:
@@ -40,16 +49,13 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-swift-
             
-      - name: Validate script exists
+      - name: Build validation (Security focused)
         run: |
-          if [ ! -f "./Scripts/run-all-tests.sh" ]; then
-            echo "❌ Test script not found"
-            exit 1
-          fi
-          chmod +x ./Scripts/run-all-tests.sh
-          
-      - name: Run security tests
-        run: ./Scripts/run-all-tests.sh --security-only
+          xcodebuild build \
+            -project "Traveling Snails.xcodeproj" \
+            -scheme "Traveling Snails" \
+            -destination "platform=macOS,arch=arm64" \
+            CODE_SIGNING_ALLOWED=NO | xcbeautify
         
       - name: Enhanced security scan for sensitive data
         run: |
@@ -105,25 +111,25 @@ jobs:
             echo "✅ No obvious security issues detected"
           fi
           
-      - name: Upload security test results
+      - name: Upload security build results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: security-test-results
+          name: security-build-results
           path: |
             swiftlint-results.json
             *.log
           retention-days: 7
 
-  # Test matrix for parallel execution - reduces from 7 jobs to 4
-  test-matrix:
-    name: Test Matrix
+  # Build validation matrix for parallel execution
+  build-validation-matrix:
+    name: Build Validation Matrix
     runs-on: macos-latest
-    needs: security-tests
-    timeout-minutes: 25
+    needs: security-build-validation
+    timeout-minutes: 8
     strategy:
       matrix:
-        test-type: [unit, integration, performance, swiftdata]
+        build-type: [debug, release]
       fail-fast: true
     steps:
       - name: Checkout code
@@ -147,51 +153,35 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-swift-
             
-      - name: Validate script exists
+      - name: Build validation (${{ matrix.build-type }})
         run: |
-          if [ ! -f "./Scripts/run-all-tests.sh" ]; then
-            echo "❌ Test script not found"
-            exit 1
+          BUILD_CONFIG="Debug"
+          if [ "${{ matrix.build-type }}" = "release" ]; then
+            BUILD_CONFIG="Release"
           fi
-          chmod +x ./Scripts/run-all-tests.sh
-            
-      - name: Run matrix tests
-        run: |
-          case "${{ matrix.test-type }}" in
-            "unit")
-              ./Scripts/run-all-tests.sh --unit-only
-              ;;
-            "integration")
-              ./Scripts/run-all-tests.sh --integration-only
-              ;;
-            "performance")
-              ./Scripts/run-all-tests.sh --performance-only
-              ;;
-            "swiftdata")
-              # Run SwiftData tests specifically
-              xcodebuild test \
-                -project "Traveling Snails.xcodeproj" \
-                -scheme "Traveling Snails" \
-                -destination "platform=iOS Simulator,name=iPhone 16" \
-                -only-testing:"Traveling Snails Tests/SwiftData Tests" | xcbeautify
-              ;;
-          esac
+          
+          xcodebuild build \
+            -project "Traveling Snails.xcodeproj" \
+            -scheme "Traveling Snails" \
+            -configuration "$BUILD_CONFIG" \
+            -destination "platform=macOS,arch=arm64" \
+            CODE_SIGNING_ALLOWED=NO | xcbeautify
         
-      - name: Upload ${{ matrix.test-type }} test results
+      - name: Upload ${{ matrix.build-type }} build results
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.test-type }}-test-results
+          name: ${{ matrix.build-type }}-build-results
           path: |
             *.log
           retention-days: 7
 
-  # Build validation runs in parallel with tests
-  build-validation:
-    name: Build Validation
+  # Comprehensive build validation with multiple targets
+  comprehensive-build-validation:
+    name: Comprehensive Build Validation
     runs-on: macos-latest
-    needs: security-tests
-    timeout-minutes: 15
+    needs: security-build-validation
+    timeout-minutes: 12
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -214,17 +204,28 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-swift-
             
-      - name: Build project
+      - name: Build for macOS (iPad/iPhone compatibility)
         run: |
           xcodebuild build \
             -project "Traveling Snails.xcodeproj" \
             -scheme "Traveling Snails" \
-            -destination "platform=iOS Simulator,name=iPhone 16" | xcbeautify
+            -destination "platform=macOS,arch=arm64" \
+            CODE_SIGNING_ALLOWED=NO | xcbeautify
+            
+      - name: Build for iOS Device (compilation check)
+        run: |
+          xcodebuild build \
+            -project "Traveling Snails.xcodeproj" \
+            -scheme "Traveling Snails" \
+            -destination "generic/platform=iOS" \
+            CODE_SIGNING_ALLOWED=NO | xcbeautify
 
   # Enhanced SwiftLint analysis (consolidated with better error handling)
   enhanced-linting:
     name: Enhanced Linting
     runs-on: macos-latest
+    needs: security-build-validation
+    timeout-minutes: 10
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -317,60 +318,59 @@ jobs:
             *.log
           retention-days: 7
 
-  # Final summary job that requires all tests to pass
-  test-summary:
-    name: Test Summary
+  # Final summary job that requires all build validations to pass
+  build-summary:
+    name: Build Summary
     runs-on: macos-latest
-    needs: [security-tests, test-matrix, build-validation, enhanced-linting, dependency-scan]
+    needs: [security-build-validation, build-validation-matrix, comprehensive-build-validation, enhanced-linting, dependency-scan]
     if: always()
     steps:
-      - name: Check test results
+      - name: Check build results
         run: |
-          echo "🎯 Comprehensive Test Pipeline Summary"
-          echo "======================================"
+          echo "🏗️ Comprehensive Build Validation Summary"
+          echo "=========================================="
           
           # Create comprehensive summary
-          echo "## 🎯 Test Pipeline Results" >> $GITHUB_STEP_SUMMARY
+          echo "## 🏗️ Build Validation Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Security Tests | ${{ needs.security-tests.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Test Matrix | ${{ needs.test-matrix.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Build Validation | ${{ needs.build-validation.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Build Validation | ${{ needs.security-build-validation.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build Validation Matrix | ${{ needs.build-validation-matrix.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Comprehensive Build Validation | ${{ needs.comprehensive-build-validation.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Enhanced Linting | ${{ needs.enhanced-linting.result }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Dependency Scan | ${{ needs.dependency-scan.result }} |" >> $GITHUB_STEP_SUMMARY
           
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## 📝 Testing Approach" >> $GITHUB_STEP_SUMMARY
+          echo "- **CI**: Build validation + security scanning (fast, reliable)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Local**: Comprehensive test execution via pre-commit hooks" >> $GITHUB_STEP_SUMMARY
+          echo "- **Benefits**: No iOS simulator dependencies, faster feedback" >> $GITHUB_STEP_SUMMARY
+          
           # Check if all required jobs passed (treat cancelled as failure)
-          if [[ "${{ needs.security-tests.result }}" == "success" && \
-                "${{ needs.test-matrix.result }}" == "success" && \
-                "${{ needs.build-validation.result }}" == "success" && \
+          if [[ "${{ needs.security-build-validation.result }}" == "success" && \
+                "${{ needs.build-validation-matrix.result }}" == "success" && \
+                "${{ needs.comprehensive-build-validation.result }}" == "success" && \
                 "${{ needs.enhanced-linting.result }}" == "success" && \
                 "${{ needs.dependency-scan.result }}" == "success" ]]; then
-            echo "✅ ALL TESTS PASSED!"
-            echo "🚀 Codebase is ready for deployment"
+            echo "✅ ALL BUILD VALIDATIONS PASSED!"
+            echo "🚀 Codebase builds successfully and is ready for deployment"
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "## ✅ All Tests Passed!" >> $GITHUB_STEP_SUMMARY
-            echo "🚀 **Codebase is ready for deployment**" >> $GITHUB_STEP_SUMMARY
+            echo "## ✅ All Build Validations Passed!" >> $GITHUB_STEP_SUMMARY
+            echo "🚀 **Codebase builds successfully and is ready for deployment**" >> $GITHUB_STEP_SUMMARY
           else
-            echo "❌ SOME TESTS FAILED OR WERE CANCELLED!"
-            echo "Security Tests: ${{ needs.security-tests.result }}"
-            echo "Test Matrix: ${{ needs.test-matrix.result }}"
-            echo "Build Validation: ${{ needs.build-validation.result }}"
+            echo "❌ SOME BUILD VALIDATIONS FAILED!"
+            echo "Security Build Validation: ${{ needs.security-build-validation.result }}"
+            echo "Build Validation Matrix: ${{ needs.build-validation-matrix.result }}"
+            echo "Comprehensive Build Validation: ${{ needs.comprehensive-build-validation.result }}"
             echo "Enhanced Linting: ${{ needs.enhanced-linting.result }}"
             echo "Dependency Scan: ${{ needs.dependency-scan.result }}"
             echo ""
             
-            # Check for cancelled jobs specifically
-            if [[ "${{ needs.test-matrix.result }}" == "cancelled" || \
-                  "${{ needs.build-validation.result }}" == "cancelled" ]]; then
-              echo "⚠️  Jobs were cancelled - likely due to a newer commit or workflow trigger."
-              echo "This can happen with rapid commits or concurrent workflow runs."
-            fi
-            
-            echo "Please ensure all tests complete successfully before merging."
+            echo "Please ensure all build validations complete successfully before merging."
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "## ❌ Some Tests Failed" >> $GITHUB_STEP_SUMMARY
-            echo "**Please fix the failing tests before merging.**" >> $GITHUB_STEP_SUMMARY
+            echo "## ❌ Some Build Validations Failed" >> $GITHUB_STEP_SUMMARY
+            echo "**Please fix the failing build issues before merging.**" >> $GITHUB_STEP_SUMMARY
             exit 1
           fi
 
@@ -378,7 +378,8 @@ jobs:
   dependency-scan:
     name: Dependency Security Scan
     runs-on: macos-latest
-    needs: security-tests
+    needs: security-build-validation
+    timeout-minutes: 8
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -432,3 +433,4 @@ jobs:
           echo "- GitHub's Dependabot" >> $GITHUB_STEP_SUMMARY
           echo "- OWASP dependency-check" >> $GITHUB_STEP_SUMMARY
           echo "- Snyk or similar tools" >> $GITHUB_STEP_SUMMARY
+

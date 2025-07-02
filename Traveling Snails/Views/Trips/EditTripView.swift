@@ -456,62 +456,14 @@ struct EditTripView: View {
     }
 
     private func checkDateConflicts() -> String? {
-        guard trip.totalActivities > 0 else { return nil }
-
-        // Get all activity dates and convert them to the local calendar day
-        let calendar = Calendar.current
-        var allActivityDates: [Date] = []
-
-        // For each activity, convert the start/end times to local date components
-        // This ensures we're comparing actual calendar days rather than timezone-specific moments
-        for lodging in trip.lodging {
-            let startDay = calendar.startOfDay(for: lodging.start)
-            let endDay = calendar.startOfDay(for: lodging.end)
-            allActivityDates.append(contentsOf: [startDay, endDay])
-        }
-
-        for transportation in trip.transportation {
-            let startDay = calendar.startOfDay(for: transportation.start)
-            let endDay = calendar.startOfDay(for: transportation.end)
-            allActivityDates.append(contentsOf: [startDay, endDay])
-        }
-
-        for activity in trip.activity {
-            let startDay = calendar.startOfDay(for: activity.start)
-            let endDay = calendar.startOfDay(for: activity.end)
-            allActivityDates.append(contentsOf: [startDay, endDay])
-        }
-
-        guard let earliestActivityDay = allActivityDates.min(),
-              let latestActivityDay = allActivityDates.max() else { return nil }
-
-        var conflicts: [String] = []
-
-        // Convert trip dates to start of day for fair comparison
-        let tripStartDay = hasStartDate ? calendar.startOfDay(for: startDate) : nil
-        let tripEndDay = hasEndDate ? calendar.startOfDay(for: endDate) : nil
-
-        if let tripStart = tripStartDay, tripStart > earliestActivityDay {
-            let formatter = DateFormatter()
-            formatter.dateStyle = .medium
-            formatter.timeStyle = .none
-
-            conflicts.append("Trip start date (\(formatter.string(from: tripStart))) is after activities starting on \(formatter.string(from: earliestActivityDay))")
-        }
-
-        if let tripEnd = tripEndDay, tripEnd < latestActivityDay {
-            let formatter = DateFormatter()
-            formatter.dateStyle = .medium
-            formatter.timeStyle = .none
-
-            conflicts.append("Trip end date (\(formatter.string(from: tripEnd))) is before activities ending on \(formatter.string(from: latestActivityDay))")
-        }
-
-        if !conflicts.isEmpty {
-            return conflicts.joined(separator: ". ") + ". Activities outside the trip date range may not be selectable when editing."
-        }
-
-        return nil
+        // PERFORMANCE OPTIMIZATION: Use cached date range from Trip model
+        // This replaces the O(n) computation with cached O(1) access for subsequent calls
+        return trip.optimizedCheckDateConflicts(
+            hasStartDate: hasStartDate, 
+            startDate: startDate, 
+            hasEndDate: hasEndDate, 
+            endDate: endDate
+        )
     }
 
     func deleteTrip() {
