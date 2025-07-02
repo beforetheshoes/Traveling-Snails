@@ -432,3 +432,4 @@ jobs:
           echo "- GitHub's Dependabot" >> $GITHUB_STEP_SUMMARY
           echo "- OWASP dependency-check" >> $GITHUB_STEP_SUMMARY
           echo "- Snyk or similar tools" >> $GITHUB_STEP_SUMMARY
+
