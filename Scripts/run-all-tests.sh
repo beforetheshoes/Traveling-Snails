@@ -17,8 +17,8 @@ PROJECT_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PROJECT_NAME="Traveling Snails"
 SCHEME_NAME="Traveling Snails"
 # Use generic simulator for better CI compatibility
-SIMULATOR_NAME="iPhone 16"
-GENERIC_SIMULATOR="platform=iOS Simulator,name=Any iOS Simulator Device"
+SIMULATOR_NAME="iPhone 16" 
+GENERIC_SIMULATOR="id=dvtdevice-DVTiOSDeviceSimulatorPlaceholder-iphonesimulator:placeholder"
 TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
 START_EPOCH=$(date +%s)
 EXIT_CODE=0
