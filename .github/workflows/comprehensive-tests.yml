@@ -181,7 +181,7 @@ jobs:
               xcodebuild test \
                 -project "Traveling Snails.xcodeproj" \
                 -scheme "Traveling Snails" \
-                -destination "platform=macOS,arch=arm64,variant=Designed for [iPad,iPhone]" \
+                -destination "platform=iOS Simulator,name=iPhone 16" \
                 -only-testing:"Traveling Snails Tests/SwiftData Tests" | xcbeautify
               ;;
           esac
@@ -228,7 +228,7 @@ jobs:
           xcodebuild build \
             -project "Traveling Snails.xcodeproj" \
             -scheme "Traveling Snails" \
-            -destination "platform=macOS,arch=arm64,variant=Designed for [iPad,iPhone]" | xcbeautify
+            -destination "platform=iOS Simulator,name=iPhone 16" | xcbeautify
 
   # Enhanced SwiftLint analysis (consolidated with better error handling)
   enhanced-linting:
