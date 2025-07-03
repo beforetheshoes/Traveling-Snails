@@ -23,6 +23,9 @@ TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
 START_EPOCH=$(date +%s)
 EXIT_CODE=0
 
+# Global array for background process IDs
+declare -a pids=()
+
 # Test target configuration
 TEST_TARGET="Traveling Snails Tests"
 UNIT_TEST_PATH="Unit Tests"
@@ -31,6 +34,26 @@ PERFORMANCE_TEST_PATH="Performance Tests"
 
 # Change to project root
 cd "$PROJECT_ROOT"
+
+# Signal handlers for cleanup
+cleanup() {
+    echo -e "${YELLOW}\n⚠️  Cleaning up background processes...${NC}"
+    # Kill background processes if they exist
+    if [ ${#pids[@]} -gt 0 ]; then
+        for pid in "${pids[@]}"; do
+            if kill -0 "$pid" 2>/dev/null; then
+                kill "$pid" 2>/dev/null || true
+            fi
+        done
+    fi
+    # Clean up temporary files
+    rm -f .unit_test_exit_code .integration_test_exit_code .performance_test_exit_code .security_test_exit_code
+    rm -f .test_cache_*.tmp
+    exit 130
+}
+
+# Set up signal handlers
+trap cleanup INT TERM
 
 echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
 echo -e "${BLUE}        Traveling Snails - Test & Lint Suite${NC}"
@@ -53,7 +76,7 @@ should_run_tests() {
     fi
     
     local cache_time=$(stat -f %m "$cache_file" 2>/dev/null || echo 0)
-    local newest_source=$(find . -name "*.swift" -not -path "./.build/*" -not -path "./build/*" -newer "$cache_file" 2>/dev/null | wc -l)
+    local newest_source=$(find . -name "*.swift" -not -path "./.build/*" -not -path "./build/*" -newer "$cache_file" 2>/dev/null | wc -l | tr -d ' ')
     
     if [ "$newest_source" -gt 0 ]; then
         echo -e "${YELLOW}⚠️  Source files changed since last $test_name run${NC}"
@@ -71,7 +94,9 @@ mark_test_cached() {
     local exit_code="$2"
     
     if [ "$USE_CACHE" = true ]; then
-        echo "$exit_code" > "$cache_file"
+        # Use atomic write for cache file to prevent race conditions
+        local temp_file="${cache_file}.tmp"
+        echo "$exit_code" > "$temp_file" && mv "$temp_file" "$cache_file"
         touch "$cache_file"
     fi
 }
@@ -479,7 +504,7 @@ run_tests_parallel() {
     echo ""
     
     # Start background processes for each test category
-    local pids=()
+    pids=()
     
     # Unit tests
     (
@@ -520,6 +545,24 @@ run_tests_parallel() {
     local integration_exit=$(cat .integration_test_exit_code 2>/dev/null || echo 1)
     local performance_exit=$(cat .performance_test_exit_code 2>/dev/null || echo 1)
     local security_exit=$(cat .security_test_exit_code 2>/dev/null || echo 1)
+    
+    # Verify exit code files exist and are readable
+    if [ ! -f ".unit_test_exit_code" ]; then
+        echo -e "${RED}⚠️  Unit test exit code file missing${NC}"
+        unit_exit=1
+    fi
+    if [ ! -f ".integration_test_exit_code" ]; then
+        echo -e "${RED}⚠️  Integration test exit code file missing${NC}"
+        integration_exit=1
+    fi
+    if [ ! -f ".performance_test_exit_code" ]; then
+        echo -e "${RED}⚠️  Performance test exit code file missing${NC}"
+        performance_exit=1
+    fi
+    if [ ! -f ".security_test_exit_code" ]; then
+        echo -e "${RED}⚠️  Security test exit code file missing${NC}"
+        security_exit=1
+    fi
     
     # Clean up exit code files
     rm -f .unit_test_exit_code .integration_test_exit_code .performance_test_exit_code .security_test_exit_code
@@ -590,10 +633,17 @@ generate_coverage_report() {
                 
                 # Generate coverage report
                 echo -e "${CYAN}Run this command to view detailed coverage:${NC}"
-                echo "xcrun llvm-cov report \\"
-                echo "  ./build/Build/Products/Debug-iphonesimulator/Traveling\\ Snails.app/Traveling\\ Snails \\"
-                echo "  -instr-profile=$coverage_files \\"
-                echo "  -ignore-filename-regex=Tests"
+                # Find the app path dynamically
+                local app_path=$(find ./build/Build/Products -name "*.app" -type d | head -1)
+                if [ -n "$app_path" ]; then
+                    local app_binary="$app_path/$(basename "$app_path" .app)"
+                    echo "xcrun llvm-cov report \\"
+                    echo "  \"$app_binary\" \\"
+                    echo "  -instr-profile=$coverage_files \\"
+                    echo "  -ignore-filename-regex=Tests"
+                else
+                    echo -e "${RED}⚠️  Could not find app binary for coverage report${NC}"
+                fi
             else
                 echo -e "${YELLOW}⚠️  No coverage data found${NC}"
             fi
