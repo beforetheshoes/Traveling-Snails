@@ -32,7 +32,6 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |
-            const { context } = require('@actions/github');
             
             // Get all check runs for the PR head commit
             const checkRuns = await github.rest.checks.listForRef({
