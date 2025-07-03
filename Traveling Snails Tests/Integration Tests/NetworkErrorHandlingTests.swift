@@ -330,7 +330,7 @@ func withTimeout<T>(
 
         // Return first completed task
         defer { group.cancelAll() }
-        return await group.next() ?? nil
+        return await group.next()
     }
 }
 
