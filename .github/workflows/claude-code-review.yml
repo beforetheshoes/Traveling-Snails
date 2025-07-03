@@ -85,6 +85,8 @@ jobs:
 
       - name: Wait for CI completion with retries
         if: steps.check-status.outputs.ci-passed == 'waiting'
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           echo "⏳ CI tests are still running. Implementing smart wait with retries..."
           
