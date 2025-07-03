@@ -1,5 +1,6 @@
 name: Claude Code Review
 
+# OPTIMIZATION: Only runs after CI tests pass to avoid wasting resources on failing builds
 on:
   pull_request:
     branches: [main, develop]
@@ -18,12 +19,88 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Check that CI tests pass before running Claude review
+  check-ci-status:
+    name: Wait for CI Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    outputs:
+      ci-passed: ${{ steps.check-status.outputs.ci-passed }}
+    steps:
+      - name: Check CI Status
+        id: check-status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { context } = require('@actions/github');
+            
+            // Get all check runs for the PR head commit
+            const checkRuns = await github.rest.checks.listForRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.payload.pull_request.head.sha,
+            });
+            
+            console.log(`Found ${checkRuns.data.check_runs.length} check runs`);
+            
+            // Look for the Build Validation Pipeline workflow
+            const buildValidationRuns = checkRuns.data.check_runs.filter(run => 
+              run.name.includes('Build Validation Pipeline') || 
+              run.name.includes('Build Summary') ||
+              run.name === 'Build Summary'
+            );
+            
+            console.log(`Found ${buildValidationRuns.length} build validation runs`);
+            
+            if (buildValidationRuns.length === 0) {
+              console.log('No Build Validation Pipeline found, waiting...');
+              core.setOutput('ci-passed', 'waiting');
+              return;
+            }
+            
+            // Check if any build validation runs are still pending
+            const pendingRuns = buildValidationRuns.filter(run => 
+              run.status === 'queued' || run.status === 'in_progress'
+            );
+            
+            if (pendingRuns.length > 0) {
+              console.log(`${pendingRuns.length} build validation runs still pending`);
+              core.setOutput('ci-passed', 'waiting');
+              return;
+            }
+            
+            // Check if all completed runs passed
+            const failedRuns = buildValidationRuns.filter(run => 
+              run.status === 'completed' && run.conclusion !== 'success'
+            );
+            
+            if (failedRuns.length > 0) {
+              console.log(`${failedRuns.length} build validation runs failed`);
+              console.log('Failed runs:', failedRuns.map(r => `${r.name}: ${r.conclusion}`));
+              core.setOutput('ci-passed', 'false');
+              return;
+            }
+            
+            console.log('All build validation runs passed');
+            core.setOutput('ci-passed', 'true');
+
+      - name: Wait for CI completion
+        if: steps.check-status.outputs.ci-passed == 'waiting'
+        run: |
+          echo "⏳ CI tests are still running. Waiting 2 minutes before rechecking..."
+          sleep 120
+          echo "❌ CI tests took too long. Claude review will be skipped."
+          echo "Please re-run the Claude review workflow after CI completes."
+          exit 1
+
   claude-review:
     name: Claude Code Review
     runs-on: ubuntu-latest
+    needs: check-ci-status
     timeout-minutes: 10
-    # Skip review for certain conditions
+    # Only run if CI tests passed and not a WIP/skip-review PR
     if: |
+      needs.check-ci-status.outputs.ci-passed == 'true' &&
       !contains(github.event.pull_request.title, '[skip-review]') &&
       !contains(github.event.pull_request.title, '[WIP]') &&
       !contains(github.event.pull_request.title, 'WIP:')
@@ -54,6 +131,8 @@ jobs:
           direct_prompt: |
             You are conducting a comprehensive code review for a SwiftUI travel planning app called "Traveling Snails". 
             This app uses SwiftData + CloudKit for data persistence and follows modern iOS 18+ patterns.
+            
+            ✅ **NOTE: All CI tests have passed** - This review runs only after successful build validation.
             
             🔍 **CRITICAL ANALYSIS AREAS:**
             
