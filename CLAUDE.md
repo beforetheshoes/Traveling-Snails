@@ -200,5 +200,46 @@ Problem → Draft solution → Test → Next
 
 These documents contain critical technical guidance and should be referenced regularly during development.
 
+## 🔄 VERSION CONTROL WORKFLOW (MANDATORY)
+**STRICT WORKFLOW TO PREVENT MERGE CONFLICTS AND LOST WORK:**
+
+### Before Starting Any Work:
+```bash
+git checkout main
+git pull origin main
+git checkout -b feature/descriptive-name
+```
+
+### During Development:
+```bash
+git add .
+git commit -m "Clear description of changes"
+git push origin feature/descriptive-name
+```
+
+### Before Creating Pull Request:
+```bash
+git checkout main
+git pull origin main
+git checkout feature/descriptive-name
+git merge main  # Resolve any conflicts locally
+./Scripts/run-all-tests.sh  # Ensure all tests pass
+git push origin feature/descriptive-name
+```
+
+### After PR is Merged:
+```bash
+git checkout main
+git pull origin main
+git branch -d feature/descriptive-name
+```
+
+### Critical Rules:
+- **ALWAYS pull main before starting new work**
+- **NEVER work directly on main branch**
+- **ALWAYS create feature branches with descriptive names**
+- **ALWAYS run tests before pushing**
+- **RESOLVE conflicts locally, never in GitHub UI**
+
 ## 🚨 COMMIT GUIDELINES
 - **DO NOT COMMIT WITHOUT RUNNING ALL TESTS AND RECEIVING APPROVAL.**
