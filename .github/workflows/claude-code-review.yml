@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     outputs:
-      ci-passed: ${{ steps.check-status.outputs.ci-passed }}
+      ci-passed: ${{ steps.check-status.outputs.ci-passed || steps.retry-check.outputs.ci-passed }}
     steps:
       - name: Check CI Status
         id: check-status
@@ -84,6 +84,7 @@ jobs:
             core.setOutput('ci-passed', 'true');
 
       - name: Wait for CI completion with retries
+        id: retry-check
         if: steps.check-status.outputs.ci-passed == 'waiting'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -105,9 +106,11 @@ jobs:
             
             if [ "$CI_STATUS" = "passed" ]; then
               echo "✅ CI tests completed successfully! Proceeding with Claude review..."
+              echo "ci-passed=true" >> $GITHUB_OUTPUT
               exit 0
             elif [ "$CI_STATUS" = "failed" ]; then
               echo "❌ CI tests failed. Claude review will be skipped."
+              echo "ci-passed=false" >> $GITHUB_OUTPUT
               exit 1
             fi
             
@@ -116,6 +119,7 @@ jobs:
           
           echo "❌ CI tests took longer than ${MAX_WAIT_TIME}s (15 minutes). Claude review will be skipped."
           echo "💡 Tip: Re-run the Claude review workflow manually after CI completes."
+          echo "ci-passed=timeout" >> $GITHUB_OUTPUT
           exit 1
 
   claude-review:
@@ -136,6 +140,21 @@ jobs:
       id-token: write
     
     steps:
+      - name: Debug conditional evaluation
+        run: |
+          echo "🔍 Debugging Claude Code Review conditional logic:"
+          echo "ci-passed output: '${{ needs.check-ci-status.outputs.ci-passed }}'"
+          echo "PR title: '${{ github.event.pull_request.title }}'"
+          echo "Contains [skip-review]: ${{ contains(github.event.pull_request.title, '[skip-review]') }}"
+          echo "Contains [WIP]: ${{ contains(github.event.pull_request.title, '[WIP]') }}"
+          echo "Contains WIP:: ${{ contains(github.event.pull_request.title, 'WIP:') }}"
+          echo ""
+          if [ "${{ needs.check-ci-status.outputs.ci-passed }}" = "true" ]; then
+            echo "✅ CI status check: PASSED"
+          else
+            echo "❌ CI status check: FAILED (value: '${{ needs.check-ci-status.outputs.ci-passed }}')"
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
