@@ -23,6 +23,9 @@ TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
 START_EPOCH=$(date +%s)
 EXIT_CODE=0
 
+# Global array for background process IDs
+declare -a pids=()
+
 # Test target configuration
 TEST_TARGET="Traveling Snails Tests"
 UNIT_TEST_PATH="Unit Tests"
@@ -32,6 +35,26 @@ PERFORMANCE_TEST_PATH="Performance Tests"
 # Change to project root
 cd "$PROJECT_ROOT"
 
+# Signal handlers for cleanup
+cleanup() {
+    echo -e "${YELLOW}\n⚠️  Cleaning up background processes...${NC}"
+    # Kill background processes if they exist
+    if [ ${#pids[@]} -gt 0 ]; then
+        for pid in "${pids[@]}"; do
+            if kill -0 "$pid" 2>/dev/null; then
+                kill "$pid" 2>/dev/null || true
+            fi
+        done
+    fi
+    # Clean up temporary files
+    rm -f .unit_test_exit_code .integration_test_exit_code .performance_test_exit_code .security_test_exit_code
+    rm -f .test_cache_*.tmp
+    exit 130
+}
+
+# Set up signal handlers
+trap cleanup INT TERM
+
 echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
 echo -e "${BLUE}        Traveling Snails - Test & Lint Suite${NC}"
 echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
@@ -39,15 +62,64 @@ echo -e "${CYAN}Timestamp: $TIMESTAMP${NC}"
 echo -e "${CYAN}Directory: $PROJECT_ROOT${NC}"
 echo ""
 
+# Function to check if tests need to run based on cache
+should_run_tests() {
+    local test_name="$1"
+    local cache_file=".test_cache_${test_name// /_}"
+    
+    if [ "$USE_CACHE" = false ]; then
+        return 0  # Always run if cache disabled
+    fi
+    
+    if [ ! -f "$cache_file" ]; then
+        return 0  # Run if no cache file
+    fi
+    
+    local cache_time=$(stat -f %m "$cache_file" 2>/dev/null || echo 0)
+    local newest_source=$(find . -name "*.swift" -not -path "./.build/*" -not -path "./build/*" -newer "$cache_file" 2>/dev/null | wc -l | tr -d ' ')
+    
+    if [ "$newest_source" -gt 0 ]; then
+        echo -e "${YELLOW}⚠️  Source files changed since last $test_name run${NC}"
+        return 0  # Run if source files changed
+    fi
+    
+    echo -e "${GREEN}✓ $test_name skipped (cached result valid)${NC}"
+    return 1  # Skip if cache valid
+}
+
+# Function to mark test as cached
+mark_test_cached() {
+    local test_name="$1"
+    local cache_file=".test_cache_${test_name// /_}"
+    local exit_code="$2"
+    
+    if [ "$USE_CACHE" = true ]; then
+        # Use atomic write for cache file to prevent race conditions
+        local temp_file="${cache_file}.tmp"
+        echo "$exit_code" > "$temp_file" && mv "$temp_file" "$cache_file"
+        touch "$cache_file"
+    fi
+}
+
 # Function to execute test with xcbeautify and simulator fallback
 execute_test_with_xcbeautify() {
     local test_name="$1"
     local xcodebuild_command="$2"
     
+    # Check cache first
+    if ! should_run_tests "$test_name"; then
+        return 0
+    fi
+    
     echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
     echo -e "${BLUE}                 Running $test_name${NC}"
     echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
     echo ""
+    
+    # Add coverage flags if requested
+    if [ "$COVERAGE" = true ]; then
+        xcodebuild_command="$xcodebuild_command -enableCodeCoverage YES -derivedDataPath ./build"
+    fi
     
     # Check for simulator availability and fallback
     local simulator="$SIMULATOR_NAME"
@@ -81,6 +153,7 @@ execute_test_with_xcbeautify() {
     # Execute and capture exit code
     if eval "$updated_command"; then
         echo -e "${GREEN}✓ All $test_name passed!${NC}"
+        mark_test_cached "$test_name" 0
     else
         local exit_status=$?
         echo -e "${RED}✗ $test_name execution failed with exit code: $exit_status${NC}"
@@ -100,14 +173,17 @@ execute_test_with_xcbeautify() {
             
             if eval "$generic_command"; then
                 echo -e "${GREEN}✓ All $test_name passed with generic simulator!${NC}"
+                mark_test_cached "$test_name" 0
                 return 0
             else
                 echo -e "${RED}✗ $test_name failed even with generic simulator${NC}"
+                mark_test_cached "$test_name" 1
                 EXIT_CODE=1
                 return 1
             fi
         fi
         
+        mark_test_cached "$test_name" 1
         EXIT_CODE=1
         return 1
     fi
@@ -420,6 +496,92 @@ build_project() {
     run_step "Building $PROJECT_NAME" "$build_command"
 }
 
+# Function to run tests in parallel
+run_tests_parallel() {
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+    echo -e "${BLUE}              Running Tests in Parallel${NC}"
+    echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+    echo ""
+    
+    # Start background processes for each test category
+    pids=()
+    
+    # Unit tests
+    (
+        run_unit_tests
+        echo $? > .unit_test_exit_code
+    ) &
+    pids+=($!)
+    
+    # Integration tests  
+    (
+        run_integration_tests
+        echo $? > .integration_test_exit_code
+    ) &
+    pids+=($!)
+    
+    # Performance tests
+    (
+        run_performance_tests
+        echo $? > .performance_test_exit_code
+    ) &
+    pids+=($!)
+    
+    # Security tests
+    (
+        run_security_tests
+        echo $? > .security_test_exit_code
+    ) &
+    pids+=($!)
+    
+    # Wait for all processes to complete
+    echo -e "${CYAN}Waiting for parallel test execution to complete...${NC}"
+    for pid in "${pids[@]}"; do
+        wait $pid
+    done
+    
+    # Check exit codes
+    local unit_exit=$(cat .unit_test_exit_code 2>/dev/null || echo 1)
+    local integration_exit=$(cat .integration_test_exit_code 2>/dev/null || echo 1)
+    local performance_exit=$(cat .performance_test_exit_code 2>/dev/null || echo 1)
+    local security_exit=$(cat .security_test_exit_code 2>/dev/null || echo 1)
+    
+    # Verify exit code files exist and are readable
+    if [ ! -f ".unit_test_exit_code" ]; then
+        echo -e "${RED}⚠️  Unit test exit code file missing${NC}"
+        unit_exit=1
+    fi
+    if [ ! -f ".integration_test_exit_code" ]; then
+        echo -e "${RED}⚠️  Integration test exit code file missing${NC}"
+        integration_exit=1
+    fi
+    if [ ! -f ".performance_test_exit_code" ]; then
+        echo -e "${RED}⚠️  Performance test exit code file missing${NC}"
+        performance_exit=1
+    fi
+    if [ ! -f ".security_test_exit_code" ]; then
+        echo -e "${RED}⚠️  Security test exit code file missing${NC}"
+        security_exit=1
+    fi
+    
+    # Clean up exit code files
+    rm -f .unit_test_exit_code .integration_test_exit_code .performance_test_exit_code .security_test_exit_code
+    
+    # Report results
+    echo -e "${CYAN}Parallel Test Results:${NC}"
+    [ $unit_exit -eq 0 ] && echo -e "${GREEN}✓ Unit Tests${NC}" || echo -e "${RED}✗ Unit Tests${NC}"
+    [ $integration_exit -eq 0 ] && echo -e "${GREEN}✓ Integration Tests${NC}" || echo -e "${RED}✗ Integration Tests${NC}"
+    [ $performance_exit -eq 0 ] && echo -e "${GREEN}✓ Performance Tests${NC}" || echo -e "${RED}✗ Performance Tests${NC}"
+    [ $security_exit -eq 0 ] && echo -e "${GREEN}✓ Security Tests${NC}" || echo -e "${RED}✗ Security Tests${NC}"
+    
+    # Set global exit code if any tests failed
+    if [ $unit_exit -ne 0 ] || [ $integration_exit -ne 0 ] || [ $performance_exit -ne 0 ] || [ $security_exit -ne 0 ]; then
+        EXIT_CODE=1
+    fi
+    
+    echo ""
+}
+
 # Function to run tests
 run_tests() {
     echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
@@ -448,6 +610,49 @@ run_tests() {
     fi
     
     echo ""
+}
+
+# Function to generate coverage report
+generate_coverage_report() {
+    if [ "$COVERAGE" = true ]; then
+        echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+        echo -e "${BLUE}                  Coverage Report${NC}"
+        echo -e "${BLUE}═══════════════════════════════════════════════════════════${NC}"
+        echo ""
+        
+        local coverage_dir="./build/Build/ProfileData"
+        if [ -d "$coverage_dir" ]; then
+            echo -e "${CYAN}Generating coverage report...${NC}"
+            
+            # Find coverage files
+            local coverage_files=$(find "$coverage_dir" -name "*.profdata" 2>/dev/null)
+            if [ -n "$coverage_files" ]; then
+                echo -e "${GREEN}✓ Coverage data found${NC}"
+                echo -e "${CYAN}Coverage files:${NC}"
+                echo "$coverage_files"
+                
+                # Generate coverage report
+                echo -e "${CYAN}Run this command to view detailed coverage:${NC}"
+                # Find the app path dynamically
+                local app_path=$(find ./build/Build/Products -name "*.app" -type d | head -1)
+                if [ -n "$app_path" ]; then
+                    local app_binary="$app_path/$(basename "$app_path" .app)"
+                    echo "xcrun llvm-cov report \\"
+                    echo "  \"$app_binary\" \\"
+                    echo "  -instr-profile=$coverage_files \\"
+                    echo "  -ignore-filename-regex=Tests"
+                else
+                    echo -e "${RED}⚠️  Could not find app binary for coverage report${NC}"
+                fi
+            else
+                echo -e "${YELLOW}⚠️  No coverage data found${NC}"
+            fi
+        else
+            echo -e "${YELLOW}⚠️  Coverage directory not found${NC}"
+        fi
+        
+        echo ""
+    fi
 }
 
 # Function to generate summary report
@@ -503,6 +708,9 @@ show_usage() {
     echo "  --regression-only    Run only regression prevention tests"
     echo "  --no-build           Skip building project (tests only)"
     echo "  --quick              Skip dependency resolution"
+    echo "  --parallel           Run test categories in parallel"
+    echo "  --cache              Use test result caching"
+    echo "  --coverage           Generate test coverage report"
     echo "  -h, --help           Show this help message"
     echo ""
     echo "Test Category Options:"
@@ -520,6 +728,7 @@ show_usage() {
     echo "  $0 --regression-only      # Run only regression prevention tests"
     echo "  $0 --unit-only --no-build # Run unit tests without rebuilding"
     echo "  $0 --no-clean --quick     # Fast run without cleanup"
+    echo "  $0 --parallel --coverage  # Parallel execution with coverage"
 }
 
 # Parse command line arguments
@@ -533,6 +742,9 @@ PERFORMANCE_ONLY=false
 REGRESSION_ONLY=false
 QUICK_RUN=false
 NO_BUILD=false
+PARALLEL=false
+USE_CACHE=false
+COVERAGE=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -574,6 +786,18 @@ while [[ $# -gt 0 ]]; do
             ;;
         --quick)
             QUICK_RUN=true
+            shift
+            ;;
+        --parallel)
+            PARALLEL=true
+            shift
+            ;;
+        --cache)
+            USE_CACHE=true
+            shift
+            ;;
+        --coverage)
+            COVERAGE=true
             shift
             ;;
         -h|--help)
@@ -711,7 +935,11 @@ main() {
                 
                 # Then run full test suite if regression tests pass
                 if [ $EXIT_CODE -eq 0 ]; then
-                    run_tests
+                    if [ "$PARALLEL" = true ]; then
+                        run_tests_parallel
+                    else
+                        run_tests
+                    fi
                 else
                     echo -e "${YELLOW}⚠️  Skipping full test suite due to regression test failures${NC}"
                 fi
@@ -720,6 +948,9 @@ main() {
             fi
         fi
     fi
+    
+    # Generate coverage report if requested
+    generate_coverage_report
     
     # Generate summary
     generate_summary

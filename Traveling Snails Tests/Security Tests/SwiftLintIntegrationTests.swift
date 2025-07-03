@@ -194,6 +194,8 @@ struct SwiftLintIntegrationTests {
         #expect(configContent.contains("use_l10n_enum:"), "use_l10n_enum rule should be defined")
 
         // Verify deprecated navigation patterns are flagged as error
+        // Using string concatenation to avoid triggering SwiftLint rules
+        // while still testing that the rules work correctly
         let navigationString = "Navigation" + "View"
         #expect(configContent.contains(navigationString), "Deprecated navigation should be flagged in rules")
         let stateObjectString = "@State" + "Object"

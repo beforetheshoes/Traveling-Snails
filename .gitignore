@@ -2,3 +2,4 @@
 build/
 violations.json
 *.json
+swiftlint_output.txt
