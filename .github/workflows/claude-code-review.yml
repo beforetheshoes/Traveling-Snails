@@ -1,5 +1,6 @@
 name: Claude Code Review
 
+# OPTIMIZATION: Only runs after CI tests pass to avoid wasting resources on failing builds
 on:
   pull_request:
     branches: [main, develop]
@@ -18,12 +19,117 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Check that CI tests pass before running Claude review
+  check-ci-status:
+    name: Wait for CI Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      ci-passed: ${{ steps.check-status.outputs.ci-passed || steps.retry-check.outputs.ci-passed }}
+    steps:
+      - name: Check CI Status
+        id: check-status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            
+            // Get all check runs for the PR head commit
+            const checkRuns = await github.rest.checks.listForRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: context.payload.pull_request.head.sha,
+            });
+            
+            console.log(`Found ${checkRuns.data.check_runs.length} check runs`);
+            
+            // Look for the Build Validation Pipeline workflow
+            const buildValidationRuns = checkRuns.data.check_runs.filter(run => 
+              run.name.includes('Build Validation Pipeline') || 
+              run.name.includes('Build Summary') ||
+              run.name === 'Build Summary'
+            );
+            
+            console.log(`Found ${buildValidationRuns.length} build validation runs`);
+            
+            if (buildValidationRuns.length === 0) {
+              console.log('No Build Validation Pipeline found, waiting...');
+              core.setOutput('ci-passed', 'waiting');
+              return;
+            }
+            
+            // Check if any build validation runs are still pending
+            const pendingRuns = buildValidationRuns.filter(run => 
+              run.status === 'queued' || run.status === 'in_progress'
+            );
+            
+            if (pendingRuns.length > 0) {
+              console.log(`${pendingRuns.length} build validation runs still pending`);
+              core.setOutput('ci-passed', 'waiting');
+              return;
+            }
+            
+            // Check if all completed runs passed
+            const failedRuns = buildValidationRuns.filter(run => 
+              run.status === 'completed' && run.conclusion !== 'success'
+            );
+            
+            if (failedRuns.length > 0) {
+              console.log(`${failedRuns.length} build validation runs failed`);
+              console.log('Failed runs:', failedRuns.map(r => `${r.name}: ${r.conclusion}`));
+              core.setOutput('ci-passed', 'false');
+              return;
+            }
+            
+            console.log('All build validation runs passed');
+            core.setOutput('ci-passed', 'true');
+
+      - name: Wait for CI completion with retries
+        id: retry-check
+        if: steps.check-status.outputs.ci-passed == 'waiting'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "⏳ CI tests are still running. Implementing smart wait with retries..."
+          
+          # Wait up to 15 minutes with multiple check intervals
+          MAX_WAIT_TIME=900  # 15 minutes total
+          CHECK_INTERVAL=60  # Check every minute
+          ELAPSED_TIME=0
+          
+          while [ $ELAPSED_TIME -lt $MAX_WAIT_TIME ]; do
+            echo "⏳ Waiting for CI tests... (${ELAPSED_TIME}s elapsed, max ${MAX_WAIT_TIME}s)"
+            sleep $CHECK_INTERVAL
+            ELAPSED_TIME=$((ELAPSED_TIME + CHECK_INTERVAL))
+            
+            # Re-check CI status
+            CI_STATUS=$(gh api repos/${{ github.repository }}/commits/${{ github.event.pull_request.head.sha }}/check-runs --jq '[.check_runs[] | select(.name | test("Build Summary|Build Validation"))] | if length == 0 then "waiting" elif any(.status == "queued" or .status == "in_progress") then "waiting" elif any(.conclusion != "success") then "failed" else "passed" end')
+            
+            if [ "$CI_STATUS" = "passed" ]; then
+              echo "✅ CI tests completed successfully! Proceeding with Claude review..."
+              echo "ci-passed=true" >> $GITHUB_OUTPUT
+              exit 0
+            elif [ "$CI_STATUS" = "failed" ]; then
+              echo "❌ CI tests failed. Claude review will be skipped."
+              echo "ci-passed=false" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+            
+            echo "⏳ CI tests still running, checking again in ${CHECK_INTERVAL}s..."
+          done
+          
+          echo "❌ CI tests took longer than ${MAX_WAIT_TIME}s (15 minutes). Claude review will be skipped."
+          echo "💡 Tip: Re-run the Claude review workflow manually after CI completes."
+          echo "ci-passed=timeout" >> $GITHUB_OUTPUT
+          exit 1
+
   claude-review:
     name: Claude Code Review
     runs-on: ubuntu-latest
+    needs: check-ci-status
     timeout-minutes: 10
-    # Skip review for certain conditions
+    # Only run if CI tests passed and not a WIP/skip-review PR
     if: |
+      needs.check-ci-status.outputs.ci-passed == 'true' &&
       !contains(github.event.pull_request.title, '[skip-review]') &&
       !contains(github.event.pull_request.title, '[WIP]') &&
       !contains(github.event.pull_request.title, 'WIP:')
@@ -34,15 +140,59 @@ jobs:
       id-token: write
     
     steps:
+      - name: Debug conditional evaluation
+        run: |
+          echo "🔍 Debugging Claude Code Review conditional logic:"
+          echo "ci-passed output: '${{ needs.check-ci-status.outputs.ci-passed }}'"
+          echo "PR title: '${{ github.event.pull_request.title }}'"
+          echo "Contains [skip-review]: ${{ contains(github.event.pull_request.title, '[skip-review]') }}"
+          echo "Contains [WIP]: ${{ contains(github.event.pull_request.title, '[WIP]') }}"
+          echo "Contains WIP:: ${{ contains(github.event.pull_request.title, 'WIP:') }}"
+          echo ""
+          if [ "${{ needs.check-ci-status.outputs.ci-passed }}" = "true" ]; then
+            echo "✅ CI status check: PASSED"
+          else
+            echo "❌ CI status check: FAILED (value: '${{ needs.check-ci-status.outputs.ci-passed }}')"
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           # Fetch more history for better context
           fetch-depth: 0
 
+      - name: Validate Claude Authentication
+        run: |
+          echo "🔍 Checking Claude OAuth token configuration..."
+          
+          # Check if required secrets are available (without exposing them)
+          if [ -z "${{ secrets.CLAUDE_ACCESS_TOKEN }}" ]; then
+            echo "❌ CLAUDE_ACCESS_TOKEN secret is not set"
+            exit 1
+          fi
+          
+          if [ -z "${{ secrets.CLAUDE_REFRESH_TOKEN }}" ]; then
+            echo "❌ CLAUDE_REFRESH_TOKEN secret is not set"
+            exit 1
+          fi
+          
+          if [ -z "${{ secrets.CLAUDE_EXPIRES_AT }}" ]; then
+            echo "❌ CLAUDE_EXPIRES_AT secret is not set"
+            exit 1
+          fi
+          
+          if [ -z "${{ secrets.SECRETS_ADMIN_PAT }}" ]; then
+            echo "❌ SECRETS_ADMIN_PAT secret is not set"
+            exit 1
+          fi
+          
+          echo "✅ All required Claude OAuth secrets are configured"
+          echo "📝 Note: If authentication still fails, the tokens may need to be regenerated"
+
       - name: Run Claude Code Review
         id: claude-review
         uses: grll/claude-code-action@beta
+        continue-on-error: true
         with:
           use_oauth: true
           claude_access_token: ${{ secrets.CLAUDE_ACCESS_TOKEN }}
@@ -54,6 +204,8 @@ jobs:
           direct_prompt: |
             You are conducting a comprehensive code review for a SwiftUI travel planning app called "Traveling Snails". 
             This app uses SwiftData + CloudKit for data persistence and follows modern iOS 18+ patterns.
+            
+            ✅ **NOTE: All CI tests have passed** - This review runs only after successful build validation.
             
             🔍 **CRITICAL ANALYSIS AREAS:**
             
@@ -105,4 +257,28 @@ jobs:
             5. **File-Specific Notes** (with file:line references)
             
             Be thorough, constructive, and specific. Focus on preventing the SwiftData infinite recreation bug and ensuring modern Swift patterns.
+
+      - name: Handle Claude Authentication Error
+        if: failure() && steps.claude-review.outcome == 'failure'
+        run: |
+          echo "❌ Claude Code Review failed, likely due to authentication issues"
+          echo ""
+          echo "🔧 **Troubleshooting Steps:**"
+          echo "1. **Check OAuth Token Status**: The Claude OAuth tokens may have expired"
+          echo "2. **Regenerate Tokens**: Visit https://claude.ai/settings to generate new OAuth tokens"
+          echo "3. **Update GitHub Secrets**: Update these repository secrets with new values:"
+          echo "   - CLAUDE_ACCESS_TOKEN"
+          echo "   - CLAUDE_REFRESH_TOKEN" 
+          echo "   - CLAUDE_EXPIRES_AT"
+          echo "4. **Verify SECRETS_ADMIN_PAT**: Ensure the PAT has 'secrets' scope for auto-refresh"
+          echo ""
+          echo "⚠️  **Important**: This is not a build failure - all CI tests passed successfully"
+          echo "📝 **Manual Review**: Consider performing manual code review in the meantime"
+          echo ""
+          echo "## 🔧 Claude Authentication Issue" >> $GITHUB_STEP_SUMMARY
+          echo "The Claude Code Review step failed due to authentication issues." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Action Required**: Update Claude OAuth tokens in repository secrets" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Note**: All CI tests passed - this is only a review automation issue" >> $GITHUB_STEP_SUMMARY
 
