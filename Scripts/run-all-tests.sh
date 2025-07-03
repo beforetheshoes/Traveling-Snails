@@ -18,7 +18,7 @@ PROJECT_NAME="Traveling Snails"
 SCHEME_NAME="Traveling Snails"
 # Use generic simulator for better CI compatibility
 SIMULATOR_NAME="iPhone 16" 
-GENERIC_SIMULATOR="platform=iOS Simulator,OS=latest"
+GENERIC_SIMULATOR="platform=iOS Simulator,name=iPhone 16"
 TIMESTAMP=$(date +"%Y-%m-%d %H:%M:%S")
 START_EPOCH=$(date +%s)
 EXIT_CODE=0
@@ -263,7 +263,7 @@ validate_test_targets() {
     if xcodebuild test \
         -project "$PROJECT_NAME.xcodeproj" \
         -scheme "$SCHEME_NAME" \
-        -destination "platform=iOS Simulator,OS=latest" \
+        -destination "platform=iOS Simulator,name=iPhone 16" \
         -only-testing:"$TEST_TARGET/$UNIT_TEST_PATH" \
         -dry-run >/dev/null 2>&1; then
         echo -e "${GREEN}✓ xcodebuild can locate test targets${NC}"
@@ -285,10 +285,21 @@ run_security_tests() {
     local xcodebuild_command="xcodebuild test \
         -project \"$PROJECT_NAME.xcodeproj\" \
         -scheme \"$SCHEME_NAME\" \
-        -destination \"platform=iOS Simulator,OS=latest\" \
+        -destination \"platform=iOS Simulator,name=iPhone 16\" \
         -only-testing:\"$TEST_TARGET/Security Tests\""
     
     execute_test_with_xcbeautify "Security Tests" "$xcodebuild_command"
+}
+
+# Function to run regression prevention tests specifically
+run_regression_tests() {
+    local xcodebuild_command="xcodebuild test \
+        -project \"$PROJECT_NAME.xcodeproj\" \
+        -scheme \"$SCHEME_NAME\" \
+        -destination \"platform=iOS Simulator,name=iPhone 16\" \
+        -only-testing:\"$TEST_TARGET/Security Tests/TestRegressionPreventionTests\""
+    
+    execute_test_with_xcbeautify "Regression Prevention Tests" "$xcodebuild_command"
 }
 
 # Function to run unit tests only
@@ -296,7 +307,7 @@ run_unit_tests() {
     local xcodebuild_command="xcodebuild test \
         -project \"$PROJECT_NAME.xcodeproj\" \
         -scheme \"$SCHEME_NAME\" \
-        -destination \"platform=iOS Simulator,OS=latest\" \
+        -destination \"platform=iOS Simulator,name=iPhone 16\" \
         -only-testing:\"$TEST_TARGET/$UNIT_TEST_PATH\""
     
     execute_test_with_xcbeautify "Unit Tests" "$xcodebuild_command"
@@ -307,7 +318,7 @@ run_integration_tests() {
     local xcodebuild_command="xcodebuild test \
         -project \"$PROJECT_NAME.xcodeproj\" \
         -scheme \"$SCHEME_NAME\" \
-        -destination \"platform=iOS Simulator,OS=latest\" \
+        -destination \"platform=iOS Simulator,name=iPhone 16\" \
         -only-testing:\"$TEST_TARGET/$INTEGRATION_TEST_PATH\""
     
     execute_test_with_xcbeautify "Integration Tests" "$xcodebuild_command"
@@ -318,7 +329,7 @@ run_performance_tests() {
     local xcodebuild_command="xcodebuild test \
         -project \"$PROJECT_NAME.xcodeproj\" \
         -scheme \"$SCHEME_NAME\" \
-        -destination \"platform=iOS Simulator,OS=latest\" \
+        -destination \"platform=iOS Simulator,name=iPhone 16\" \
         -only-testing:\"$TEST_TARGET/$PERFORMANCE_TEST_PATH\""
     
     execute_test_with_xcbeautify "Performance Tests" "$xcodebuild_command"
@@ -399,7 +410,7 @@ build_project() {
     local build_command="xcodebuild build \
         -project \"$PROJECT_NAME.xcodeproj\" \
         -scheme \"$SCHEME_NAME\" \
-        -destination \"platform=iOS Simulator,OS=latest\""
+        -destination \"platform=iOS Simulator,name=iPhone 16\""
     
     # Add xcbeautify if available
     if command -v xcbeautify &> /dev/null; then
@@ -419,7 +430,7 @@ run_tests() {
     local test_command="xcodebuild test \
         -project \"$PROJECT_NAME.xcodeproj\" \
         -scheme \"$SCHEME_NAME\" \
-        -destination \"platform=iOS Simulator,OS=latest\""
+        -destination \"platform=iOS Simulator,name=iPhone 16\""
     
     # Add xcbeautify if available
     if command -v xcbeautify &> /dev/null; then
@@ -489,6 +500,7 @@ show_usage() {
     echo "  --unit-only          Run only unit tests"
     echo "  --integration-only   Run only integration tests"
     echo "  --performance-only   Run only performance tests"
+    echo "  --regression-only    Run only regression prevention tests"
     echo "  --no-build           Skip building project (tests only)"
     echo "  --quick              Skip dependency resolution"
     echo "  -h, --help           Show this help message"
@@ -505,6 +517,7 @@ show_usage() {
     echo "  $0 --unit-only            # Run only unit tests"
     echo "  $0 --integration-only     # Run only integration tests"
     echo "  $0 --performance-only     # Run only performance tests"
+    echo "  $0 --regression-only      # Run only regression prevention tests"
     echo "  $0 --unit-only --no-build # Run unit tests without rebuilding"
     echo "  $0 --no-clean --quick     # Fast run without cleanup"
 }
@@ -517,6 +530,7 @@ SECURITY_ONLY=false
 UNIT_ONLY=false
 INTEGRATION_ONLY=false
 PERFORMANCE_ONLY=false
+REGRESSION_ONLY=false
 QUICK_RUN=false
 NO_BUILD=false
 
@@ -548,6 +562,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --performance-only)
             PERFORMANCE_ONLY=true
+            shift
+            ;;
+        --regression-only)
+            REGRESSION_ONLY=true
             shift
             ;;
         --no-build)
@@ -595,10 +613,15 @@ check_mutual_exclusivity() {
         selected_options="$selected_options --performance-only"
     fi
     
+    if [ "$REGRESSION_ONLY" = true ]; then
+        count=$((count + 1))
+        selected_options="$selected_options --regression-only"
+    fi
+    
     if [ $count -gt 1 ]; then
         echo -e "${RED}Error: Test category options are mutually exclusive${NC}"
         echo -e "${RED}You specified:$selected_options${NC}"
-        echo "Please use only one of: --security-only, --unit-only, --integration-only, or --performance-only"
+        echo "Please use only one of: --security-only, --unit-only, --integration-only, --performance-only, or --regression-only"
         exit 1
     fi
 }
@@ -663,6 +686,15 @@ main() {
         else
             echo -e "${YELLOW}⚠️  Skipping performance tests due to build failure${NC}"
         fi
+    elif [ "$REGRESSION_ONLY" = true ]; then
+        if [ "$NO_BUILD" = false ]; then
+            build_project
+        fi
+        if [ $EXIT_CODE -eq 0 ]; then
+            run_regression_tests
+        else
+            echo -e "${YELLOW}⚠️  Skipping regression tests due to build failure${NC}"
+        fi
     else
         # Run SwiftLint if not test-only
         if [ "$TEST_ONLY" = false ]; then
@@ -673,7 +705,16 @@ main() {
         if [ "$LINT_ONLY" = false ]; then
             build_project
             if [ $EXIT_CODE -eq 0 ]; then
-                run_tests
+                # Run regression tests first to catch immediate issues
+                echo -e "${CYAN}Running regression prevention tests first...${NC}"
+                run_regression_tests
+                
+                # Then run full test suite if regression tests pass
+                if [ $EXIT_CODE -eq 0 ]; then
+                    run_tests
+                else
+                    echo -e "${YELLOW}⚠️  Skipping full test suite due to regression test failures${NC}"
+                fi
             else
                 echo -e "${YELLOW}⚠️  Skipping tests due to build failure${NC}"
             fi

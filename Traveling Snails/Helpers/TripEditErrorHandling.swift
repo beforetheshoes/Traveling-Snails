@@ -164,7 +164,7 @@ enum TripEditErrorAnalytics {
     static func recordError(_ error: AppError, context: String, retryCount: Int) {
         // Perform periodic cleanup before adding new events
         cleanupStaleEventsIfNeeded()
-        
+
         let event = TripEditErrorEvent(
             errorCategory: error.category,
             errorType: TripEditErrorType.from(error),
@@ -205,20 +205,20 @@ enum TripEditErrorAnalytics {
 
         return patterns
     }
-    
+
     /// Manually trigger cleanup for testing or when memory pressure is detected
     static func cleanup() {
         let cutoffDate = Date().addingTimeInterval(-config.maxEventAge)
         errorHistory.removeAll { $0.timestamp < cutoffDate }
         lastCleanup = Date()
     }
-    
+
     /// Reset all analytics state - useful for testing
     static func reset() {
         errorHistory.removeAll()
         lastCleanup = Date()
     }
-    
+
     /// Get current analytics state for debugging
     static func getAnalyticsState() -> TripEditAnalyticsState {
         cleanupStaleEventsIfNeeded()
@@ -229,19 +229,19 @@ enum TripEditErrorAnalytics {
             lastCleanup: lastCleanup
         )
     }
-    
+
     private static func cleanupStaleEventsIfNeeded() {
         let now = Date()
-        
+
         // Only cleanup if enough time has passed since last cleanup
         guard now.timeIntervalSince(lastCleanup) > config.cleanupInterval else { return }
-        
+
         let cutoffDate = now.addingTimeInterval(-config.maxEventAge)
         let originalCount = errorHistory.count
-        
+
         errorHistory.removeAll { $0.timestamp < cutoffDate }
         lastCleanup = now
-        
+
         #if DEBUG
         let removedCount = originalCount - errorHistory.count
         if removedCount > 0 {
@@ -270,10 +270,10 @@ enum TripEditErrorType: String, CaseIterable {
     case organization = "organization"
     case importExport = "importExport"
     case unknown = "unknown"
-    
+
     static func from(_ error: AppError) -> TripEditErrorType {
         switch error {
-        case .databaseSaveFailed, .databaseLoadFailed, .databaseDeleteFailed, 
+        case .databaseSaveFailed, .databaseLoadFailed, .databaseDeleteFailed,
              .databaseCorrupted, .relationshipIntegrityError:
             return .database
         case .networkUnavailable, .serverError, .timeoutError, .invalidURL:

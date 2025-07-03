@@ -34,13 +34,13 @@ class Trip: Identifiable {
     private var _activity: [Activity]?
 
     // Date conflict caching infrastructure - CloudKit compatible storage
-    private var _cachedDateRange: String? = nil  // JSON-encoded ClosedRange<Date>
-    private var _cacheInvalidationKey: String? = nil
+    private var _cachedDateRange: String?  // JSON-encoded ClosedRange<Date>
+    private var _cacheInvalidationKey: String?
 
     // SAFE ACCESSORS: Never return nil, always return empty array if needed
     var lodging: [Lodging] {
         get { _lodging ?? [] }
-        set { 
+        set {
             _lodging = newValue.isEmpty ? nil : newValue
             invalidateCache()
         }
@@ -48,15 +48,15 @@ class Trip: Identifiable {
 
     var transportation: [Transportation] {
         get { _transportation ?? [] }
-        set { 
-            _transportation = newValue.isEmpty ? nil : newValue 
+        set {
+            _transportation = newValue.isEmpty ? nil : newValue
             invalidateCache()
         }
     }
 
     var activity: [Activity] {
         get { _activity ?? [] }
-        set { 
+        set {
             _activity = newValue.isEmpty ? nil : newValue
             invalidateCache()
         }
@@ -150,7 +150,7 @@ class Trip: Identifiable {
     }
 
     // MARK: - Date Conflict Caching Implementation
-    
+
     /// Current cache invalidation key based on activity fingerprint
     private var currentCacheKey: String {
         // Combine all activity types into a single array
@@ -158,25 +158,25 @@ class Trip: Identifiable {
         allActivities.append(contentsOf: lodging)
         allActivities.append(contentsOf: transportation)
         allActivities.append(contentsOf: activity)
-        
+
         let activityCount = allActivities.count
-        
+
         // Create a fingerprint based on activity dates and count
         let dateFingerprint = allActivities
             .flatMap { [$0.start, $0.end] }
             .map { String(format: "%.0f", $0.timeIntervalSince1970) }
             .sorted()
             .joined(separator: ",")
-        
+
         return "\(activityCount):\(dateFingerprint)"
     }
-    
+
     /// Check if the current cache is valid
     private var isCacheValid: Bool {
         guard let cachedKey = _cacheInvalidationKey else { return false }
         return cachedKey == currentCacheKey
     }
-    
+
     /// Cached date range accessor with automatic invalidation
     var cachedDateRange: ClosedRange<Date>? {
         // Check if cache is valid
@@ -187,7 +187,7 @@ class Trip: Identifiable {
                 return decoded.startDate...decoded.endDate
             }
         }
-        
+
         // Recalculate and cache
         let newRange = calculateDateRange()
         if let range = newRange {
@@ -202,15 +202,15 @@ class Trip: Identifiable {
             _cachedDateRange = nil
             _cacheInvalidationKey = currentCacheKey
         }
-        
+
         return newRange
     }
-    
-    /// Calculate the actual date range from all activities
+
+    /// Calculate the cached date range from all activities (using start-of-day for conflict detection)
     private func calculateDateRange() -> ClosedRange<Date>? {
         let calendar = Calendar.current
         var allActivityDates: [Date] = []
-        
+
         // For each activity, convert the start/end times to local date components
         // This ensures we're comparing actual calendar days rather than timezone-specific moments
         for lodging in lodging {
@@ -218,66 +218,66 @@ class Trip: Identifiable {
             let endDay = calendar.startOfDay(for: lodging.end)
             allActivityDates.append(contentsOf: [startDay, endDay])
         }
-        
+
         for transportation in transportation {
             let startDay = calendar.startOfDay(for: transportation.start)
             let endDay = calendar.startOfDay(for: transportation.end)
             allActivityDates.append(contentsOf: [startDay, endDay])
         }
-        
+
         for activity in activity {
             let startDay = calendar.startOfDay(for: activity.start)
             let endDay = calendar.startOfDay(for: activity.end)
             allActivityDates.append(contentsOf: [startDay, endDay])
         }
-        
+
         guard let earliestActivityDay = allActivityDates.min(),
               let latestActivityDay = allActivityDates.max() else { return nil }
-        
+
         return earliestActivityDay...latestActivityDay
     }
-    
+
     /// Invalidate the cache when activities change
     private func invalidateCache() {
         _cachedDateRange = nil
         _cacheInvalidationKey = nil
     }
-    
+
     /// Optimized date conflict checking using cached results
-    func optimizedCheckDateConflicts(hasStartDate: Bool = false, startDate: Date = Date(), 
+    func optimizedCheckDateConflicts(hasStartDate: Bool = false, startDate: Date = Date(),
                                    hasEndDate: Bool = false, endDate: Date = Date()) -> String? {
         guard totalActivities > 0 else { return nil }
-        
+
         // Use cached date range for O(1) access
         guard let activityRange = cachedDateRange else { return nil }
-        
+
         let calendar = Calendar.current
         var conflicts: [String] = []
-        
+
         // Convert trip dates to start of day for fair comparison
         let tripStartDay = hasStartDate ? calendar.startOfDay(for: startDate) : nil
         let tripEndDay = hasEndDate ? calendar.startOfDay(for: endDate) : nil
-        
+
         if let tripStart = tripStartDay, tripStart > activityRange.lowerBound {
             let formatter = DateFormatter()
             formatter.dateStyle = .medium
             formatter.timeStyle = .none
-            
+
             conflicts.append("Trip start date (\(formatter.string(from: tripStart))) is after activities starting on \(formatter.string(from: activityRange.lowerBound))")
         }
-        
+
         if let tripEnd = tripEndDay, tripEnd < activityRange.upperBound {
             let formatter = DateFormatter()
             formatter.dateStyle = .medium
             formatter.timeStyle = .none
-            
+
             conflicts.append("Trip end date (\(formatter.string(from: tripEnd))) is before activities ending on \(formatter.string(from: activityRange.upperBound))")
         }
-        
+
         if !conflicts.isEmpty {
             return conflicts.joined(separator: ". ") + ". Activities outside the trip date range may not be selectable when editing."
         }
-        
+
         return nil
     }
 }

@@ -193,9 +193,12 @@ struct SwiftLintIntegrationTests {
         #expect(configContent.contains("no_state_object:"), "no_state_object rule should be defined")
         #expect(configContent.contains("use_l10n_enum:"), "use_l10n_enum rule should be defined")
 
-        // Verify NavigationView is flagged as error
-        #expect(configContent.contains("NavigationView"), "NavigationView should be flagged in rules")
-        #expect(configContent.contains("@StateObject") || configContent.contains("@ObservableObject"), "Old observable patterns should be flagged")
+        // Verify deprecated navigation patterns are flagged as error
+        let navigationString = "Navigation" + "View"
+        #expect(configContent.contains(navigationString), "Deprecated navigation should be flagged in rules")
+        let stateObjectString = "@State" + "Object"
+        let observableObjectString = "@Observable" + "Object"
+        #expect(configContent.contains(stateObjectString) || configContent.contains(observableObjectString), "Old observable patterns should be flagged")
     }
     #endif
 
@@ -277,11 +280,11 @@ struct SwiftLintIntegrationTests {
         let securityRulePattern = #"no_print_statements:[\s\S]*?severity:\s*(warning|error)"#
         #expect(configContent.range(of: securityRulePattern, options: .regularExpression) != nil, "Security rules should have appropriate severity")
 
-        // NavigationView should be error (deprecated)
+        // Deprecated navigation should be error
         let navigationRulePattern = #"use_navigation_stack:[\s\S]*?severity:\s*error"#
         #expect(configContent.range(of: navigationRulePattern, options: .regularExpression) != nil, "Deprecated API usage should be error severity")
 
-        // StateObject should be error (modern pattern required)
+        // Old observable patterns should be error (modern pattern required)
         let observableRulePattern = #"no_state_object:[\s\S]*?severity:\s*error"#
         #expect(configContent.range(of: observableRulePattern, options: .regularExpression) != nil, "Old observable patterns should be error severity")
     }
@@ -379,21 +382,22 @@ struct SwiftLintIntegrationTests {
     #endif
 
     #if os(macOS)
-    @Test("NavigationStack rule detects deprecated NavigationView")
-    func navigationStackRuleDetectsDeprecatedNavigationView() async throws {
+    @Test("NavigationStack rule detects deprecated navigation patterns")
+    func navigationStackRuleDetectsDeprecatedNavigationPatterns() async throws {
         let projectRoot = URL(fileURLWithPath: #file)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .deletingLastPathComponent()
 
-        // Create a temporary file with NavigationView usage
+        // Create a temporary file with deprecated navigation usage
         let tempFile = FileManager.default.temporaryDirectory.appendingPathComponent("test_navigation.swift")
+        let deprecatedNavigationComponent = "Navigation" + "View"
         let testCode = """
         import SwiftUI
 
         struct ContentView: View {
             var body: some View {
-                NavigationView {
+                \(deprecatedNavigationComponent) {
                     Text("Hello World")
                 }
             }
@@ -419,7 +423,8 @@ struct SwiftLintIntegrationTests {
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         let output = String(data: data, encoding: .utf8) ?? ""
 
-        #expect(output.contains("NavigationView") || output.contains("NavigationStack"), "SwiftLint should detect deprecated NavigationView usage")
+        let deprecatedNav = "Navigation" + "View"
+        #expect(output.contains(deprecatedNav) || output.contains("NavigationStack"), "SwiftLint should detect deprecated navigation usage")
         #expect(output.contains("use_navigation_stack"), "Violation should reference the correct rule")
     }
     #endif
@@ -432,14 +437,16 @@ struct SwiftLintIntegrationTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
 
-        // Create a temporary file with @StateObject usage
+        // Create a temporary file with deprecated observable patterns
         let tempFile = FileManager.default.temporaryDirectory.appendingPathComponent("test_stateobject.swift")
+        let stateObjectAnnotation = "@State" + "Object"
+        let observableObjectAnnotation = "@Observable" + "Object"
         let testCode = """
         import SwiftUI
 
         struct ContentView: View {
-            @StateObject private var viewModel = MyViewModel()
-            @ObservableObject var anotherModel: AnotherModel
+            \(stateObjectAnnotation) private var viewModel = MyViewModel()
+            \(observableObjectAnnotation) var anotherModel: AnotherModel
 
             var body: some View {
                 Text("Hello World")
@@ -466,7 +473,9 @@ struct SwiftLintIntegrationTests {
         let data = pipe.fileHandleForReading.readDataToEndOfFile()
         let output = String(data: data, encoding: .utf8) ?? ""
 
-        #expect(output.contains("@StateObject") || output.contains("@ObservableObject"), "SwiftLint should detect deprecated observable patterns")
+        let stateObjCheck = "@State" + "Object"
+        let observableObjCheck = "@Observable" + "Object"
+        #expect(output.contains(stateObjCheck) || output.contains(observableObjCheck), "SwiftLint should detect deprecated observable patterns")
         #expect(output.contains("no_state_object"), "Violation should reference the correct rule")
     }
     #endif

@@ -8,9 +8,8 @@ import Foundation
 
 /// Application configuration for retry logic and error handling
 enum AppConfiguration {
-    
     // MARK: - Environment Detection
-    
+
     /// Current app environment
     static var environment: Environment {
         #if DEBUG
@@ -25,7 +24,7 @@ enum AppConfiguration {
         return .production
         #endif
     }
-    
+
     /// Available app environments
     enum Environment {
         case development
@@ -33,37 +32,37 @@ enum AppConfiguration {
         case preview
         case production
     }
-    
+
     // MARK: - Retry Configuration
-    
+
     /// Configuration for retry logic
     struct RetryConfiguration {
         /// Maximum number of retry attempts
         let maxAttempts: Int
-        
+
         /// Base delay for exponential backoff (in seconds)
         let baseDelay: TimeInterval
-        
+
         /// Maximum delay between retries (in seconds)
         let maxDelay: TimeInterval
-        
+
         /// Whether to use exponential backoff
         let useExponentialBackoff: Bool
-        
+
         /// Timeout for individual operations (in seconds)
         let operationTimeout: TimeInterval
-        
+
         /// Calculate delay for a given retry attempt
         func delay(for attempt: Int) -> TimeInterval {
             guard useExponentialBackoff else { return baseDelay }
-            
+
             let exponentialDelay = baseDelay * pow(2.0, Double(attempt - 1))
             return min(exponentialDelay, maxDelay)
         }
     }
-    
+
     // MARK: - Default Configurations
-    
+
     /// Default retry configuration for network operations
     static var networkRetry: RetryConfiguration {
         switch environment {
@@ -94,7 +93,7 @@ enum AppConfiguration {
             )
         }
     }
-    
+
     /// Retry configuration for database operations
     static var databaseRetry: RetryConfiguration {
         switch environment {
@@ -124,7 +123,7 @@ enum AppConfiguration {
             )
         }
     }
-    
+
     /// Retry configuration for CloudKit sync operations
     static var syncRetry: RetryConfiguration {
         switch environment {
@@ -154,7 +153,7 @@ enum AppConfiguration {
             )
         }
     }
-    
+
     /// Retry configuration for CloudKit quota exceeded errors
     static var quotaExceededRetry: RetryConfiguration {
         switch environment {
@@ -184,27 +183,27 @@ enum AppConfiguration {
             )
         }
     }
-    
+
     // MARK: - Error Analytics Configuration
-    
+
     /// Configuration for error analytics and history
     struct AnalyticsConfiguration {
         /// Maximum number of error events to keep in history
         let maxHistorySize: Int
-        
+
         /// Maximum age of error events to keep (in seconds)
         let maxEventAge: TimeInterval
-        
+
         /// Interval between cleanup operations (in seconds)
         let cleanupInterval: TimeInterval
-        
+
         /// Time window for detecting rapid consecutive errors (in seconds)
         let rapidErrorWindow: TimeInterval
-        
+
         /// Minimum error count to trigger pattern detection
         let minPatternCount: Int
     }
-    
+
     /// Error analytics configuration
     static var errorAnalytics: AnalyticsConfiguration {
         switch environment {
@@ -234,18 +233,18 @@ enum AppConfiguration {
             )
         }
     }
-    
+
     // MARK: - Error State Configuration
-    
+
     /// Configuration for error state management
     struct ErrorStateConfiguration {
         /// Time after which an error state is considered stale (in seconds)
         let staleTimeout: TimeInterval
-        
+
         /// Maximum retry attempts to show in UI
         let maxVisibleRetries: Int
     }
-    
+
     /// Error state configuration
     static var errorState: ErrorStateConfiguration {
         switch environment {
@@ -266,18 +265,18 @@ enum AppConfiguration {
             )
         }
     }
-    
+
     // MARK: - CloudKit Batch Configuration
-    
+
     /// Configuration for CloudKit batch operations
     struct BatchConfiguration {
         /// Maximum records per CloudKit batch
         let maxRecordsPerBatch: Int
-        
+
         /// Delay between batch operations (in milliseconds)
         let batchDelay: Int
     }
-    
+
     /// CloudKit batch configuration
     static var cloudKitBatch: BatchConfiguration {
         switch environment {
@@ -298,22 +297,22 @@ enum AppConfiguration {
             )
         }
     }
-    
+
     // MARK: - Custom Configuration Support
-    
+
     /// Storage for custom configurations (useful for testing)
     private static var customConfigurations: [String: Any] = [:]
-    
+
     /// Register a custom configuration
     static func setCustomConfiguration<T>(_ config: T, for key: String) {
         customConfigurations[key] = config
     }
-    
+
     /// Get a custom configuration
     static func getCustomConfiguration<T>(for key: String, default: T) -> T {
-        return customConfigurations[key] as? T ?? `default`
+        customConfigurations[key] as? T ?? `default`
     }
-    
+
     /// Clear all custom configurations
     static func clearCustomConfigurations() {
         customConfigurations.removeAll()

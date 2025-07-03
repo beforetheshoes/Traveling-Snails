@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **File Attachment Import Display (Issue #28)**: Fixed attachments not appearing in UI after import despite being correctly imported into database
+  - **Root Cause**: UI views using `@State` variables were not refreshing when underlying SwiftData relationships changed after import
+  - **Solution**: Added notification-based refresh mechanism to `UnifiedTripActivityDetailView` that listens for `importCompleted`, `fileAttachmentAdded`, and `fileAttachmentRemoved` notifications
+  - **Technical Details**: Export/import logic was working correctly; the issue was purely UI refresh timing
+  - **Enhanced Import Manager**: Added `importCompleted` notification posting in `DatabaseImportManager` to trigger UI updates
+  - **Centralized Refresh**: Added `refreshAttachments()` helper function to ensure consistent attachment state updates across all UI operations
+
 ### Added
 - **Performance: Cache date conflict results for large trips (Issue #57)**: Implemented intelligent caching system for date conflict detection that reduces computational complexity from O(n) to O(1) for repeated checks
   - **Smart Cache Infrastructure**: CloudKit-compatible caching in Trip model using JSON-encoded date ranges with fingerprint-based invalidation

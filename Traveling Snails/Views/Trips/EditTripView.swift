@@ -458,10 +458,10 @@ struct EditTripView: View {
     private func checkDateConflicts() -> String? {
         // PERFORMANCE OPTIMIZATION: Use cached date range from Trip model
         // This replaces the O(n) computation with cached O(1) access for subsequent calls
-        return trip.optimizedCheckDateConflicts(
-            hasStartDate: hasStartDate, 
-            startDate: startDate, 
-            hasEndDate: hasEndDate, 
+        trip.optimizedCheckDateConflicts(
+            hasStartDate: hasStartDate,
+            startDate: startDate,
+            hasEndDate: hasEndDate,
             endDate: endDate
         )
     }

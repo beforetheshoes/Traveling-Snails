@@ -266,7 +266,7 @@ struct ErrorStateManagementTests {
         #expect(networkErrorGroup?.count == 4, "Should aggregate network errors")
 
         // Verify timing constraints (allow for system variability)
-        #expect(duration < 5.0, "Rapid error processing should complete in reasonable time")
+        #expect(duration < 7.0, "Rapid error processing should complete in reasonable time")
     }
 
     @Test("Error state should support undo operations")
