@@ -23,7 +23,7 @@ jobs:
   check-ci-status:
     name: Wait for CI Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 15
     outputs:
       ci-passed: ${{ steps.check-status.outputs.ci-passed }}
     steps:
@@ -83,13 +83,37 @@ jobs:
             console.log('All build validation runs passed');
             core.setOutput('ci-passed', 'true');
 
-      - name: Wait for CI completion
+      - name: Wait for CI completion with retries
         if: steps.check-status.outputs.ci-passed == 'waiting'
         run: |
-          echo "⏳ CI tests are still running. Waiting 2 minutes before rechecking..."
-          sleep 120
-          echo "❌ CI tests took too long. Claude review will be skipped."
-          echo "Please re-run the Claude review workflow after CI completes."
+          echo "⏳ CI tests are still running. Implementing smart wait with retries..."
+          
+          # Wait up to 10 minutes with multiple check intervals
+          MAX_WAIT_TIME=600  # 10 minutes total
+          CHECK_INTERVAL=60  # Check every minute
+          ELAPSED_TIME=0
+          
+          while [ $ELAPSED_TIME -lt $MAX_WAIT_TIME ]; do
+            echo "⏳ Waiting for CI tests... (${ELAPSED_TIME}s elapsed, max ${MAX_WAIT_TIME}s)"
+            sleep $CHECK_INTERVAL
+            ELAPSED_TIME=$((ELAPSED_TIME + CHECK_INTERVAL))
+            
+            # Re-check CI status
+            CI_STATUS=$(gh api repos/${{ github.repository }}/commits/${{ github.event.pull_request.head.sha }}/check-runs --jq '[.check_runs[] | select(.name | test("Build Summary|Build Validation"))] | if length == 0 then "waiting" elif any(.status == "queued" or .status == "in_progress") then "waiting" elif any(.conclusion != "success") then "failed" else "passed" end')
+            
+            if [ "$CI_STATUS" = "passed" ]; then
+              echo "✅ CI tests completed successfully! Proceeding with Claude review..."
+              exit 0
+            elif [ "$CI_STATUS" = "failed" ]; then
+              echo "❌ CI tests failed. Claude review will be skipped."
+              exit 1
+            fi
+            
+            echo "⏳ CI tests still running, checking again in ${CHECK_INTERVAL}s..."
+          done
+          
+          echo "❌ CI tests took longer than ${MAX_WAIT_TIME}s. Claude review will be skipped."
+          echo "💡 Tip: Re-run the Claude review workflow manually after CI completes."
           exit 1
 
   claude-review:
