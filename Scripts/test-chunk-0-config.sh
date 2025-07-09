@@ -18,9 +18,16 @@ export DERIVED_DATA_PATH="$HOME/Library/Developer/Xcode/DerivedData/Traveling_Sn
 export PROJECT_NAME="Traveling Snails"
 export SCHEME_NAME="Traveling Snails"
 
-# Multiple destination support - Use actual simulators from your system
-export IOS_SIMULATOR_NAME="dsxfa"
-export IPAD_SIMULATOR_NAME="dsxfa"
+# Multiple destination support - Use proper simulator names with fallback
+export IOS_SIMULATOR_NAME="iPhone 15 Pro"
+export IPAD_SIMULATOR_NAME="iPad Pro (12.9-inch) (6th generation)"
+
+# Fallback simulator names if primary ones aren't available
+export IOS_SIMULATOR_FALLBACK="iPhone 14 Pro"
+export IPAD_SIMULATOR_FALLBACK="iPad Air (5th generation)"
+
+# Last resort: use any available simulator (for local development)
+export ANY_IOS_SIMULATOR="Any iOS Simulator Device"
 
 # Use generic simulator names instead of hardcoded IDs to prevent CoreSimulator issues
 # This prevents simulator deletion/corruption that can happen with stale IDs
@@ -370,23 +377,78 @@ run_step_with_timeout() {
     fi
 }
 
-# Check simulator availability
+# Check simulator availability with intelligent fallback
 check_simulator() {
     if [ "$DESTINATION_TYPE" = "mac" ]; then
         printf "${GREEN}✓ Using Mac Catalyst: %s${NC}\n" "$SIMULATOR_NAME"
         return 0
     fi
     
-    # Check if the simulator name exists in available simulators
+    # Function to find the first available simulator from a list
+    find_available_simulator() {
+        local sim_list="$1"
+        local found_sim=""
+        
+        for sim_name in $sim_list; do
+            if xcrun simctl list devices | grep -q "$sim_name"; then
+                found_sim="$sim_name"
+                break
+            fi
+        done
+        
+        echo "$found_sim"
+    }
+    
+    # Check if the primary simulator exists
     if xcrun simctl list devices | grep -q "$SIMULATOR_NAME"; then
-        printf "${GREEN}✓ Found simulator: %s${NC}\n" "$SIMULATOR_NAME"
+        printf "${GREEN}✓ Found primary simulator: %s${NC}\n" "$SIMULATOR_NAME"
         return 0
-    else
-        printf "${YELLOW}⚠️  Specific simulator '$SIMULATOR_NAME' not found, will use any available iOS simulator${NC}\n"
-        printf "${YELLOW}Available simulators:${NC}\n"
-        xcrun simctl list devices | grep -A 10 "iOS" | head -10
-        return 0  # Don't fail, let xcodebuild pick an available simulator
     fi
+    
+    # Try fallback simulators based on destination type
+    if [ "$DESTINATION_TYPE" = "ios" ]; then
+        fallback_sims="$IOS_SIMULATOR_FALLBACK iPhone 14 iPhone 13 Pro iPhone 12 Pro"
+        available_sim=$(find_available_simulator "$fallback_sims")
+        
+        if [ -n "$available_sim" ]; then
+            printf "${YELLOW}⚠️  Primary simulator '$SIMULATOR_NAME' not found${NC}\n"
+            printf "${GREEN}✓ Using fallback simulator: %s${NC}\n" "$available_sim"
+            export SIMULATOR_NAME="$available_sim"
+            export DESTINATION="platform=iOS Simulator,name=$available_sim,arch=arm64"
+            return 0
+        fi
+    elif [ "$DESTINATION_TYPE" = "ipad" ]; then
+        fallback_sims="$IPAD_SIMULATOR_FALLBACK iPad Pro (11-inch) iPad Air"
+        available_sim=$(find_available_simulator "$fallback_sims")
+        
+        if [ -n "$available_sim" ]; then
+            printf "${YELLOW}⚠️  Primary simulator '$SIMULATOR_NAME' not found${NC}\n"
+            printf "${GREEN}✓ Using fallback simulator: %s${NC}\n" "$available_sim"
+            export SIMULATOR_NAME="$available_sim"
+            export DESTINATION="platform=iOS Simulator,name=$available_sim,arch=arm64"
+            return 0
+        fi
+    fi
+    
+    # Final fallback: use any available iOS simulator
+    printf "${YELLOW}⚠️  No preferred simulators found, checking for any iOS simulator${NC}\n"
+    printf "${YELLOW}Available simulators:${NC}\n"
+    xcrun simctl list devices | grep -A 10 "iOS" | head -10
+    
+    # Get first available iOS simulator
+    first_sim=$(xcrun simctl list devices | grep -A 20 "iOS" | grep "(" | head -1 | sed 's/^[[:space:]]*//' | sed 's/ (.*//')
+    
+    if [ -n "$first_sim" ]; then
+        printf "${GREEN}✓ Using available simulator: %s${NC}\n" "$first_sim"
+        export SIMULATOR_NAME="$first_sim"
+        export DESTINATION="platform=iOS Simulator,name=$first_sim,arch=arm64"
+        return 0
+    fi
+    
+    # Last resort: let xcodebuild choose
+    printf "${YELLOW}⚠️  Using generic destination - let xcodebuild choose simulator${NC}\n"
+    export DESTINATION="platform=iOS Simulator,name=$ANY_IOS_SIMULATOR,arch=arm64"
+    return 0
 }
 
 # Pre-boot simulator function

@@ -9,6 +9,14 @@ import Foundation
 import SwiftData
 import SwiftUI
 
+#if DEBUG && canImport(Testing)
+import Testing
+#endif
+
+#if DEBUG && canImport(XCTest)
+import XCTest
+#endif
+
 // MARK: - Accessibility Support
 
 struct AccessibilityInfo {
@@ -150,7 +158,9 @@ func generateSwitchControlTabOrder(for error: ViewErrorState, accessibility: Acc
     return tabOrder
 }
 
-// MARK: - Test Engine Classes
+// MARK: - Test Support Classes
+// These classes provide testing utilities for accessibility and error presentation
+// They are compiled only in DEBUG builds to avoid bloating production code
 
 #if DEBUG
 struct VoiceCommand {

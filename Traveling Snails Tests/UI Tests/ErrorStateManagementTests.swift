@@ -7,6 +7,7 @@
 import Foundation
 import SwiftData
 import Testing
+import Darwin.Mach
 @testable import Traveling_Snails
 
 @Suite("Error State Management and User Feedback Tests")
@@ -42,6 +43,148 @@ struct ErrorStateManagementTests {
         let ageInSeconds = restoredState?.ageInSeconds ?? 0
         #expect(ageInSeconds >= 0, "Error age should be non-negative")
         #expect(ageInSeconds < 5, "Error age should be recent for test")
+    }
+
+    @Test("Error state serialization should handle edge cases", .tags(.ui, .medium, .parallel, .swiftui, .errorHandling, .validation, .critical, .mainActor))
+    func testErrorStateSerializationEdgeCases() async throws {
+        _ = SwiftDataTestBase()
+
+        // Test 1: Corrupted serialized data recovery
+        let corruptedData = Data([0xFF, 0xFE, 0xFD, 0xFC]) // Invalid JSON
+        let failedRestore = ViewErrorState.deserialize(from: corruptedData)
+        #expect(failedRestore == nil, "Should gracefully handle corrupted data")
+
+        // Test 2: Partial data corruption
+        let partialData = "{\"errorType\":\"saveFailure\",\"message\":\"test\"".data(using: .utf8)!
+        let partialRestore = ViewErrorState.deserialize(from: partialData)
+        #expect(partialRestore == nil, "Should handle incomplete JSON")
+
+        // Test 3: Future format compatibility (missing new fields)
+        let legacyFormat = """
+        {
+            "errorType": "saveFailure",
+            "message": "Legacy error message",
+            "isRecoverable": true,
+            "retryCount": 0,
+            "timestamp": \(Date().timeIntervalSince1970)
+        }
+        """.data(using: .utf8)!
+        
+        let legacyRestore = ViewErrorState.deserialize(from: legacyFormat)
+        #expect(legacyRestore != nil, "Should handle legacy format")
+        #expect(legacyRestore?.message == "Legacy error message", "Should preserve legacy data")
+
+        // Test 4: Invalid error type handling
+        let invalidTypeFormat = """
+        {
+            "errorType": "unknownFutureErrorType",
+            "message": "Future error",
+            "isRecoverable": true,
+            "retryCount": 0,
+            "timestamp": \(Date().timeIntervalSince1970)
+        }
+        """.data(using: .utf8)!
+        
+        let invalidTypeRestore = ViewErrorState.deserialize(from: invalidTypeFormat)
+        #expect(invalidTypeRestore == nil, "Should reject unknown error types")
+
+        // Test 5: Very large retry counts and old timestamps
+        let extremeErrorState = ViewErrorState(
+            errorType: .networkFailure,
+            message: "Network timeout after multiple retries",
+            isRecoverable: true,
+            retryCount: 999,
+            timestamp: Date(timeIntervalSince1970: 0) // Very old timestamp
+        )
+        
+        let extremeSerialized = extremeErrorState.serialize()
+        let extremeRestored = ViewErrorState.deserialize(from: extremeSerialized)
+        
+        #expect(extremeRestored?.retryCount == 999, "Should handle large retry counts")
+        #expect((extremeRestored?.ageInSeconds ?? 0) > 1_000_000, "Should calculate age for very old errors")
+
+        // Test 6: Empty and very long messages
+        let emptyMessageState = ViewErrorState(
+            errorType: .saveFailure,
+            message: "",
+            isRecoverable: false,
+            retryCount: 0,
+            timestamp: Date()
+        )
+        
+        let emptyMessageData = emptyMessageState.serialize()
+        let emptyMessageRestored = ViewErrorState.deserialize(from: emptyMessageData)
+        #expect(emptyMessageRestored?.message == "", "Should handle empty messages")
+
+        let longMessage = String(repeating: "Very long error message. ", count: 100)
+        let longMessageState = ViewErrorState(
+            errorType: .validationError,
+            message: longMessage,
+            isRecoverable: true,
+            retryCount: 0,
+            timestamp: Date()
+        )
+        
+        let longMessageData = longMessageState.serialize()
+        let longMessageRestored = ViewErrorState.deserialize(from: longMessageData)
+        #expect(longMessageRestored?.message == longMessage, "Should handle very long messages")
+    }
+
+    @Test("Error state memory management during serialization", .tags(.ui, .medium, .parallel, .swiftui, .errorHandling, .performance, .validation, .mainActor))
+    func testErrorStateMemoryManagement() async throws {
+        _ = SwiftDataTestBase()
+
+        var initialMemory = mach_task_basic_info()
+        var count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size) / 4
+
+        let initialResult = withUnsafeMutablePointer(to: &initialMemory) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), $0, &count)
+            }
+        }
+
+        // Create and serialize many error states to test memory usage
+        var errorStates: [ViewErrorState] = []
+        for i in 0..<1000 {
+            let errorState = ViewErrorState(
+                errorType: .networkFailure,
+                message: "Test error #\(i) with substantial message content",
+                isRecoverable: true,
+                retryCount: i % 10,
+                timestamp: Date()
+            )
+            errorStates.append(errorState)
+        }
+
+        // Serialize all states
+        var serializedData: [Data] = []
+        for errorState in errorStates {
+            serializedData.append(errorState.serialize())
+        }
+
+        // Deserialize all states
+        var restoredStates: [ViewErrorState?] = []
+        for data in serializedData {
+            restoredStates.append(ViewErrorState.deserialize(from: data))
+        }
+
+        // Verify all states were properly restored
+        let successfulRestores = restoredStates.compactMap { $0 }.count
+        #expect(successfulRestores == 1000, "All error states should be successfully serialized and restored")
+
+        // Memory should not grow excessively
+        var finalMemory = mach_task_basic_info()
+        let finalResult = withUnsafeMutablePointer(to: &finalMemory) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), $0, &count)
+            }
+        }
+
+        if initialResult == KERN_SUCCESS && finalResult == KERN_SUCCESS {
+            let memoryGrowth = finalMemory.resident_size - initialMemory.resident_size
+            #expect(memoryGrowth < 50_000_000, "Memory growth should be reasonable (< 50MB)")
+        }
+        // If memory info calls fail, we skip the memory growth test (no assertion needed)
     }
 
     @Test("Progressive error disclosure should match error severity", .tags(.ui, .medium, .parallel, .swiftui, .errorHandling, .accessibility, .validation, .critical, .mainActor))
@@ -553,8 +696,46 @@ struct ErrorStateManagementTests {
         let networkErrorGroup = aggregatedErrors.first { $0.errorType == .network }
         #expect(networkErrorGroup?.count == 4, "Should aggregate network errors")
 
-        // Verify timing constraints (allow for system variability)
-        #expect(duration < 10.0, "Rapid error processing should complete in reasonable time")
+        // Verify improved timing constraints
+        #expect(duration < 2.0, "Rapid error processing should complete within 2 seconds")
+        #expect(duration >= 0.05, "Should complete after all processing delays")
+
+        // Verify memory usage during rapid error generation
+        var initialMemory = mach_task_basic_info()
+        var count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size) / 4
+        let initialResult = withUnsafeMutablePointer(to: &initialMemory) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), $0, &count)
+            }
+        }
+
+        // Generate many rapid errors to test memory usage
+        let stressTestStartTime = Date()
+        for i in 0..<100 {
+            let stressError = AppError.invalidInput("Stress test error #\(i)")
+            errorStateManager.addError(stressError, context: "Memory stress test")
+        }
+        let stressTestDuration = Date().timeIntervalSince(stressTestStartTime)
+
+        // Check memory after stress test
+        var finalMemory = mach_task_basic_info()
+        let finalResult = withUnsafeMutablePointer(to: &finalMemory) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
+                task_info(mach_task_self_, task_flavor_t(MACH_TASK_BASIC_INFO), $0, &count)
+            }
+        }
+
+        if initialResult == KERN_SUCCESS && finalResult == KERN_SUCCESS {
+            let memoryGrowth = finalMemory.resident_size - initialMemory.resident_size
+            #expect(memoryGrowth < 10_000_000, "Memory growth should be limited during rapid error generation (< 10MB)")
+        }
+        // If memory info calls fail, we skip the memory growth test (no assertion needed)
+        
+        #expect(stressTestDuration < 1.0, "Stress test should complete within 1 second")
+
+        // Verify error manager maintains performance with many errors
+        let finalErrorCount = errorStateManager.getDisplayableErrors().count
+        #expect(finalErrorCount <= 5, "Should maintain error limiting even under stress")
     }
 
     @Test("Error state should support undo operations", .tags(.ui, .medium, .parallel, .swiftui, .errorHandling, .userInterface, .validation, .mainActor))
