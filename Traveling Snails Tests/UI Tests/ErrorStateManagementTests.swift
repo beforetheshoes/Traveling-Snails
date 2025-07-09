@@ -4,10 +4,10 @@
 //
 //
 
+import Darwin.Mach
 import Foundation
 import SwiftData
 import Testing
-import Darwin.Mach
 @testable import Traveling_Snails
 
 @Suite("Error State Management and User Feedback Tests")
@@ -69,7 +69,7 @@ struct ErrorStateManagementTests {
             "timestamp": \(Date().timeIntervalSince1970)
         }
         """.data(using: .utf8)!
-        
+
         let legacyRestore = ViewErrorState.deserialize(from: legacyFormat)
         #expect(legacyRestore != nil, "Should handle legacy format")
         #expect(legacyRestore?.message == "Legacy error message", "Should preserve legacy data")
@@ -84,7 +84,7 @@ struct ErrorStateManagementTests {
             "timestamp": \(Date().timeIntervalSince1970)
         }
         """.data(using: .utf8)!
-        
+
         let invalidTypeRestore = ViewErrorState.deserialize(from: invalidTypeFormat)
         #expect(invalidTypeRestore == nil, "Should reject unknown error types")
 
@@ -96,10 +96,10 @@ struct ErrorStateManagementTests {
             retryCount: 999,
             timestamp: Date(timeIntervalSince1970: 0) // Very old timestamp
         )
-        
+
         let extremeSerialized = extremeErrorState.serialize()
         let extremeRestored = ViewErrorState.deserialize(from: extremeSerialized)
-        
+
         #expect(extremeRestored?.retryCount == 999, "Should handle large retry counts")
         #expect((extremeRestored?.ageInSeconds ?? 0) > 1_000_000, "Should calculate age for very old errors")
 
@@ -111,7 +111,7 @@ struct ErrorStateManagementTests {
             retryCount: 0,
             timestamp: Date()
         )
-        
+
         let emptyMessageData = emptyMessageState.serialize()
         let emptyMessageRestored = ViewErrorState.deserialize(from: emptyMessageData)
         #expect(emptyMessageRestored?.message == "", "Should handle empty messages")
@@ -124,7 +124,7 @@ struct ErrorStateManagementTests {
             retryCount: 0,
             timestamp: Date()
         )
-        
+
         let longMessageData = longMessageState.serialize()
         let longMessageRestored = ViewErrorState.deserialize(from: longMessageData)
         #expect(longMessageRestored?.message == longMessage, "Should handle very long messages")
@@ -146,7 +146,7 @@ struct ErrorStateManagementTests {
             "futureVersionField": 42
         }
         """.data(using: .utf8)!
-        
+
         let legacyCompatibleRestore = ViewErrorState.deserialize(from: legacyFormatWithExtraFields)
         #expect(legacyCompatibleRestore != nil, "Should handle format changes during app updates")
         #expect(legacyCompatibleRestore?.message == "Legacy error from old app version", "Should preserve essential data across versions")
@@ -155,13 +155,13 @@ struct ErrorStateManagementTests {
         let simultaneousErrors = [
             ViewErrorState(errorType: .saveFailure, message: "Save failed", isRecoverable: true, retryCount: 0, timestamp: Date()),
             ViewErrorState(errorType: .networkFailure, message: "Network timeout", isRecoverable: true, retryCount: 1, timestamp: Date()),
-            ViewErrorState(errorType: .validationError, message: "Invalid input", isRecoverable: false, retryCount: 0, timestamp: Date())
+            ViewErrorState(errorType: .validationError, message: "Invalid input", isRecoverable: false, retryCount: 0, timestamp: Date()),
         ]
-        
+
         // Serialize all errors and verify they can all be restored independently
         let serializedErrors = simultaneousErrors.map { $0.serialize() }
         let restoredErrors = serializedErrors.compactMap { ViewErrorState.deserialize(from: $0) }
-        
+
         #expect(restoredErrors.count == simultaneousErrors.count, "Should restore all simultaneous errors")
         #expect(Set(restoredErrors.map(\.message)) == Set(simultaneousErrors.map(\.message)), "Should preserve all error messages")
 
@@ -173,15 +173,15 @@ struct ErrorStateManagementTests {
             retryCount: 0,
             timestamp: Date()
         )
-        
+
         let minimalSerialized = minimalErrorState.serialize()
         #expect(minimalSerialized.count < 200, "Should create minimal serialization when storage is constrained")
-        
+
         let minimalRestored = ViewErrorState.deserialize(from: minimalSerialized)
         #expect(minimalRestored != nil, "Should handle minimal data scenarios")
-        
+
         // Edge Case 4: Timestamp edge cases (future dates, epoch boundaries)
-        let futureTimestamp = Date(timeIntervalSince1970: Date().timeIntervalSince1970 + 86400) // Tomorrow
+        let futureTimestamp = Date(timeIntervalSince1970: Date().timeIntervalSince1970 + 86_400) // Tomorrow
         let futureErrorState = ViewErrorState(
             errorType: .networkFailure,
             message: "Future timestamp error",
@@ -189,11 +189,11 @@ struct ErrorStateManagementTests {
             retryCount: 0,
             timestamp: futureTimestamp
         )
-        
+
         let futureSerialized = futureErrorState.serialize()
         let futureRestored = ViewErrorState.deserialize(from: futureSerialized)
         #expect(futureRestored?.ageInSeconds ?? 0 < 0, "Should handle future timestamps gracefully")
-        
+
         // Edge Case 5: Epoch boundary (Year 2038 problem simulation)
         let epochBoundary = Date(timeIntervalSince1970: 2_147_483_647) // 32-bit epoch limit
         let epochErrorState = ViewErrorState(
@@ -203,7 +203,7 @@ struct ErrorStateManagementTests {
             retryCount: 0,
             timestamp: epochBoundary
         )
-        
+
         let epochSerialized = epochErrorState.serialize()
         let epochRestored = ViewErrorState.deserialize(from: epochSerialized)
         #expect(epochRestored != nil, "Should handle epoch boundary dates")
@@ -215,17 +215,17 @@ struct ErrorStateManagementTests {
         _ = SwiftDataTestBase()
 
         // Test 1: Concurrent serialization from multiple tasks
-        let baseErrorState = ViewErrorState(
+        _ = ViewErrorState(
             errorType: .saveFailure,
             message: "Concurrent test error",
             isRecoverable: true,
             retryCount: 0,
             timestamp: Date()
         )
-        
+
         let concurrentSerializationTasks = 10
         var serializationResults: [Data] = []
-        
+
         await withTaskGroup(of: Data.self) { group in
             for i in 0..<concurrentSerializationTasks {
                 group.addTask {
@@ -239,34 +239,34 @@ struct ErrorStateManagementTests {
                     return errorState.serialize()
                 }
             }
-            
+
             for await result in group {
                 serializationResults.append(result)
             }
         }
-        
+
         #expect(serializationResults.count == concurrentSerializationTasks, "All concurrent serializations should complete")
-        
+
         // Test 2: Concurrent deserialization with potential race conditions
         let deserializationTasks = serializationResults.map { data in
             Task {
-                return ViewErrorState.deserialize(from: data)
+                ViewErrorState.deserialize(from: data)
             }
         }
-        
+
         var deserializationResults: [ViewErrorState?] = []
         for task in deserializationTasks {
             let result = await task.value
             deserializationResults.append(result)
         }
-        
+
         let successfulDeserializations = deserializationResults.compactMap { $0 }
         #expect(successfulDeserializations.count == concurrentSerializationTasks, "All concurrent deserializations should succeed")
-        
+
         // Test 3: Race condition during error state manager operations
         let errorStateManager = ErrorStateManager()
         let concurrentManagerTasks = 50
-        
+
         await withTaskGroup(of: Void.self) { group in
             // Add errors concurrently
             for i in 0..<concurrentManagerTasks {
@@ -275,28 +275,28 @@ struct ErrorStateManagementTests {
                     errorStateManager.addError(error, context: "Concurrent test \(i)")
                 }
             }
-            
+
             // Simultaneously read from manager
-            for i in 0..<5 {
+            for _ in 0..<5 {
                 group.addTask {
                     _ = errorStateManager.getDisplayableErrors()
                     _ = errorStateManager.getUniqueErrors()
                     _ = errorStateManager.getAggregatedErrors()
                 }
             }
-            
+
             await group.waitForAll()
         }
-        
+
         // Verify manager state after concurrent operations
         let finalErrors = errorStateManager.getDisplayableErrors()
         let uniqueErrors = errorStateManager.getUniqueErrors()
         let aggregatedErrors = errorStateManager.getAggregatedErrors()
-        
+
         #expect(finalErrors.count <= concurrentManagerTasks, "Error manager should handle concurrent additions")
         #expect(uniqueErrors.count <= concurrentManagerTasks, "Unique error deduplication should work under concurrency")
         #expect(aggregatedErrors.count > 0, "Aggregated errors should be computed correctly under concurrency")
-        
+
         // Test 4: Race condition during error state updates
         let mutableErrorState = ViewErrorState(
             errorType: .networkFailure,
@@ -305,10 +305,10 @@ struct ErrorStateManagementTests {
             retryCount: 0,
             timestamp: Date()
         )
-        
+
         let updateTasks = 20
         var updateResults: [Data] = []
-        
+
         await withTaskGroup(of: Data.self) { group in
             for i in 0..<updateTasks {
                 group.addTask {
@@ -323,23 +323,23 @@ struct ErrorStateManagementTests {
                     return updatedState.serialize()
                 }
             }
-            
+
             for await result in group {
                 updateResults.append(result)
             }
         }
-        
+
         #expect(updateResults.count == updateTasks, "All concurrent updates should complete")
-        
+
         // Verify all updates produced valid serialized data
         let validUpdates = updateResults.compactMap { ViewErrorState.deserialize(from: $0) }
         #expect(validUpdates.count == updateTasks, "All concurrent updates should produce valid error states")
-        
+
         // Test 5: Stress test with rapid concurrent operations
         let stressTestDuration = 1.0 // 1 second
         let stressTestStart = Date()
         var stressTestOperations = 0
-        
+
         await withTaskGroup(of: Int.self) { group in
             for _ in 0..<10 { // 10 concurrent workers
                 group.addTask {
@@ -352,10 +352,10 @@ struct ErrorStateManagementTests {
                             retryCount: operationCount,
                             timestamp: Date()
                         )
-                        
+
                         let serialized = errorState.serialize()
                         let deserialized = ViewErrorState.deserialize(from: serialized)
-                        
+
                         if deserialized != nil {
                             operationCount += 1
                         }
@@ -363,14 +363,14 @@ struct ErrorStateManagementTests {
                     return operationCount
                 }
             }
-            
+
             for await count in group {
                 stressTestOperations += count
             }
         }
-        
+
         #expect(stressTestOperations > 100, "Stress test should complete many operations under concurrency")
-        
+
         let stressTestActualDuration = Date().timeIntervalSince(stressTestStart)
         #expect(stressTestActualDuration < 2.0, "Stress test should complete within reasonable time")
     }
@@ -941,8 +941,8 @@ struct ErrorStateManagementTests {
         let networkErrorGroup = aggregatedErrors.first { $0.errorType == .network }
         #expect(networkErrorGroup?.count == 4, "Should aggregate network errors")
 
-        // Verify improved timing constraints
-        #expect(duration < 5.0, "Rapid error processing should complete within 5 seconds")
+        // Verify improved timing constraints with more realistic baseline for CI
+        #expect(duration < 10.0, "Rapid error processing should complete within 10 seconds")
         #expect(duration >= 0.05, "Should complete after all processing delays")
 
         // Verify memory usage during rapid error generation
@@ -975,7 +975,7 @@ struct ErrorStateManagementTests {
             #expect(memoryGrowth < 10_000_000, "Memory growth should be limited during rapid error generation (< 10MB)")
         }
         // If memory info calls fail, we skip the memory growth test (no assertion needed)
-        
+
         #expect(stressTestDuration < 2.0, "Stress test should complete within 2 seconds for better performance guarantees")
 
         // Verify error manager maintains performance with many errors

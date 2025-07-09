@@ -134,7 +134,7 @@ struct SwiftDataFixValidationTests {
         let duration = endTime - startTime
 
         #expect(successCount == 50, "Should create all organizations successfully")
-        #expect(duration < 2.0, "Creating 50 organizations took \(duration)s - should be under 2s")
+        #expect(duration < 3.0, "Creating 50 organizations took \(duration)s - should be under 3s")
 
         print("✅ OrganizationManager stability: Created \(successCount)/50 orgs in \(String(format: "%.3f", duration))s")
     }

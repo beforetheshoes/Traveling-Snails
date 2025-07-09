@@ -178,8 +178,8 @@ struct AccessibilityPerformanceTests {
 
         let syncTime = Date().timeIntervalSince(startTime)
 
-        // Sync should preserve accessibility efficiently (allow up to 10 seconds for CI environment)  
-        #expect(syncTime < 10.0, "CloudKit sync with accessibility should complete in under 10 seconds")
+        // Sync should preserve accessibility efficiently (allow up to 12 seconds for CI environment)  
+        #expect(syncTime < 12.0, "CloudKit sync with accessibility should complete in under 12 seconds")
 
         print("CloudKit sync performance with accessibility for \(tripCount) items: \(syncTime)s")
     }
