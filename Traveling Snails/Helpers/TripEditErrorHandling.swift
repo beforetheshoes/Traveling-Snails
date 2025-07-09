@@ -309,93 +309,11 @@ struct TripEditErrorBanner: View {
     let onAction: (TripEditAction) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundColor(.orange)
-                    .accessibilityLabel(errorAccessibilityLabel)
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(errorState.userMessage)
-                        .font(.caption)
-                        .foregroundColor(.primary)
-                        .accessibilityLabel("Error message")
-                        .accessibilityValue(errorState.userMessage)
-                    if errorState.canRetry {
-                        Text("Retry attempt \(errorState.retryCount)/\(AppConfiguration.errorState.maxVisibleRetries)")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                            .accessibilityLabel("Retry count")
-                    }
-                }
-                Spacer()
+        InlineErrorRecoveryView(errorState: errorState, onAction: onAction)
+            .padding(.horizontal)
+            .onAppear {
+                announceErrorIfNeeded()
             }
-
-            if !errorState.suggestedActions.isEmpty {
-                HStack(spacing: 8) {
-                    ForEach(errorState.suggestedActions.prefix(3), id: \.self) { action in
-                        Button(action.displayName) {
-                            onAction(action)
-                        }
-                        .font(.caption)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.blue.opacity(0.1))
-                        .cornerRadius(4)
-                        .accessibilityLabel(action.displayName)
-                        .accessibilityHint(accessibilityHint(for: action))
-                        .accessibilityAddTraits(.isButton)
-                    }
-                    Spacer()
-                }
-                .accessibilityElement(children: .contain)
-                .accessibilityLabel("Error recovery actions")
-            }
-        }
-        .padding(12)
-        .background(Color.orange.opacity(0.1))
-        .cornerRadius(8)
-        .padding(.horizontal)
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("Error notification")
-        .accessibilityValue(errorState.userMessage)
-        .accessibilityHint("Error occurred, recovery actions available")
-        .onAppear {
-            announceErrorIfNeeded()
-        }
-    }
-
-    private var errorAccessibilityLabel: String {
-        switch errorState.error.category {
-        case .network:
-            return "Network Error"
-        case .database:
-            return "Critical Error"
-        case .app:
-            return "Validation Error"
-        case .cloudKit:
-            return "CloudKit Error"
-        default:
-            return "Error"
-        }
-    }
-
-    private func accessibilityHint(for action: TripEditAction) -> String {
-        switch action {
-        case .retry:
-            return "Attempts the operation again"
-        case .workOffline:
-            return "Continues working without network connection"
-        case .saveAsDraft:
-            return "Saves your changes locally"
-        case .fixInput:
-            return "Allows you to correct the input"
-        case .manageStorage:
-            return "Opens storage management options"
-        case .upgradeStorage:
-            return "Opens iCloud storage upgrade options"
-        case .cancel:
-            return "Dismisses the error and cancels the operation"
-        }
     }
 
     private func announceErrorIfNeeded() {
@@ -424,6 +342,21 @@ struct TripEditErrorBanner: View {
             return false
         default:
             return true
+        }
+    }
+
+    private var errorAccessibilityLabel: String {
+        switch errorState.error.category {
+        case .network:
+            return "Network Error"
+        case .database:
+            return "Critical Error"
+        case .app:
+            return "Validation Error"
+        case .cloudKit:
+            return "CloudKit Error"
+        default:
+            return "Error"
         }
     }
 }

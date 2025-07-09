@@ -569,6 +569,7 @@ enum ErrorRecoveryEngine {
 class ErrorStateManager {
     private var errors: [ErrorEntry] = []
     private let maxDisplayedErrors = 3
+    private let queue = DispatchQueue(label: "com.traveling-snails.error-state", attributes: .concurrent)
 
     func addError(_ error: AppError, context: String) {
         let entry = ErrorEntry(
@@ -576,32 +577,40 @@ class ErrorStateManager {
             context: context,
             timestamp: Date()
         )
-        errors.append(entry)
+        queue.async(flags: .barrier) {
+            self.errors.append(entry)
+        }
     }
 
     func getUniqueErrors() -> [AppError] {
-        var seen: Set<Logger.Category> = []
-        var unique: [AppError] = []
+        queue.sync {
+            var seen: Set<Logger.Category> = []
+            var unique: [AppError] = []
 
-        for error in errors.map(\.error) {
-            let category = error.category
-            if !seen.contains(category) {
-                seen.insert(category)
-                unique.append(error)
+            for error in errors.map(\.error) {
+                let category = error.category
+                if !seen.contains(category) {
+                    seen.insert(category)
+                    unique.append(error)
+                }
             }
-        }
 
-        return unique
+            return unique
+        }
     }
 
     func getDisplayableErrors() -> [ErrorEntry] {
-        Array(errors.suffix(maxDisplayedErrors))
+        queue.sync {
+            Array(errors.suffix(maxDisplayedErrors))
+        }
     }
 
     func getAggregatedErrors() -> [AggregatedError] {
-        let grouped = Dictionary(grouping: errors) { $0.error.category }
-        return grouped.map { category, entries in
-            AggregatedError(errorType: category, count: entries.count)
+        queue.sync {
+            let grouped = Dictionary(grouping: errors) { $0.error.category }
+            return grouped.map { category, entries in
+                AggregatedError(errorType: category, count: entries.count)
+            }
         }
     }
 }

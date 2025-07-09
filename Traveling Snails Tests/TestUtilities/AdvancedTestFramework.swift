@@ -136,15 +136,23 @@ final class StressTestFramework {
                     var successfulOperations = 0
                     var errors: [Error] = []
 
+                    // Create ONE ModelContext per task, not per operation
+                    let taskModelContext = ModelContext(testBase.modelContainer)
+
                     for operationId in 0..<operationsPerTask {
                         do {
-                            // Create fresh ModelContext for each task to avoid concurrency issues
-                            let taskModelContext = ModelContext(testBase.modelContainer)
                             try await operation(taskModelContext, taskId * operationsPerTask + operationId)
                             successfulOperations += 1
                         } catch {
                             errors.append(error)
                         }
+                    }
+
+                    // Final save to ensure all data is persisted
+                    do {
+                        try taskModelContext.save()
+                    } catch {
+                        errors.append(error)
                     }
 
                     let taskDuration = CFAbsoluteTimeGetCurrent() - taskStartTime
