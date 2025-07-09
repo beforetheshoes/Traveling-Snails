@@ -14,7 +14,7 @@ import Testing
 struct ComprehensiveImportExportTests {
     @Suite("Organization Management Tests")
     struct OrganizationManagementTests {
-        @Test("None organization creation and uniqueness")
+        @Test("None organization creation and uniqueness", .tags(.integration, .fast, .parallel, .organization, .validation, .smoke))
         func noneOrganizationUniqueness() {
             // Test that multiple calls return same organization
             let org1 = Organization(name: "None")
@@ -26,7 +26,7 @@ struct ComprehensiveImportExportTests {
             #expect(org2.canBeDeleted == false)
         }
 
-        @Test("Regular organization deletion rules")
+        @Test("Regular organization deletion rules", .tags(.integration, .fast, .parallel, .organization, .validation, .consistency))
         func regularOrganizationDeletionRules() {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Airline")
@@ -48,7 +48,7 @@ struct ComprehensiveImportExportTests {
             #expect(org.canBeDeleted == false)
         }
 
-        @Test("Organization merge logic")
+        @Test("Organization merge logic", .tags(.integration, .fast, .parallel, .organization, .validation, .consistency))
         func organizationMergeLogic() {
             let org1 = Organization(
                 name: "Test Airline",
@@ -75,7 +75,7 @@ struct ComprehensiveImportExportTests {
 
     @Suite("Export Data Validation Tests")
     struct ExportDataValidationTests {
-        @Test("Export structure validation")
+        @Test("Export structure validation", .tags(.integration, .fast, .parallel, .dataExport, .validation, .smoke))
         func exportStructureValidation() {
             let exportData: [String: Any] = [
                 "exportInfo": [
@@ -102,7 +102,7 @@ struct ComprehensiveImportExportTests {
             }
         }
 
-        @Test("Trip export data completeness")
+        @Test("Trip export data completeness", .tags(.integration, .fast, .parallel, .trip, .dataExport, .validation))
         func tripExportDataCompleteness() {
             let trip = Trip(
                 name: "Test Trip",
@@ -130,7 +130,7 @@ struct ComprehensiveImportExportTests {
             #expect(exportDict["hasEndDate"] as? Bool == trip.hasEndDate)
         }
 
-        @Test("Organization export data completeness")
+        @Test("Organization export data completeness", .tags(.integration, .fast, .parallel, .organization, .dataExport, .validation))
         func organizationExportDataCompleteness() {
             let address = Address(
                 street: "123 Test St",
@@ -169,7 +169,7 @@ struct ComprehensiveImportExportTests {
             #expect(exportDict["address"] != nil)
         }
 
-        @Test("Activity export data with relationships")
+        @Test("Activity export data with relationships", .tags(.integration, .fast, .parallel, .activity, .dataExport, .validation, .consistency))
         func activityExportDataWithRelationships() {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Venue")
@@ -203,7 +203,7 @@ struct ComprehensiveImportExportTests {
 
     @Suite("Import Data Validation Tests")
     struct ImportDataValidationTests {
-        @Test("Import file format validation")
+        @Test("Import file format validation", .tags(.integration, .fast, .parallel, .dataImport, .validation, .errorHandling))
         func importFileFormatValidation() {
             // Valid export format
             let validExport: [String: Any] = [
@@ -231,7 +231,7 @@ struct ComprehensiveImportExportTests {
             #expect(invalidExport["exportInfo"] == nil)
         }
 
-        @Test("Organization import deduplication logic")
+        @Test("Organization import deduplication logic", .tags(.integration, .medium, .parallel, .organization, .dataImport, .validation, .consistency))
         func organizationImportDeduplicationLogic() {
             // Simulate existing organizations
             let existingOrgs = [
@@ -263,7 +263,7 @@ struct ComprehensiveImportExportTests {
             }
         }
 
-        @Test("Trip activity relationship reconstruction")
+        @Test("Trip activity relationship reconstruction", .tags(.integration, .medium, .parallel, .trip, .activity, .dataImport, .validation, .consistency))
         func tripActivityRelationshipReconstruction() {
             // Simulate import data structure
             let tripData: [String: Any] = [
@@ -294,7 +294,7 @@ struct ComprehensiveImportExportTests {
             #expect(transportData["organizationId"] as? String == "org-999")
         }
 
-        @Test("Timezone import validation")
+        @Test("Timezone import validation", .tags(.integration, .fast, .parallel, .dataImport, .validation, .boundary))
         func timezoneImportValidation() {
             let activityData: [String: Any] = [
                 "name": "Test Activity",
@@ -315,7 +315,7 @@ struct ComprehensiveImportExportTests {
 
     @Suite("File Attachment Import/Export Tests")
     struct FileAttachmentImportExportTests {
-        @Test("File attachment export with embedded data")
+        @Test("File attachment export with embedded data", .tags(.integration, .medium, .parallel, .fileAttachment, .dataExport, .validation, .critical))
         func fileAttachmentExportWithEmbeddedData() {
             let testData = "Test file content".data(using: .utf8)!
             let attachment = EmbeddedFileAttachment(
@@ -349,7 +349,7 @@ struct ComprehensiveImportExportTests {
             }
         }
 
-        @Test("File attachment import without data")
+        @Test("File attachment import without data", .tags(.integration, .fast, .parallel, .fileAttachment, .dataImport, .validation, .errorHandling))
         func fileAttachmentImportWithoutData() {
             let importData: [String: Any] = [
                 "fileName": "missing-data.txt",
@@ -369,7 +369,7 @@ struct ComprehensiveImportExportTests {
             #expect(importData["mimeType"] as? String == "text/plain")
         }
 
-        @Test("File attachment relationship preservation")
+        @Test("File attachment relationship preservation", .tags(.integration, .fast, .parallel, .fileAttachment, .validation, .consistency))
         func fileAttachmentRelationshipPreservation() {
             let activity = Activity(name: "Test Activity")
             let attachment = EmbeddedFileAttachment(fileName: "activity-doc.pdf")
@@ -411,7 +411,7 @@ struct ComprehensiveImportExportTests {
             // settings.colorScheme = originalScheme
         }
 
-        @Test("Color scheme preference validation")
+        @Test("Color scheme preference validation", .tags(.integration, .fast, .parallel, .settings, .validation, .smoke))
         func colorSchemePreferenceValidation() {
             #expect(ColorSchemePreference.system.displayName == "System")
             #expect(ColorSchemePreference.light.displayName == "Light")
@@ -422,7 +422,7 @@ struct ComprehensiveImportExportTests {
             #expect(ColorSchemePreference.dark.colorScheme == .dark)
         }
 
-        @Test("Database export settings validation")
+        @Test("Database export settings validation", .tags(.integration, .fast, .parallel, .settings, .dataExport, .validation))
         func databaseExportSettingsValidation() {
             // Test export format options
             enum TestExportFormat: String, CaseIterable {
@@ -445,7 +445,7 @@ struct ComprehensiveImportExportTests {
 
     @Suite("Data Integrity Tests")
     struct DataIntegrityTests {
-        @Test("Trip date consistency after import")
+        @Test("Trip date consistency after import", .tags(.integration, .medium, .parallel, .trip, .dataImport, .validation, .consistency))
         func tripDateConsistencyAfterImport() {
             let startDate = Date()
             let endDate = Calendar.current.date(byAdding: .day, value: 7, to: startDate)!
@@ -483,7 +483,7 @@ struct ComprehensiveImportExportTests {
             #expect(trip.hasDateRange == true)
         }
 
-        @Test("Organization relationship consistency after import")
+        @Test("Organization relationship consistency after import", .tags(.integration, .medium, .parallel, .organization, .dataImport, .validation, .consistency))
         func organizationRelationshipConsistencyAfterImport() {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Airline")
@@ -509,7 +509,7 @@ struct ComprehensiveImportExportTests {
             #expect(org.transportation.first?.id == transport.id)
         }
 
-        @Test("File attachment data integrity after import")
+        @Test("File attachment data integrity after import", .tags(.integration, .medium, .parallel, .fileAttachment, .dataImport, .validation, .consistency, .filesystem))
         func fileAttachmentDataIntegrityAfterImport() {
             let originalData = "Original file content".data(using: .utf8)!
             let base64String = originalData.base64EncodedString()
@@ -552,7 +552,7 @@ struct ComprehensiveImportExportTests {
             }
         }
 
-        @Test("Currency precision preservation during import/export")
+        @Test("Currency precision preservation during import/export", .tags(.integration, .fast, .parallel, .dataImport, .dataExport, .validation, .boundary))
         func currencyPrecisionPreservation() {
             let originalCost = Decimal(string: "123.45")!
 
@@ -580,7 +580,7 @@ struct ComprehensiveImportExportTests {
 
     @Suite("Error Handling and Recovery Tests")
     struct ErrorHandlingAndRecoveryTests {
-        @Test("Invalid import file handling")
+        @Test("Invalid import file handling", .tags(.integration, .medium, .parallel, .dataImport, .errorHandling, .validation, .boundary))
         func invalidImportFileHandling() {
             // Test various invalid formats
             let invalidFormats = [
@@ -617,7 +617,7 @@ struct ComprehensiveImportExportTests {
             }
         }
 
-        @Test("Partial import recovery")
+        @Test("Partial import recovery", .tags(.integration, .medium, .parallel, .dataImport, .errorHandling, .validation, .regression))
         func partialImportRecovery() {
             // Simulate import with some valid and some invalid data
             let partiallyValidImport: [String: Any] = [
@@ -665,7 +665,7 @@ struct ComprehensiveImportExportTests {
             }
         }
 
-        @Test("Memory pressure during large import")
+        @Test("Memory pressure during large import", .tags(.integration, .medium, .parallel, .dataImport, .memory, .stress, .validation))
         func memoryPressureDuringLargeImport() {
             // Simulate large dataset
             var largeImportData: [String: Any] = [
@@ -729,7 +729,7 @@ struct ComprehensiveImportExportTests {
             #expect(processedCount == 10)
         }
 
-        @Test("Import rollback on critical error")
+        @Test("Import rollback on critical error", .tags(.integration, .medium, .parallel, .dataImport, .errorHandling, .validation, .critical))
         func importRollbackOnCriticalError() {
             // Test that import can be safely aborted
             var importState = [
@@ -759,7 +759,7 @@ struct ComprehensiveImportExportTests {
 
     @Suite("Performance and Scalability Tests")
     struct PerformanceAndScalabilityTests {
-        @Test("Export generation performance")
+        @Test("Export generation performance", .tags(.integration, .medium, .parallel, .dataExport, .performance, .validation))
         func exportGenerationPerformance() {
             // Create test dataset
             let trip = Trip(name: "Performance Test Trip")
@@ -804,7 +804,7 @@ struct ComprehensiveImportExportTests {
             }
         }
 
-        @Test("Import processing performance")
+        @Test("Import processing performance", .tags(.integration, .medium, .parallel, .dataImport, .performance, .validation))
         func importProcessingPerformance() {
             // Create test import data
             var importData: [String: Any] = [
@@ -845,7 +845,7 @@ struct ComprehensiveImportExportTests {
             #expect(processedOrgs.count == 25)
         }
 
-        @Test("Large file attachment handling")
+        @Test("Large file attachment handling", .tags(.integration, .medium, .parallel, .fileAttachment, .performance, .memory, .validation))
         func largeFileAttachmentHandling() {
             // Test with moderately large data (1KB for test performance)
             let largeData = Data(repeating: 0x42, count: 1024)

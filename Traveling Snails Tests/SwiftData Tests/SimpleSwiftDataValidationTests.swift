@@ -11,7 +11,7 @@ import Testing
 
 @Suite("Simple SwiftData Validation")
 struct SimpleSwiftDataValidationTests {
-    @Test("AppSettings performance with NSUbiquitousKeyValueStore")
+    @Test("AppSettings performance with NSUbiquitousKeyValueStore", .tags(.swiftdata, .fast, .parallel, .settings, .validation, .performance))
     @MainActor func testAppSettingsPerformance() throws {
         let appSettings = AppSettings.shared
 
@@ -28,7 +28,7 @@ struct SimpleSwiftDataValidationTests {
         print("✅ AppSettings performance: \(String(format: "%.3f", duration))s for 100 accesses")
     }
 
-    @Test("AppSettings singleton pattern works without ModelContext")
+    @Test("AppSettings singleton pattern works without ModelContext", .tags(.swiftdata, .fast, .parallel, .settings, .validation, .sanity))
     @MainActor func testAppSettingsSingleton() throws {
         let appSettings1 = AppSettings.shared
         let appSettings2 = AppSettings.shared
@@ -45,7 +45,7 @@ struct SimpleSwiftDataValidationTests {
         print("✅ AppSettings singleton: Same instance, no ModelContext required")
     }
 
-    @Test("Settings persist correctly to both stores")
+    @Test("Settings persist correctly to both stores", .tags(.swiftdata, .fast, .parallel, .settings, .validation, .sync))
     @MainActor func testSettingsPersistence() throws {
         let appSettings = AppSettings.shared
 
@@ -67,7 +67,7 @@ struct SimpleSwiftDataValidationTests {
         print("✅ Settings persistence: Both iCloud and UserDefaults updated")
     }
 
-    @Test("OrganizationManager stability")
+    @Test("OrganizationManager stability", .tags(.swiftdata, .medium, .parallel, .organization, .validation, .sanity))
     @MainActor func testOrganizationManagerStability() throws {
         let container = try ModelContainer(for: Organization.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = container.mainContext
@@ -92,7 +92,7 @@ struct SimpleSwiftDataValidationTests {
         print("✅ OrganizationManager: Created \(successCount)/10 organizations")
     }
 
-    @Test("AppSettings and SwiftData work independently")
+    @Test("AppSettings and SwiftData work independently", .tags(.swiftdata, .medium, .parallel, .settings, .organization, .validation, .integration))
     @MainActor func testIndependentOperation() throws {
         let container = try ModelContainer(for: Organization.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = container.mainContext

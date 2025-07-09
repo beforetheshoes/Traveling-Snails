@@ -11,7 +11,7 @@ import Testing
 
 @Suite("IsolatedTripDetailView Simple Tests")
 struct IsolatedTripDetailViewSimpleTests {
-    @Test("View can be initialized without crashes")
+    @Test("View can be initialized without crashes", .tags(.ui, .fast, .parallel, .swiftui, .trip, .validation, .smoke, .performance))
     func testViewInitialization() {
         let trip = Trip(name: "Test Trip")
 
@@ -26,7 +26,7 @@ struct IsolatedTripDetailViewSimpleTests {
         #expect(initTime < 0.1, "View initialization should be fast")
     }
 
-    @Test("Multiple view initializations are independent and fast")
+    @Test("Multiple view initializations are independent and fast", .tags(.ui, .medium, .parallel, .swiftui, .trip, .validation, .performance, .regression))
     func testMultipleInitializations() {
         let startTime = Date()
 
@@ -43,7 +43,7 @@ struct IsolatedTripDetailViewSimpleTests {
         #expect(totalTime < 0.5, "Creating 20 views should be fast")
     }
 
-    @Test("View initialization with same trip data is consistent")
+    @Test("View initialization with same trip data is consistent", .tags(.ui, .fast, .parallel, .swiftui, .trip, .validation, .regression))
     func testConsistentInitialization() {
         let trip = Trip(name: "Consistent Test Trip")
 

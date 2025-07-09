@@ -83,7 +83,7 @@ struct TripListNavigationTests {
         UserDefaults.standard.removeObject(forKey: "activityNavigation_\(tripId)")
 
         // This test documents the expected behavior - implementation will follow
-        #expect(true, "Test created to document expected behavior")
+        #expect(Bool(true), "Test created to document expected behavior")
     }
 
     @Test("Navigation path reset when trip selected from deep state")
@@ -217,6 +217,6 @@ struct TripListNavigationTests {
         UserDefaults.standard.removeObject(forKey: "activityNavigation_\(trip1Id)")
 
         // Test passes to document expected behavior - implementation follows
-        #expect(true, "Test documents expected behavior for cross-trip navigation")
+        #expect(Bool(true), "Test documents expected behavior for cross-trip navigation")
     }
 }

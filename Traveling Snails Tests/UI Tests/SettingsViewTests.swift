@@ -30,7 +30,7 @@ struct SettingsViewTests {
 
     @Suite("Settings State Management")
     struct SettingsStateTests {
-        @Test("Settings view state initialization")
+        @Test("Settings view state initialization", .tags(.ui, .fast, .parallel, .swiftui, .settings, .validation))
         func testSettingsViewStateInitialization() {
             // Test default state values that should be managed by SettingsViewModel
             let showingDataBrowser = false
@@ -46,7 +46,7 @@ struct SettingsViewTests {
             #expect(showingImportProgress == false)
         }
 
-        @Test("Settings modal transitions")
+        @Test("Settings modal transitions", .tags(.ui, .fast, .parallel, .swiftui, .settings, .validation, .userInterface))
         func testSettingsModalTransitions() {
             var showingDataBrowser = false
             var showingExportView = false
@@ -79,7 +79,7 @@ struct SettingsViewTests {
 
     @Suite("Appearance Settings")
     struct AppearanceSettingsTests {
-        @Test("Color scheme preference handling")
+        @Test("Color scheme preference handling", .tags(.ui, .medium, .parallel, .swiftui, .settings, .validation, .mainActor))
         @MainActor func testColorSchemePreferenceHandling() {
             // Clean up state before test
             SettingsViewTests.cleanupSharedState()
@@ -112,7 +112,7 @@ struct SettingsViewTests {
 
     @Suite("Data Management Operations")
     struct DataManagementTests {
-        @Test("Import result handling")
+        @Test("Import result handling", .tags(.ui, .medium, .parallel, .swiftui, .settings, .dataImport, .validation))
         func testImportResultHandling() throws {
             // Test data structures that should be managed by DataManagementService
             let importManager = DatabaseImportManager()
@@ -143,7 +143,7 @@ struct SettingsViewTests {
             #expect(mockResult.errors.isEmpty)
         }
 
-        @Test("File import URL handling")
+        @Test("File import URL handling", .tags(.ui, .fast, .parallel, .swiftui, .settings, .dataImport, .validation, .filesystem))
         func testFileImportURLHandling() {
             // Test URL handling logic that should be in DataManagementService
             let testURL = URL(fileURLWithPath: "/path/to/test.json")
@@ -154,7 +154,7 @@ struct SettingsViewTests {
             #expect(urls.first?.pathExtension == "json")
         }
 
-        @Test("None organization cleanup logic")
+        @Test("None organization cleanup logic", .tags(.ui, .medium, .parallel, .swiftui, .settings, .organization, .validation))
         func testNoneOrganizationCleanupLogic() throws {
             // Test cleanup logic that should be in DataManagementService
             let config = ModelConfiguration(isStoredInMemoryOnly: true)
@@ -188,7 +188,7 @@ struct SettingsViewTests {
 
     @Suite("Security Settings")
     struct SecuritySettingsTests {
-        @Test("Biometric authentication settings")
+        @Test("Biometric authentication settings", .tags(.ui, .medium, .parallel, .swiftui, .settings, .authentication, .validation, .mainActor))
         @MainActor func testBiometricAuthenticationSettings() async {
             // Create auth manager via dependency injection
             let container = DefaultServiceContainerFactory.createTestContainer()
@@ -203,7 +203,7 @@ struct SettingsViewTests {
             #expect(authManager.isEnabled == authManager.canUseBiometrics())
         }
 
-        @Test("Timeout options enumeration")
+        @Test("Timeout options enumeration", .tags(.ui, .fast, .parallel, .swiftui, .settings, .authentication, .validation))
         func testTimeoutOptionsEnumeration() {
             // Test the timeout enum that should be in SettingsViewModel
             enum TimeoutOption: TimeInterval, CaseIterable {
@@ -250,7 +250,7 @@ struct SettingsViewTests {
             #expect(unknownTimeout == .fifteenMinutes) // Default fallback
         }
 
-        @Test("UserDefaults timeout handling")
+        @Test("UserDefaults timeout handling", .tags(.ui, .fast, .parallel, .swiftui, .settings, .authentication, .validation))
         func testUserDefaultsTimeoutHandling() {
             // Test UserDefaults interaction that should be in SettingsViewModel
             let key = "testBiometricTimeout"
@@ -278,7 +278,7 @@ struct SettingsViewTests {
 
     @Suite("App Information")
     struct AppInformationTests {
-        @Test("App version information")
+        @Test("App version information", .tags(.ui, .fast, .parallel, .swiftui, .settings, .validation))
         func testAppVersionInformation() {
             // Test bundle info access that should be in SettingsViewModel
             let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
@@ -301,7 +301,7 @@ struct SettingsViewTests {
 
     @Suite("Import/Export Flow")
     struct ImportExportFlowTests {
-        @Test("File import flow handling")
+        @Test("File import flow handling", .tags(.ui, .medium, .parallel, .swiftui, .settings, .dataImport, .validation, .userInterface))
         func testFileImportFlowHandling() {
             // Test the complete import flow that should be in DataManagementService
             var showingImportPicker = false
@@ -336,7 +336,7 @@ struct SettingsViewTests {
             #expect(showingImportProgress == false)
         }
 
-        @Test("Import error handling")
+        @Test("Import error handling", .tags(.ui, .medium, .parallel, .swiftui, .settings, .dataImport, .errorHandling, .validation))
         func testImportErrorHandling() {
             // Test error handling in import flow
             var importResult: DatabaseImportManager.ImportResult?
@@ -360,7 +360,7 @@ struct SettingsViewTests {
             #expect(importResult?.errors.contains("Missing organization data") == true)
         }
 
-        @Test("Export flow handling")
+        @Test("Export flow handling", .tags(.ui, .medium, .parallel, .swiftui, .settings, .dataExport, .validation, .userInterface))
         func testExportFlowHandling() {
             // Test export flow state management
             var showingExportView = false
@@ -379,7 +379,7 @@ struct SettingsViewTests {
 
     @Suite("Settings Integration")
     struct SettingsIntegrationTests {
-        @Test("Complete settings flow")
+        @Test("Complete settings flow", .tags(.ui, .medium, .parallel, .swiftui, .settings, .validation, .smoke, .mainActor))
         @MainActor func testCompleteSettingsFlow() async {
             // Clean up state before test
             SettingsViewTests.cleanupSharedState()

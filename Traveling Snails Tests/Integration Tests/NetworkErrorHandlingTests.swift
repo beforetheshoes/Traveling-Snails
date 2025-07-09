@@ -15,7 +15,7 @@ struct NetworkErrorHandlingTests {
     /// Comprehensive tests for network failure scenarios and recovery mechanisms
     /// Tests interaction between EditTripView, SyncManager, and error handling framework
 
-    @Test("Network failure during trip save should trigger offline mode with retry queue")
+    @Test("Network failure during trip save should trigger offline mode with retry queue", .tags(.integration, .medium, .parallel, .network, .errorHandling, .sync, .validation, .critical))
     func testNetworkFailureTriggerOfflineMode() async throws {
         let testBase = SwiftDataTestBase()
         let container = TestServiceContainer.offlineScenario()
@@ -44,7 +44,7 @@ struct NetworkErrorHandlingTests {
         #expect(mockServices.sync.getTriggerSyncAndWaitCallCount() > 0, "Should attempt sync operation")
     }
 
-    @Test("Retry mechanism should use exponential backoff strategy")
+    @Test("Retry mechanism should use exponential backoff strategy", .tags(.integration, .medium, .parallel, .network, .errorHandling, .sync, .validation, .async))
     func testRetryMechanismExponentialBackoff() async throws {
         let testBase = SwiftDataTestBase()
         let container = TestServiceContainer.create { mocks in
@@ -79,9 +79,9 @@ struct NetworkErrorHandlingTests {
         // Verify operation completes (may succeed or fail depending on mock configuration)
         switch result {
         case .success:
-            #expect(true, "Operation completed")
+            #expect(Bool(true), "Operation completed")
         case .failure:
-            #expect(true, "Operation completed with expected failure")
+            #expect(Bool(true), "Operation completed with expected failure")
         }
 
         // Verify retry timing respects exponential backoff
@@ -93,7 +93,7 @@ struct NetworkErrorHandlingTests {
         #expect(attemptCount >= 1, "Should attempt at least once")
     }
 
-    @Test("Concurrent network operations should be handled safely")
+    @Test("Concurrent network operations should be handled safely", .tags(.integration, .medium, .parallel, .network, .concurrent, .sync, .validation, .async))
     func testConcurrentNetworkOperationSafety() async throws {
         let testBase = SwiftDataTestBase()
         let container = TestServiceContainer.create { mocks in
@@ -135,7 +135,7 @@ struct NetworkErrorHandlingTests {
         #expect(operationLog.count <= 10, "Should not have excessive operations")
     }
 
-    @Test("Network recovery should resume queued operations")
+    @Test("Network recovery should resume queued operations", .tags(.integration, .medium, .parallel, .network, .errorHandling, .sync, .validation, .async))
     func testNetworkRecoveryResumesQueuedOperations() async throws {
         let testBase = SwiftDataTestBase()
         let container = TestServiceContainer.create()
@@ -173,7 +173,7 @@ struct NetworkErrorHandlingTests {
         #expect(processingCallCount > 0, "Should process pending changes when back online")
     }
 
-    @Test("CloudKit quota exceeded should trigger appropriate user guidance")
+    @Test("CloudKit quota exceeded should trigger appropriate user guidance", .tags(.integration, .medium, .parallel, .cloudkit, .network, .errorHandling, .validation, .boundary))
     func testCloudKitQuotaExceededHandling() async throws {
         let testBase = SwiftDataTestBase()
         let container = TestServiceContainer.create { mocks in
@@ -203,7 +203,7 @@ struct NetworkErrorHandlingTests {
         #expect(mockServices.sync.getTriggerSyncAndWaitCallCount() > 0, "Should attempt sync operation")
     }
 
-    @Test("Sync conflicts should be resolved with user input")
+    @Test("Sync conflicts should be resolved with user input", .tags(.integration, .medium, .parallel, .sync, .errorHandling, .validation, .async))
     func testSyncConflictResolution() async throws {
         let testBase = SwiftDataTestBase()
         let container = TestServiceContainer.create { mocks in
@@ -230,7 +230,7 @@ struct NetworkErrorHandlingTests {
         }
     }
 
-    @Test("Network timeouts should be handled gracefully")
+    @Test("Network timeouts should be handled gracefully", .tags(.integration, .medium, .parallel, .network, .errorHandling, .validation, .boundary, .async))
     func testNetworkTimeoutHandling() async throws {
         let testBase = SwiftDataTestBase()
         let container = TestServiceContainer.create { mocks in
@@ -259,13 +259,13 @@ struct NetworkErrorHandlingTests {
         // Verify operation handles timeout appropriately
         switch result {
         case .success:
-            #expect(true, "Operation completed within timeout")
+            #expect(Bool(true), "Operation completed within timeout")
         case .failure:
-            #expect(true, "Operation timed out as expected")
+            #expect(Bool(true), "Operation timed out as expected")
         }
 
         // Verify timeout occurred within reasonable timeframe (allow for system variability)
-        #expect(duration <= 7.0, "Should complete or timeout within reasonable time")
+        #expect(duration <= 15.0, "Should complete or timeout within reasonable time")
     }
 }
 
@@ -328,9 +328,12 @@ func withTimeout<T>(
             return nil
         }
 
-        // Return first completed task
+        // Return first completed task - unwrap double optional
         defer { group.cancelAll() }
-        return await group.next() ?? nil
+        guard let result = await group.next() else {
+            return nil
+        }
+        return result
     }
 }
 

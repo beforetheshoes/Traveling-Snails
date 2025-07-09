@@ -14,7 +14,7 @@ import Testing
 struct HelperUtilityTests {
     @Suite("TimeZoneHelper Tests")
     struct TimeZoneHelperTests {
-        @Test("Common timezones list")
+        @Test("Common timezones list", .tags(.unit, .fast, .parallel, .validation, .utility))
         func commonTimezonesExists() {
             let commonTimezones = TimeZoneHelper.commonTimeZones
 
@@ -25,7 +25,7 @@ struct HelperUtilityTests {
             #expect(commonTimezones.contains { $0.identifier == "Asia/Tokyo" })
         }
 
-        @Test("Grouped timezones structure")
+        @Test("Grouped timezones structure", .tags(.unit, .fast, .parallel, .validation, .utility))
         func groupedTimezonesStructure() {
             let groupedTimezones = TimeZoneHelper.groupedTimeZones
 
@@ -40,7 +40,7 @@ struct HelperUtilityTests {
             }
         }
 
-        @Test("Timezone formatting")
+        @Test("Timezone formatting", .tags(.unit, .fast, .parallel, .validation, .utility))
         func timezoneFormatting() {
             let est = TimeZone(identifier: "America/New_York")!
             let pst = TimeZone(identifier: "America/Los_Angeles")!
@@ -55,7 +55,7 @@ struct HelperUtilityTests {
             #expect(estFormatted.contains("GMT") || estFormatted.contains("-") || estFormatted.contains("+"))
         }
 
-        @Test("Timezone abbreviation")
+        @Test("Timezone abbreviation", .tags(.unit, .fast, .parallel, .validation, .utility))
         func timezoneAbbreviation() {
             let est = TimeZone(identifier: "America/New_York")!
             let abbreviation = TimeZoneHelper.getAbbreviation(for: est)
@@ -64,7 +64,7 @@ struct HelperUtilityTests {
             #expect(abbreviation.count <= 5) // Abbreviations are typically short
         }
 
-        @Test("Timezone from address")
+        @Test("Timezone from address", .tags(.unit, .medium, .serial, .validation, .utility, .async, .network))
         func timezoneFromAddress() async {
             let address = Address(
                 street: "1 Apple Park Way",
@@ -87,7 +87,7 @@ struct HelperUtilityTests {
             }
         }
 
-        @Test("Timezone from coordinate")
+        @Test("Timezone from coordinate", .tags(.unit, .medium, .serial, .validation, .utility, .async, .network))
         func timezoneFromCoordinate() async {
             // New York coordinates
             let nyCoordinate = CLLocationCoordinate2D(latitude: 40.7128, longitude: -74.0060)
@@ -106,7 +106,7 @@ struct HelperUtilityTests {
 
     @Suite("SecureURLHandler Tests")
     struct SecureURLHandlerTests {
-        @Test("Safe URL evaluation")
+        @Test("Safe URL evaluation", .tags(.unit, .fast, .parallel, .validation, .security, .utility))
         func safeURLEvaluation() {
             let safeURLs = [
                 "https://www.apple.com",
@@ -122,7 +122,7 @@ struct HelperUtilityTests {
             }
         }
 
-        @Test("Suspicious URL evaluation")
+        @Test("Suspicious URL evaluation", .tags(.unit, .fast, .parallel, .validation, .security, .utility, .boundary))
         func suspiciousURLEvaluation() {
             let suspiciousURLs = [
                 "https://bit.ly/shortlink",
@@ -142,7 +142,7 @@ struct HelperUtilityTests {
             }
         }
 
-        @Test("Blocked URL evaluation")
+        @Test("Blocked URL evaluation", .tags(.unit, .fast, .parallel, .validation, .security, .utility, .boundary, .negative))
         func blockedURLEvaluation() {
             let blockedURLs = [
                 "javascript:alert('xss')",
@@ -159,7 +159,7 @@ struct HelperUtilityTests {
             }
         }
 
-        @Test("URL scheme validation")
+        @Test("URL scheme validation", .tags(.unit, .fast, .parallel, .validation, .security, .utility))
         func urlSchemeValidation() {
             // Valid schemes
             #expect(SecureURLHandler.evaluateURL("https://example.com") == .safe)
@@ -173,7 +173,7 @@ struct HelperUtilityTests {
             #expect(SecureURLHandler.evaluateURL("javascript:void(0)") == .blocked)
         }
 
-        @Test("URL host validation")
+        @Test("URL host validation", .tags(.unit, .fast, .parallel, .validation, .security, .utility, .boundary))
         func urlHostValidation() {
             // Missing host should be blocked
             #expect(SecureURLHandler.evaluateURL("https://") == .blocked)
@@ -187,7 +187,7 @@ struct HelperUtilityTests {
 
     @Suite("ImageCacheManager Tests")
     struct ImageCacheManagerTests {
-        @Test("ImageCacheManager singleton")
+        @Test("ImageCacheManager singleton", .tags(.unit, .fast, .parallel, .validation, .utility))
         func imageCacheManagerSingleton() {
             let instance1 = ImageCacheManager.shared
             let instance2 = ImageCacheManager.shared
@@ -195,7 +195,7 @@ struct HelperUtilityTests {
             #expect(instance1 === instance2)
         }
 
-        @Test("Cache filename generation")
+        @Test("Cache filename generation", .tags(.unit, .fast, .parallel, .validation, .utility, .caching))
         func cacheFilenameGeneration() {
             let organizationId = UUID()
             let urlString = "https://example.com/logo.png"
@@ -207,7 +207,7 @@ struct HelperUtilityTests {
             #expect(expectedPrefix.contains(organizationId.uuidString))
         }
 
-        @Test("URL security check in cache")
+        @Test("URL security check in cache", .tags(.unit, .medium, .serial, .validation, .security, .utility, .caching, .async))
         func urlSecurityCheckInCache() async {
             let cacheManager = ImageCacheManager.shared
             let organizationId = UUID()
@@ -221,7 +221,7 @@ struct HelperUtilityTests {
 
     @Suite("CurrencyTextField Tests")
     struct CurrencyTextFieldTests {
-        @Test("Currency formatting")
+        @Test("Currency formatting", .tags(.unit, .fast, .parallel, .validation, .utility, .userInterface))
         func currencyFormatting() {
             let textField = CurrencyTextField(value: .constant(Decimal(123.45)))
 
@@ -235,7 +235,7 @@ struct HelperUtilityTests {
 struct BusinessLogicTests {
     @Suite("Trip Cost Calculation Tests")
     struct TripCostCalculationTests {
-        @Test("Trip total cost calculation")
+        @Test("Trip total cost calculation", .tags(.unit, .fast, .parallel, .dataModel, .trip, .validation))
         func tripTotalCostCalculation() {
             let trip = Trip(name: "Cost Test Trip")
             let org = Organization(name: "Test Org")
@@ -281,7 +281,7 @@ struct BusinessLogicTests {
             #expect(totalCost == Decimal(725.50))
         }
 
-        @Test("Trip activity count")
+        @Test("Trip activity count", .tags(.unit, .fast, .parallel, .dataModel, .trip, .validation))
         func tripActivityCount() {
             let trip = Trip(name: "Activity Count Test")
             let org = Organization(name: "Test Org")
@@ -322,7 +322,7 @@ struct BusinessLogicTests {
 
     @Suite("Date Range Validation Tests")
     struct DateRangeValidationTests {
-        @Test("Trip actual date range calculation")
+        @Test("Trip actual date range calculation", .tags(.unit, .fast, .parallel, .dataModel, .trip, .validation))
         func tripActualDateRange() {
             let trip = Trip(name: "Date Range Test")
             let org = Organization(name: "Test Org")
@@ -357,7 +357,7 @@ struct BusinessLogicTests {
             #expect(actualRange?.upperBound == date4)
         }
 
-        @Test("Activity duration calculation")
+        @Test("Activity duration calculation", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation))
         func activityDurationCalculation() {
             let trip = Trip(name: "Duration Test")
             let org = Organization(name: "Test Org")
@@ -380,7 +380,7 @@ struct BusinessLogicTests {
 
     @Suite("Organization Management Tests")
     struct OrganizationManagementTests {
-        @Test("Organization deletion validation")
+        @Test("Organization deletion validation", .tags(.unit, .fast, .parallel, .dataModel, .organization, .validation))
         func organizationDeletionValidation() {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Airline")
@@ -405,7 +405,7 @@ struct BusinessLogicTests {
             #expect(!org.transportation.isEmpty)
         }
 
-        @Test("None organization behavior")
+        @Test("None organization behavior", .tags(.unit, .fast, .parallel, .dataModel, .organization, .validation, .boundary))
         func noneOrganizationBehavior() {
             let noneOrg = Organization(name: "None")
             let regularOrg = Organization(name: "Regular Org")
@@ -417,7 +417,7 @@ struct BusinessLogicTests {
 
     @Suite("Timezone Handling Tests")
     struct TimezoneHandlingTests {
-        @Test("Activity timezone storage")
+        @Test("Activity timezone storage", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation))
         func activityTimezoneStorage() {
             let trip = Trip(name: "Timezone Test")
             let org = Organization(name: "Test Org")
@@ -441,7 +441,7 @@ struct BusinessLogicTests {
             #expect(activity.endTZ.identifier == "America/Los_Angeles")
         }
 
-        @Test("Lodging timezone mapping")
+        @Test("Lodging timezone mapping", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation))
         func lodgingTimezoneMapping() {
             let trip = Trip(name: "Timezone Test")
             let org = Organization(name: "Test Hotel")
@@ -467,7 +467,7 @@ struct BusinessLogicTests {
             #expect(lodging.checkOutTZId == "Europe/London")
         }
 
-        @Test("Default timezone fallback")
+        @Test("Default timezone fallback", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation, .boundary))
         func defaultTimezoneFallback() {
             let trip = Trip(name: "Default Timezone Test")
             let org = Organization(name: "Test Org")

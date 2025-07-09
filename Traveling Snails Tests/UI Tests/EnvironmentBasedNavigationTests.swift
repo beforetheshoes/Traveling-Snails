@@ -12,7 +12,7 @@ import Testing
 @Suite("Environment-Based Navigation Tests")
 @MainActor
 struct EnvironmentBasedNavigationTests {
-    @Test("NavigationRouter should handle trip selection via environment instead of notifications")
+    @Test("NavigationRouter should handle trip selection via environment instead of notifications", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .trip, .validation, .regression, .mainActor))
     func testEnvironmentBasedTripSelection() async throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: Trip.self, configurations: config)
@@ -33,7 +33,7 @@ struct EnvironmentBasedNavigationTests {
         #expect(router.shouldClearNavigationPath == true)
     }
 
-    @Test("NavigationRouter should clear trip selection via environment")
+    @Test("NavigationRouter should clear trip selection via environment", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .trip, .validation, .mainActor))
     func testEnvironmentBasedTripClearing() async throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: Trip.self, configurations: config)
@@ -54,7 +54,7 @@ struct EnvironmentBasedNavigationTests {
         #expect(router.shouldClearNavigationPath == true)
     }
 
-    @Test("NavigationRouter should handle multiple observers without notification center")
+    @Test("NavigationRouter should handle multiple observers without notification center", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .async, .validation, .regression, .mainActor))
     func testMultipleEnvironmentObservers() async throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: Trip.self, configurations: config)
@@ -104,7 +104,7 @@ struct EnvironmentBasedNavigationTests {
         #expect(await observerState.observer2Triggered == true)
     }
 
-    @Test("NavigationRouter should provide navigation path coordination")
+    @Test("NavigationRouter should provide navigation path coordination", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .validation, .mainActor))
     func testNavigationPathCoordination() async throws {
         let router = NavigationRouter.shared
 
@@ -117,7 +117,7 @@ struct EnvironmentBasedNavigationTests {
         #expect(router.shouldClearNavigationPath == false)
     }
 
-    @Test("NavigationRouter should maintain compatibility with existing navigation actions")
+    @Test("NavigationRouter should maintain compatibility with existing navigation actions", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .validation, .compatibility, .mainActor))
     func testBackwardCompatibilityWithNavigationActions() async throws {
         let router = NavigationRouter.shared
 
@@ -130,7 +130,7 @@ struct EnvironmentBasedNavigationTests {
         #expect(router.shouldClearNavigationPath == true)
     }
 
-    @Test("Environment-based navigation should not use NotificationCenter")
+    @Test("Environment-based navigation should not use NotificationCenter", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .validation, .regression, .mainActor))
     func testNoNotificationCenterUsage() async throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: Trip.self, configurations: config)

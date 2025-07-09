@@ -25,7 +25,7 @@ struct DependencyInjectionTests {
         UserDefaults.standard.set(true, forKey: "isRunningTests")
     }
 
-    @Test("ServiceContainer can register and resolve services")
+    @Test("ServiceContainer can register and resolve services", .tags(.integration, .fast, .parallel, .utility, .validation, .smoke))
     func testServiceContainerBasicOperations() throws {
         let container = ServiceContainer()
 
@@ -38,7 +38,7 @@ struct DependencyInjectionTests {
         #expect(resolvedService is ProductionAuthenticationService)
     }
 
-    @Test("DefaultServiceContainerFactory creates production container")
+    @Test("DefaultServiceContainerFactory creates production container", .tags(.integration, .fast, .parallel, .utility, .validation, .critical))
     func testProductionContainerCreation() throws {
         let container = DefaultServiceContainerFactory.createProductionContainer()
 
@@ -62,7 +62,7 @@ struct DependencyInjectionTests {
         #expect(permissionService is SystemPermissionService)
     }
 
-    @Test("ModernBiometricAuthManager can be created from container")
+    @Test("ModernBiometricAuthManager can be created from container", .tags(.integration, .medium, .parallel, .authentication, .utility, .validation))
     @MainActor
     func testModernBiometricAuthManagerCreation() throws {
         // Clean up state before test
@@ -86,7 +86,7 @@ struct DependencyInjectionTests {
         #expect(authManager.allTripsLocked) // Should still be locked after reset
     }
 
-    @Test("ModernAppSettings can be created from container")
+    @Test("ModernAppSettings can be created from container", .tags(.integration, .fast, .parallel, .settings, .utility, .validation))
     @MainActor
     func testModernAppSettingsCreation() throws {
         let container = DefaultServiceContainerFactory.createProductionContainer()
@@ -99,7 +99,7 @@ struct DependencyInjectionTests {
 
     // BackwardCompatibilityAdapter test removed - adapter no longer exists after migration to pure dependency injection
 
-    @Test("Service factory methods work correctly")
+    @Test("Service factory methods work correctly", .tags(.integration, .fast, .parallel, .utility, .validation, .smoke))
     @MainActor
     func testServiceFactoryMethods() throws {
         // Test ProductionAuthenticationService (avoid canUseBiometrics() during tests)
@@ -122,7 +122,7 @@ struct DependencyInjectionTests {
         #expect(type(of: permissionService) == SystemPermissionService.self)
     }
 
-    @Test("ModernSyncManager can be created with production services")
+    @Test("ModernSyncManager can be created with production services", .tags(.integration, .fast, .parallel, .sync, .utility, .validation))
     @MainActor
     func testModernSyncManagerCreation() throws {
         // This test validates the structure without requiring ModelContainer

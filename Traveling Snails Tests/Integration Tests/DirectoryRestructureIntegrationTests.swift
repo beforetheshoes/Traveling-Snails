@@ -15,7 +15,7 @@ struct DirectoryRestructureIntegrationTests {
 
     @Suite("Module Import Validation")
     struct ModuleImportValidationTests {
-        @Test("ViewModels are accessible after restructure")
+        @Test("ViewModels are accessible after restructure", .tags(.integration, .fast, .parallel, .viewModel, .validation, .smoke))
         func testViewModelsAccessibility() throws {
             // Ensure all ViewModels remain accessible after moving
             let trip = Trip(name: "Test Trip")
@@ -32,7 +32,7 @@ struct DirectoryRestructureIntegrationTests {
             #expect(navigationViewModel.items.count == 1)
         }
 
-        @Test("Content Views are accessible after restructure")
+        @Test("Content Views are accessible after restructure", .tags(.integration, .fast, .parallel, .ui, .userInterface, .validation, .smoke))
         func testContentViewsAccessibility() throws {
             // Test that content views can be instantiated after restructure
             let trip = Trip(name: "Test Trip")
@@ -51,7 +51,7 @@ struct DirectoryRestructureIntegrationTests {
             #expect(config.title == "Test")
         }
 
-        @Test("Root Views maintain proper coordination")
+        @Test("Root Views maintain proper coordination", .tags(.integration, .fast, .parallel, .ui, .navigation, .validation))
         func testRootViewCoordination() throws {
             // Test that root views can still coordinate with ViewModels
             let trips: [Trip] = [Trip(name: "Test Trip")]
@@ -72,7 +72,7 @@ struct DirectoryRestructureIntegrationTests {
 
     @Suite("File Structure Validation")
     struct FileStructureValidationTests {
-        @Test("All required files exist in expected locations")
+        @Test("All required files exist in expected locations", .tags(.integration, .fast, .parallel, .utility, .validation, .build))
         func testRequiredFilesExistence() throws {
             // This will validate that critical files are accessible
             // We'll update expected paths as we restructure
@@ -91,7 +91,7 @@ struct DirectoryRestructureIntegrationTests {
             #expect(calendarVM.trip.name == "Test")
         }
 
-        @Test("Import statements resolve correctly")
+        @Test("Import statements resolve correctly", .tags(.integration, .fast, .parallel, .utility, .validation, .build))
         func testImportStatements() throws {
             // Test that our imports work correctly after restructure
             // This ensures no circular dependencies or missing imports
@@ -114,7 +114,7 @@ struct DirectoryRestructureIntegrationTests {
 
     @Suite("Navigation Flow Integration")
     struct NavigationFlowIntegrationTests {
-        @Test("Complete navigation flow works after restructure")
+        @Test("Complete navigation flow works after restructure", .tags(.integration, .medium, .parallel, .navigation, .ui, .validation, .comprehensive))
         func testCompleteNavigationFlow() throws {
             // Test end-to-end navigation flow
             let trips: [Trip] = [
@@ -149,7 +149,7 @@ struct DirectoryRestructureIntegrationTests {
             #expect(viewModel.selectedItem == nil)
         }
 
-        @Test("View hierarchy construction succeeds")
+        @Test("View hierarchy construction succeeds", .tags(.integration, .fast, .parallel, .ui, .userInterface, .validation))
         func testViewHierarchyConstruction() throws {
             // Test that complex view hierarchies can be built
             let trip = Trip(name: "Hierarchy Test")
@@ -166,7 +166,7 @@ struct DirectoryRestructureIntegrationTests {
 
     @Suite("Performance After Restructure")
     struct PerformanceAfterRestructureTests {
-        @Test("ViewModel creation performance remains good")
+        @Test("ViewModel creation performance remains good", .tags(.integration, .medium, .parallel, .viewModel, .performance, .validation))
         func testViewModelCreationPerformance() throws {
             let trips = (0..<100).map { Trip(name: "Trip \($0)") }
             let config = NavigationConfiguration<Trip>(title: "Performance Test")
@@ -181,7 +181,7 @@ struct DirectoryRestructureIntegrationTests {
             #expect(duration < 0.1) // Should create in under 100ms
         }
 
-        @Test("Search performance remains efficient")
+        @Test("Search performance remains efficient", .tags(.integration, .slow, .parallel, .performance, .validation, .stress))
         func testSearchPerformance() throws {
             let trips = (0..<1000).map { Trip(name: "Trip \($0) Test Data") }
             let config = NavigationConfiguration<Trip>(title: "Search Performance")
@@ -203,7 +203,7 @@ struct DirectoryRestructureIntegrationTests {
 
     @Suite("Backwards Compatibility")
     struct BackwardsCompatibilityTests {
-        @Test("Existing API signatures remain unchanged")
+        @Test("Existing API signatures remain unchanged", .tags(.integration, .fast, .parallel, .compatibility, .validation, .regression))
         func testExistingAPISignatures() throws {
             // Test that public APIs we depend on haven't changed
             let trip = Trip(name: "API Test")
@@ -220,7 +220,7 @@ struct DirectoryRestructureIntegrationTests {
             #expect(navigationTrip.displayColor == .blue)
         }
 
-        @Test("Existing convenience initializers still work")
+        @Test("Existing convenience initializers still work", .tags(.integration, .fast, .parallel, .compatibility, .validation, .regression))
         func testConvenienceInitializers() throws {
             // Test that convenience methods still function
             let trips: [Trip] = [Trip(name: "Convenience Test")]

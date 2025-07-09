@@ -38,7 +38,7 @@ struct NavigationRestorationTests {
 
     // MARK: - Navigation State Tests
 
-    @Test("Navigation state preserves selected trip when navigating from activity detail")
+    @Test("Navigation state preserves selected trip when navigating from activity detail", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .trip, .activity, .validation, .mainActor))
     @MainActor func testNavigationStatePreservesSelectedTrip() async {
         let (_, trip, activity) = makeTestEnvironment()
 
@@ -64,7 +64,7 @@ struct NavigationRestorationTests {
         }
     }
 
-    @Test("Navigation state handles trip selection from activity detail")
+    @Test("Navigation state handles trip selection from activity detail", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .trip, .activity, .validation, .mainActor))
     @MainActor func testNavigationStateHandlesTripSelectionFromActivityDetail() async {
         let (_, trip, activity) = makeTestEnvironment()
 
@@ -85,7 +85,7 @@ struct NavigationRestorationTests {
         #expect(selectedTrip != nil)
     }
 
-    @Test("Navigation state restores activity detail after tab switch")
+    @Test("Navigation state restores activity detail after tab switch", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .activity, .validation, .mainActor))
     @MainActor func testNavigationStateRestoresActivityDetailAfterTabSwitch() async {
         let (_, trip, activity) = makeTestEnvironment()
 
@@ -114,7 +114,7 @@ struct NavigationRestorationTests {
         }
     }
 
-    @Test("Navigation handles missing selected trip gracefully")
+    @Test("Navigation handles missing selected trip gracefully", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .trip, .errorHandling, .validation, .mainActor))
     @MainActor func testNavigationHandlesMissingSelectedTripGracefully() async {
         let (_, _, activity) = makeTestEnvironment()
 
@@ -135,7 +135,7 @@ struct NavigationRestorationTests {
 
     // MARK: - Activity Detail View State Tests
 
-    @Test("Activity detail view preserves state when navigation occurs")
+    @Test("Activity detail view preserves state when navigation occurs", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .activity, .validation, .mainActor))
     @MainActor func testActivityDetailViewPreservesStateWhenNavigationOccurs() async {
         let (_, _, _) = makeTestEnvironment()
 
@@ -161,7 +161,7 @@ struct NavigationRestorationTests {
         #expect(scrollPosition == 100.0)
     }
 
-    @Test("Activity detail view updates when underlying activity changes")
+    @Test("Activity detail view updates when underlying activity changes", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .activity, .validation, .mainActor))
     @MainActor func testActivityDetailViewUpdatesWhenUnderlyingActivityChanges() async {
         let (container, _, activity) = makeTestEnvironment()
         let context = container.mainContext
@@ -179,7 +179,7 @@ struct NavigationRestorationTests {
 
     // MARK: - Navigation Menu Tests
 
-    @Test("Navigation menu handles activity selection correctly")
+    @Test("Navigation menu handles activity selection correctly", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .activity, .validation, .mainActor))
     @MainActor func testNavigationMenuHandlesActivitySelectionCorrectly() async {
         let (container, trip, activity) = makeTestEnvironment()
 
@@ -213,7 +213,7 @@ struct NavigationRestorationTests {
 
     // MARK: - Edge Cases
 
-    @Test("Navigation handles deleted activity gracefully")
+    @Test("Navigation handles deleted activity gracefully", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .activity, .errorHandling, .validation, .mainActor))
     @MainActor func testNavigationHandlesDeletedActivityGracefully() async {
         let (container, trip, activity) = makeTestEnvironment()
         let context = container.mainContext
@@ -235,7 +235,7 @@ struct NavigationRestorationTests {
         #expect(currentView.isSameType(as: .tripDetail(trip)))
     }
 
-    @Test("Navigation preserves trip detail selection when valid")
+    @Test("Navigation preserves trip detail selection when valid", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .trip, .activity, .validation, .mainActor))
     @MainActor func testNavigationPreservesTripDetailSelectionWhenValid() async {
         let (_, trip, activity) = makeTestEnvironment()
 

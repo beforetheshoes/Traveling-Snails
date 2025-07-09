@@ -23,7 +23,7 @@ struct FileAttachmentExportImportBugTests {
     @Suite("Export Process Validation")
     struct ExportProcessValidationTests {
         @MainActor
-        @Test("Export includes fileData when includeAttachments is true")
+        @Test("Export includes fileData when includeAttachments is true", .tags(.integration, .medium, .parallel, .fileAttachment, .dataExport, .validation, .critical, .regression))
         func exportIncludesFileDataWhenToggleEnabled() throws {
             // Create test data with file attachments using proper SwiftData pattern
             let testBase = SwiftDataTestBase()
@@ -94,7 +94,7 @@ struct FileAttachmentExportImportBugTests {
         }
 
         @MainActor
-        @Test("Export excludes fileData when includeAttachments is false")
+        @Test("Export excludes fileData when includeAttachments is false", .tags(.integration, .medium, .parallel, .fileAttachment, .dataExport, .validation, .boundary))
         func exportExcludesFileDataWhenToggleDisabled() throws {
             let testBase = SwiftDataTestBase()
             try testBase.verifyDatabaseEmpty()
@@ -150,7 +150,7 @@ struct FileAttachmentExportImportBugTests {
     @Suite("Complete Export/Import Cycle Tests")
     struct CompleteExportImportCycleTests {
         @MainActor
-        @Test("Complete export/import cycle with includeAttachments enabled - REPRODUCES BUG")
+        @Test("Complete export/import cycle with includeAttachments enabled - REPRODUCES BUG", .tags(.integration, .slow, .parallel, .fileAttachment, .dataExport, .dataImport, .validation, .critical, .regression, .comprehensive))
         func completeExportImportCycleWithAttachments() throws {
             // PHASE 1: Create original data with attachment
             let testBase = SwiftDataTestBase()
@@ -310,7 +310,7 @@ struct FileAttachmentExportImportBugTests {
         }
 
         @MainActor
-        @Test("Large file attachment export/import integrity")
+        @Test("Large file attachment export/import integrity", .tags(.integration, .medium, .parallel, .fileAttachment, .dataExport, .dataImport, .validation, .memory, .stress))
         func largeFileAttachmentExportImportIntegrity() throws {
             let testBase = SwiftDataTestBase()
             try testBase.verifyDatabaseEmpty()
@@ -355,7 +355,7 @@ struct FileAttachmentExportImportBugTests {
         }
 
         @MainActor
-        @Test("Multiple attachments per activity export/import")
+        @Test("Multiple attachments per activity export/import", .tags(.integration, .medium, .parallel, .fileAttachment, .activity, .dataExport, .dataImport, .validation, .comprehensive))
         func multipleAttachmentsPerActivityExportImport() throws {
             let testBase = SwiftDataTestBase()
             try testBase.verifyDatabaseEmpty()
@@ -430,7 +430,7 @@ struct FileAttachmentExportImportBugTests {
     @Suite("Edge Cases and Error Scenarios")
     struct EdgeCasesAndErrorScenarios {
         @MainActor
-        @Test("Import with corrupted base64 data")
+        @Test("Import with corrupted base64 data", .tags(.integration, .medium, .parallel, .fileAttachment, .dataImport, .errorHandling, .validation, .boundary))
         func importWithCorruptedBase64Data() throws {
             let testBase = SwiftDataTestBase()
             try testBase.verifyDatabaseEmpty()
@@ -491,7 +491,7 @@ struct FileAttachmentExportImportBugTests {
         }
 
         @MainActor
-        @Test("Import attachment with missing parent relationship")
+        @Test("Import attachment with missing parent relationship", .tags(.integration, .medium, .parallel, .fileAttachment, .dataImport, .errorHandling, .validation, .boundary))
         func importAttachmentWithMissingParentRelationship() throws {
             let testBase = SwiftDataTestBase()
             try testBase.verifyDatabaseEmpty()

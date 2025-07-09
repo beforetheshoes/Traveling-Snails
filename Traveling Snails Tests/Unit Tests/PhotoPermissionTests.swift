@@ -25,7 +25,7 @@ struct PhotoPermissionTests {
         UserDefaults.standard.set(true, forKey: "isRunningTests")
     }
 
-    @Test("Info.plist contains NSPhotoLibraryUsageDescription")
+    @Test("Info.plist contains NSPhotoLibraryUsageDescription", .tags(.unit, .fast, .serial, .permissions, .validation, .settings))
     func testInfoPlistContainsPhotoLibraryUsageDescription() {
         // Clean up state before test
         Self.cleanupSharedState()
@@ -47,7 +47,7 @@ struct PhotoPermissionTests {
         }
     }
 
-    @Test("Info.plist contains NSCameraUsageDescription for future camera support")
+    @Test("Info.plist contains NSCameraUsageDescription for future camera support", .tags(.unit, .fast, .serial, .permissions, .validation, .settings))
     func testInfoPlistContainsCameraUsageDescription() {
         // Clean up state before test
         Self.cleanupSharedState()
@@ -69,7 +69,7 @@ struct PhotoPermissionTests {
         }
     }
 
-    @Test("Photo authorization status can be checked")
+    @Test("Photo authorization status can be checked", .tags(.unit, .fast, .serial, .permissions, .validation))
     func testPhotoAuthorizationStatusCheck() {
         // Clean up state before test
         Self.cleanupSharedState()
@@ -82,7 +82,7 @@ struct PhotoPermissionTests {
                "Authorization status should be one of the expected values")
     }
 
-    @Test("Photo authorization request can be made")
+    @Test("Photo authorization request can be made", .tags(.unit, .medium, .serial, .permissions, .async, .validation))
     func testPhotoAuthorizationRequest() async {
         // Clean up state before test
         Self.cleanupSharedState()
@@ -96,7 +96,7 @@ struct PhotoPermissionTests {
                "Authorization status should be valid")
     }
 
-    @Test("Permission error handling provides user-friendly messages")
+    @Test("Permission error handling provides user-friendly messages", .tags(.unit, .fast, .parallel, .permissions, .errorHandling, .userInterface, .validation))
     func testPermissionErrorHandling() {
         // Clean up state before test
         Self.cleanupSharedState()

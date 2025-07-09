@@ -13,7 +13,7 @@ import Testing
 struct AttachmentDisplayLayoutTests {
     @Suite("UnifiedTripActivityDetailView Attachment Display")
     struct UnifiedTripActivityDetailViewTests {
-        @Test("Should show attachments section in non-edit mode")
+        @Test("Should show attachments section in non-edit mode", .tags(.ui, .medium, .parallel, .swiftui, .activity, .fileAttachment, .validation, .userInterface))
         func shouldShowAttachmentsSectionInNonEditMode() {
             // This test will validate that attachments are visible when not editing
             let trip = Trip(name: "Test Trip")
@@ -40,7 +40,7 @@ struct AttachmentDisplayLayoutTests {
             // This is currently failing due to the condition: if !isEditing { attachmentsSection }
         }
 
-        @Test("Should enable attachment viewing during edit mode")
+        @Test("Should enable attachment viewing during edit mode", .tags(.ui, .medium, .parallel, .swiftui, .activity, .fileAttachment, .validation, .userInterface, .regression))
         func shouldEnableAttachmentViewingDuringEditMode() {
             // This test will fail initially because attachments are hidden in edit mode
             // We need to modify the view to show attachments even during editing
@@ -67,7 +67,7 @@ struct AttachmentDisplayLayoutTests {
 
     @Suite("UniversalAddActivityFormContent File Picker Integration")
     struct UniversalAddActivityFormContentTests {
-        @Test("Should implement file picker button functionality")
+        @Test("Should implement file picker button functionality", .tags(.ui, .medium, .parallel, .swiftui, .activity, .fileAttachment, .validation, .userInterface, .filesystem))
         func shouldImplementFilePickerButtonFunctionality() {
             // This test validates the file picker integration
             let trip = Trip(name: "Test Trip")
@@ -84,7 +84,7 @@ struct AttachmentDisplayLayoutTests {
             // This test will pass after we replace the TODO with actual UnifiedFilePicker integration
         }
 
-        @Test("Should handle attachment errors gracefully")
+        @Test("Should handle attachment errors gracefully", .tags(.ui, .medium, .parallel, .swiftui, .activity, .fileAttachment, .errorHandling, .validation, .filesystem))
         func shouldHandleAttachmentErrorsGracefully() {
             let trip = Trip(name: "Test Trip")
             let viewModel = UniversalActivityFormViewModel(
@@ -103,7 +103,7 @@ struct AttachmentDisplayLayoutTests {
 
     @Suite("EmbeddedFileAttachmentListView Performance")
     struct EmbeddedFileAttachmentListViewPerformanceTests {
-        @Test("Should load thumbnails asynchronously on background thread")
+        @Test("Should load thumbnails asynchronously on background thread", .tags(.ui, .medium, .parallel, .swiftui, .activity, .fileAttachment, .async, .concurrent, .performance))
         func shouldLoadThumbnailsAsynchronouslyOnBackgroundThread() {
             // This test validates that thumbnail loading doesn't block the main thread
             let imageData = AttachmentDisplayLayoutTests.createTestImageData()
@@ -120,7 +120,7 @@ struct AttachmentDisplayLayoutTests {
             // This will be validated after we fix the performance issue in loadThumbnail()
         }
 
-        @Test("Should have consistent mobile-friendly tap targets")
+        @Test("Should have consistent mobile-friendly tap targets", .tags(.ui, .medium, .parallel, .swiftui, .activity, .fileAttachment, .accessibility, .validation, .userInterface))
         func shouldHaveConsistentMobileFriendlyTapTargets() {
             // This test validates that action buttons have proper sizes for mobile
             let attachment = EmbeddedFileAttachment(fileName: "test.pdf")

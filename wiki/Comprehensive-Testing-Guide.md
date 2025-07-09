@@ -19,6 +19,26 @@ Our testing approach is built on the principle that **issues should be caught as
 3. **Parallel test execution** provides fast feedback on all test categories
 4. **Branch protection** prevents merges until all tests pass
 
+### 🚨 CRITICAL WARNING: Test Scripts Mask Individual Failures
+
+**FUNDAMENTAL PROBLEM:** Test chunk scripts report "PASSED" even when individual tests fail, creating false confidence in test suite health.
+
+**MANDATORY VALIDATION:** After running ANY test script, you MUST manually verify individual test results:
+
+```bash
+# Find xcresult files
+find . -name "*.xcresult" -type d
+
+# Parse individual test failures
+xcrun xcresulttool get --legacy --format json --path ./manual-test-results.xcresult | \
+jq -r '.issues.testFailureSummaries._values[]? | "\(.documentLocationInCreatingWorkspace.url._value):\(.documentLocationInCreatingWorkspace.concreteLocation.line._value) \(.testCaseName._value): \(.message._value)"'
+
+# Check SwiftLint errors
+jq -r '.[] | select(.severity == "error") | "\(.file):\(.line) \(.rule) - \(.reason)"' test-swiftlint.json
+```
+
+**GOLDEN RULE:** Never trust script-level "PASSED" reporting - always verify individual test results!
+
 ### Zero Failing Commits
 
 No failing code ever reaches CI/CD because:
@@ -304,6 +324,40 @@ func testLoggingSecurity() async throws {
 }
 ```
 
+## Systematic Failure Analysis Methodology
+
+### Four-Phase Approach to Test Failure Resolution
+
+For comprehensive failure analysis, follow the proven systematic methodology documented in `/wiki/Systematic-Failure-Analysis-Methodology.md`:
+
+#### Phase 1: Comprehensive Failure Detection
+- Run all test chunks to completion
+- Parse ALL xcresult files for individual failures
+- Document complete failure inventory
+
+#### Phase 2: Root Cause Analysis
+- Classify failures: bugs vs. test problems vs. infrastructure issues
+- Analyze failure patterns and commonalities
+- Determine priority order for fixing
+
+#### Phase 3: Systematic Fixing
+- Fix in priority order: functional bugs → infrastructure → performance → environment
+- Validate each fix with individual test verification
+- Document changes and side effects
+
+#### Phase 4: Zero-Tolerance Validation
+- Achieve 100% individual test pass rate
+- Verify no warnings or SwiftLint violations
+- Maintain ongoing validation processes
+
+### Critical Failure Patterns Identified
+
+**Common Patterns Found:**
+- Duplicate implementations in test files causing conflicts
+- Hardcoded paths assuming specific development environments
+- Unrealistic performance baselines for CI environments
+- Missing file detection and error handling in tests
+
 ## Debugging Test Failures
 
 ### Local Debugging
@@ -322,6 +376,14 @@ func testLoggingSecurity() async throws {
    - Open project in Xcode
    - Select test target
    - Press `Cmd+U` or use Test Navigator
+
+4. **⚠️ ALWAYS verify individual test results**:
+   ```bash
+   # After ANY test run
+   find . -name "*.xcresult" -type d
+   xcrun xcresulttool get --legacy --format json --path ./[filename].xcresult | \
+   jq -r '.issues.testFailureSummaries._values[]? | "\(.testCaseName._value): \(.message._value)"'
+   ```
 
 ### CI/CD Debugging
 

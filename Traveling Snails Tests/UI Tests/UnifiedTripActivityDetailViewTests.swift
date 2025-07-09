@@ -6,7 +6,7 @@ import Testing
 @Suite("UnifiedTripActivityDetailView Tests")
 @MainActor
 struct UnifiedTripActivityDetailViewTests {
-    @Test("Detail view shows dynamic transportation icons in edit mode")
+    @Test("Detail view shows dynamic transportation icons in edit mode", .tags(.ui, .medium, .parallel, .swiftui, .transportation, .activity, .validation, .mainActor))
     func detailViewShowsDynamicTransportationIconsInEditMode() {
         let testBase = SwiftDataTestBase()
 
@@ -85,7 +85,7 @@ struct UnifiedTripActivityDetailViewTests {
         #expect(boatIcon == "ferry", "Edit mode should show ferry icon for boat transportation")
     }
 
-    @Test("Detail view edit mode works with different starting transportation types")
+    @Test("Detail view edit mode works with different starting transportation types", .tags(.ui, .medium, .parallel, .swiftui, .transportation, .activity, .validation, .mainActor))
     func detailViewEditModeWorksWithDifferentStartingTypes() {
         let testBase = SwiftDataTestBase()
 

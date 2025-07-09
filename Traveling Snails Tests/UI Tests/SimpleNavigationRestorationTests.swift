@@ -14,7 +14,7 @@ import Testing
 struct SimpleNavigationRestorationTests {
     // MARK: - ActivityNavigationReference Tests (Core Functionality)
 
-    @Test("ActivityNavigationReference Codable works with minimal setup")
+    @Test("ActivityNavigationReference Codable works with minimal setup", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .activity, .validation, .mainActor))
     @MainActor func testActivityNavigationReferenceCodeable() async throws {
         // Create minimal SwiftData setup to get real objects
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
@@ -43,7 +43,7 @@ struct SimpleNavigationRestorationTests {
         #expect(decodedReference.tripId == tripId)
     }
 
-    @Test("ActivityNavigationReference handles all activity types")
+    @Test("ActivityNavigationReference handles all activity types", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .activity, .validation, .mainActor))
     @MainActor func testActivityNavigationReferenceTypes() async throws {
         // Since we can only create ActivityNavigationReference from DestinationType,
         // we'll test the core types that can be created
@@ -83,7 +83,7 @@ struct SimpleNavigationRestorationTests {
         #expect(decodedTransportationRef.activityType == .transportation)
     }
 
-    @Test("UserDefaults navigation state storage works")
+    @Test("UserDefaults navigation state storage works", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .activity, .validation, .mainActor))
     @MainActor func testUserDefaultsNavigationStorage() async throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: Activity.self, configurations: config)
@@ -122,7 +122,7 @@ struct SimpleNavigationRestorationTests {
 
     // MARK: - DestinationType Core Tests
 
-    @Test("DestinationType activityId computed property works")
+    @Test("DestinationType activityId computed property works", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .activity, .validation, .mainActor))
     @MainActor func testDestinationTypeActivityId() async throws {
         // Create a simple in-memory SwiftData setup
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
@@ -136,7 +136,7 @@ struct SimpleNavigationRestorationTests {
         #expect(destination.activityId == activity.id)
     }
 
-    @Test("Navigation restoration implementation matches expected pattern")
+    @Test("Navigation restoration implementation matches expected pattern", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .activity, .validation, .regression, .mainActor))
     @MainActor func testNavigationRestorationPattern() async throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: Activity.self, configurations: config)
@@ -168,7 +168,7 @@ struct SimpleNavigationRestorationTests {
         #expect(UserDefaults.standard.data(forKey: key) == nil)
     }
 
-    @Test("Multiple trip navigation states can coexist")
+    @Test("Multiple trip navigation states can coexist", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .activity, .validation, .mainActor))
     @MainActor func testMultipleTripNavigationStates() async throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: Activity.self, Lodging.self, configurations: config)

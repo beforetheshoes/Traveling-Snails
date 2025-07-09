@@ -14,7 +14,7 @@ import Testing
 struct NotificationNamesTests {
     // MARK: - Navigation Notifications (Legacy)
 
-    @Test("Legacy navigation notifications exist")
+    @Test("Legacy navigation notifications exist", .tags(.unit, .fast, .parallel, .validation, .navigation, .compatibility))
     func testLegacyNavigationNotifications() {
         // These should already exist in the current NotificationNames.swift
         #expect(Notification.Name.tripSelectedFromList.rawValue == "tripSelectedFromList")
@@ -24,7 +24,7 @@ struct NotificationNamesTests {
 
     // MARK: - Sync Notifications (To be consolidated)
 
-    @Test("Sync notification names exist and match expected values")
+    @Test("Sync notification names exist and match expected values", .tags(.unit, .fast, .parallel, .validation, .sync, .compatibility))
     func testSyncNotifications() {
         #expect(Notification.Name.syncDidStart.rawValue == "SyncManagerDidStartSync")
         #expect(Notification.Name.syncDidComplete.rawValue == "SyncManagerDidCompleteSync")
@@ -34,35 +34,35 @@ struct NotificationNamesTests {
 
     // MARK: - Localization Notifications
 
-    @Test("Localization notification names exist")
+    @Test("Localization notification names exist", .tags(.unit, .fast, .parallel, .validation, .localization, .compatibility))
     func testLocalizationNotifications() {
         #expect(Notification.Name.languageChanged.rawValue == "LanguageChanged")
     }
 
     // MARK: - Database Notifications
 
-    @Test("Database notification names exist")
+    @Test("Database notification names exist", .tags(.unit, .fast, .parallel, .validation, .dataImport, .compatibility))
     func testDatabaseNotifications() {
         #expect(Notification.Name.importCompleted.rawValue == "importCompleted")
     }
 
     // MARK: - Cloud Storage Notifications
 
-    @Test("Cloud storage notification names exist")
+    @Test("Cloud storage notification names exist", .tags(.unit, .fast, .parallel, .validation, .cloudkit, .compatibility))
     func testCloudStorageNotifications() {
         #expect(Notification.Name.cloudStorageDidChangeExternally.rawValue == "CloudStorageDidChangeExternally")
     }
 
     // MARK: - Error Handling Notifications
 
-    @Test("Error handling notification names exist")
+    @Test("Error handling notification names exist", .tags(.unit, .fast, .parallel, .validation, .errorHandling, .compatibility))
     func testErrorHandlingNotifications() {
         #expect(Notification.Name.appErrorOccurred.rawValue == "AppErrorOccurred")
     }
 
     // MARK: - Notification Functionality Tests
 
-    @Test("Notifications can be posted and observed")
+    @Test("Notifications can be posted and observed", .tags(.unit, .medium, .serial, .validation, .async, .mainActor))
     func testNotificationPosting() async {
         await MainActor.run {
             let testObject = "testData"
@@ -94,7 +94,7 @@ struct NotificationNamesTests {
         }
     }
 
-    @Test("All notification names are unique")
+    @Test("All notification names are unique", .tags(.unit, .fast, .parallel, .validation, .boundary))
     func testUniqueNotificationNames() {
         // Collect all notification raw values
         let notificationNames = [
@@ -116,7 +116,7 @@ struct NotificationNamesTests {
         #expect(uniqueNames.count == notificationNames.count, "All notification names should be unique")
     }
 
-    @Test("All notification names are non-empty")
+    @Test("All notification names are non-empty", .tags(.unit, .fast, .parallel, .validation, .boundary))
     func testNonEmptyNotificationNames() {
         let notificationNames = [
             Notification.Name.tripSelectedFromList.rawValue,
@@ -139,7 +139,7 @@ struct NotificationNamesTests {
 
     // MARK: - Backward Compatibility Tests
 
-    @Test("Consolidated notifications maintain backward compatibility")
+    @Test("Consolidated notifications maintain backward compatibility", .tags(.unit, .fast, .parallel, .validation, .compatibility, .regression))
     func testBackwardCompatibility() {
         // Verify that consolidating notifications doesn't break existing string values
         // These values must match what's currently scattered in the codebase

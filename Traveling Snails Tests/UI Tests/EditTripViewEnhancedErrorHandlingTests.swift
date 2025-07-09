@@ -15,7 +15,7 @@ struct EditTripViewEnhancedErrorHandlingTests {
     /// Test suite for comprehensive error handling in EditTripView
     /// Following TDD principles to define expected behavior before implementation
 
-    @Test("EditTripView should handle save failures with retry options")
+    @Test("EditTripView should handle save failures with retry options", .tags(.ui, .medium, .parallel, .swiftui, .trip, .errorHandling, .validation, .critical, .mainActor))
     func testSaveFailureWithRetryOptions() async throws {
         let testBase = SwiftDataTestBase()
 
@@ -47,7 +47,7 @@ struct EditTripViewEnhancedErrorHandlingTests {
         #expect(expectedBehavior.expectedErrorType == .databaseSaveFailure, "Should properly categorize database errors")
     }
 
-    @Test("EditTripView should handle network failures during sync with offline fallback")
+    @Test("EditTripView should handle network failures during sync with offline fallback", .tags(.ui, .medium, .parallel, .swiftui, .trip, .errorHandling, .network, .sync, .validation, .mainActor))
     func testNetworkFailureDuringSyncWithOfflineFallback() async throws {
         let testBase = SwiftDataTestBase()
 
@@ -75,7 +75,7 @@ struct EditTripViewEnhancedErrorHandlingTests {
         #expect(expectedNetworkBehavior.retryStrategy == .exponentialBackoff, "Should use proper retry strategy")
     }
 
-    @Test("EditTripView should provide progressive error disclosure for different error types")
+    @Test("EditTripView should provide progressive error disclosure for different error types", .tags(.ui, .medium, .parallel, .swiftui, .trip, .errorHandling, .validation, .userInterface, .mainActor))
     func testProgressiveErrorDisclosure() async throws {
         _ = SwiftDataTestBase()
 
@@ -116,7 +116,7 @@ struct EditTripViewEnhancedErrorHandlingTests {
         }
     }
 
-    @Test("EditTripView should implement automatic retry with exponential backoff for transient failures")
+    @Test("EditTripView should implement automatic retry with exponential backoff for transient failures", .tags(.ui, .medium, .parallel, .swiftui, .trip, .errorHandling, .validation, .async, .mainActor))
     func testAutomaticRetryWithExponentialBackoff() async throws {
         let testBase = SwiftDataTestBase()
 
@@ -144,7 +144,7 @@ struct EditTripViewEnhancedErrorHandlingTests {
         #expect(retryConfiguration.maxAttempts == 3, "Should limit retry attempts")
     }
 
-    @Test("EditTripView should persist error state across app lifecycle")
+    @Test("EditTripView should persist error state across app lifecycle", .tags(.ui, .medium, .parallel, .swiftui, .trip, .errorHandling, .validation, .regression, .mainActor))
     func testErrorStatePersistenceAcrossLifecycle() async throws {
         let testBase = SwiftDataTestBase()
 
@@ -172,7 +172,7 @@ struct EditTripViewEnhancedErrorHandlingTests {
         #expect(shouldRetryOnResume == true, "Should offer retry when app resumes")
     }
 
-    @Test("EditTripView should provide clear actionable error messages")
+    @Test("EditTripView should provide clear actionable error messages", .tags(.ui, .medium, .parallel, .swiftui, .trip, .errorHandling, .validation, .userInterface, .accessibility, .mainActor))
     func testClearActionableErrorMessages() async throws {
         _ = SwiftDataTestBase()
 
@@ -206,7 +206,7 @@ struct EditTripViewEnhancedErrorHandlingTests {
         }
     }
 
-    @Test("EditTripView should handle concurrent operations safely")
+    @Test("EditTripView should handle concurrent operations safely", .tags(.ui, .medium, .parallel, .swiftui, .trip, .errorHandling, .validation, .concurrent, .critical, .mainActor))
     func testConcurrentOperationSafety() async throws {
         let testBase = SwiftDataTestBase()
 
@@ -223,7 +223,7 @@ struct EditTripViewEnhancedErrorHandlingTests {
                     // Each concurrent operation should be handled safely
                     let operationId = "operation_\(i)"
                     // Implementation should use proper synchronization
-                    #expect(true, "Concurrent operation \(operationId) should be handled safely")
+                    #expect(Bool(true), "Concurrent operation \(operationId) should be handled safely")
                 }
             }
         }

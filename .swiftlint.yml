@@ -29,7 +29,7 @@ opt_in_rules:
   - attributes
   - closure_end_indentation
   - closure_spacing
-  # - collection_alignment # Conflicts with colon spacing
+  - collection_alignment
   - conditional_returns_on_newline
   - contains_over_filter_count
   - contains_over_filter_is_empty
@@ -41,7 +41,7 @@ opt_in_rules:
   - empty_count
   - empty_string
   - enum_case_associated_values_count
-  # - explicit_enum_raw_value # Conflicts with redundant_string_enum_value
+  - explicit_enum_raw_value
   - explicit_init
   - fallthrough
   - fatal_error_message
@@ -175,10 +175,23 @@ custom_rules:
   # SWIFTDATA: Prevent parameter passing anti-pattern
   no_swiftdata_parameter_passing:
     name: "No SwiftData Parameter Passing"
-    regex: ':\s*\[(?:Trip|Activity|Lodging|Transportation|Organization|Address)\]'
+    regex: '(?:func\s+\w+|init)\s*\([^)]*\w+:\s*\[(?:Trip|Activity|Lodging|Transportation|Organization|Address)\]'
     message: "Avoid passing SwiftData model arrays as parameters - use @Query in consuming view instead"
     severity: warning
-    excluded: ".*Tests.*\\.swift$"
+    # EXCLUSIONS REVIEW TRACKING (Last reviewed: 2025-07-09, Next review: 2025-08-09)
+    # - Tests: Test files need to pass model arrays for test setup and verification
+    #   Justification: Test infrastructure requires direct model array access for setup/verification
+    #   Review action: Consider if mock/protocol approach could eliminate need for exclusion
+    # - OrganizationManager: Manager classes return arrays (not parameters) for business logic
+    #   Justification: Manager pattern requires array returns for business logic operations
+    #   Review action: Evaluate if @Query can be moved to view layer to eliminate exclusion
+    # - UnifiedNavigationView: Uses generic protocol abstraction [Item], not concrete SwiftData models
+    #   Justification: Generic protocol abstraction doesn't violate SwiftData-specific rule intent
+    #   Review action: Verify protocol abstractions remain generic and don't become SwiftData-specific
+    # - UnifiedNavigationRootView: Uses generic protocol abstraction [Item], not concrete SwiftData models
+    #   Justification: Generic protocol abstraction doesn't violate SwiftData-specific rule intent
+    #   Review action: Verify protocol abstractions remain generic and don't become SwiftData-specific
+    excluded: ".*Tests.*\\.swift$|.*OrganizationManager\\.swift$|.*UnifiedNavigationView\\.swift$|.*UnifiedNavigationRootView\\.swift$"
     
   # MODERN SWIFT: Enforce @Observable over @StateObject
   no_state_object:
@@ -196,7 +209,7 @@ custom_rules:
     excluded: ".*Tests.*\\.swift$|.*Preview.*\\.swift$"
     
   # TESTING: Detect #expect(false) anti-pattern
-  no_expect_false:
+  no_expect_false_pattern:
     name: "No expect(false) Pattern"
     regex: '#expect\\(\\s*false\\s*[,)]'
     message: "Use Issue.record() instead of #expect(false) to avoid compiler warnings"
@@ -248,13 +261,9 @@ contains_over_filter_count:
 contains_over_filter_is_empty:
   severity: error
 
-cyclomatic_complexity:
-  warning: 15
-  error: 25
+# cyclomatic_complexity: (disabled in disabled_rules)
 
-empty_count:
-  severity: error
-  only_after_dot: true
+# empty_count: (disabled in disabled_rules)
 
 empty_string:
   severity: warning
@@ -282,25 +291,25 @@ file_name:
 file_name_no_space:
   severity: error
 
-function_body_length:
-  warning: 100
-  error: 200
+# function_body_length: (disabled in disabled_rules)
+# warning: 100
+# error: 200
 
 function_parameter_count:
   warning: 6
   error: 8
 
-identifier_name:
-  min_length: 1
-  max_length:
-    warning: 50
-    error: 60
-  excluded:
-    - "id"
-    - "URL"
-    - "x"
-    - "y"
-    - "z"
+# identifier_name: (disabled in disabled_rules)
+# min_length: 1
+# max_length:
+#   warning: 50
+#   error: 60
+# excluded:
+#   - "id"
+#   - "URL"
+#   - "x"
+#   - "y"
+#   - "z"
 
 large_tuple:
   warning: 3

@@ -8,7 +8,7 @@ import Testing
 struct ProtocolExtensionTests {
     @Suite("TripActivityProtocol Tests")
     struct TripActivityProtocolTests {
-        @Test("Activity protocol conformance")
+        @Test("Activity protocol conformance", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation))
         func activityProtocolConformance() {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")
@@ -35,7 +35,7 @@ struct ProtocolExtensionTests {
             #expect(activity.hasTypeSelector == false)
         }
 
-        @Test("Lodging protocol conformance")
+        @Test("Lodging protocol conformance", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation))
         func lodgingProtocolConformance() {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Hotel")
@@ -64,7 +64,7 @@ struct ProtocolExtensionTests {
             #expect(lodging.hasTypeSelector == false)
         }
 
-        @Test("Transportation protocol conformance")
+        @Test("Transportation protocol conformance", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation))
         func transportationProtocolConformance() {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Airline")
@@ -92,7 +92,7 @@ struct ProtocolExtensionTests {
             #expect(transportation.hasTypeSelector == true)
         }
 
-        @Test("Activity location handling")
+        @Test("Activity location handling", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation))
         func activityLocationHandling() {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Venue")
@@ -125,7 +125,7 @@ struct ProtocolExtensionTests {
             #expect(activity.hasLocation == true)
         }
 
-        @Test("Transportation location handling")
+        @Test("Transportation location handling", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation))
         func transportationLocationHandling() {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Airline")
@@ -154,7 +154,7 @@ struct ProtocolExtensionTests {
 
     @Suite("ActivityWrapper Tests")
     struct ActivityWrapperTests {
-        @Test("ActivityWrapper type detection")
+        @Test("ActivityWrapper type detection", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation))
         func activityWrapperTypeDetection() {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")
@@ -194,7 +194,7 @@ struct ProtocolExtensionTests {
             #expect(activityWrapper.type == .activity)
         }
 
-        @Test("ActivityWrapper type properties")
+        @Test("ActivityWrapper type properties", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation, .userInterface))
         func activityWrapperTypeProperties() {
             #expect(ActivityWrapper.ActivityType.lodging.icon == "bed.double.fill")
             #expect(ActivityWrapper.ActivityType.transportation.icon == "car.fill")
@@ -208,7 +208,7 @@ struct ProtocolExtensionTests {
 
     @Suite("TripActivityEditData Tests")
     struct TripActivityEditDataTests {
-        @Test("TripActivityEditData initialization from Activity")
+        @Test("TripActivityEditData initialization from Activity", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation, .viewModel))
         func editDataFromActivity() {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")
@@ -241,7 +241,7 @@ struct ProtocolExtensionTests {
             #expect(editData.organization?.name == "Test Org")
         }
 
-        @Test("TripActivityEditData initialization from Transportation")
+        @Test("TripActivityEditData initialization from Transportation", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation, .viewModel))
         func editDataFromTransportation() {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Airline")
@@ -274,7 +274,7 @@ struct ProtocolExtensionTests {
 
     @Suite("DestinationType Tests")
     struct DestinationTypeTests {
-        @Test("DestinationType equality")
+        @Test("DestinationType equality", .tags(.unit, .fast, .parallel, .dataModel, .validation))
         func destinationTypeEquality() {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")
@@ -317,7 +317,7 @@ struct ProtocolExtensionTests {
             #expect(dest1 != dest4)
         }
 
-        @Test("DestinationType hashing")
+        @Test("DestinationType hashing", .tags(.unit, .fast, .parallel, .dataModel, .validation))
         func destinationTypeHashing() {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")

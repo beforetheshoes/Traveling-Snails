@@ -13,7 +13,7 @@ import Testing
 
 @Suite("Minimal Attachment Bug Reproduction - Issue #28")
 struct MinimalAttachmentBugReproTest {
-    @Test("Simple attachment export with includeAttachments toggle - Step by step debugging")
+    @Test("Simple attachment export with includeAttachments toggle - Step by step debugging", .tags(.integration, .medium, .parallel, .fileAttachment, .dataExport, .validation, .critical, .regression))
     func simpleAttachmentExportWithToggle() async throws {
         // Create test container
         let container = try ModelContainer(for: Trip.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
@@ -103,7 +103,7 @@ struct MinimalAttachmentBugReproTest {
         #expect(dict["parentId"] as? String == activity.id.uuidString, "Parent ID should be preserved")
     }
 
-    @Test("Simple attachment export with includeAttachments FALSE - Should exclude data")
+    @Test("Simple attachment export with includeAttachments FALSE - Should exclude data", .tags(.integration, .medium, .parallel, .fileAttachment, .dataExport, .validation, .boundary))
     func simpleAttachmentExportWithToggleOff() async throws {
         // Create test container
         let container = try ModelContainer(for: Trip.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
@@ -164,7 +164,7 @@ struct MinimalAttachmentBugReproTest {
         #expect(dict["fileSize"] as? Int64 == attachment.fileSize, "File size should be preserved")
     }
 
-    @Test("Simple import restoration with fileData present")
+    @Test("Simple import restoration with fileData present", .tags(.integration, .medium, .parallel, .fileAttachment, .dataImport, .validation, .critical, .regression))
     func simpleImportRestorationWithFileData() async throws {
         // Create import container (simulating fresh import)
         let container = try ModelContainer(for: Trip.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))

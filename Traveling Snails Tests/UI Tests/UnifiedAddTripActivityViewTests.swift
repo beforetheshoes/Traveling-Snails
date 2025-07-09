@@ -15,7 +15,7 @@ struct UnifiedAddTripActivityRootViewTests {
 
     @Suite("Template Creation Logic")
     struct TemplateCreationTests {
-        @Test("Lodging template has correct defaults")
+        @Test("Lodging template has correct defaults", .tags(.ui, .medium, .parallel, .swiftui, .lodging, .validation))
         func testLodgingTemplateDefaults() {
             let trip = Trip(name: "Test Trip")
             let startDate = Date()
@@ -37,7 +37,7 @@ struct UnifiedAddTripActivityRootViewTests {
             #expect(template.organization == nil)
         }
 
-        @Test("Transportation template has correct defaults")
+        @Test("Transportation template has correct defaults", .tags(.ui, .medium, .parallel, .swiftui, .transportation, .validation))
         func testTransportationTemplateDefaults() {
             let trip = Trip(name: "Test Trip")
             let startDate = Date()
@@ -55,7 +55,7 @@ struct UnifiedAddTripActivityRootViewTests {
             #expect(template.organization == nil)
         }
 
-        @Test("Activity template has correct defaults")
+        @Test("Activity template has correct defaults", .tags(.ui, .medium, .parallel, .swiftui, .activity, .validation))
         func testActivityTemplateDefaults() {
             let trip = Trip(name: "Test Trip")
             let startDate = Date()
@@ -75,7 +75,7 @@ struct UnifiedAddTripActivityRootViewTests {
             #expect(template.organization == nil)
         }
 
-        @Test("Template uses current date when trip has no start date")
+        @Test("Template uses current date when trip has no start date", .tags(.ui, .medium, .parallel, .swiftui, .trip, .validation))
         func testTemplateWithNoTripStartDate() {
             let trip = Trip(name: "Test Trip")
             trip.hasStartDate = false
@@ -93,7 +93,7 @@ struct UnifiedAddTripActivityRootViewTests {
 
     @Suite("TripActivityEditData Logic")
     struct EditDataTests {
-        @Test("Edit data initialization from template")
+        @Test("Edit data initialization from template", .tags(.ui, .medium, .parallel, .swiftui, .activity, .validation))
         func testEditDataFromTemplate() {
             let trip = Trip(name: "Test Trip")
             let template = ActivitySaverFactory.createSaver(for: .activity).createTemplate(in: trip)
@@ -111,7 +111,7 @@ struct UnifiedAddTripActivityRootViewTests {
             #expect(editData.hideLocation == false)
         }
 
-        @Test("Transportation edit data includes type")
+        @Test("Transportation edit data includes type", .tags(.ui, .medium, .parallel, .swiftui, .transportation, .validation))
         func testTransportationEditDataType() {
             let trip = Trip(name: "Test Trip")
             let transportation = Transportation(
@@ -127,7 +127,7 @@ struct UnifiedAddTripActivityRootViewTests {
             #expect(editData.transportationType == .plane)
         }
 
-        @Test("Activity edit data for custom location")
+        @Test("Activity edit data for custom location", .tags(.ui, .medium, .parallel, .swiftui, .activity, .validation))
         func testActivityEditDataCustomLocation() {
             let trip = Trip(name: "Test Trip")
             let customAddress = Address(street: "123 Main St", city: "Test City")
@@ -153,7 +153,7 @@ struct UnifiedAddTripActivityRootViewTests {
 
     @Suite("Form Validation Logic")
     struct FormValidationTests {
-        @Test("Form invalid when name is empty")
+        @Test("Form invalid when name is empty", .tags(.ui, .medium, .parallel, .swiftui, .validation, .errorHandling))
         func testFormInvalidEmptyName() {
             var editData = TripActivityEditData(from: ActivitySaverFactory.createSaver(for: .activity).createTemplate(in: Trip(name: "Test")))
             editData.name = ""
@@ -163,7 +163,7 @@ struct UnifiedAddTripActivityRootViewTests {
             #expect(isValid == false)
         }
 
-        @Test("Form invalid when organization is nil")
+        @Test("Form invalid when organization is nil", .tags(.ui, .medium, .parallel, .swiftui, .validation, .errorHandling))
         func testFormInvalidNilOrganization() {
             var editData = TripActivityEditData(from: ActivitySaverFactory.createSaver(for: .activity).createTemplate(in: Trip(name: "Test")))
             editData.name = "Valid Name"
@@ -173,7 +173,7 @@ struct UnifiedAddTripActivityRootViewTests {
             #expect(isValid == false)
         }
 
-        @Test("Form valid when all required fields present")
+        @Test("Form valid when all required fields present", .tags(.ui, .medium, .parallel, .swiftui, .validation))
         func testFormValidWhenComplete() {
             var editData = TripActivityEditData(from: ActivitySaverFactory.createSaver(for: .activity).createTemplate(in: Trip(name: "Test")))
             editData.name = "Valid Name"
@@ -188,7 +188,7 @@ struct UnifiedAddTripActivityRootViewTests {
 
     @Suite("Save Logic Tests")
     struct SaveLogicTests {
-        @Test("Lodging save creates correct object")
+        @Test("Lodging save creates correct object", .tags(.ui, .medium, .serial, .swiftui, .lodging, .swiftdata, .validation))
         func testLodgingSaveCreation() throws {
             // Create in-memory model context for testing
             let config = ModelConfiguration(isStoredInMemoryOnly: true)
@@ -239,7 +239,7 @@ struct UnifiedAddTripActivityRootViewTests {
             #expect(lodging.organization?.name == "Test Hotel")
         }
 
-        @Test("Transportation save creates correct object")
+        @Test("Transportation save creates correct object", .tags(.ui, .medium, .serial, .swiftui, .transportation, .swiftdata, .validation))
         func testTransportationSaveCreation() throws {
             let config = ModelConfiguration(isStoredInMemoryOnly: true)
             let container = try ModelContainer(for: Trip.self, Organization.self, Transportation.self, configurations: config)
@@ -282,7 +282,7 @@ struct UnifiedAddTripActivityRootViewTests {
             #expect(transportation.organization?.name == "Test Airline")
         }
 
-        @Test("Activity save creates correct object")
+        @Test("Activity save creates correct object", .tags(.ui, .medium, .serial, .swiftui, .activity, .swiftdata, .validation))
         func testActivitySaveCreation() throws {
             let config = ModelConfiguration(isStoredInMemoryOnly: true)
             let container = try ModelContainer(for: Trip.self, Organization.self, Activity.self, configurations: config)
@@ -333,7 +333,7 @@ struct UnifiedAddTripActivityRootViewTests {
             #expect(activity.organization?.name == "Test Venue")
         }
 
-        @Test("Save handles None organization correctly")
+        @Test("Save handles None organization correctly", .tags(.ui, .medium, .serial, .swiftui, .organization, .swiftdata, .validation))
         func testSaveWithNoneOrganization() throws {
             let config = ModelConfiguration(isStoredInMemoryOnly: true)
             let container = try ModelContainer(for: Trip.self, Organization.self, Activity.self, configurations: config)
@@ -369,27 +369,27 @@ struct UnifiedAddTripActivityRootViewTests {
 
     @Suite("UI State Management")
     struct UIStateTests {
-        @Test("Initial saving state is false")
+        @Test("Initial saving state is false", .tags(.ui, .medium, .parallel, .swiftui, .state, .validation))
         func testInitialSavingState() {
             // This tests state that should be managed by ActivityFormViewModel
             let isSaving = false
             #expect(isSaving == false)
         }
 
-        @Test("Form disabled during saving")
+        @Test("Form disabled during saving", .tags(.ui, .medium, .parallel, .swiftui, .state, .validation))
         func testFormDisabledDuringSaving() {
             let isSaving = true
             let isFormEnabled = !isSaving
             #expect(isFormEnabled == false)
         }
 
-        @Test("Organization picker state management")
+        @Test("Organization picker state management", .tags(.ui, .medium, .parallel, .swiftui, .organization, .state, .validation))
         func testOrganizationPickerState() {
             let showingOrganizationPicker = false
             #expect(showingOrganizationPicker == false)
         }
 
-        @Test("Attachment management state")
+        @Test("Attachment management state", .tags(.ui, .medium, .parallel, .swiftui, .fileAttachment, .state, .validation))
         func testAttachmentState() {
             var attachments: [EmbeddedFileAttachment] = []
             let newAttachment = EmbeddedFileAttachment(fileName: "test.pdf", fileData: Data())
@@ -409,7 +409,7 @@ struct UnifiedAddTripActivityRootViewTests {
 
     @Suite("Template Configuration")
     struct TemplateConfigurationTests {
-        @Test("Lodging template configuration")
+        @Test("Lodging template configuration", .tags(.ui, .medium, .parallel, .swiftui, .lodging, .validation))
         func testLodgingTemplateConfiguration() {
             let trip = Trip(name: "Test Trip")
             let template = ActivitySaverFactory.createSaver(for: .lodging).createTemplate(in: trip)
@@ -425,7 +425,7 @@ struct UnifiedAddTripActivityRootViewTests {
             #expect(template.hasTypeSelector == false)
         }
 
-        @Test("Transportation template configuration")
+        @Test("Transportation template configuration", .tags(.ui, .medium, .parallel, .swiftui, .transportation, .validation))
         func testTransportationTemplateConfiguration() {
             let trip = Trip(name: "Test Trip")
             let template = ActivitySaverFactory.createSaver(for: .transportation).createTemplate(in: trip)
@@ -440,7 +440,7 @@ struct UnifiedAddTripActivityRootViewTests {
             #expect(template.hasTypeSelector == true)
         }
 
-        @Test("Activity template configuration")
+        @Test("Activity template configuration", .tags(.ui, .medium, .parallel, .swiftui, .activity, .validation))
         func testActivityTemplateConfiguration() {
             let trip = Trip(name: "Test Trip")
             let template = ActivitySaverFactory.createSaver(for: .activity).createTemplate(in: trip)
@@ -460,7 +460,7 @@ struct UnifiedAddTripActivityRootViewTests {
 
     @Suite("Integration Scenarios")
     struct IntegrationTests {
-        @Test("Complete form submission flow")
+        @Test("Complete form submission flow", .tags(.ui, .medium, .serial, .swiftui, .activity, .swiftdata, .integration, .smoke))
         func testCompleteFormSubmissionFlow() throws {
             let config = ModelConfiguration(isStoredInMemoryOnly: true)
             let container = try ModelContainer(for: Trip.self, Organization.self, Activity.self, configurations: config)
@@ -506,7 +506,7 @@ struct UnifiedAddTripActivityRootViewTests {
             #expect(activity.organization == org)
         }
 
-        @Test("Error handling during save")
+        @Test("Error handling during save", .tags(.ui, .medium, .parallel, .swiftui, .errorHandling, .validation))
         func testErrorHandlingDuringSave() {
             // Test that save errors are handled properly
             // This should be managed by ActivitySaveService

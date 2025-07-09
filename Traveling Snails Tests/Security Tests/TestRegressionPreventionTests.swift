@@ -133,7 +133,7 @@ struct TestRegressionPreventionTests {
         #expect(!errorPatternExists.isEmpty, "Error pattern demonstrates correct Issue.record() usage")
 
         // Successful path validation
-        #expect(true, "Normal test execution should succeed")
+        #expect(Bool(true), "Normal test execution should succeed")
 
         // This test validates that we use Issue.record() for error conditions
         // instead of #expect(false) which always triggers compiler warnings

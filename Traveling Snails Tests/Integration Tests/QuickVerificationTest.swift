@@ -27,7 +27,7 @@ struct QuickVerificationTests {
         return (container, context)
     }
 
-    @Test("Basic SwiftData functionality works")
+    @Test("Basic SwiftData functionality works", .tags(.integration, .fast, .parallel, .swiftdata, .validation, .smoke))
     func testBasicSwiftDataFunctionality() throws {
         let env = createTestEnvironment()
         let modelContext = env.context
@@ -51,7 +51,7 @@ struct QuickVerificationTests {
         #expect(trip.lodging.contains { $0.name == "Test Hotel" })
     }
 
-    @Test("Test framework setup works")
+    @Test("Test framework setup works", .tags(.integration, .fast, .parallel, .utility, .validation, .sanity))
     func testFrameworkSetup() {
         let env = createTestEnvironment()
 
@@ -60,7 +60,7 @@ struct QuickVerificationTests {
         #expect(env.context.container === env.container)
     }
 
-    @Test("SwiftData patterns prevent infinite recreation")
+    @Test("SwiftData patterns prevent infinite recreation", .tags(.integration, .medium, .parallel, .swiftdata, .regression, .validation, .critical))
     func testInfiniteRecreationPrevention() throws {
         let env = createTestEnvironment()
         let modelContext = env.context

@@ -12,7 +12,7 @@ import Testing
 @Suite("DatabaseExportView Tests")
 @MainActor
 struct DatabaseExportViewTests {
-    @Test("Preview text visibility with current font settings is problematic")
+    @Test("Preview text visibility with current font settings is problematic", .tags(.ui, .medium, .parallel, .swiftui, .settings, .dataExport, .validation, .userInterface, .mainActor))
     func testPreviewTextVisibility() {
         let sampleExportData = """
         {
@@ -42,7 +42,7 @@ struct DatabaseExportViewTests {
         // Problem: Users report seeing "empty box" because text is rendered but not visible
     }
 
-    @Test("Export data state management simulates async flow correctly")
+    @Test("Export data state management simulates async flow correctly", .tags(.ui, .medium, .parallel, .swiftui, .settings, .dataExport, .async, .validation, .mainActor))
     func testExportDataStateManagement() async throws {
         let testBase = SwiftDataTestBase()
 
@@ -72,7 +72,7 @@ struct DatabaseExportViewTests {
         #expect(!isGenerating, "Generating state should be false after completion")
     }
 
-    @Test("Empty database export should still show valid structure")
+    @Test("Empty database export should still show valid structure", .tags(.ui, .medium, .parallel, .swiftui, .settings, .dataExport, .validation, .mainActor))
     func testEmptyDatabaseExport() throws {
         let testBase = SwiftDataTestBase()
 
@@ -102,7 +102,7 @@ struct DatabaseExportViewTests {
         // The issue: If export returns empty string due to error, preview shows nothing
     }
 
-    @Test("Error scenarios create invisible content in preview")
+    @Test("Error scenarios create invisible content in preview", .tags(.ui, .medium, .parallel, .swiftui, .settings, .dataExport, .errorHandling, .validation, .mainActor))
     func testErrorHandlingInExport() {
         // This test demonstrates the current issue: errors are not visually distinct
 
@@ -118,7 +118,7 @@ struct DatabaseExportViewTests {
         #expect(errorLooksLikeNormalContent, "Error messages are not visually distinct from normal content")
     }
 
-    @Test("Large export data may cause rendering issues")
+    @Test("Large export data may cause rendering issues", .tags(.ui, .medium, .parallel, .swiftui, .settings, .dataExport, .performance, .validation, .mainActor))
     func testLargeExportDataRendering() throws {
         // Simulate large export data
         var largeExportData = "{\n  \"exportInfo\": {\n    \"version\": \"1.0\"\n  },\n  \"trips\": [\n"
@@ -141,11 +141,11 @@ struct DatabaseExportViewTests {
         // due to performance or text rendering limitations
         let mightCauseRenderingIssues = largeExportData.count > 10_000
         if mightCauseRenderingIssues {
-            #expect(true, "Large exports might cause the 'empty box' issue due to rendering performance")
+            #expect(Bool(true), "Large exports might cause the 'empty box' issue due to rendering performance")
         }
     }
 
-    @Test("Current font configuration is inadequate for preview readability")
+    @Test("Current font configuration is inadequate for preview readability", .tags(.ui, .medium, .parallel, .swiftui, .settings, .dataExport, .accessibility, .validation, .mainActor))
     func testPreviewReadability() {
         // Test current font settings from DatabaseExportView.swift line 88
         // .font(.system(.caption, design: .monospaced))
@@ -162,7 +162,7 @@ struct DatabaseExportViewTests {
         // and ensure good contrast with the .systemGray6 background
     }
 
-    @Test("Preview scrollview configuration may hide content")
+    @Test("Preview scrollview configuration may hide content", .tags(.ui, .medium, .parallel, .swiftui, .settings, .dataExport, .userInterface, .validation, .mainActor))
     func testPreviewScrollViewConfiguration() {
         // Test the current ScrollView configuration from DatabaseExportView.swift:86-93
 

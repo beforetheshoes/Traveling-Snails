@@ -270,6 +270,37 @@ Pre-commit hooks (local) → Security Tests (CI) → Parallel Test Execution →
 ./Scripts/run-all-tests.sh --test-only
 ```
 
+### 🚨 CRITICAL: Test Failure Detection
+
+**🚨 CRITICAL: Two-Step Testing Process**
+
+**Step 1 - EXECUTION**: Use chunks for timeout management  
+**Step 2 - VALIDATION**: Always check for actual failures with detection script
+
+**⚠️ NEVER TRUST CHUNK EXIT CODES** - They mask individual test failures!
+
+```bash
+# MANDATORY: Always run after ANY test execution
+./Scripts/detect-test-failures.sh
+
+# This script automatically:
+# - Finds failures across ALL xcresult files
+# - Parses individual test failures that chunk scripts miss
+# - Categorizes failures by type (accessibility, performance, etc.)
+# - Provides detailed failure analysis with line numbers
+```
+
+**Manual Detection (if needed):**
+```bash
+# Find xcresult files:
+find . -name "*.xcresult" -type d
+
+# Parse individual test failures:
+xcrun xcresulttool get --legacy --format json --path ./manual-test-results.xcresult | jq -r '.issues.testFailureSummaries._values[] | "\(.documentLocationInCreatingWorkspace.url._value):\(.documentLocationInCreatingWorkspace.concreteLocation.line._value) \(.testCaseName._value): \(.message._value)"'
+```
+
+**✅ CORRECT WORKFLOW**: Execute chunks → Run `detect-test-failures.sh` → Fix any detected failures
+
 ### CI/CD Pipeline (GitHub Actions)
 
 **Build validation with local testing approach** - optimized for reliability and speed:
@@ -486,6 +517,84 @@ The project includes a comprehensive test runner script that provides advanced t
 ./Scripts/run-all-tests.sh --lint-only          # Run only SwiftLint checks
 ./Scripts/run-all-tests.sh --no-clean           # Skip cleaning derived data
 ```
+
+### 🚨 CRITICAL: Individual Test Failure Detection
+
+**⚠️ WARNING: Test scripts may mask individual test failures!**
+
+Test scripts can report overall success while individual tests fail. **Always check xcresult files for actual failures**:
+
+```bash
+# After running any test script, check for failures:
+find . -name "*.xcresult" -type d
+
+# Parse individual test failures from xcresult files:
+xcrun xcresulttool get --legacy --format json --path ./manual-test-results.xcresult | jq -r '.issues.testFailureSummaries._values[] | "\(.documentLocationInCreatingWorkspace.url._value):\(.documentLocationInCreatingWorkspace.concreteLocation.line._value) \(.testCaseName._value): \(.message._value)"'
+
+# Check SwiftLint errors:
+jq -r '.[] | select(.severity == "error") | "\(.file):\(.line) \(.rule) - \(.reason)"' test-swiftlint.json
+```
+
+**Never trust script-level success reporting - always verify individual test results!**
+
+### 🎯 Systematic Test Failure Analysis Methodology
+
+**CRITICAL: When any tests fail, follow this comprehensive analysis process:**
+
+#### Phase 1: Comprehensive Failure Detection
+```bash
+# Step 1: Execute tests (choose method based on constraints)
+./Scripts/test-chunk-1.sh        # For timeout-limited environments
+# OR
+./Scripts/run-all-tests.sh       # For complete LOCAL testing (will timeout in Claude Code)
+
+# Step 2: MANDATORY - Always validate with detection script
+./Scripts/detect-test-failures.sh
+
+# This detection script:
+# - Finds failures across ALL xcresult files
+# - Categorizes failures by type (accessibility, performance, etc.)
+# - Provides detailed failure analysis with line numbers
+# - Is the ONLY reliable way to detect individual test failures
+```
+
+#### Phase 2: Root Cause Analysis
+**For EVERY failure, determine if it's a bug or unreasonable expectation:**
+
+**Functional Failures (High Priority):**
+- Logic errors → Fix the implementation
+- Missing implementations → Add required code
+- Duplicate implementations → Remove duplicates from test files
+- SwiftLint integration issues → Fix path configurations
+
+**Performance Failures (Medium Priority):**
+- Test measurement inefficiencies → Optimize test setup
+- Unrealistic baselines → Adjust to realistic but regression-catching values
+- System overhead → Account for CI environment constraints
+
+**Examples of proper analysis:**
+```bash
+❌ "CI is slow, ignore it"
+✅ "Test creates unnecessary SwiftData contexts - fix measurement approach" 
+✅ "500ms baseline too aggressive for mock overhead - adjust to 1000ms"
+✅ "Hardcoded paths fail in different environments - use dynamic detection"
+```
+
+#### Phase 3: Systematic Fixing
+1. **Create TODO list** documenting ALL failures
+2. **Fix high-priority functional bugs first**
+3. **Address performance issues with proper analysis**
+4. **Validate each fix individually**
+5. **Update TODO status as work progresses**
+
+#### Phase 4: Zero-Tolerance Validation
+**NEVER declare success until:**
+- ✅ Detection script shows zero failures
+- ✅ All TODOs marked complete  
+- ✅ Full test suite passes
+- ✅ All fixes have documented root cause analysis
+
+**This methodology ensures comprehensive success and prevents overlooking any failures.**
 
 ### Running Specific Test Suites Manually
 

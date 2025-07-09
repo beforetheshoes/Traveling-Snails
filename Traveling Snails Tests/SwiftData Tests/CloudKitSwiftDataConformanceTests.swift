@@ -17,7 +17,7 @@ struct CloudKitSwiftDataConformanceTests {
     @Suite("Relationship Safety Tests")
     @MainActor
     struct RelationshipSafetyTests {
-        @Test("Trip relationships never return nil")
+        @Test("Trip relationships never return nil", .tags(.swiftdata, .medium, .parallel, .cloudkit, .dataModel, .trip, .validation, .critical))
         func tripRelationshipsNeverReturnNil() async throws {
             let testBase = SwiftDataTestBase()
 
@@ -40,7 +40,7 @@ struct CloudKitSwiftDataConformanceTests {
             #expect(trip.totalCost == 0)
         }
 
-        @Test("Organization relationships never return nil")
+        @Test("Organization relationships never return nil", .tags(.swiftdata, .medium, .parallel, .cloudkit, .dataModel, .organization, .validation, .critical))
         func organizationRelationshipsNeverReturnNil() async throws {
             let testBase = SwiftDataTestBase()
 
@@ -60,7 +60,7 @@ struct CloudKitSwiftDataConformanceTests {
             #expect(org.canBeDeleted == true)
         }
 
-        @Test("File attachment relationships never return nil")
+        @Test("File attachment relationships never return nil", .tags(.swiftdata, .medium, .parallel, .cloudkit, .dataModel, .fileAttachment, .validation, .critical))
         func fileAttachmentRelationshipsNeverReturnNil() async throws {
             let testBase = SwiftDataTestBase()
 
@@ -119,7 +119,7 @@ struct CloudKitSwiftDataConformanceTests {
     @Suite("Relationship Append/Remove Safety Tests")
     @MainActor
     struct RelationshipAppendRemoveSafetyTests {
-        @Test("Trip relationship mutations work safely")
+        @Test("Trip relationship mutations work safely", .tags(.swiftdata, .medium, .parallel, .cloudkit, .dataModel, .trip, .validation, .critical))
         func tripRelationshipMutationsWorkSafely() async throws {
             let testBase = SwiftDataTestBase()
 
@@ -155,7 +155,7 @@ struct CloudKitSwiftDataConformanceTests {
             #expect(trip.totalActivities == 0)
         }
 
-        @Test("Organization relationship mutations work safely")
+        @Test("Organization relationship mutations work safely", .tags(.swiftdata, .medium, .parallel, .cloudkit, .dataModel, .organization, .validation, .critical))
         func organizationRelationshipMutationsWorkSafely() async throws {
             let testBase = SwiftDataTestBase()
 
@@ -185,7 +185,7 @@ struct CloudKitSwiftDataConformanceTests {
             #expect(org.canBeDeleted == false)
         }
 
-        @Test("File attachment mutations work safely")
+        @Test("File attachment mutations work safely", .tags(.swiftdata, .medium, .parallel, .cloudkit, .dataModel, .fileAttachment, .validation, .critical))
         func fileAttachmentMutationsWorkSafely() async throws {
             let testBase = SwiftDataTestBase()
 
@@ -229,7 +229,7 @@ struct CloudKitSwiftDataConformanceTests {
     @Suite("None Organization Safety Tests")
     @MainActor
     struct NoneOrganizationSafetyTests {
-        @Test("None organization creation is safe")
+        @Test("None organization creation is safe", .tags(.swiftdata, .medium, .parallel, .cloudkit, .dataModel, .organization, .validation, .boundary))
         func noneOrganizationCreationIsSafe() async throws {
             let testBase = SwiftDataTestBase()
 
@@ -247,7 +247,7 @@ struct CloudKitSwiftDataConformanceTests {
             #expect(regularOrg.canBeDeleted == true)
         }
 
-        @Test("None organization relationship handling")
+        @Test("None organization relationship handling", .tags(.swiftdata, .medium, .parallel, .cloudkit, .dataModel, .organization, .validation, .boundary))
         func noneOrganizationRelationshipHandling() async throws {
             let testBase = SwiftDataTestBase()
 
@@ -276,7 +276,7 @@ struct CloudKitSwiftDataConformanceTests {
     @Suite("CloudKit Compatibility Tests")
     @MainActor
     struct CloudKitCompatibilityTests {
-        @Test("Empty relationships are efficiently stored")
+        @Test("Empty relationships are efficiently stored", .tags(.swiftdata, .medium, .parallel, .cloudkit, .dataModel, .sync, .validation, .critical))
         func emptyRelationshipsAreEfficientlyStored() async throws {
             let testBase = SwiftDataTestBase()
 
@@ -297,7 +297,7 @@ struct CloudKitSwiftDataConformanceTests {
             #expect(trip.activity.isEmpty)
         }
 
-        @Test("Relationships handle CloudKit sync scenarios")
+        @Test("Relationships handle CloudKit sync scenarios", .tags(.swiftdata, .medium, .parallel, .cloudkit, .dataModel, .sync, .validation, .critical))
         func relationshipsHandleCloudKitSyncScenarios() async throws {
             let testBase = SwiftDataTestBase()
 
@@ -335,7 +335,7 @@ struct CloudKitSwiftDataConformanceTests {
     @Suite("Data Consistency Tests")
     @MainActor
     struct DataConsistencyTests {
-        @Test("Relationship bidirectionality is maintained")
+        @Test("Relationship bidirectionality is maintained", .tags(.swiftdata, .medium, .parallel, .cloudkit, .dataModel, .consistency, .validation, .critical))
         func relationshipBidirectionalityIsMaintained() async throws {
             let testBase = SwiftDataTestBase()
 
@@ -367,7 +367,7 @@ struct CloudKitSwiftDataConformanceTests {
             #expect(activity.organization?.id == org.id)
         }
 
-        @Test("Complex relationship scenarios work")
+        @Test("Complex relationship scenarios work", .tags(.swiftdata, .medium, .parallel, .cloudkit, .dataModel, .consistency, .validation, .comprehensive))
         func complexRelationshipScenariosWork() async throws {
             let testBase = SwiftDataTestBase()
 
@@ -438,7 +438,7 @@ struct CloudKitSwiftDataConformanceTests {
     @Suite("Performance and Memory Tests")
     @MainActor
     struct PerformanceAndMemoryTests {
-        @Test("Large relationship collections perform well")
+        @Test("Large relationship collections perform well", .tags(.swiftdata, .slow, .serial, .cloudkit, .dataModel, .performance, .validation, .boundary))
         func largeRelationshipCollectionsPerformWell() async throws {
             let testBase = SwiftDataTestBase()
 
@@ -477,7 +477,7 @@ struct CloudKitSwiftDataConformanceTests {
             #expect(org.activity.count == 100)
         }
 
-        @Test("Memory usage is efficient with empty relationships")
+        @Test("Memory usage is efficient with empty relationships", .tags(.swiftdata, .medium, .parallel, .cloudkit, .dataModel, .memory, .validation, .boundary))
         func memoryUsageIsEfficientWithEmptyRelationships() async throws {
             let testBase = SwiftDataTestBase()
 
