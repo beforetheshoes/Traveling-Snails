@@ -210,6 +210,171 @@ struct ErrorStateManagementTests {
         #expect(epochRestored?.timestamp == epochBoundary, "Should preserve exact epoch boundary timestamp")
     }
 
+    @Test("Error state concurrent access and race conditions", .tags(.ui, .medium, .parallel, .swiftui, .errorHandling, .validation, .critical, .mainActor))
+    func testErrorStateConcurrentAccessAndRaceConditions() async throws {
+        _ = SwiftDataTestBase()
+
+        // Test 1: Concurrent serialization from multiple tasks
+        let baseErrorState = ViewErrorState(
+            errorType: .saveFailure,
+            message: "Concurrent test error",
+            isRecoverable: true,
+            retryCount: 0,
+            timestamp: Date()
+        )
+        
+        let concurrentSerializationTasks = 10
+        var serializationResults: [Data] = []
+        
+        await withTaskGroup(of: Data.self) { group in
+            for i in 0..<concurrentSerializationTasks {
+                group.addTask {
+                    let errorState = ViewErrorState(
+                        errorType: .saveFailure,
+                        message: "Concurrent serialization test \(i)",
+                        isRecoverable: true,
+                        retryCount: i,
+                        timestamp: Date()
+                    )
+                    return errorState.serialize()
+                }
+            }
+            
+            for await result in group {
+                serializationResults.append(result)
+            }
+        }
+        
+        #expect(serializationResults.count == concurrentSerializationTasks, "All concurrent serializations should complete")
+        
+        // Test 2: Concurrent deserialization with potential race conditions
+        let deserializationTasks = serializationResults.map { data in
+            Task {
+                return ViewErrorState.deserialize(from: data)
+            }
+        }
+        
+        var deserializationResults: [ViewErrorState?] = []
+        for task in deserializationTasks {
+            let result = await task.value
+            deserializationResults.append(result)
+        }
+        
+        let successfulDeserializations = deserializationResults.compactMap { $0 }
+        #expect(successfulDeserializations.count == concurrentSerializationTasks, "All concurrent deserializations should succeed")
+        
+        // Test 3: Race condition during error state manager operations
+        let errorStateManager = ErrorStateManager()
+        let concurrentManagerTasks = 50
+        
+        await withTaskGroup(of: Void.self) { group in
+            // Add errors concurrently
+            for i in 0..<concurrentManagerTasks {
+                group.addTask {
+                    let error = AppError.invalidInput("Concurrent error \(i)")
+                    errorStateManager.addError(error, context: "Concurrent test \(i)")
+                }
+            }
+            
+            // Simultaneously read from manager
+            for i in 0..<5 {
+                group.addTask {
+                    _ = errorStateManager.getDisplayableErrors()
+                    _ = errorStateManager.getUniqueErrors()
+                    _ = errorStateManager.getAggregatedErrors()
+                }
+            }
+            
+            await group.waitForAll()
+        }
+        
+        // Verify manager state after concurrent operations
+        let finalErrors = errorStateManager.getDisplayableErrors()
+        let uniqueErrors = errorStateManager.getUniqueErrors()
+        let aggregatedErrors = errorStateManager.getAggregatedErrors()
+        
+        #expect(finalErrors.count <= concurrentManagerTasks, "Error manager should handle concurrent additions")
+        #expect(uniqueErrors.count <= concurrentManagerTasks, "Unique error deduplication should work under concurrency")
+        #expect(aggregatedErrors.count > 0, "Aggregated errors should be computed correctly under concurrency")
+        
+        // Test 4: Race condition during error state updates
+        let mutableErrorState = ViewErrorState(
+            errorType: .networkFailure,
+            message: "Original message",
+            isRecoverable: true,
+            retryCount: 0,
+            timestamp: Date()
+        )
+        
+        let updateTasks = 20
+        var updateResults: [Data] = []
+        
+        await withTaskGroup(of: Data.self) { group in
+            for i in 0..<updateTasks {
+                group.addTask {
+                    // Simulate concurrent access to error state data
+                    let updatedState = ViewErrorState(
+                        errorType: mutableErrorState.errorType,
+                        message: "Updated message \(i)",
+                        isRecoverable: mutableErrorState.isRecoverable,
+                        retryCount: mutableErrorState.retryCount + i,
+                        timestamp: mutableErrorState.timestamp
+                    )
+                    return updatedState.serialize()
+                }
+            }
+            
+            for await result in group {
+                updateResults.append(result)
+            }
+        }
+        
+        #expect(updateResults.count == updateTasks, "All concurrent updates should complete")
+        
+        // Verify all updates produced valid serialized data
+        let validUpdates = updateResults.compactMap { ViewErrorState.deserialize(from: $0) }
+        #expect(validUpdates.count == updateTasks, "All concurrent updates should produce valid error states")
+        
+        // Test 5: Stress test with rapid concurrent operations
+        let stressTestDuration = 1.0 // 1 second
+        let stressTestStart = Date()
+        var stressTestOperations = 0
+        
+        await withTaskGroup(of: Int.self) { group in
+            for _ in 0..<10 { // 10 concurrent workers
+                group.addTask {
+                    var operationCount = 0
+                    while Date().timeIntervalSince(stressTestStart) < stressTestDuration {
+                        let errorState = ViewErrorState(
+                            errorType: .validationError,
+                            message: "Stress test \(operationCount)",
+                            isRecoverable: true,
+                            retryCount: operationCount,
+                            timestamp: Date()
+                        )
+                        
+                        let serialized = errorState.serialize()
+                        let deserialized = ViewErrorState.deserialize(from: serialized)
+                        
+                        if deserialized != nil {
+                            operationCount += 1
+                        }
+                    }
+                    return operationCount
+                }
+            }
+            
+            for await count in group {
+                stressTestOperations += count
+            }
+        }
+        
+        #expect(stressTestOperations > 100, "Stress test should complete many operations under concurrency")
+        
+        let stressTestActualDuration = Date().timeIntervalSince(stressTestStart)
+        #expect(stressTestActualDuration < 2.0, "Stress test should complete within reasonable time")
+    }
+
     @Test("Error state memory management during serialization", .tags(.ui, .medium, .parallel, .swiftui, .errorHandling, .performance, .validation, .mainActor))
     func testErrorStateMemoryManagement() async throws {
         _ = SwiftDataTestBase()

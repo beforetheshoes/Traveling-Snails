@@ -178,11 +178,19 @@ custom_rules:
     regex: '(?:func\s+\w+|init)\s*\([^)]*\w+:\s*\[(?:Trip|Activity|Lodging|Transportation|Organization|Address)\]'
     message: "Avoid passing SwiftData model arrays as parameters - use @Query in consuming view instead"
     severity: warning
-    # Exclusions documented:
+    # EXCLUSIONS REVIEW TRACKING (Last reviewed: 2025-07-09, Next review: 2025-08-09)
     # - Tests: Test files need to pass model arrays for test setup and verification
+    #   Justification: Test infrastructure requires direct model array access for setup/verification
+    #   Review action: Consider if mock/protocol approach could eliminate need for exclusion
     # - OrganizationManager: Manager classes return arrays (not parameters) for business logic
+    #   Justification: Manager pattern requires array returns for business logic operations
+    #   Review action: Evaluate if @Query can be moved to view layer to eliminate exclusion
     # - UnifiedNavigationView: Uses generic protocol abstraction [Item], not concrete SwiftData models
+    #   Justification: Generic protocol abstraction doesn't violate SwiftData-specific rule intent
+    #   Review action: Verify protocol abstractions remain generic and don't become SwiftData-specific
     # - UnifiedNavigationRootView: Uses generic protocol abstraction [Item], not concrete SwiftData models
+    #   Justification: Generic protocol abstraction doesn't violate SwiftData-specific rule intent
+    #   Review action: Verify protocol abstractions remain generic and don't become SwiftData-specific
     excluded: ".*Tests.*\\.swift$|.*OrganizationManager\\.swift$|.*UnifiedNavigationView\\.swift$|.*UnifiedNavigationRootView\\.swift$"
     
   # MODERN SWIFT: Enforce @Observable over @StateObject

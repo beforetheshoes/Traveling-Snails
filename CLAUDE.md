@@ -69,6 +69,67 @@ jq -r '.[] | select(.severity == "error") | "\(.file):\(.line) \(.rule) - \(.rea
 - **For development**: Use `run-all-tests.sh` for complete LOCAL testing (will timeout in Claude Code), then validate with detection script
 - **Golden Rule**: Every test execution MUST be followed by `detect-test-failures.sh`
 
+### Build Configuration Requirements for Test Frameworks
+
+#### DEBUG Build Requirements
+**CRITICAL**: Test frameworks must be available in DEBUG builds for accessibility testing infrastructure to function properly.
+
+##### Required Test Framework Availability
+- **Swift Testing Framework**: Must be available via `canImport(Testing)` in DEBUG builds
+- **XCTest Framework**: Must be available via `canImport(XCTest)` in DEBUG builds
+- **Accessibility Testing**: Depends on both frameworks for comprehensive coverage
+
+##### Build Configuration Setup
+```swift
+// Proper import pattern for test framework dependencies
+#if DEBUG && canImport(Testing)
+import Testing
+#elseif DEBUG
+// Testing framework not available - test-related code will be excluded
+#endif
+
+#if DEBUG && canImport(XCTest)
+import XCTest
+#elseif DEBUG
+// XCTest framework not available - test-related code will be excluded
+#endif
+```
+
+##### Verification Commands
+```bash
+# Verify test frameworks are available in DEBUG builds
+swift -c "import Testing" 2>/dev/null && echo "✅ Testing framework available" || echo "❌ Testing framework missing"
+swift -c "import XCTest" 2>/dev/null && echo "✅ XCTest framework available" || echo "❌ XCTest framework missing"
+
+# Check for framework availability in specific files
+grep -r "canImport(Testing)" "Traveling Snails/Helpers/" || echo "⚠️  No Testing framework checks found"
+grep -r "canImport(XCTest)" "Traveling Snails/Helpers/" || echo "⚠️  No XCTest framework checks found"
+```
+
+##### Build Safety Requirements
+1. **Conditional Compilation**: All test-related code must be wrapped in `#if DEBUG` blocks
+2. **Framework Availability Checks**: Use `canImport()` to verify framework availability
+3. **Fallback Handling**: Provide explicit fallback behavior when frameworks are unavailable
+4. **Documentation**: Document framework requirements in code comments
+
+##### Accessibility Testing Dependencies
+- **VoiceOver testing**: Requires both Testing and XCTest frameworks
+- **Switch Control testing**: Requires Testing framework for assertions
+- **Voice Control testing**: Requires XCTest framework for interaction simulation
+- **Screen Reader testing**: Requires Testing framework for structure validation
+
+##### Troubleshooting Framework Issues
+**If test frameworks are not available:**
+1. Check Xcode version compatibility
+2. Verify DEBUG build configuration
+3. Ensure proper import guards are in place
+4. Review build logs for framework loading errors
+
+**Common Issues:**
+- Framework available in Xcode but not command line builds
+- Missing framework dependencies in Swift Package Manager
+- Conditional compilation flags not set correctly
+
 ### Chunked Testing System
 The chunked testing system ensures 100% test coverage while working within Claude Code's 2-minute timeout constraints:
 
@@ -282,10 +343,115 @@ struct BadView: View {
 - Use secure CloudKit record zones
 - Implement proper data validation
 
+### SwiftLint Rule Exclusions Review Process
+**MANDATORY PERIODIC REVIEW**: SwiftLint rule exclusions must be reviewed regularly to ensure they remain necessary and don't introduce security vulnerabilities.
+
+#### Review Schedule
+- **Monthly**: Review all exclusions during regular code maintenance
+- **Before major releases**: Comprehensive review of all exclusions
+- **After dependency updates**: Check if exclusions are still needed
+- **When adding new exclusions**: Justify necessity and set review date
+
+#### Review Checklist
+1. **Verify exclusion is still necessary**:
+   - Can the underlying issue be fixed instead of excluded?
+   - Has the codebase changed making the exclusion obsolete?
+   - Are there new language features that eliminate the need?
+
+2. **Security impact assessment**:
+   - Does the exclusion introduce security vulnerabilities?
+   - Are excluded rules related to sensitive data handling?
+   - Could the exclusion mask important security issues?
+
+3. **Documentation requirements**:
+   - Clear justification for why exclusion is needed
+   - Examples of code patterns that require the exclusion
+   - Timeline for potential removal of exclusion
+
+#### Current Exclusions (as of 2025-07-09)
+- **Tests exclusions**: Test files need to pass model arrays for test setup
+- **OrganizationManager exclusions**: Business logic requires array returns
+- **UnifiedNavigationView exclusions**: Generic protocol abstractions
+- **Next review due**: 2025-08-09
+
+#### Process for Adding New Exclusions
+1. **Try to fix the underlying issue first**
+2. **If exclusion is necessary**: Add detailed justification comment
+3. **Set review date**: Maximum 6 months from creation
+4. **Update review checklist**: Add to monthly review process
+
 ### Performance Guidelines
 - Use `@Query` with proper predicates and sorting
 - Implement lazy loading for large datasets
 - Optimize SwiftUI view updates with proper state management
+
+#### Performance Test Baselines and Monitoring
+**CRITICAL**: These baselines ensure consistent performance across development cycles and prevent performance regressions.
+
+##### Current Performance Baselines (as of 2025-07-09)
+**Trip Operations:**
+- **Trip insertion**: 10ms baseline (average < 20ms, maximum < 100ms)
+- **Trip query**: 5ms baseline (average < 10ms, maximum < 50ms)
+- **Trip deletion**: 15ms baseline (average < 30ms, maximum < 75ms)
+
+**Batch Operations:**
+- **Batch query**: 50ms baseline (average < 100ms, maximum < 200ms)
+- **Batch insertion**: 100ms baseline (average < 200ms, maximum < 500ms)
+- **Batch updates**: 75ms baseline (average < 150ms, maximum < 300ms)
+
+**Sync Operations:**
+- **Sync service**: 1000ms baseline (adjusted from 500ms for mock overhead)
+- **CloudKit sync**: 2000ms baseline (average < 3000ms, maximum < 5000ms)
+- **Conflict resolution**: 500ms baseline (average < 1000ms, maximum < 1500ms)
+
+**Error Handling Performance:**
+- **Error state serialization**: 1ms baseline (average < 2ms, maximum < 5ms)
+- **Error state deserialization**: 2ms baseline (average < 5ms, maximum < 10ms)
+- **Rapid error processing**: 5000ms baseline (50 errors, average < 7000ms)
+- **Concurrent error operations**: 2000ms baseline (10 workers, average < 3000ms)
+
+##### Baseline Justification
+**Why these baselines are appropriate:**
+1. **Trip operations**: Reflect real-world SwiftData performance on iOS devices
+2. **Batch operations**: Account for SwiftData overhead and CloudKit sync delays
+3. **Sync service**: Includes mock overhead and network simulation delays
+4. **Error handling**: Balances responsiveness with comprehensive error processing
+
+##### Performance Monitoring Process
+**Automated Monitoring:**
+- Performance tests run in Chunk 4 (Performance + Security Tests)
+- Baselines validated during every comprehensive test run
+- Regression detection through performance test suite
+
+**Manual Monitoring:**
+- Weekly performance baseline review
+- Monthly performance trend analysis
+- Quarterly baseline adjustment based on iOS/hardware changes
+
+##### Performance Regression Detection
+**Immediate Actions when baselines are exceeded:**
+1. **Investigate root cause**: Profile the specific operation that regressed
+2. **Determine impact**: Assess if regression affects user experience
+3. **Fix or adjust**: Either fix the regression or adjust baseline if justified
+4. **Update documentation**: Record any baseline changes with justification
+
+**Alerting Thresholds:**
+- **Warning**: 150% of baseline (investigate but don't block)
+- **Error**: 200% of baseline (blocks commit/deployment)
+- **Critical**: 300% of baseline (requires immediate attention)
+
+##### Performance Test Maintenance
+**Baseline Review Schedule:**
+- **Monthly**: Review all baselines for relevance
+- **Quarterly**: Comprehensive baseline adjustment
+- **After iOS updates**: Verify baselines still appropriate
+- **After hardware changes**: Adjust baselines for new device capabilities
+
+**Baseline Adjustment Criteria:**
+- iOS version changes that affect SwiftData performance
+- Hardware improvements that change baseline performance
+- Application architecture changes that impact performance
+- Third-party dependency updates affecting performance
 
 ### Error Handling
 - Use structured error types with localized descriptions
