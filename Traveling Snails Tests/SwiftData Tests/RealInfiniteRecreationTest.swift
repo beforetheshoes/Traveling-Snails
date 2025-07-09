@@ -11,7 +11,7 @@ import Testing
 
 @Suite("Real Infinite Recreation Test")
 struct RealInfiniteRecreationTest {
-    @Test("Reproduce the actual infinite recreation logs when adding activities")
+    @Test("Reproduce the actual infinite recreation logs when adding activities", .tags(.swiftdata, .medium, .serial, .dataModel, .regression, .critical, .boundary))
     @MainActor
     func testActualInfiniteRecreationScenario() async throws {
         let testBase = SwiftDataTestBase()
@@ -104,7 +104,7 @@ struct RealInfiniteRecreationTest {
         // during view updates, which is what the caching approach attempts to solve
     }
 
-    @Test("Demonstrate the proper pattern to avoid infinite recreation")
+    @Test("Demonstrate the proper pattern to avoid infinite recreation", .tags(.swiftdata, .medium, .parallel, .dataModel, .regression, .validation, .critical))
     @MainActor
     func testProperPatternToAvoidRecreation() async throws {
         let testBase = SwiftDataTestBase()

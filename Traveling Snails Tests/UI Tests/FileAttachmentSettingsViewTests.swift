@@ -11,7 +11,7 @@ import Testing
 @Suite("FileAttachmentSettingsView Tests")
 @MainActor
 struct FileAttachmentSettingsViewTests {
-    @Test("Orphaned files detection logic - no orphaned files")
+    @Test("Orphaned files detection logic - no orphaned files", .tags(.ui, .medium, .parallel, .swiftui, .settings, .fileAttachment, .validation, .mainActor))
     func orphanedFilesDetectionNoOrphans() async throws {
         let testBase = SwiftDataTestBase()
         try testBase.verifyDatabaseEmpty()
@@ -66,7 +66,7 @@ struct FileAttachmentSettingsViewTests {
                 "Should generate correct 'no orphaned files' message")
     }
 
-    @Test("Orphaned files detection logic - multiple orphaned files")
+    @Test("Orphaned files detection logic - multiple orphaned files", .tags(.ui, .medium, .parallel, .swiftui, .settings, .fileAttachment, .validation, .mainActor))
     func orphanedFilesDetectionMultipleOrphans() async throws {
         let testBase = SwiftDataTestBase()
         try testBase.verifyDatabaseEmpty()
@@ -110,7 +110,7 @@ struct FileAttachmentSettingsViewTests {
                 "Should generate correct message for multiple orphaned files")
     }
 
-    @Test("Orphaned files detection logic - single orphaned file")
+    @Test("Orphaned files detection logic - single orphaned file", .tags(.ui, .medium, .parallel, .swiftui, .settings, .fileAttachment, .validation, .mainActor))
     func orphanedFilesDetectionSingleOrphan() async throws {
         let testBase = SwiftDataTestBase()
         try testBase.verifyDatabaseEmpty()
@@ -140,7 +140,7 @@ struct FileAttachmentSettingsViewTests {
                 "Should generate correct singular message for one orphaned file")
     }
 
-    @Test("Orphaned files cleanup behavior")
+    @Test("Orphaned files cleanup behavior", .tags(.ui, .medium, .parallel, .swiftui, .settings, .fileAttachment, .validation, .mainActor))
     func orphanedFilesCleanupBehavior() async throws {
         let testBase = SwiftDataTestBase()
         try testBase.verifyDatabaseEmpty()
@@ -195,7 +195,7 @@ struct FileAttachmentSettingsViewTests {
                 "Should generate correct cleanup success message")
     }
 
-    @Test("Message formatting consistency")
+    @Test("Message formatting consistency", .tags(.ui, .fast, .parallel, .swiftui, .settings, .fileAttachment, .validation, .localization))
     func messageFormattingConsistency() {
         // Test singular vs plural message formatting
         let testCases = [

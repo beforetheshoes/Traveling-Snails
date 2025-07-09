@@ -13,7 +13,7 @@ import UniformTypeIdentifiers
 struct ImportPermissionTests {
     @Suite("Database Import Permission Tests")
     struct DatabaseImportPermissionTests {
-        @Test("Database import should handle file access permission failures gracefully")
+        @Test("Database import should handle file access permission failures gracefully", .tags(.unit, .medium, .serial, .permissions, .dataImport, .errorHandling, .filesystem))
         @MainActor
         func testDatabaseImportFileAccessFailure() async {
             // This test will FAIL initially - no proper permission error handling exists
@@ -33,7 +33,7 @@ struct ImportPermissionTests {
             #expect(result.tripsImported == 0, "No trips should be imported on permission failure")
         }
 
-        @Test("Database import should validate file readability before processing")
+        @Test("Database import should validate file readability before processing", .tags(.unit, .medium, .serial, .permissions, .dataImport, .validation, .filesystem))
         @MainActor
         func testDatabaseImportFileReadabilityCheck() async {
             // This test will FAIL initially - no pre-validation exists
@@ -52,7 +52,7 @@ struct ImportPermissionTests {
                    "Error should mention read/access issues")
         }
 
-        @Test("Database import should provide user-friendly error messages for permission failures")
+        @Test("Database import should provide user-friendly error messages for permission failures", .tags(.unit, .medium, .serial, .permissions, .dataImport, .errorHandling, .userInterface))
         @MainActor
         func testDatabaseImportUserFriendlyErrors() async {
             // This test will FAIL initially - errors are not user-friendly
@@ -78,7 +78,7 @@ struct ImportPermissionTests {
 
     @Suite("Security-Scoped Resource Tests")
     struct SecurityScopedResourceTests {
-        @Test("EmbeddedFileAttachmentManager should handle security-scoped resource failures")
+        @Test("EmbeddedFileAttachmentManager should handle security-scoped resource failures", .tags(.unit, .medium, .serial, .permissions, .fileAttachment, .security, .errorHandling))
         @MainActor
         func testSecurityScopedResourceFailure() {
             // This test will FAIL initially - no proper error handling for security-scoped resources
@@ -93,7 +93,7 @@ struct ImportPermissionTests {
             #expect(attachment == nil, "Should return nil for inaccessible files")
         }
 
-        @Test("EmbeddedFileAttachmentManager should provide detailed error information for access failures")
+        @Test("EmbeddedFileAttachmentManager should provide detailed error information for access failures", .tags(.unit, .medium, .serial, .permissions, .fileAttachment, .errorHandling, .validation))
         @MainActor
         func testDetailedErrorInformationForAccessFailures() {
             // This test will FAIL initially - no detailed error reporting exists
@@ -112,7 +112,7 @@ struct ImportPermissionTests {
             // This test documents the need for better error reporting
         }
 
-        @Test("File access validation should distinguish between different failure types")
+        @Test("File access validation should distinguish between different failure types", .tags(.unit, .medium, .serial, .permissions, .fileAttachment, .validation, .boundary))
         @MainActor
         func testFileAccessFailureTypes() {
             // This test will FAIL initially - no distinction between failure types
@@ -140,7 +140,7 @@ struct ImportPermissionTests {
 
     @Suite("File Importer Permission Tests")
     struct FileImporterPermissionTests {
-        @Test("Settings file import should handle permission failures gracefully")
+        @Test("Settings file import should handle permission failures gracefully", .tags(.unit, .medium, .serial, .permissions, .settings, .dataImport, .errorHandling))
         @MainActor
         func testSettingsFileImportPermissionFailure() async {
             // This test will FAIL initially - permission failures are not handled gracefully
@@ -164,7 +164,7 @@ struct ImportPermissionTests {
             #expect(Bool(true), "This test documents the need for better permission error handling")
         }
 
-        @Test("File importer should handle document access scope properly")
+        @Test("File importer should handle document access scope properly", .tags(.unit, .medium, .serial, .permissions, .dataImport, .security, .filesystem))
         @MainActor
         func testDocumentAccessScopeHandling() async {
             // This test will FAIL initially - no proper document access scope handling
@@ -219,7 +219,7 @@ struct ImportPermissionTests {
 
     @Suite("Error Message Quality Tests")
     struct ErrorMessageQualityTests {
-        @Test("Permission error messages should guide users to solutions")
+        @Test("Permission error messages should guide users to solutions", .tags(.unit, .fast, .parallel, .permissions, .errorHandling, .userInterface, .validation))
         @MainActor
         func testPermissionErrorGuidance() {
             // This test will FAIL initially - error messages don't provide guidance
@@ -236,7 +236,7 @@ struct ImportPermissionTests {
             #expect(errorMessage.count > 30, "Should be descriptive enough to be helpful")
         }
 
-        @Test("Import errors should distinguish between different permission types")
+        @Test("Import errors should distinguish between different permission types", .tags(.unit, .fast, .parallel, .permissions, .dataImport, .errorHandling, .validation))
         @MainActor
         func testPermissionErrorTypes() {
             // This test will FAIL initially - we don't have specific permission error types

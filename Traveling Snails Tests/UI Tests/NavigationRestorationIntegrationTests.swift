@@ -39,7 +39,7 @@ struct NavigationRestorationIntegrationTests {
 
     // MARK: - ActivityNavigationReference Tests
 
-    @Test("ActivityNavigationReference correctly stores and recreates DestinationType for Activity")
+    @Test("ActivityNavigationReference correctly stores and recreates DestinationType for Activity", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .activity, .validation, .mainActor))
     @MainActor func testActivityNavigationReferenceForActivity() async throws {
         let testBase = SwiftDataTestBase()
 
@@ -80,7 +80,7 @@ struct NavigationRestorationIntegrationTests {
         }
     }
 
-    @Test("ActivityNavigationReference correctly stores and recreates DestinationType for Lodging")
+    @Test("ActivityNavigationReference correctly stores and recreates DestinationType for Lodging", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .activity, .validation, .mainActor))
     @MainActor func testActivityNavigationReferenceForLodging() async {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try! ModelContainer(for: Trip.self, Lodging.self, configurations: config)
@@ -116,7 +116,7 @@ struct NavigationRestorationIntegrationTests {
         }
     }
 
-    @Test("ActivityNavigationReference correctly stores and recreates DestinationType for Transportation")
+    @Test("ActivityNavigationReference correctly stores and recreates DestinationType for Transportation", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .activity, .validation, .mainActor))
     @MainActor func testActivityNavigationReferenceForTransportation() async {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try! ModelContainer(for: Trip.self, Transportation.self, configurations: config)
@@ -152,7 +152,7 @@ struct NavigationRestorationIntegrationTests {
         }
     }
 
-    @Test("ActivityNavigationReference gracefully handles missing activity")
+    @Test("ActivityNavigationReference gracefully handles missing activity", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .activity, .errorHandling, .validation, .mainActor))
     @MainActor func testActivityNavigationReferenceHandlesMissingActivity() async throws {
         let testBase = SwiftDataTestBase()
 
@@ -189,7 +189,7 @@ struct NavigationRestorationIntegrationTests {
 
     // MARK: - Codable Tests
 
-    @Test("ActivityNavigationReference is properly Codable")
+    @Test("ActivityNavigationReference is properly Codable", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .activity, .validation, .mainActor))
     @MainActor func testActivityNavigationReferenceCodeable() async throws {
         let testBase = SwiftDataTestBase()
 
@@ -229,7 +229,7 @@ struct NavigationRestorationIntegrationTests {
 
     // MARK: - UserDefaults Integration Tests
 
-    @Test("Navigation restoration works with UserDefaults")
+    @Test("Navigation restoration works with UserDefaults", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .activity, .validation, .mainActor))
     @MainActor func testNavigationRestorationWithUserDefaults() async throws {
         let testBase = SwiftDataTestBase()
 
@@ -278,7 +278,7 @@ struct NavigationRestorationIntegrationTests {
         UserDefaults.standard.removeObject(forKey: key)
     }
 
-    @Test("Navigation state cleanup works correctly")
+    @Test("Navigation state cleanup works correctly", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .activity, .validation, .mainActor))
     @MainActor func testNavigationStateCleanup() async throws {
         let testBase = SwiftDataTestBase()
 
@@ -313,7 +313,7 @@ struct NavigationRestorationIntegrationTests {
 
     // MARK: - DestinationType Tests
 
-    @Test("DestinationType activityId property works correctly")
+    @Test("DestinationType activityId property works correctly", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .activity, .validation, .mainActor))
     @MainActor func testDestinationTypeActivityId() async {
         let (container, trip, activity) = makeTestEnvironment()
 
@@ -337,7 +337,7 @@ struct NavigationRestorationIntegrationTests {
         #expect(transportationDestination.activityId == transportation.id)
     }
 
-    @Test("DestinationType equality works correctly")
+    @Test("DestinationType equality works correctly", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .activity, .validation, .mainActor))
     @MainActor func testDestinationTypeEquality() async {
         let (container, trip, activity) = makeTestEnvironment()
 
@@ -359,7 +359,7 @@ struct NavigationRestorationIntegrationTests {
         #expect(destination1 != destination3)
     }
 
-    @Test("DestinationType hashing works correctly")
+    @Test("DestinationType hashing works correctly", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .activity, .validation, .mainActor))
     @MainActor func testDestinationTypeHashing() async {
         let (container, trip, activity) = makeTestEnvironment()
 

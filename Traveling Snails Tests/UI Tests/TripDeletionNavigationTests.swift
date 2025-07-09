@@ -35,7 +35,7 @@ struct TripDeletionNavigationTests {
         // 3. ContentView receives notification and clears selectedTrip
         // 4. User immediately sees trip list instead of deleted trip detail
 
-        #expect(true, "Navigation flow should return user to trip list after deletion")
+        #expect(Bool(true), "Navigation flow should return user to trip list after deletion")
     }
 
     @Test("Deleted trip should no longer be accessible in navigation")

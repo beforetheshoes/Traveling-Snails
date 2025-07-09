@@ -13,14 +13,14 @@ import Testing
 struct LoggerStandardizationTests {
     @Suite("Logger.secure Pattern Tests")
     struct LoggerSecureTests {
-        @Test("Logger.secure creates proper os.Logger instance")
+        @Test("Logger.secure creates proper os.Logger instance", .tags(.unit, .fast, .parallel, .logging, .security, .validation))
         func testLoggerSecureCreation() {
             let logger = Logger.secure(category: .app)
             // Verify it's an os.Logger by testing it doesn't crash
             logger.debug("Test message")
         }
 
-        @Test("Logger.secure uses correct subsystem and category")
+        @Test("Logger.secure uses correct subsystem and category", .tags(.unit, .fast, .parallel, .logging, .security, .validation))
         func testLoggerSecureSubsystemAndCategory() {
             _ = Bundle.main.bundleIdentifier ?? "com.travelingsnails.app"
 
@@ -33,7 +33,7 @@ struct LoggerStandardizationTests {
             syncLogger.debug("Sync logger test")
         }
 
-        @Test("Logger.secure supports all categories")
+        @Test("Logger.secure supports all categories", .tags(.unit, .fast, .parallel, .logging, .security, .validation))
         func testLoggerSecureAllCategories() {
             for category in Traveling_Snails.Logger.Category.allCases {
                 let logger = Traveling_Snails.Logger.secure(category: category)
@@ -42,7 +42,7 @@ struct LoggerStandardizationTests {
             }
         }
 
-        @Test("Logger.secure privacy levels work correctly")
+        @Test("Logger.secure privacy levels work correctly", .tags(.unit, .medium, .serial, .logging, .security, .validation, .errorHandling))
         func testLoggerSecurePrivacyLevels() {
             let logHandler = TestLogHandler()
             logHandler.startCapturing()
@@ -65,7 +65,7 @@ struct LoggerStandardizationTests {
 
     @Suite("Migration Pattern Validation Tests")
     struct MigrationPatternTests {
-        @Test("Logger.shared pattern still works during migration")
+        @Test("Logger.shared pattern still works during migration", .tags(.unit, .medium, .serial, .logging, .migration, .compatibility, .regression))
         func testLoggerSharedCompatibility() {
             let logHandler = TestLogHandler()
             logHandler.startCapturing()
@@ -82,7 +82,7 @@ struct LoggerStandardizationTests {
             #expect(violations.isEmpty, "Existing Logger.shared pattern should not expose sensitive data")
         }
 
-        @Test("Both patterns can coexist safely")
+        @Test("Both patterns can coexist safely", .tags(.unit, .medium, .serial, .logging, .migration, .compatibility, .regression))
         func testPatternCoexistence() {
             let logHandler = TestLogHandler()
             logHandler.startCapturing()
@@ -100,7 +100,7 @@ struct LoggerStandardizationTests {
             #expect(violations.isEmpty, "Both logging patterns should coexist safely")
         }
 
-        @Test("Category consistency between patterns")
+        @Test("Category consistency between patterns", .tags(.unit, .medium, .serial, .logging, .migration, .compatibility, .validation))
         func testCategoryConsistency() {
             let logHandler = TestLogHandler()
             logHandler.startCapturing()
@@ -124,7 +124,7 @@ struct LoggerStandardizationTests {
 
     @Suite("High-Impact File Migration Validation")
     struct HighImpactFileMigrationTests {
-        @Test("SyncManager logging patterns are safe")
+        @Test("SyncManager logging patterns are safe", .tags(.unit, .medium, .serial, .logging, .security, .sync, .migration))
         func testSyncManagerLoggingPatterns() {
             let logHandler = TestLogHandler()
             logHandler.startCapturing()
@@ -143,7 +143,7 @@ struct LoggerStandardizationTests {
             #expect(violations.isEmpty, "SyncManager logging should not expose sensitive data")
         }
 
-        @Test("EditTripView logging patterns are safe")
+        @Test("EditTripView logging patterns are safe", .tags(.unit, .medium, .serial, .logging, .security, .trip, .migration))
         func testEditTripViewLoggingPatterns() {
             let logHandler = TestLogHandler()
             logHandler.startCapturing()
@@ -162,7 +162,7 @@ struct LoggerStandardizationTests {
             #expect(violations.isEmpty, "EditTripView logging should not expose sensitive data")
         }
 
-        @Test("BiometricAuthManager logging patterns are safe")
+        @Test("BiometricAuthManager logging patterns are safe", .tags(.unit, .medium, .serial, .logging, .security, .authentication, .biometric))
         func testBiometricAuthManagerLoggingPatterns() {
             let logHandler = TestLogHandler()
             logHandler.startCapturing()
@@ -183,7 +183,7 @@ struct LoggerStandardizationTests {
 
     @Suite("Performance and Consistency Tests")
     struct PerformanceConsistencyTests {
-        @Test("Logger.secure performance is acceptable")
+        @Test("Logger.secure performance is acceptable", .tags(.unit, .medium, .serial, .logging, .performance, .validation))
         func testLoggerSecurePerformance() {
             let startTime = CFAbsoluteTimeGetCurrent()
 
@@ -200,7 +200,7 @@ struct LoggerStandardizationTests {
             #expect(duration < 1.0, "Logger.secure should have acceptable performance")
         }
 
-        @Test("Category assignment consistency")
+        @Test("Category assignment consistency", .tags(.unit, .medium, .serial, .logging, .validation, .consistency))
         func testCategoryAssignmentConsistency() {
             let logHandler = TestLogHandler()
             logHandler.startCapturing()
@@ -224,7 +224,7 @@ struct LoggerStandardizationTests {
 
     @Suite("Regression Prevention Tests")
     struct RegressionPreventionTests {
-        @Test("No infinite recreation from logging")
+        @Test("No infinite recreation from logging", .tags(.unit, .medium, .serial, .logging, .regression, .errorHandling, .boundary))
         func testNoInfiniteRecreationFromLogging() {
             var logCount = 0
             let maxExpectedLogs = 10
@@ -247,7 +247,7 @@ struct LoggerStandardizationTests {
             #expect(logs.count <= maxExpectedLogs * 2, "Log count should be reasonable") // Allow some tolerance
         }
 
-        @Test("Logger migration does not affect SwiftData operations")
+        @Test("Logger migration does not affect SwiftData operations", .tags(.unit, .medium, .serial, .logging, .swiftdata, .migration, .compatibility))
         func testLoggerMigrationSwiftDataCompatibility() {
             let logHandler = TestLogHandler()
             logHandler.startCapturing()

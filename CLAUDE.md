@@ -17,22 +17,177 @@ You are an expert SwiftUI programmer working on the Traveling Snails travel plan
 
 If ANY test fails, if ANY warning exists, if build fails → **KEEP DEBUGGING**
 
-### Testing Commands
-**ALWAYS use the provided scripts:**
-- `./Scripts/run-all-tests.sh` - Complete test suite
-- `./Scripts/run_tests.sh` - Run tests only  
-- `./Scripts/run_build.sh` - Build only
+### 🚨 CRITICAL TEST FAILURE DETECTION
+**CHUNK SCRIPTS HIDE INDIVIDUAL TEST FAILURES - YOU MUST DETECT THEM MANUALLY:**
 
-**Targeted testing examples:**
-- `./Scripts/run-all-tests.sh --unit-only` - Just unit tests when developing features
-- `./Scripts/run-all-tests.sh --security-only` - Security tests for sensitive changes
-- `./Scripts/run-all-tests.sh --lint-only` - Quick style check before commit
-- `./Scripts/run-all-tests.sh --unit-only --no-build` - Fast iteration without rebuild
-- `./Scripts/run-all-tests.sh --parallel --coverage` - Full suite with coverage analysis
-- `./Scripts/run-all-tests.sh --cache --quick` - Skip unchanged tests, fast startup
+#### 🔍 MANDATORY: Always Check Individual Test Failures
+**The chunk scripts report "PASSED" even when individual tests fail. You MUST:**
+
+1. **After ANY chunk test**: Check for .xcresult files and parse them for failures
+2. **Parse xcresult files** using: `xcrun xcresulttool get --legacy --format json --path ./[filename].xcresult | jq -r '.issues.testFailureSummaries._values[] | "\(.documentLocationInCreatingWorkspace.url._value):\(.documentLocationInCreatingWorkspace.concreteLocation.line._value) \(.testCaseName._value): \(.message._value)"'`
+3. **Never trust chunk-level "PASSED" status** - always verify individual test results
+
+#### 📋 Test Failure Detection Commands
+```bash
+# Find all xcresult files
+find . -name "*.xcresult" -type d
+
+# Parse failures from xcresult (replace filename)
+xcrun xcresulttool get --legacy --format json --path ./manual-test-results.xcresult | jq -r '.issues.testFailureSummaries._values[] | "\(.documentLocationInCreatingWorkspace.url._value):\(.documentLocationInCreatingWorkspace.concreteLocation.line._value) \(.testCaseName._value): \(.message._value)"'
+
+# Find SwiftLint issues
+jq -r '.[] | select(.severity == "error") | "\(.file):\(.line) \(.rule) - \(.reason)"' test-swiftlint.json
+```
+
+### Testing Commands
+**ALWAYS use the provided scripts, BUT ALWAYS CHECK FOR INDIVIDUAL FAILURES:**
+
+#### For Claude Code (Timeout-Friendly):
+**CRITICAL: Chunks are for EXECUTION only. ALWAYS validate with detection script:**
+
+- `./Scripts/test-chunk-0-config.sh` - **REQUIRED FIRST** - Setup + Build (~47s)
+- `./Scripts/test-chunk-1.sh` - Unit Tests (~66s) 
+- `./Scripts/test-chunk-2.sh` - Integration + SwiftData Tests (~45s)
+- `./Scripts/test-chunk-3.sh` - UI + Accessibility Tests (~120s+ may timeout)
+- `./Scripts/test-chunk-4.sh` - Performance + Security Tests (~90s)
+- `./Scripts/test-chunk-5.sh` - SwiftLint Analysis (~60s)
+
+**🚨 MANDATORY AFTER ANY TEST EXECUTION**: `./Scripts/detect-test-failures.sh`
+
+**⚠️ NEVER TRUST CHUNK EXIT CODES** - Chunks report "PASSED" even when individual tests fail!
+
+#### For Local Development:
+- `./Scripts/run-all-tests.sh` - Complete test suite (5+ minutes) - **LOCAL ONLY, will timeout in Claude Code**
+- Individual chunk execution for specific test categories
+- Always followed by `./Scripts/detect-test-failures.sh` validation
 
 ### Testing Infrastructure
-- When testing and/or building, ALWAYS use run_tests.sh or run_build.sh. If the test you need isn't in one of those scripts, then add it.
+- **For Claude Code**: 
+  - **Execution**: Run chunks individually to avoid 2-minute timeouts
+  - **Validation**: ALWAYS run `./Scripts/detect-test-failures.sh` after ANY test execution
+  - **Critical Rule**: Chunk exit codes are unreliable - only trust the detection script
+- **For development**: Use `run-all-tests.sh` for complete LOCAL testing (will timeout in Claude Code), then validate with detection script
+- **Golden Rule**: Every test execution MUST be followed by `detect-test-failures.sh`
+
+### Chunked Testing System
+The chunked testing system ensures 100% test coverage while working within Claude Code's 2-minute timeout constraints:
+
+**Chunk 1** (Build + Unit Tests): Critical foundation - must pass for other chunks to run
+**Chunk 2** (Integration + SwiftData Tests): Data layer validation  
+**Chunk 3** (UI + Accessibility Tests): Interface and accessibility compliance
+**Chunk 4** (Performance + Security Tests): Quality and security validation
+**Chunk 5** (SwiftLint Analysis): Code style and security compliance
+
+Each chunk is designed to complete within 90 seconds, ensuring compatibility with timeout constraints while maintaining comprehensive coverage.
+
+**🚨 CRITICAL WORKFLOW**: 
+1. **Execute**: Run chunks for timeout management
+2. **Validate**: Always run `./Scripts/detect-test-failures.sh` 
+3. **Never trust chunk exit codes** - they mask individual failures!
+
+## 🎯 SYSTEMATIC FAILURE ANALYSIS METHODOLOGY (CRITICAL)
+**The approach that ensures ALL failures are detected and fixed systematically:**
+
+### 🔍 Phase 1: Comprehensive Failure Detection
+**NEVER accept "some tests passed" - detect EVERY failure:**
+
+1. **Use the detection script**: `./Scripts/detect-test-failures.sh`
+   - This script finds failures across ALL xcresult files
+   - Parses individual test failures that chunk scripts might miss
+   - Categorizes failures by type (accessibility, performance, etc.)
+
+2. **Manual verification of critical areas**:
+   - Always check for SwiftLint integration issues
+   - Verify accessibility test completeness  
+   - Look for performance baseline violations
+   - Check for stress test throughput issues
+
+3. **Create comprehensive TODO list**:
+   - Document EVERY failure found
+   - Categorize by priority (high for functional bugs, medium for performance)
+   - Track status as you work through them
+
+### 🛠️ Phase 2: Root Cause Analysis for Each Failure
+**For EVERY failure, determine if it's a bug or unreasonable expectation:**
+
+#### For Functional Failures:
+- **Logic errors**: Fix the actual implementation 
+- **Missing implementations**: Add the required code
+- **Incorrect test expectations**: Only change tests if they test wrong behavior
+
+#### For Performance Failures:
+- **Investigate thoroughly**: Don't assume it's "just CI slowness"
+- **Check for inefficiencies**: Look for unnecessary overhead in test setup
+- **Validate baselines**: Ensure performance expectations are realistic but still catch regressions
+- **Examples of proper analysis**:
+  ```
+  ❌ "CI is slow, ignore it"
+  ✅ "Test creates unnecessary SwiftData contexts - fix measurement approach"
+  ✅ "500ms baseline too aggressive for mock with overhead - adjust to 1000ms"
+  ```
+
+#### For Timing Failures:
+- **Examine actual vs expected duration**
+- **Check for blocking operations that could be optimized**
+- **Adjust timeouts only if analysis shows the operation is fundamentally slower**
+
+### 🔧 Phase 3: Systematic Fixing
+**Fix ALL issues in priority order:**
+
+1. **High Priority** (functional bugs):
+   - SwiftLint integration failures
+   - Accessibility test logic errors
+   - Core functionality bugs
+   - **CRITICAL**: Check for duplicate implementations between test files and main code
+
+2. **Medium Priority** (performance issues):
+   - Test measurement inefficiencies
+   - Unrealistic performance baselines
+   - Timeout adjustments
+
+3. **Validate each fix**:
+   - Test the specific area you fixed
+   - Ensure the fix doesn't break other tests
+   - Update TODO list with completion status
+
+### 🚨 CRITICAL: Avoid Duplicate Implementation Traps
+**Common failure pattern that must be checked:**
+
+Test files sometimes contain their own implementations of classes/engines that should come from main code:
+- `ErrorDisclosureEngine` in test file vs ErrorStateManagement.swift
+- `ErrorAccessibilityEngine` duplicated with different logic
+- Mock service implementations that differ from expected interfaces
+
+**Solution methodology:**
+1. **When test logic fails**: Check if test file has duplicate definitions
+2. **Remove duplicates**: Keep implementation in main code, remove from test file
+3. **Add comments**: Mark where real implementation is located
+4. **Verify**: Ensure tests now use the correct, single implementation
+
+### 🚨 Phase 4: Zero-Tolerance Validation
+**NEVER declare victory until ALL tests pass:**
+
+1. **Run comprehensive validation**
+2. **Check detection script shows no failures**  
+3. **Verify all TODOs are marked complete**
+4. **Run full test suite as final confirmation**
+
+### 📋 Mandatory Failure Analysis Questions
+**For EVERY failure, ask these questions:**
+
+1. **Is this a real bug or unreasonable test expectation?**
+2. **What is the root cause (not just symptoms)?**
+3. **Is the fix appropriate (doesn't mask real issues)?**
+4. **Will this fix prevent similar failures in the future?**
+
+### 🎯 Success Criteria
+**The process is complete ONLY when:**
+- ✅ Detection script shows zero failures
+- ✅ All TODOs marked complete
+- ✅ Full test suite passes
+- ✅ All fixes have proper root cause analysis documented
+
+**NEVER compromise on this methodology - it's what ensures comprehensive success.**
 
 ## ⚡ DEVELOPMENT PROCESS (CRITICAL)
 **TRUE TDD FLOW - NO EXCEPTIONS:**

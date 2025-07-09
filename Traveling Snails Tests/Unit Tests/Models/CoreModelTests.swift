@@ -15,7 +15,7 @@ import Testing
 struct CoreModelTests {
     @Suite("Trip Model Tests")
     struct TripTests {
-        @Test("Trip initialization with basic properties")
+        @Test("Trip initialization with basic properties", .tags(.unit, .fast, .parallel, .dataModel, .trip, .validation))
         func tripBasicInitialization() {
             let trip = Trip(name: "Test Trip", notes: "Test notes")
 
@@ -27,7 +27,7 @@ struct CoreModelTests {
             #expect(trip.totalCost == 0)
         }
 
-        @Test("Trip initialization with dates")
+        @Test("Trip initialization with dates", .tags(.unit, .fast, .parallel, .dataModel, .trip, .validation))
         func tripInitializationWithDates() {
             let startDate = Date()
             let endDate = Calendar.current.date(byAdding: .day, value: 7, to: startDate)!
@@ -41,7 +41,7 @@ struct CoreModelTests {
             #expect(trip.hasDateRange == true)
         }
 
-        @Test("Trip date management")
+        @Test("Trip date management", .tags(.unit, .fast, .parallel, .dataModel, .trip, .validation))
         func tripDateManagement() {
             let trip = Trip(name: "Date Test Trip")
             let testDate = Date()
@@ -64,7 +64,7 @@ struct CoreModelTests {
             #expect(trip.effectiveStartDate == nil)
         }
 
-        @Test("Trip date range validation")
+        @Test("Trip date range validation", .tags(.unit, .fast, .parallel, .dataModel, .trip, .validation, .boundary))
         func tripDateRangeValidation() {
             let startDate = Date()
             let endDate = Calendar.current.date(byAdding: .day, value: 7, to: startDate)!
@@ -85,7 +85,7 @@ struct CoreModelTests {
 
     @Suite("Organization Model Tests")
     struct OrganizationTests {
-        @Test("Organization basic initialization")
+        @Test("Organization basic initialization", .tags(.unit, .fast, .parallel, .dataModel, .organization, .validation))
         func organizationBasicInit() {
             let org = Organization(name: "Test Airline")
 
@@ -97,7 +97,7 @@ struct CoreModelTests {
             #expect(org.isNone == false)
         }
 
-        @Test("Organization with full details")
+        @Test("Organization with full details", .tags(.unit, .fast, .parallel, .dataModel, .organization, .validation))
         func organizationFullDetails() {
             let address = Address(
                 street: "123 Main St",
@@ -122,7 +122,7 @@ struct CoreModelTests {
             #expect(org.hasAddress == true)
         }
 
-        @Test("Organization none sentinel")
+        @Test("Organization none sentinel", .tags(.unit, .fast, .parallel, .dataModel, .organization, .validation, .boundary))
         func organizationNoneSentinel() {
             let noneOrg = Organization(name: "None")
             #expect(noneOrg.isNone == true)
@@ -134,7 +134,7 @@ struct CoreModelTests {
 
     @Suite("Address Model Tests")
     struct AddressTests {
-        @Test("Address basic initialization")
+        @Test("Address basic initialization", .tags(.unit, .fast, .parallel, .dataModel, .validation))
         func addressBasicInit() {
             let address = Address()
 
@@ -146,7 +146,7 @@ struct CoreModelTests {
             #expect(address.coordinate == nil)
         }
 
-        @Test("Address with full details")
+        @Test("Address with full details", .tags(.unit, .fast, .parallel, .dataModel, .validation))
         func addressFullDetails() {
             let address = Address(
                 street: "123 Main St",
@@ -166,7 +166,7 @@ struct CoreModelTests {
             #expect(address.displayAddress == "123 Main St, San Francisco, CA 94102, USA")
         }
 
-        @Test("Address display logic")
+        @Test("Address display logic", .tags(.unit, .fast, .parallel, .dataModel, .validation, .boundary))
         func addressDisplayLogic() {
             // Test formatted address priority
             let addressWithFormatted = Address(
@@ -188,7 +188,7 @@ struct CoreModelTests {
 
     @Suite("Activity Models Tests")
     struct ActivityModelTests {
-        @Test("Activity initialization and protocol conformance")
+        @Test("Activity initialization and protocol conformance", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation))
         func activityInitialization() {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Venue")
@@ -215,7 +215,7 @@ struct CoreModelTests {
             #expect(activity.duration() == 2 * 3600) // 2 hours in seconds
         }
 
-        @Test("Lodging initialization and properties")
+        @Test("Lodging initialization and properties", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation))
         func lodgingInitialization() {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Hotel")
@@ -243,7 +243,7 @@ struct CoreModelTests {
             #expect(lodging.endTZId == TimeZone.current.identifier)
         }
 
-        @Test("Transportation initialization and type handling")
+        @Test("Transportation initialization and type handling", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation))
         func transportationInitialization() {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Airline")
@@ -271,14 +271,14 @@ struct CoreModelTests {
 
     @Suite("Paid Status Tests")
     struct PaidStatusTests {
-        @Test("Paid status display names")
+        @Test("Paid status display names", .tags(.unit, .fast, .parallel, .dataModel, .validation))
         func paidStatusDisplayNames() {
             #expect(PaidStatus.none.displayName == "None")
             #expect(PaidStatus.deposit.displayName == "Deposit")
             #expect(PaidStatus.infull.displayName == "In Full")
         }
 
-        @Test("Paid status all cases")
+        @Test("Paid status all cases", .tags(.unit, .fast, .parallel, .dataModel, .validation))
         func paidStatusAllCases() {
             let allCases = PaidStatus.allCases
             #expect(allCases.count == 3)
@@ -290,7 +290,7 @@ struct CoreModelTests {
 
     @Suite("Transportation Type Tests")
     struct TransportationTypeTests {
-        @Test("Transportation type system images")
+        @Test("Transportation type system images", .tags(.unit, .fast, .parallel, .dataModel, .validation))
         func transportationTypeSystemImages() {
             #expect(TransportationType.plane.systemImage == "airplane")
             #expect(TransportationType.train.systemImage == "train.side.front.car")
@@ -300,7 +300,7 @@ struct CoreModelTests {
             #expect(TransportationType.walking.systemImage == "figure.walk")
         }
 
-        @Test("Transportation type display names")
+        @Test("Transportation type display names", .tags(.unit, .fast, .parallel, .dataModel, .validation))
         func transportationTypeDisplayNames() {
             #expect(TransportationType.plane.displayName == "Plane")
             #expect(TransportationType.train.displayName == "Train")

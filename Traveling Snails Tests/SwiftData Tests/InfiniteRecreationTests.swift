@@ -11,7 +11,7 @@ import Testing
 
 @Suite("Infinite Recreation Tests")
 struct InfiniteRecreationTests {
-    @Test("DatabaseBrowserTab should not cause infinite recreation with model arrays", .disabled("This test intentionally causes an infinite loop and hangs the test runner."))
+    @Test("DatabaseBrowserTab should not cause infinite recreation with model arrays", .tags(.swiftdata, .medium, .serial, .dataModel, .regression, .critical, .boundary), .disabled("This test intentionally causes an infinite loop and hangs the test runner."))
     @MainActor
     func testDatabaseBrowserTabRecreation() async throws {
         let testBase = SwiftDataTestBase()
@@ -116,7 +116,7 @@ struct InfiniteRecreationTests {
         // views receiving model arrays as parameters will recreate
     }
 
-    @Test("Query-based view should not recreate excessively")
+    @Test("Query-based view should not recreate excessively", .tags(.swiftdata, .medium, .parallel, .dataModel, .regression, .validation))
     @MainActor
     func testQueryBasedViewStability() async throws {
         let testBase = SwiftDataTestBase()
@@ -151,6 +151,6 @@ struct InfiniteRecreationTests {
         // Note: In actual testing, we'd need to test this in a SwiftUI environment
         // This test serves as documentation of the correct pattern
 
-        #expect(true, "Query-based views should be more stable")
+        #expect(Bool(true), "Query-based views should be more stable")
     }
 }

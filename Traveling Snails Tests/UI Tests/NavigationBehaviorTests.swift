@@ -11,7 +11,7 @@ import Testing
 
 @Suite("Navigation Behavior Tests")
 struct NavigationBehaviorTests {
-    @Test("Fresh trip selection should not trigger automatic navigation")
+    @Test("Fresh trip selection should not trigger automatic navigation", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .trip, .validation, .regression, .mainActor))
     @MainActor func testFreshTripSelection() async throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: Trip.self, Activity.self, configurations: config)
@@ -42,7 +42,7 @@ struct NavigationBehaviorTests {
         UserDefaults.standard.removeObject(forKey: "activityNavigation_\(tripId)")
     }
 
-    @Test("Tab restoration should restore navigation state")
+    @Test("Tab restoration should restore navigation state", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .trip, .validation, .regression, .mainActor))
     @MainActor func testTabRestoration() async throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: Trip.self, Activity.self, configurations: config)
@@ -80,7 +80,7 @@ struct NavigationBehaviorTests {
         UserDefaults.standard.removeObject(forKey: "activityNavigation_\(tripId)")
     }
 
-    @Test("Trip change should reset navigation state")
+    @Test("Trip change should reset navigation state", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .trip, .validation, .mainActor))
     @MainActor func testTripChangeResetsState() async throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(for: Trip.self, configurations: config)
@@ -99,7 +99,7 @@ struct NavigationBehaviorTests {
         #expect(trip1.id != trip2.id)
     }
 
-    @Test("Clear navigation states removes UserDefaults entries")
+    @Test("Clear navigation states removes UserDefaults entries", .tags(.ui, .fast, .parallel, .swiftui, .navigation, .validation, .mainActor))
     @MainActor func testClearNavigationStates() async throws {
         let tripId = UUID()
         let key = "activityNavigation_\(tripId)"

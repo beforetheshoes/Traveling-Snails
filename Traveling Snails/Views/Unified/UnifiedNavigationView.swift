@@ -139,6 +139,9 @@ struct UnifiedNavigationView<Item: NavigationItem, DetailView: View>: View {
                         placeholder: configuration.searchPlaceholder
                     )
                     .padding(.top, 8)
+                    .accessibilityIdentifier("SearchBar")
+                    .accessibilityLabel(configuration.searchPlaceholder)
+                    .accessibilityHint("Type to search \(configuration.title.lowercased())")
                 }
 
                 // Content
@@ -149,6 +152,7 @@ struct UnifiedNavigationView<Item: NavigationItem, DetailView: View>: View {
                 }
             }
             .navigationTitle(configuration.title)
+            .accessibilityIdentifier("NavigationView_\(configuration.title.replacingOccurrences(of: " ", with: ""))")
             .navigationDestination(for: Item.self) { item in
                 detailViewBuilder(item)
             }
@@ -164,6 +168,9 @@ struct UnifiedNavigationView<Item: NavigationItem, DetailView: View>: View {
                     } label: {
                         Label(configuration.addButtonTitle, systemImage: configuration.addButtonIcon)
                     }
+                    .accessibilityIdentifier("AddButton_\(configuration.title.replacingOccurrences(of: " ", with: ""))")
+                    .accessibilityLabel(configuration.addButtonTitle)
+                    .accessibilityHint("Double tap to add a new \(configuration.title.dropLast().lowercased())")
                 }
             }
             .sheet(isPresented: $showingAddView) {
@@ -243,6 +250,10 @@ struct UnifiedNavigationView<Item: NavigationItem, DetailView: View>: View {
             description: Text(NSLocalizedString(configuration.emptyStateDescription, value: configuration.emptyStateDescription, comment: "Empty state description"))
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityIdentifier("EmptyStateView_\(configuration.title.replacingOccurrences(of: " ", with: ""))")
+        .accessibilityLabel(configuration.emptyStateTitle)
+        .accessibilityValue(configuration.emptyStateDescription)
+        .accessibilityHint("Add a new \(configuration.title.dropLast().lowercased()) to get started")
     }
 
     @ViewBuilder
@@ -251,38 +262,75 @@ struct UnifiedNavigationView<Item: NavigationItem, DetailView: View>: View {
             filteredItems,
             selection: configuration.allowsSelection ? $selectedItem : .constant(nil)
         ) { item in
-            // Remove the conflicting NavigationLink + onTapGesture pattern
-            // Use a single gesture handling approach
-            Group {
-                if let customRow = rowContentBuilder {
-                    customRow(item)
-                } else {
-                    EnhancedItemRowView(
-                        item: item,
-                        isSelected: selectedItem?.id == item.id || selectedTrip?.id == item.id
-                    )
+            itemRowContent(for: item)
+                .modifier(ItemRowModifier(item: item))
+                .onTapGesture {
+                    handleItemTap(item)
                 }
-            }
-            .contentShape(Rectangle()) // Ensure entire row area is tappable
-            .onTapGesture {
-                Logger.shared.debug("Item tapped: \(item.displayName)", category: .navigation)
-                selectedItem = item
-                onItemSelected?(item)
-
-                // Update selectedTrip if this is a trip
-                if let trip = item as? Trip {
-                    selectedTrip = trip
-                    // Use environment-based navigation instead of notifications
-                    navigationRouter.selectTrip(trip.id)
-                    Logger.shared.debug("Environment-based trip selection for trip: \(trip.name)", category: .navigation)
-                }
-            }
-            .listRowSeparator(.hidden) // Hide separators since we have our own styling
-            .listRowBackground(Color.clear) // Remove the gray background
-            .listRowInsets(EdgeInsets(top: 6, leading: 8, bottom: 6, trailing: 8)) // Reduce list insets to give more room for the rounded rectangle
         }
         .listStyle(.plain) // Use plain style to avoid extra background styling
         .scrollContentBackground(.visible)
+        .accessibilityIdentifier("\(configuration.title.replacingOccurrences(of: " ", with: ""))ListView")
+        .accessibilityLabel("\(configuration.title) list")
+        .accessibilityHint("Swipe up or down to navigate through \(configuration.title.lowercased())")
+    }
+
+    // MARK: - Helper Methods
+
+    @ViewBuilder
+    private func itemRowContent(for item: Item) -> some View {
+        // Remove the conflicting NavigationLink + onTapGesture pattern
+        // Use a single gesture handling approach
+        Group {
+            if let customRow = rowContentBuilder {
+                customRow(item)
+            } else {
+                EnhancedItemRowView(
+                    item: item,
+                    isSelected: selectedItem?.id == item.id || selectedTrip?.id == item.id
+                )
+            }
+        }
+        .contentShape(Rectangle()) // Ensure entire row area is tappable
+    }
+
+    private func handleItemTap(_ item: Item) {
+        Logger.shared.debug("Item tapped: \(item.displayName)", category: .navigation)
+        selectedItem = item
+        onItemSelected?(item)
+
+        // Update selectedTrip if this is a trip
+        if let trip = item as? Trip {
+            selectedTrip = trip
+            // Use environment-based navigation instead of notifications
+            navigationRouter.selectTrip(trip.id)
+            Logger.shared.debug("Environment-based trip selection for trip: \(trip.name)", category: .navigation)
+        }
+    }
+
+    // MARK: - Accessibility Helper Methods
+
+    private func buildAccessibilityLabel(for item: Item) -> String {
+        var components: [String] = [item.displayName]
+
+        if let subtitle = item.displaySubtitle {
+            components.append(subtitle)
+        }
+
+        if let badgeCount = item.displayBadgeCount, badgeCount > 0 {
+            components.append("\(badgeCount) items")
+        }
+
+        return components.joined(separator: ", ")
+    }
+
+    private func buildAccessibilityHint(for item: Item) -> String {
+        "Double tap to view \(item.displayName) details"
+    }
+
+    private func buildAccessibilityValue(for item: Item) -> String? {
+        guard let badgeCount = item.displayBadgeCount, badgeCount > 0 else { return nil }
+        return "\(badgeCount) items"
     }
 }
 
@@ -550,5 +598,48 @@ extension UnifiedNavigationView where Item == Organization, DetailView == AnyVie
             },
             onItemSelected: onOrganizationSelected
         )
+    }
+}
+
+// MARK: - ItemRowModifier
+
+struct ItemRowModifier<Item: NavigationItem>: ViewModifier {
+    let item: Item
+
+    func body(content: Content) -> some View {
+        content
+            .accessibilityIdentifier("ItemRow_\(item.id.uuidString.prefix(8))")
+            .accessibilityLabel(buildAccessibilityLabel(for: item))
+            .accessibilityHint(buildAccessibilityHint(for: item))
+            .accessibilityValue(buildAccessibilityValue(for: item) ?? "")
+            .accessibilityAddTraits(.isButton)
+            .listRowSeparator(.hidden) // Hide separators since we have our own styling
+            .listRowBackground(Color.clear) // Remove the gray background
+            .listRowInsets(EdgeInsets(top: 6, leading: 8, bottom: 6, trailing: 8)) // Reduce list insets to give more room for the rounded rectangle
+    }
+
+    private func buildAccessibilityLabel(for item: Item) -> String {
+        var components: [String] = [item.displayName]
+
+        if let subtitle = item.displaySubtitle {
+            components.append(subtitle)
+        }
+
+        if let badgeCount = item.displayBadgeCount, badgeCount > 0 {
+            components.append("\(badgeCount) items")
+        }
+
+        return components.joined(separator: ", ")
+    }
+
+    private func buildAccessibilityHint(for item: Item) -> String {
+        "Double tap to select and view details"
+    }
+
+    private func buildAccessibilityValue(for item: Item) -> String? {
+        if let badgeCount = item.displayBadgeCount, badgeCount > 0 {
+            return "\(badgeCount) items"
+        }
+        return nil
     }
 }

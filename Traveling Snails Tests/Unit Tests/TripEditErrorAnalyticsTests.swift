@@ -11,7 +11,7 @@ import Testing
 
 @Suite("TripEditErrorAnalytics Tests")
 struct TripEditErrorAnalyticsTests {
-    @Test("TripEditErrorType correctly maps from AppError")
+    @Test("TripEditErrorType correctly maps from AppError", .tags(.unit, .fast, .parallel, .validation, .errorHandling, .dataModel))
     func errorTypeMappingIsCorrect() {
         // Test database errors
         #expect(TripEditErrorType.from(.databaseSaveFailed("test")) == .database)
@@ -49,7 +49,7 @@ struct TripEditErrorAnalyticsTests {
         #expect(TripEditErrorType.from(.operationCancelled) == .unknown)
     }
 
-    @Test("TripEditErrorEvent has minimal memory footprint")
+    @Test("TripEditErrorEvent has minimal memory footprint", .tags(.unit, .fast, .parallel, .validation, .memory, .performance))
     func errorEventHasMinimalMemoryFootprint() {
         // Create an error event
         let event = TripEditErrorEvent(
@@ -71,7 +71,7 @@ struct TripEditErrorAnalyticsTests {
         #expect(event.timestamp <= Date())
     }
 
-    @Test("Analytics can be reset for clean state")
+    @Test("Analytics can be reset for clean state", .tags(.unit, .fast, .serial, .validation, .errorHandling, .utility))
     func analyticsCanBeReset() {
         // Record some errors
         TripEditErrorAnalytics.recordError(.networkUnavailable, context: "test1", retryCount: 0)
@@ -90,7 +90,7 @@ struct TripEditErrorAnalyticsTests {
         #expect(stateAfter.lastCleanup >= stateBefore.lastCleanup)
     }
 
-    @Test("Analytics respects maximum history size")
+    @Test("Analytics respects maximum history size", .tags(.unit, .medium, .serial, .validation, .memory, .boundary, .errorHandling))
     func analyticsRespectsMaxHistorySize() {
         // Reset any existing state
         TripEditErrorAnalytics.reset()

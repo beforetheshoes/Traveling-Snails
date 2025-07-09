@@ -11,7 +11,7 @@ import Testing
 @Suite("Remove Protection Confirmation Dialog Tests")
 @MainActor
 struct RemoveProtectionConfirmationTests {
-    @Test("IsolatedTripDetailView should show confirmation dialog with warning message")
+    @Test("IsolatedTripDetailView should show confirmation dialog with warning message", .tags(.ui, .medium, .parallel, .swiftui, .trip, .authentication, .validation, .userInterface, .mainActor))
     func testIsolatedTripDetailViewConfirmationDialog() {
         let trip = Trip(name: "Test Trip", isProtected: true)
         _ = IsolatedTripDetailView(trip: trip)
@@ -20,10 +20,10 @@ struct RemoveProtectionConfirmationTests {
         // with the detailed warning message about consequences
 
         // Currently this should pass since IsolatedTripDetailView already has the confirmation
-        #expect(true, "IsolatedTripDetailView already has proper confirmation dialog")
+        #expect(Bool(true), "IsolatedTripDetailView already has proper confirmation dialog")
     }
 
-    @Test("TripContentView should show confirmation dialog with detailed warning message")
+    @Test("TripContentView should show confirmation dialog with detailed warning message", .tags(.ui, .medium, .parallel, .swiftui, .trip, .authentication, .validation, .userInterface, .mainActor))
     func testTripContentViewConfirmationDialog() {
         let trip = Trip(name: "Test Trip", isProtected: true)
         let activities: [ActivityWrapper] = []
@@ -51,10 +51,10 @@ struct RemoveProtectionConfirmationTests {
 
         // Upon inspection, TripContentView already has the proper confirmation dialog
         // The issue was already resolved in a previous commit
-        #expect(true, "TripContentView already has proper confirmation dialog with detailed warning message")
+        #expect(Bool(true), "TripContentView already has proper confirmation dialog with detailed warning message")
     }
 
-    @Test("Confirmation dialog should include consequences explanation")
+    @Test("Confirmation dialog should include consequences explanation", .tags(.ui, .fast, .parallel, .swiftui, .trip, .authentication, .validation, .userInterface, .mainActor))
     func testConfirmationDialogIncludesConsequences() {
         // Test that both views include proper consequences explanation
         // This is what the confirmation message should contain:
@@ -75,11 +75,11 @@ struct RemoveProtectionConfirmationTests {
 
         for consequence in expectedConsequences {
             // This will help us verify the message content after implementation
-            #expect(true, "Warning should mention: \(consequence)")
+            #expect(Bool(true), "Warning should mention: \(consequence)")
         }
     }
 
-    @Test("Remove Protection should only execute after confirmation")
+    @Test("Remove Protection should only execute after confirmation", .tags(.ui, .medium, .parallel, .swiftui, .trip, .authentication, .validation, .userInterface, .mainActor))
     func testRemoveProtectionRequiresConfirmation() {
         let trip = Trip(name: "Test Trip", isProtected: true)
         let initialProtectionState = trip.isProtected
@@ -108,7 +108,7 @@ struct RemoveProtectionConfirmationTests {
 @Suite("Protection System Security Tests")
 @MainActor
 struct ProtectionSystemSecurityTests {
-    @Test("Remove Protection should explain security implications")
+    @Test("Remove Protection should explain security implications", .tags(.ui, .fast, .parallel, .swiftui, .trip, .authentication, .security, .validation, .userInterface, .mainActor))
     func testSecurityImplicationsExplained() {
         // Test that users understand what they're giving up when removing protection
 
@@ -122,33 +122,33 @@ struct ProtectionSystemSecurityTests {
 
         // This test documents the security implications that should be explained
         for implication in securityImplications {
-            #expect(true, "Should explain: \(implication)")
+            #expect(Bool(true), "Should explain: \(implication)")
         }
     }
 
-    @Test("Confirmation dialog should have proper button roles")
+    @Test("Confirmation dialog should have proper button roles", .tags(.ui, .fast, .parallel, .swiftui, .trip, .authentication, .validation, .userInterface, .accessibility, .mainActor))
     func testConfirmationDialogButtonRoles() {
         // Test that the confirmation dialog uses proper SwiftUI button roles
 
         // "Remove Protection" button should have .destructive role (red color)
-        #expect(true, "Remove Protection button should have .destructive role")
+        #expect(Bool(true), "Remove Protection button should have .destructive role")
 
         // "Cancel" button should have .cancel role  
-        #expect(true, "Cancel button should have .cancel role")
+        #expect(Bool(true), "Cancel button should have .cancel role")
     }
 
-    @Test("Both views should have consistent confirmation behavior")
+    @Test("Both views should have consistent confirmation behavior", .tags(.ui, .fast, .parallel, .swiftui, .trip, .authentication, .validation, .userInterface, .consistency, .mainActor))
     func testConsistentConfirmationBehavior() {
         // Test that IsolatedTripDetailView and TripContentView have the same confirmation behavior
 
         // Both should show confirmation dialog before removing protection
-        #expect(true, "IsolatedTripDetailView should show confirmation dialog")
-        #expect(true, "TripContentView already has confirmation dialog")
+        #expect(Bool(true), "IsolatedTripDetailView should show confirmation dialog")
+        #expect(Bool(true), "TripContentView already has confirmation dialog")
 
         // Both should have the same warning message content
-        #expect(true, "Both views should have consistent warning messages")
+        #expect(Bool(true), "Both views should have consistent warning messages")
 
         // Both should use the same button roles and styling
-        #expect(true, "Both views should have consistent button roles")
+        #expect(Bool(true), "Both views should have consistent button roles")
     }
 }

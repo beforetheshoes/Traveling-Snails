@@ -13,7 +13,7 @@ import Testing
 struct FixedModelTests {
     @Suite("Model Initialization Tests")
     struct ModelInitializationTests {
-        @Test("Trip initialization with proper defaults")
+        @Test("Trip initialization with proper defaults", .tags(.unit, .fast, .parallel, .dataModel, .trip, .validation))
         func tripInitializationWithProperDefaults() {
             let trip = Trip(name: "Test Trip")
 
@@ -25,7 +25,7 @@ struct FixedModelTests {
             #expect(trip.totalCost == 0)
         }
 
-        @Test("Organization initialization with proper defaults")
+        @Test("Organization initialization with proper defaults", .tags(.unit, .fast, .parallel, .dataModel, .organization, .validation))
         func organizationInitializationWithProperDefaults() {
             let org = Organization(name: "Test Org")
 
@@ -38,7 +38,7 @@ struct FixedModelTests {
             #expect(org.isNone == false)
         }
 
-        @Test("Address initialization with proper defaults")
+        @Test("Address initialization with proper defaults", .tags(.unit, .fast, .parallel, .dataModel, .validation))
         func addressInitializationWithProperDefaults() {
             let address = Address()
 
@@ -53,7 +53,7 @@ struct FixedModelTests {
             #expect(address.isEmpty == true)
         }
 
-        @Test("Activity initialization with current timezone defaults")
+        @Test("Activity initialization with current timezone defaults", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation))
         func activityInitializationWithCurrentTimezoneDefaults() {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")
@@ -78,7 +78,7 @@ struct FixedModelTests {
             #expect(activity.endTZId == TimeZone.current.identifier)
         }
 
-        @Test("Lodging initialization with current timezone defaults")
+        @Test("Lodging initialization with current timezone defaults", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation))
         func lodgingInitializationWithCurrentTimezoneDefaults() {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")
@@ -105,7 +105,7 @@ struct FixedModelTests {
             #expect(lodging.checkOutTZId == TimeZone.current.identifier)
         }
 
-        @Test("Transportation initialization with current timezone defaults")
+        @Test("Transportation initialization with current timezone defaults", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation))
         func transportationInitializationWithCurrentTimezoneDefaults() {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")
@@ -131,7 +131,7 @@ struct FixedModelTests {
 
     @Suite("Relationship Handling Tests")
     struct RelationshipHandlingTests {
-        @Test("Trip handles nil relationships gracefully")
+        @Test("Trip handles nil relationships gracefully", .tags(.unit, .fast, .parallel, .dataModel, .trip, .validation, .boundary))
         func tripHandlesNilRelationshipsGracefully() {
             let trip = Trip(name: "Nil Test")
 
@@ -143,7 +143,7 @@ struct FixedModelTests {
             #expect(trip.activity.isEmpty)
         }
 
-        @Test("Trip with manually initialized relationships")
+        @Test("Trip with manually initialized relationships", .tags(.unit, .fast, .parallel, .dataModel, .trip, .validation))
         func tripWithManuallyInitializedRelationships() {
             let trip = Trip(name: "Manual Test")
             let org = Organization(name: "Test Org")
@@ -193,7 +193,7 @@ struct FixedModelTests {
             #expect(trip.totalCost == Decimal(750))
         }
 
-        @Test("Organization handles nil relationships gracefully")
+        @Test("Organization handles nil relationships gracefully", .tags(.unit, .fast, .parallel, .dataModel, .organization, .validation, .boundary))
         func organizationHandlesNilRelationshipsGracefully() {
             let org = Organization(name: "Nil Test")
 
@@ -208,7 +208,7 @@ struct FixedModelTests {
 
     @Suite("Business Logic Tests")
     struct BusinessLogicTests {
-        @Test("Trip cost calculation precision")
+        @Test("Trip cost calculation precision", .tags(.unit, .fast, .parallel, .dataModel, .trip, .validation, .boundary))
         func tripCostCalculationPrecision() {
             let trip = Trip(name: "Cost Test")
             let org = Organization(name: "Test Org")
@@ -255,7 +255,7 @@ struct FixedModelTests {
             #expect(trip.totalCost == expectedTotal)
         }
 
-        @Test("Activity duration calculation")
+        @Test("Activity duration calculation", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation))
         func activityDurationCalculation() {
             let trip = Trip(name: "Duration Test")
             let org = Organization(name: "Test Org")
@@ -274,7 +274,7 @@ struct FixedModelTests {
             #expect(activity.duration() == 3 * 3600) // 3 hours in seconds
         }
 
-        @Test("Trip date range validation")
+        @Test("Trip date range validation", .tags(.unit, .fast, .parallel, .dataModel, .trip, .validation, .boundary))
         func tripDateRangeValidation() {
             let startDate = Date()
             let endDate = Calendar.current.date(byAdding: .day, value: 7, to: startDate)!
@@ -293,7 +293,7 @@ struct FixedModelTests {
             }
         }
 
-        @Test("None organization detection")
+        @Test("None organization detection", .tags(.unit, .fast, .parallel, .dataModel, .organization, .validation, .boundary))
         func noneOrganizationDetection() {
             let noneOrg = Organization(name: "None")
             let regularOrg = Organization(name: "Regular Org")
@@ -305,7 +305,7 @@ struct FixedModelTests {
 
     @Suite("Protocol Conformance Tests")
     struct ProtocolConformanceTests {
-        @Test("Activity protocol conformance")
+        @Test("Activity protocol conformance", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation))
         func activityProtocolConformance() {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")
@@ -328,7 +328,7 @@ struct FixedModelTests {
             #expect(activity.hasTypeSelector == false)
         }
 
-        @Test("Lodging protocol conformance")
+        @Test("Lodging protocol conformance", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation))
         func lodgingProtocolConformance() {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Hotel")
@@ -353,7 +353,7 @@ struct FixedModelTests {
             #expect(lodging.hasTypeSelector == false)
         }
 
-        @Test("Transportation protocol conformance")
+        @Test("Transportation protocol conformance", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation))
         func transportationProtocolConformance() {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Airline")
@@ -380,7 +380,7 @@ struct FixedModelTests {
 
     @Suite("Edge Case Handling")
     struct EdgeCaseHandling {
-        @Test("Empty models handle gracefully - safer version")
+        @Test("Empty models handle gracefully - safer version", .tags(.unit, .fast, .parallel, .dataModel, .validation, .boundary, .negative))
         func emptyModelsHandleGracefullySafer() {
             let emptyTrip = Trip(name: "")
             let emptyOrg = Organization(name: "")
@@ -399,7 +399,7 @@ struct FixedModelTests {
             #expect(emptyTrip.totalActivities == 0)
         }
 
-        @Test("Extreme decimal values")
+        @Test("Extreme decimal values", .tags(.unit, .fast, .parallel, .dataModel, .validation, .boundary))
         func extremeDecimalValues() {
             let activity = Activity()
 
@@ -416,7 +416,7 @@ struct FixedModelTests {
             }
         }
 
-        @Test("Invalid timezone handling")
+        @Test("Invalid timezone handling", .tags(.unit, .fast, .parallel, .dataModel, .validation, .boundary, .errorHandling))
         func invalidTimezoneHandling() {
             let activity = Activity()
             activity.startTZId = "Invalid/Timezone"
@@ -427,7 +427,7 @@ struct FixedModelTests {
             #expect(activity.endTZ.identifier == TimeZone.current.identifier)
         }
 
-        @Test("Extreme coordinate values")
+        @Test("Extreme coordinate values", .tags(.unit, .fast, .parallel, .dataModel, .validation, .boundary))
         func extremeCoordinateValues() {
             let extremeAddress = Address(latitude: 90.0, longitude: 180.0)
             #expect(extremeAddress.latitude == 90.0)
@@ -438,7 +438,7 @@ struct FixedModelTests {
             #expect(nullIslandAddress.coordinate == nil) // 0,0 returns nil in your implementation
         }
 
-        @Test("Very long strings")
+        @Test("Very long strings", .tags(.unit, .fast, .parallel, .dataModel, .validation, .boundary))
         func veryLongStrings() {
             let longName = String(repeating: "A", count: 1000)
             let trip = Trip(name: longName)
@@ -446,7 +446,7 @@ struct FixedModelTests {
             #expect(trip.name.count == 1000)
         }
 
-        @Test("Extreme dates")
+        @Test("Extreme dates", .tags(.unit, .fast, .parallel, .dataModel, .validation, .boundary))
         func extremeDates() {
             let veryOldDate = Date(timeIntervalSince1970: 0) // 1970
             let farFutureDate = Date(timeIntervalSince1970: 4_102_444_800) // 2100
@@ -463,7 +463,7 @@ struct FixedModelTests {
 
     @Suite("Performance Tests")
     struct PerformanceTests {
-        @Test("Large dataset creation performance")
+        @Test("Large dataset creation performance", .tags(.unit, .medium, .serial, .dataModel, .performance, .stress))
         func largeDatasetCreationPerformance() {
             let trip = Trip(name: "Performance Test")
             let org = Organization(name: "Performance Org")
@@ -494,7 +494,7 @@ struct FixedModelTests {
             #expect(trip.totalCost == Decimal(4950)) // Sum of 0+1+2+...+99
         }
 
-        @Test("Cost calculation performance")
+        @Test("Cost calculation performance", .tags(.unit, .medium, .serial, .dataModel, .performance, .stress))
         func costCalculationPerformance() {
             let trip = Trip(name: "Cost Performance Test")
             let org = Organization(name: "Test Org")

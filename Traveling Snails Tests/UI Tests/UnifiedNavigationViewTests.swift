@@ -38,7 +38,7 @@ struct MockNavigationItem: NavigationItem {
 
 @Suite("Navigation Configuration Tests")
 struct NavigationConfigurationTests {
-    @Test("Default configuration initialization")
+    @Test("Default configuration initialization", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .validation))
     func testDefaultConfiguration() {
         let config = NavigationConfiguration<MockNavigationItem>(title: "Test")
 
@@ -53,7 +53,7 @@ struct NavigationConfigurationTests {
         #expect(config.allowsSelection == true)
     }
 
-    @Test("Custom configuration initialization")
+    @Test("Custom configuration initialization", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .validation))
     func testCustomConfiguration() {
         let config = NavigationConfiguration<MockNavigationItem>(
             title: "Custom Title",
@@ -83,7 +83,7 @@ struct NavigationConfigurationTests {
 
 @Suite("Mock Navigation Item Tests")
 struct MockNavigationItemTests {
-    @Test("Basic item creation")
+    @Test("Basic item creation", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .validation))
     func testBasicItemCreation() {
         let item = MockNavigationItem(name: "Test Item")
 
@@ -94,7 +94,7 @@ struct MockNavigationItemTests {
         #expect(item.displayBadgeCount == nil)
     }
 
-    @Test("Full item creation")
+    @Test("Full item creation", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .validation))
     func testFullItemCreation() {
         let item = MockNavigationItem(
             name: "Full Item",
@@ -111,7 +111,7 @@ struct MockNavigationItemTests {
         #expect(item.displayBadgeCount == 5)
     }
 
-    @Test("Item identity")
+    @Test("Item identity", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .validation))
     func testItemIdentity() {
         let item1 = MockNavigationItem(name: "Item 1")
         let item2 = MockNavigationItem(name: "Item 2")
@@ -122,7 +122,7 @@ struct MockNavigationItemTests {
         #expect(item2.id != item3.id)
     }
 
-    @Test("Item hashability")
+    @Test("Item hashability", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .validation))
     func testItemHashability() {
         let item1 = MockNavigationItem(name: "Item 1")
         let item2 = MockNavigationItem(name: "Item 2")
@@ -138,7 +138,7 @@ struct MockNavigationItemTests {
 
 @Suite("Trip Navigation Item Tests")
 struct TripNavigationItemTests {
-    @Test("Trip with name")
+    @Test("Trip with name", .tags(.ui, .medium, .parallel, .swiftui, .trip, .validation))
     func testTripWithName() {
         let trip = Trip(name: "Summer Vacation")
 
@@ -147,14 +147,14 @@ struct TripNavigationItemTests {
         #expect(trip.displayColor == .blue)
     }
 
-    @Test("Trip without name")
+    @Test("Trip without name", .tags(.ui, .medium, .parallel, .swiftui, .trip, .validation))
     func testTripWithoutName() {
         let trip = Trip(name: "")
 
         #expect(trip.displayName == NSLocalizedString("trip.untitled", value: "Untitled Trip", comment: "Default trip name"))
     }
 
-    @Test("Trip with date range")
+    @Test("Trip with date range", .tags(.ui, .medium, .parallel, .swiftui, .trip, .validation, .calendar))
     func testTripWithDateRange() {
         let trip = Trip(name: "Test Trip")
         let startDate = Date()
@@ -170,7 +170,7 @@ struct TripNavigationItemTests {
         #expect(subtitle!.contains("-"))
     }
 
-    @Test("Trip with start date only")
+    @Test("Trip with start date only", .tags(.ui, .medium, .parallel, .swiftui, .trip, .validation, .calendar))
     func testTripWithStartDateOnly() {
         let trip = Trip(name: "Test Trip")
         let startDate = Date()
@@ -184,7 +184,7 @@ struct TripNavigationItemTests {
         #expect(subtitle!.contains("Starts"))
     }
 
-    @Test("Trip with end date only")
+    @Test("Trip with end date only", .tags(.ui, .medium, .parallel, .swiftui, .trip, .validation, .calendar))
     func testTripWithEndDateOnly() {
         let trip = Trip(name: "Test Trip")
         let endDate = Date()
@@ -198,7 +198,7 @@ struct TripNavigationItemTests {
         #expect(subtitle!.contains("Ends"))
     }
 
-    @Test("Trip with no dates")
+    @Test("Trip with no dates", .tags(.ui, .medium, .parallel, .swiftui, .trip, .validation, .calendar))
     func testTripWithNoDates() {
         let trip = Trip(name: "Test Trip")
         trip.hasStartDate = false
@@ -208,7 +208,7 @@ struct TripNavigationItemTests {
         #expect(subtitle == NSLocalizedString("trip.noDates", value: "No dates set", comment: "Trip with no dates"))
     }
 
-    @Test("Trip badge count")
+    @Test("Trip badge count", .tags(.ui, .medium, .parallel, .swiftui, .trip, .validation))
     func testTripBadgeCount() {
         let trip = Trip(name: "Test Trip")
 
@@ -222,7 +222,7 @@ struct TripNavigationItemTests {
 
 @Suite("Organization Navigation Item Tests")
 struct OrganizationNavigationItemTests {
-    @Test("Organization with name")
+    @Test("Organization with name", .tags(.ui, .medium, .parallel, .swiftui, .organization, .validation))
     func testOrganizationWithName() {
         let org = Organization()
         org.name = "Acme Corp"
@@ -232,7 +232,7 @@ struct OrganizationNavigationItemTests {
         #expect(org.displayColor == .orange)
     }
 
-    @Test("Organization without name")
+    @Test("Organization without name", .tags(.ui, .medium, .parallel, .swiftui, .organization, .validation))
     func testOrganizationWithoutName() {
         let org = Organization()
         org.name = ""
@@ -240,7 +240,7 @@ struct OrganizationNavigationItemTests {
         #expect(org.displayName == NSLocalizedString("organization.unnamed", value: "Unnamed Organization", comment: "Default organization name"))
     }
 
-    @Test("Organization with contact info")
+    @Test("Organization with contact info", .tags(.ui, .medium, .parallel, .swiftui, .organization, .validation))
     func testOrganizationWithContactInfo() {
         let org = Organization()
         org.name = "Test Org"
@@ -254,7 +254,7 @@ struct OrganizationNavigationItemTests {
         #expect(subtitle!.contains("•"))
     }
 
-    @Test("Organization badge count")
+    @Test("Organization badge count", .tags(.ui, .medium, .parallel, .swiftui, .organization, .validation))
     func testOrganizationBadgeCount() {
         let org = Organization()
 
@@ -267,7 +267,7 @@ struct OrganizationNavigationItemTests {
 
 @Suite("Search Functionality Tests")
 struct SearchFunctionalityTests {
-    @Test("Default search filter - name matching")
+    @Test("Default search filter - name matching", .tags(.ui, .medium, .parallel, .swiftui, .search, .validation))
     func testDefaultSearchFilterName() {
         let items = [
             MockNavigationItem(name: "Apple Inc."),
@@ -284,7 +284,7 @@ struct SearchFunctionalityTests {
         #expect(filteredItems.first?.displayName == "Apple Inc.")
     }
 
-    @Test("Default search filter - subtitle matching")
+    @Test("Default search filter - subtitle matching", .tags(.ui, .medium, .parallel, .swiftui, .search, .validation))
     func testDefaultSearchFilterSubtitle() {
         let items = [
             MockNavigationItem(name: "Company A", subtitle: "Software Development"),
@@ -301,7 +301,7 @@ struct SearchFunctionalityTests {
         #expect(filteredItems.first?.displayName == "Company A")
     }
 
-    @Test("Search with empty string")
+    @Test("Search with empty string", .tags(.ui, .medium, .parallel, .swiftui, .search, .validation))
     func testSearchWithEmptyString() {
         let items = [
             MockNavigationItem(name: "Item 1"),
@@ -319,7 +319,7 @@ struct SearchFunctionalityTests {
         #expect(filteredItems.count == 3)
     }
 
-    @Test("Search case insensitivity")
+    @Test("Search case insensitivity", .tags(.ui, .medium, .parallel, .swiftui, .search, .validation))
     func testSearchCaseInsensitivity() {
         let items = [
             MockNavigationItem(name: "Apple Inc."),
@@ -338,7 +338,7 @@ struct SearchFunctionalityTests {
         }
     }
 
-    @Test("Search with no matches")
+    @Test("Search with no matches", .tags(.ui, .medium, .parallel, .swiftui, .search, .validation))
     func testSearchWithNoMatches() {
         let items = [
             MockNavigationItem(name: "Apple Inc."),
@@ -360,7 +360,7 @@ struct SearchFunctionalityTests {
 
 @Suite("UnifiedSearchBar Integration Tests")
 struct UnifiedSearchBarIntegrationTests {
-    @Test("Search bar configuration")
+    @Test("Search bar configuration", .tags(.ui, .medium, .parallel, .swiftui, .search, .validation))
     func testSearchBarConfiguration() {
         var searchText = ""
         let placeholder = "Search items..."
@@ -375,7 +375,7 @@ struct UnifiedSearchBarIntegrationTests {
         #expect(searchText == "test query")
     }
 
-    @Test("Search bar integration with navigation")
+    @Test("Search bar integration with navigation", .tags(.ui, .medium, .parallel, .swiftui, .search, .navigation, .integration))
     func testSearchBarIntegrationWithNavigation() {
         let items = [
             MockNavigationItem(name: "Test Item 1"),
@@ -397,7 +397,7 @@ struct UnifiedSearchBarIntegrationTests {
 
 @Suite("Enhanced Row View Tests")
 struct EnhancedRowViewTests {
-    @Test("Row view accessibility")
+    @Test("Row view accessibility", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .accessibility, .validation))
     func testRowViewAccessibility() {
         let item = MockNavigationItem(
             name: "Test Item",
@@ -412,7 +412,7 @@ struct EnhancedRowViewTests {
         #expect(item.displayBadgeCount == 3)
     }
 
-    @Test("Row view with badge")
+    @Test("Row view with badge", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .validation))
     func testRowViewWithBadge() {
         let item = MockNavigationItem(
             name: "Item with Badge",
@@ -422,7 +422,7 @@ struct EnhancedRowViewTests {
         #expect(item.displayBadgeCount == 10)
     }
 
-    @Test("Row view without badge")
+    @Test("Row view without badge", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .validation))
     func testRowViewWithoutBadge() {
         let item = MockNavigationItem(
             name: "Item without Badge",
@@ -432,7 +432,7 @@ struct EnhancedRowViewTests {
         #expect(item.displayBadgeCount == nil)
     }
 
-    @Test("Row view with zero badge")
+    @Test("Row view with zero badge", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .validation))
     func testRowViewWithZeroBadge() {
         let item = MockNavigationItem(
             name: "Item with Zero Badge",
@@ -447,7 +447,7 @@ struct EnhancedRowViewTests {
 
 @Suite("Navigation State Tests")
 struct NavigationStateTests {
-    @Test("Initial state")
+    @Test("Initial state", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .state, .validation))
     func testInitialState() {
         let items = [
             MockNavigationItem(name: "Item 1"),
@@ -460,14 +460,14 @@ struct NavigationStateTests {
         #expect(items[1].displayName == "Item 2")
     }
 
-    @Test("Empty items list")
+    @Test("Empty items list", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .state, .validation))
     func testEmptyItemsList() {
         let items: [MockNavigationItem] = []
 
         #expect(items.isEmpty)
     }
 
-    @Test("Single item list")
+    @Test("Single item list", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .state, .validation))
     func testSingleItemList() {
         let items = [MockNavigationItem(name: "Only Item")]
 
@@ -480,7 +480,7 @@ struct NavigationStateTests {
 
 @Suite("Convenience Initializer Tests")
 struct ConvenienceInitializerTests {
-    @Test("Trip convenience initializer configuration")
+    @Test("Trip convenience initializer configuration", .tags(.ui, .medium, .parallel, .swiftui, .trip, .validation))
     func testTripConvenienceInitializerConfiguration() {
         // Test static string values rather than complex binding scenarios
         let trips: [Trip] = []
@@ -496,7 +496,7 @@ struct ConvenienceInitializerTests {
         #expect(trips.isEmpty) // Verify empty array handling
     }
 
-    @Test("Organization convenience initializer configuration")
+    @Test("Organization convenience initializer configuration", .tags(.ui, .medium, .parallel, .swiftui, .organization, .validation))
     func testOrganizationConvenienceInitializerConfiguration() {
         // Test static string values rather than complex binding scenarios
         let organizations: [Organization] = []
@@ -517,7 +517,7 @@ struct ConvenienceInitializerTests {
 
 @Suite("Error Handling Tests")
 struct ErrorHandlingTests {
-    @Test("Handling invalid trip data")
+    @Test("Handling invalid trip data", .tags(.ui, .medium, .parallel, .swiftui, .trip, .errorHandling, .validation))
     func testHandlingInvalidTripData() {
         let trip = Trip(name: "")
 
@@ -526,7 +526,7 @@ struct ErrorHandlingTests {
         #expect(trip.displayName == NSLocalizedString("trip.untitled", value: "Untitled Trip", comment: "Default trip name"))
     }
 
-    @Test("Handling invalid organization data")
+    @Test("Handling invalid organization data", .tags(.ui, .medium, .parallel, .swiftui, .organization, .errorHandling, .validation))
     func testHandlingInvalidOrganizationData() {
         let org = Organization()
         org.name = ""
@@ -536,7 +536,7 @@ struct ErrorHandlingTests {
         #expect(org.displayName == NSLocalizedString("organization.unnamed", value: "Unnamed Organization", comment: "Default organization name"))
     }
 
-    @Test("Handling nil subtitle")
+    @Test("Handling nil subtitle", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .errorHandling, .validation))
     func testHandlingNilSubtitle() {
         let item = MockNavigationItem(name: "Test", subtitle: nil)
 
@@ -550,7 +550,7 @@ struct ErrorHandlingTests {
         #expect(matches == true)
     }
 
-    @Test("Handling negative badge count")
+    @Test("Handling negative badge count", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .errorHandling, .validation))
     func testHandlingNegativeBadgeCount() {
         let item = MockNavigationItem(name: "Test", badgeCount: -1)
 
@@ -563,7 +563,7 @@ struct ErrorHandlingTests {
 
 @Suite("Performance Tests")
 struct PerformanceTests {
-    @Test("Large list filtering performance")
+    @Test("Large list filtering performance", .tags(.ui, .slow, .parallel, .swiftui, .search, .performance, .validation))
     func testLargeListFilteringPerformance() {
         // Create a large list of items
         let items = (1...1000).map { i in
@@ -589,7 +589,7 @@ struct PerformanceTests {
         #expect(timeInterval < 0.1) // Should complete within 100ms
     }
 
-    @Test("Memory usage with large datasets")
+    @Test("Memory usage with large datasets", .tags(.ui, .slow, .parallel, .swiftui, .navigation, .performance, .validation))
     func testMemoryUsageWithLargeDatasets() {
         // Create items and ensure they can be deallocated
         var items: [MockNavigationItem]? = (1...10_000).map { i in
@@ -610,7 +610,7 @@ struct PerformanceTests {
 
 @Suite("Integration Tests")
 struct IntegrationTests {
-    @Test("Tab switching behavior")
+    @Test("Tab switching behavior", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .integration, .validation))
     func testTabSwitchingBehavior() {
         var selectedTabValue = 0
 
@@ -620,7 +620,7 @@ struct IntegrationTests {
         #expect(selectedTabValue == 1)
     }
 
-    @Test("Trip selection from external source")
+    @Test("Trip selection from external source", .tags(.ui, .medium, .parallel, .swiftui, .trip, .navigation, .integration, .validation))
     func testTripSelectionFromExternalSource() {
         let trip = Trip(name: "Selected Trip")
         var selectedTripValue: Trip?
@@ -637,7 +637,7 @@ struct IntegrationTests {
 
 @Suite("Localization Tests")
 struct LocalizationTests {
-    @Test("Default string localization")
+    @Test("Default string localization", .tags(.ui, .medium, .parallel, .swiftui, .localization, .validation))
     func testDefaultStringLocalization() {
         let untitledTrip = NSLocalizedString("trip.untitled", value: "Untitled Trip", comment: "Default trip name")
         let unnamedOrg = NSLocalizedString("organization.unnamed", value: "Unnamed Organization", comment: "Default organization name")
@@ -648,7 +648,7 @@ struct LocalizationTests {
         #expect(unnamedOrg == "Unnamed Organization") // Default value
     }
 
-    @Test("Navigation strings localization")
+    @Test("Navigation strings localization", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .localization, .validation))
     func testNavigationStringsLocalization() {
         let selectItemTitle = NSLocalizedString("navigation.detail.selectItem.title", value: "Select an Item", comment: "Title when no item is selected")
         let selectItemDescription = NSLocalizedString("navigation.detail.selectItem.description", value: "Choose an item from the list to view details", comment: "Description when no item is selected")
@@ -657,7 +657,7 @@ struct LocalizationTests {
         #expect(!selectItemDescription.isEmpty)
     }
 
-    @Test("Accessibility strings localization")
+    @Test("Accessibility strings localization", .tags(.ui, .medium, .parallel, .swiftui, .accessibility, .localization, .validation))
     func testAccessibilityStringsLocalization() {
         let accessibilityHint = NSLocalizedString("navigation.row.accessibilityHint", value: "Double tap to view details", comment: "Accessibility hint for navigation rows")
 

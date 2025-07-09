@@ -14,7 +14,7 @@ import UniformTypeIdentifiers
 struct EmbeddedFileAttachmentTests {
     @Suite("EmbeddedFileAttachment Model Tests")
     struct EmbeddedFileAttachmentModelTests {
-        @Test("Basic file attachment initialization")
+        @Test("Basic file attachment initialization", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .validation))
         func basicFileAttachmentInitialization() {
             let attachment = EmbeddedFileAttachment(
                 fileName: "test_file.pdf",
@@ -34,7 +34,7 @@ struct EmbeddedFileAttachmentTests {
             #expect(attachment.fileData == nil)
         }
 
-        @Test("File attachment with embedded data")
+        @Test("File attachment with embedded data", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .validation))
         func fileAttachmentWithEmbeddedData() {
             let testData = "Test file content".data(using: .utf8)!
 
@@ -51,7 +51,7 @@ struct EmbeddedFileAttachmentTests {
             #expect(attachment.fileSize == Int64(testData.count))
         }
 
-        @Test("File size formatting")
+        @Test("File size formatting", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .validation))
         func fileSizeFormatting() {
             let attachment = EmbeddedFileAttachment()
 
@@ -65,7 +65,7 @@ struct EmbeddedFileAttachmentTests {
             #expect(attachment.formattedFileSize == "500 bytes")
         }
 
-        @Test("File type detection")
+        @Test("File type detection", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .validation))
         func fileTypeDetection() {
             let imageAttachment = EmbeddedFileAttachment(fileExtension: "jpg")
             #expect(imageAttachment.isImage == true)
@@ -88,7 +88,7 @@ struct EmbeddedFileAttachmentTests {
             #expect(unknownAttachment.isDocument == false)
         }
 
-        @Test("System icon selection")
+        @Test("System icon selection", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .validation, .userInterface))
         func systemIconSelection() {
             let imageAttachment = EmbeddedFileAttachment(fileExtension: "png")
             #expect(imageAttachment.systemIcon == "photo")
@@ -103,7 +103,7 @@ struct EmbeddedFileAttachmentTests {
             #expect(unknownAttachment.systemIcon == "doc")
         }
 
-        @Test("Display name logic")
+        @Test("Display name logic", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .validation))
         func displayNameLogic() {
             let attachmentWithDescription = EmbeddedFileAttachment(
                 originalFileName: "document.pdf",
@@ -118,7 +118,7 @@ struct EmbeddedFileAttachmentTests {
             #expect(attachmentWithoutDescription.displayName == "document.pdf")
         }
 
-        @Test("Temporary file URL creation")
+        @Test("Temporary file URL creation", .tags(.unit, .medium, .serial, .dataModel, .fileAttachment, .filesystem, .validation))
         func temporaryFileURLCreation() {
             let testData = "Test content".data(using: .utf8)!
             let attachment = EmbeddedFileAttachment(
@@ -142,7 +142,7 @@ struct EmbeddedFileAttachmentTests {
             }
         }
 
-        @Test("Temporary file URL with no data")
+        @Test("Temporary file URL with no data", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .validation, .boundary))
         func temporaryFileURLWithNoData() {
             let attachment = EmbeddedFileAttachment(fileName: "test.txt")
             let tempURL = attachment.temporaryFileURL
@@ -152,14 +152,14 @@ struct EmbeddedFileAttachmentTests {
 
     @Suite("EmbeddedFileAttachmentManager Tests")
     struct EmbeddedFileAttachmentManagerTests {
-        @Test("Manager singleton")
+        @Test("Manager singleton", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .validation))
         func managerSingleton() {
             let manager1 = EmbeddedFileAttachmentManager.shared
             let manager2 = EmbeddedFileAttachmentManager.shared
             #expect(manager1 === manager2)
         }
 
-        @Test("MIME type detection")
+        @Test("MIME type detection", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .validation))
         func mimeTypeDetection() {
             _ = EmbeddedFileAttachmentManager.shared
 
@@ -176,7 +176,7 @@ struct EmbeddedFileAttachmentTests {
             #expect(txtURL.pathExtension == "txt")
         }
 
-        @Test("File validation with valid attachment")
+        @Test("File validation with valid attachment", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .validation))
         func fileValidationWithValidAttachment() {
             let testData = "Valid test content".data(using: .utf8)!
             let attachment = EmbeddedFileAttachment(
@@ -192,7 +192,7 @@ struct EmbeddedFileAttachmentTests {
             #expect(validation.error == nil)
         }
 
-        @Test("File validation with no data")
+        @Test("File validation with no data", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .validation, .boundary, .negative))
         func fileValidationWithNoData() {
             let attachment = EmbeddedFileAttachment(fileName: "empty.txt")
 
@@ -203,7 +203,7 @@ struct EmbeddedFileAttachmentTests {
             #expect(validation.error == "No file data stored")
         }
 
-        @Test("File validation with empty data")
+        @Test("File validation with empty data", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .validation, .boundary, .negative))
         func fileValidationWithEmptyData() {
             let attachment = EmbeddedFileAttachment(
                 fileName: "empty.txt",
@@ -217,7 +217,7 @@ struct EmbeddedFileAttachmentTests {
             #expect(validation.error == "File data is empty")
         }
 
-        @Test("Get file data")
+        @Test("Get file data", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .validation))
         func getFileData() {
             let testData = "Test file data".data(using: .utf8)!
             let attachment = EmbeddedFileAttachment(
@@ -231,7 +231,7 @@ struct EmbeddedFileAttachmentTests {
             #expect(retrievedData == testData)
         }
 
-        @Test("Get file data with no data")
+        @Test("Get file data with no data", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .validation, .boundary))
         func getFileDataWithNoData() {
             let attachment = EmbeddedFileAttachment(fileName: "test.txt")
 
@@ -244,7 +244,7 @@ struct EmbeddedFileAttachmentTests {
 
     @Suite("File Attachment Relationship Tests")
     struct FileAttachmentRelationshipTests {
-        @Test("Activity file attachment relationship")
+        @Test("Activity file attachment relationship", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .activity, .validation))
         func activityFileAttachmentRelationship() {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")
@@ -271,7 +271,7 @@ struct EmbeddedFileAttachmentTests {
             #expect(activity.attachmentCount == 1)
         }
 
-        @Test("Lodging file attachment relationship")
+        @Test("Lodging file attachment relationship", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .activity, .validation))
         func lodgingFileAttachmentRelationship() {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Hotel")
@@ -300,7 +300,7 @@ struct EmbeddedFileAttachmentTests {
             #expect(lodging.attachmentCount == 1)
         }
 
-        @Test("Transportation file attachment relationship")
+        @Test("Transportation file attachment relationship", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .activity, .validation))
         func transportationFileAttachmentRelationship() {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Airline")
@@ -327,7 +327,7 @@ struct EmbeddedFileAttachmentTests {
             #expect(transportation.attachmentCount == 1)
         }
 
-        @Test("Multiple attachments per activity")
+        @Test("Multiple attachments per activity", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .activity, .validation))
         func multipleAttachmentsPerActivity() {
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")
@@ -352,7 +352,7 @@ struct EmbeddedFileAttachmentTests {
             #expect(activity.hasAttachments == true)
         }
 
-        @Test("Attachment without relationship")
+        @Test("Attachment without relationship", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .validation, .boundary))
         func attachmentWithoutRelationship() {
             let attachment = EmbeddedFileAttachment(fileName: "orphaned.pdf")
 
@@ -364,7 +364,7 @@ struct EmbeddedFileAttachmentTests {
 
     @Suite("File Extension and Type Tests")
     struct FileExtensionAndTypeTests {
-        @Test("Image file extensions")
+        @Test("Image file extensions", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .validation))
         func imageFileExtensions() {
             let imageExtensions = ["jpg", "jpeg", "png", "gif", "heic", "webp"]
 
@@ -375,7 +375,7 @@ struct EmbeddedFileAttachmentTests {
             }
         }
 
-        @Test("Document file extensions")
+        @Test("Document file extensions", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .validation))
         func documentFileExtensions() {
             let docExtensions = ["doc", "docx", "txt", "rtf", "pages"]
 
@@ -386,7 +386,7 @@ struct EmbeddedFileAttachmentTests {
             }
         }
 
-        @Test("PDF file extension")
+        @Test("PDF file extension", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .validation))
         func pdfFileExtension() {
             let attachment = EmbeddedFileAttachment(fileExtension: "pdf")
             #expect(attachment.isPDF == true)
@@ -395,7 +395,7 @@ struct EmbeddedFileAttachmentTests {
             #expect(attachment.isDocument == false)
         }
 
-        @Test("Case insensitive extension matching")
+        @Test("Case insensitive extension matching", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .validation, .boundary))
         func caseInsensitiveExtensionMatching() {
             let upperCaseAttachment = EmbeddedFileAttachment(fileExtension: "JPG")
             let lowerCaseAttachment = EmbeddedFileAttachment(fileExtension: "jpg")
@@ -406,7 +406,7 @@ struct EmbeddedFileAttachmentTests {
             #expect(mixedCaseAttachment.isImage == true)
         }
 
-        @Test("Unknown file extensions")
+        @Test("Unknown file extensions", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .validation, .boundary))
         func unknownFileExtensions() {
             let unknownExtensions = ["xyz", "unknown", ""]
 
@@ -422,7 +422,7 @@ struct EmbeddedFileAttachmentTests {
 
     @Suite("Performance Tests")
     struct PerformanceTests {
-        @Test("Large file data handling")
+        @Test("Large file data handling", .tags(.unit, .medium, .serial, .dataModel, .fileAttachment, .performance, .filesystem))
         func largeFileDataHandling() {
             // Create a 1MB test file
             let largeData = Data(repeating: 0x42, count: 1_048_576)
@@ -449,7 +449,7 @@ struct EmbeddedFileAttachmentTests {
             }
         }
 
-        @Test("Multiple attachment creation performance")
+        @Test("Multiple attachment creation performance", .tags(.unit, .medium, .serial, .dataModel, .fileAttachment, .performance))
         func multipleAttachmentCreationPerformance() {
             let startTime = Date()
             var attachments: [EmbeddedFileAttachment] = []
@@ -471,7 +471,7 @@ struct EmbeddedFileAttachmentTests {
             #expect(attachments.count == 100)
         }
 
-        @Test("File size calculation performance")
+        @Test("File size calculation performance", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .performance))
         func fileSizeCalculationPerformance() {
             let attachments = (0..<50).map { i in
                 EmbeddedFileAttachment(fileSize: Int64(i * 1024))
@@ -488,7 +488,7 @@ struct EmbeddedFileAttachmentTests {
 
     @Suite("Error Handling Tests")
     struct ErrorHandlingTests {
-        @Test("Temporary file creation failure handling")
+        @Test("Temporary file creation failure handling", .tags(.unit, .medium, .serial, .dataModel, .fileAttachment, .errorHandling, .filesystem))
         func temporaryFileCreationFailureHandling() {
             // Test with invalid data that might cause write failures
             let attachment = EmbeddedFileAttachment(
@@ -506,7 +506,7 @@ struct EmbeddedFileAttachmentTests {
             }
         }
 
-        @Test("Invalid file extension handling")
+        @Test("Invalid file extension handling", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .errorHandling, .boundary, .negative))
         func invalidFileExtensionHandling() {
             let invalidExtensions = ["", " ", ".", "...", "very_long_extension_that_shouldnt_exist"]
 
@@ -521,7 +521,7 @@ struct EmbeddedFileAttachmentTests {
             }
         }
 
-        @Test("Extreme file sizes")
+        @Test("Extreme file sizes", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .errorHandling, .boundary))
         func extremeFileSizes() {
             let extremeSizes: [Int64] = [0, 1, Int64.max]
 

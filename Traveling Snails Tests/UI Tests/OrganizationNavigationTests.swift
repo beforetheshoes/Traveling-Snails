@@ -41,7 +41,7 @@ struct OrganizationNavigationTests {
 
     // MARK: - Navigation Configuration Tests
 
-    @Test("Organization navigation configuration should have correct settings")
+    @Test("Organization navigation configuration should have correct settings", .tags(.ui, .medium, .parallel, .swiftui, .organization, .navigation, .validation, .mainActor))
     func testOrganizationNavigationConfiguration() {
         _ = SwiftDataTestBase() // Ensure test environment
         let organizations: [Organization] = []
@@ -64,7 +64,7 @@ struct OrganizationNavigationTests {
 
     // MARK: - Organization NavigationItem Protocol Tests
 
-    @Test("Organization should implement NavigationItem protocol correctly")
+    @Test("Organization should implement NavigationItem protocol correctly", .tags(.ui, .medium, .parallel, .swiftui, .organization, .navigation, .validation, .mainActor))
     func testOrganizationNavigationItemConformance() {
         let testBase = SwiftDataTestBase()
         let organization = createTestOrganization(context: testBase.modelContext)
@@ -79,7 +79,7 @@ struct OrganizationNavigationTests {
         #expect(organization.displaySubtitle == "555-0123 • test@example.com")
     }
 
-    @Test("Organization with no contact info should show usage statistics in subtitle")
+    @Test("Organization with no contact info should show usage statistics in subtitle", .tags(.ui, .medium, .parallel, .swiftui, .organization, .navigation, .validation, .mainActor))
     func testOrganizationNavigationItemWithoutContactInfo() {
         let testBase = SwiftDataTestBase()
         let organization = Organization(name: "No Contact Org")
@@ -103,7 +103,7 @@ struct OrganizationNavigationTests {
 
     // MARK: - Organization Detail View Integration Tests
 
-    @Test("Organization detail view should display correctly with navigation parameters")
+    @Test("Organization detail view should display correctly with navigation parameters", .tags(.ui, .medium, .parallel, .swiftui, .organization, .navigation, .validation, .mainActor))
     func testOrganizationDetailViewIntegration() {
         let testBase = SwiftDataTestBase()
         let organization = createTestOrganizationWithAddress(context: testBase.modelContext)
@@ -121,7 +121,7 @@ struct OrganizationNavigationTests {
         #expect(detailView.organization.address?.city == "Test City")
     }
 
-    @Test("Organization detail view should handle None organization correctly")
+    @Test("Organization detail view should handle None organization correctly", .tags(.ui, .medium, .parallel, .swiftui, .organization, .navigation, .validation, .mainActor))
     func testNoneOrganizationHandling() {
         let testBase = SwiftDataTestBase()
 
@@ -140,7 +140,7 @@ struct OrganizationNavigationTests {
 
     // MARK: - Navigation View Integration Tests
 
-    @Test("Organizations navigation view should use real detail view builder")
+    @Test("Organizations navigation view should use real detail view builder", .tags(.ui, .medium, .parallel, .swiftui, .organization, .navigation, .validation, .regression, .mainActor))
     func testOrganizationNavigationDetailViewBuilder() {
         let testBase = SwiftDataTestBase()
         let organization = createTestOrganization(context: testBase.modelContext)
@@ -166,7 +166,7 @@ struct OrganizationNavigationTests {
         #expect(!detailViewString.contains("Organization Detail -"), "Detail view should not be placeholder text")
     }
 
-    @Test("Organizations navigation view should use real add view builder")
+    @Test("Organizations navigation view should use real add view builder", .tags(.ui, .medium, .parallel, .swiftui, .organization, .navigation, .validation, .regression, .mainActor))
     func testOrganizationNavigationAddViewBuilder() {
         _ = SwiftDataTestBase() // Ensure test environment
 
@@ -190,7 +190,7 @@ struct OrganizationNavigationTests {
 
     // MARK: - Organization Search Tests
 
-    @Test("Organization navigation should filter search results correctly")
+    @Test("Organization navigation should filter search results correctly", .tags(.ui, .medium, .parallel, .swiftui, .organization, .navigation, .validation, .mainActor))
     func testOrganizationSearchFiltering() {
         let testBase = SwiftDataTestBase()
 
@@ -214,7 +214,7 @@ struct OrganizationNavigationTests {
 
     // MARK: - Organization Detail View Functionality Tests
 
-    @Test("Organization detail view should show correct activity count")
+    @Test("Organization detail view should show correct activity count", .tags(.ui, .medium, .parallel, .swiftui, .organization, .activity, .validation, .mainActor))
     func testOrganizationActivityCount() {
         let testBase = SwiftDataTestBase()
         let organization = createTestOrganization(context: testBase.modelContext)
@@ -238,7 +238,7 @@ struct OrganizationNavigationTests {
         #expect(totalCount == 3) // 2 activities + 1 lodging
     }
 
-    @Test("Organization detail view should handle related trips correctly")
+    @Test("Organization detail view should handle related trips correctly", .tags(.ui, .medium, .parallel, .swiftui, .organization, .trip, .validation, .mainActor))
     func testOrganizationRelatedTrips() {
         let testBase = SwiftDataTestBase()
         let organization = createTestOrganization(context: testBase.modelContext)
@@ -276,7 +276,7 @@ struct OrganizationNavigationTests {
 
     // MARK: - Performance Tests
 
-    @Test("Organization navigation view should not cause infinite recreation")
+    @Test("Organization navigation view should not cause infinite recreation", .tags(.ui, .medium, .parallel, .swiftui, .organization, .navigation, .performance, .regression, .mainActor))
     func testOrganizationNavigationViewStability() {
         let testBase = SwiftDataTestBase()
         let organization = createTestOrganization(context: testBase.modelContext)

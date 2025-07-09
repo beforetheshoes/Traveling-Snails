@@ -12,7 +12,7 @@ import Testing
 @Suite("ToolsTab Reset Data Tests")
 @MainActor
 struct ToolsTabTests {
-    @Test("Reset All Data integration test with actual database operations")
+    @Test("Reset All Data integration test with actual database operations", .tags(.ui, .medium, .parallel, .swiftui, .settings, .validation, .regression, .mainActor))
     func resetAllDataIntegrationTest() async throws {
         // Arrange - Create isolated test database using SwiftData patterns
         let schema = Schema([Trip.self, Organization.self, Address.self, Transportation.self, Activity.self, Lodging.self])
@@ -64,7 +64,7 @@ struct ToolsTabTests {
         #expect(dataChangedCallbackCalled, "Data change callback should be triggered during reset")
     }
 
-    @Test("Current ToolsTab reset behavior shows it only simulates deletion")
+    @Test("Current ToolsTab reset behavior shows it only simulates deletion", .tags(.ui, .medium, .parallel, .swiftui, .settings, .validation, .regression, .mainActor))
     func currentResetBehaviorOnlySimulates() async throws {
         // Arrange
         let schema = Schema([Trip.self, Organization.self])

@@ -14,7 +14,7 @@ import Testing
 struct MockServiceDemonstrationTests {
     // MARK: - Basic Mock Service Usage
 
-    @Test("Basic mock service creation and configuration")
+    @Test("Basic mock service creation and configuration", .tags(.unit, .fast, .parallel, .utility, .validation))
     func testBasicMockServiceUsage() throws {
         // Create a test container with default mock services
         let container = TestServiceContainer.create()
@@ -36,7 +36,7 @@ struct MockServiceDemonstrationTests {
         #expect(mockCloud.isAvailable)
     }
 
-    @Test("Custom mock service configuration")
+    @Test("Custom mock service configuration", .tags(.unit, .fast, .parallel, .utility, .validation))
     func testCustomMockConfiguration() throws {
         // Create container with custom configuration
         let container = TestServiceContainer.create { mocks in
@@ -55,7 +55,7 @@ struct MockServiceDemonstrationTests {
 
     // MARK: - Pre-configured Scenarios
 
-    @Test("Successful scenario configuration")
+    @Test("Successful scenario configuration", .tags(.unit, .fast, .parallel, .utility, .validation))
     func testSuccessfulScenario() throws {
         let container = TestServiceContainer.successfulScenario()
         let mocks = MockServices(container: container)
@@ -67,7 +67,7 @@ struct MockServiceDemonstrationTests {
         #expect(mocks.sync.mockSyncResult)
     }
 
-    @Test("Failure scenario configuration")
+    @Test("Failure scenario configuration", .tags(.unit, .fast, .parallel, .utility, .validation, .errorHandling, .negative))
     func testFailureScenario() throws {
         let container = TestServiceContainer.failureScenario()
         let mocks = MockServices(container: container)
@@ -79,7 +79,7 @@ struct MockServiceDemonstrationTests {
         #expect(!mocks.sync.mockSyncResult)
     }
 
-    @Test("No biometrics scenario configuration")
+    @Test("No biometrics scenario configuration", .tags(.unit, .fast, .parallel, .utility, .biometric, .validation))
     func testNoBiometricsScenario() throws {
         let container = TestServiceContainer.noBiometricsScenario()
         let mocks = MockServices(container: container)
@@ -93,7 +93,7 @@ struct MockServiceDemonstrationTests {
 
     // MARK: - Mock Service Behavior Verification
 
-    @Test("Authentication service mock behavior")
+    @Test("Authentication service mock behavior", .tags(.unit, .medium, .serial, .utility, .authentication, .async, .validation))
     func testAuthenticationServiceMockBehavior() async throws {
         let container = TestServiceContainer.create()
         let authService = container.resolve(AuthenticationService.self)
@@ -118,7 +118,7 @@ struct MockServiceDemonstrationTests {
         #expect(mockAuth.allTripsLocked)
     }
 
-    @Test("Cloud storage service mock behavior")
+    @Test("Cloud storage service mock behavior", .tags(.unit, .fast, .parallel, .utility, .cloudkit, .validation))
     func testCloudStorageServiceMockBehavior() throws {
         let container = TestServiceContainer.create()
         let cloudService = container.resolve(CloudStorageService.self)
@@ -151,7 +151,7 @@ struct MockServiceDemonstrationTests {
         #expect(mockCloud.synchronizeCallCount == 0)
     }
 
-    @Test("Permission service mock behavior")
+    @Test("Permission service mock behavior", .tags(.unit, .medium, .serial, .utility, .permissions, .async, .validation))
     func testPermissionServiceMockBehavior() async throws {
         let container = TestServiceContainer.create()
         let permissionService = container.resolve(PermissionService.self)
@@ -178,7 +178,7 @@ struct MockServiceDemonstrationTests {
         #expect(mockPermission.getMicrophoneAuthorizationStatus()) // Should be back to default granted
     }
 
-    @Test("Sync service mock behavior")
+    @Test("Sync service mock behavior", .tags(.unit, .medium, .serial, .utility, .sync, .async, .mainActor, .validation))
     @MainActor func testSyncServiceMockBehavior() async throws {
         let container = TestServiceContainer.create()
         let syncService = container.resolve(SyncService.self)
@@ -212,7 +212,7 @@ struct MockServiceDemonstrationTests {
 
     // MARK: - Integration with MockServiceTestBase
 
-    @Test("MockServiceTestBase usage example")
+    @Test("MockServiceTestBase usage example", .tags(.unit, .fast, .parallel, .utility, .mainActor, .validation))
     @MainActor func testMockServiceTestBase() throws {
         // Create a test instance that uses MockServiceTestBase
         let testInstance = ExampleMockServiceTest()

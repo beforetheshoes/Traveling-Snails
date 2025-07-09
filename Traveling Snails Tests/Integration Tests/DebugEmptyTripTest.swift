@@ -12,7 +12,7 @@ import Testing
 
 @Suite("Debug Empty Trip Issue")
 struct DebugEmptyTripIssue {
-    @Test("Investigate empty trip activity count")
+    @Test("Investigate empty trip activity count", .tags(.integration, .fast, .parallel, .trip, .swiftdata, .regression, .validation))
     func investigateEmptyTripActivityCount() {
         let emptyTrip = Trip(name: "")
 
@@ -63,7 +63,7 @@ struct DebugEmptyTripIssue {
         #expect(emptyTrip.totalActivities == 0, "Expected 0 activities but got \(emptyTrip.totalActivities)")
     }
 
-    @Test("Compare different trip creation methods")
+    @Test("Compare different trip creation methods", .tags(.integration, .fast, .parallel, .trip, .swiftdata, .regression, .validation))
     func compareDifferentTripCreationMethods() {
         // Method 1: Empty name
         let trip1 = Trip(name: "")
@@ -96,7 +96,7 @@ struct DebugEmptyTripIssue {
         #endif
     }
 
-    @Test("Investigate empty activity creation")
+    @Test("Investigate empty activity creation", .tags(.integration, .fast, .parallel, .activity, .swiftdata, .regression, .validation))
     func investigateEmptyActivityCreation() {
         let emptyTrip = Trip(name: "")
         let emptyOrg = Organization(name: "")

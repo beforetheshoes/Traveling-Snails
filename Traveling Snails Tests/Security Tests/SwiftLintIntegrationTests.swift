@@ -17,24 +17,27 @@ import Darwin
 struct SwiftLintIntegrationTests {
     @Test("SwiftLint configuration file exists")
     func swiftLintConfigurationExists() async throws {
+        // Use test file location to find project root
         let projectRoot = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
+            .deletingLastPathComponent()  // Remove SwiftLintIntegrationTests.swift
+            .deletingLastPathComponent()  // Remove Security Tests
+            .deletingLastPathComponent()  // Remove Traveling Snails Tests
 
         let swiftLintConfigPath = projectRoot.appendingPathComponent(".swiftlint.yml")
 
-        let configExists = FileManager.default.fileExists(atPath: swiftLintConfigPath.path)
-        #expect(configExists, "SwiftLint configuration file should exist at project root")
+        #expect(FileManager.default.fileExists(atPath: swiftLintConfigPath.path),
+               "SwiftLint configuration file should exist at \(swiftLintConfigPath.path)")
     }
 
     #if os(macOS)
     @Test("SwiftLint configuration contains security rules")
     func swiftLintConfigurationContainsSecurityRules() async throws {
-        let projectRoot = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
+        // Use known project structure: test file is in "Tests/Security Tests/" relative to project root
+        let testFileURL = URL(fileURLWithPath: #file)
+        let projectRoot = testFileURL
+            .deletingLastPathComponent()  // Remove SwiftLintIntegrationTests.swift
+            .deletingLastPathComponent()  // Remove Security Tests
+            .deletingLastPathComponent()  // Remove Traveling Snails Tests
 
         let swiftLintConfigPath = projectRoot.appendingPathComponent(".swiftlint.yml")
         let configContent = try String(contentsOf: swiftLintConfigPath, encoding: .utf8)
@@ -85,20 +88,21 @@ struct SwiftLintIntegrationTests {
 
     @Test("Setup script exists and is executable")
     func setupScriptExistsAndIsExecutable() async throws {
+        // Use test file location to find project root
         let projectRoot = URL(fileURLWithPath: #file)
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
+            .deletingLastPathComponent()  // Remove SwiftLintIntegrationTests.swift
+            .deletingLastPathComponent()  // Remove Security Tests
+            .deletingLastPathComponent()  // Remove Traveling Snails Tests
 
         let setupScriptPath = projectRoot.appendingPathComponent("Scripts/setup-swiftlint.sh")
 
-        #expect(FileManager.default.fileExists(atPath: setupScriptPath.path), "Setup script should exist")
+        #expect(FileManager.default.fileExists(atPath: setupScriptPath.path),
+               "Setup script should exist at \(setupScriptPath.path)")
 
         // Check if script is executable
         let attributes = try FileManager.default.attributesOfItem(atPath: setupScriptPath.path)
         let permissions = attributes[.posixPermissions] as? NSNumber
         let isExecutable = (permissions?.intValue ?? 0) & 0o111 != 0
-
         #expect(isExecutable, "Setup script should be executable")
     }
 

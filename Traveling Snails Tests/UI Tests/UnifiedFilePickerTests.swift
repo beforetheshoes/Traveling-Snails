@@ -12,7 +12,7 @@ import Testing
 
 @Suite("UnifiedFilePicker Tests")
 struct UnifiedFilePickerTests {
-    @Test("UnifiedFilePicker can be created with photo configuration")
+    @Test("UnifiedFilePicker can be created with photo configuration", .tags(.ui, .medium, .parallel, .swiftui, .fileAttachment, .validation))
     func testPhotoSelectionConfiguration() {
         // Test that we can create a UnifiedFilePicker configured for photos
 
@@ -39,7 +39,7 @@ struct UnifiedFilePickerTests {
         #expect(filePicker.allowsDocuments == false, "Picker should not allow documents")
     }
 
-    @Test("FilePickerError should include permission-related errors")
+    @Test("FilePickerError should include permission-related errors", .tags(.ui, .medium, .parallel, .swiftui, .fileAttachment, .errorHandling, .validation))
     func testFilePickerErrorTypes() {
         // This test should fail initially - we don't have permission error types
         // For now, just test that the existing error types work

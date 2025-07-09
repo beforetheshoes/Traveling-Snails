@@ -14,7 +14,7 @@ import Testing
 struct UIConstantsTests {
     // MARK: - Spacing Constants Tests
 
-    @Test("Spacing constants exist and have expected values")
+    @Test("Spacing constants exist and have expected values", .tags(.unit, .fast, .parallel, .validation, .userInterface))
     func testSpacingConstants() {
         // These tests will initially fail - we need to create UIConstants
         #expect(UIConstants.Spacing.tiny == 4)
@@ -24,7 +24,7 @@ struct UIConstantsTests {
         #expect(UIConstants.Spacing.extraLarge == 20)
     }
 
-    @Test("Spacing constants are properly typed as CGFloat")
+    @Test("Spacing constants are properly typed as CGFloat", .tags(.unit, .fast, .parallel, .validation, .userInterface))
     func testSpacingTyping() {
         // Verify that spacing constants are CGFloat for SwiftUI compatibility
         let spacingValue: CGFloat = UIConstants.Spacing.medium
@@ -33,7 +33,7 @@ struct UIConstantsTests {
 
     // MARK: - Icon Size Constants Tests
 
-    @Test("Icon size constants exist and have expected values")
+    @Test("Icon size constants exist and have expected values", .tags(.unit, .fast, .parallel, .validation, .userInterface))
     func testIconSizeConstants() {
         #expect(UIConstants.IconSizes.small == 16)
         #expect(UIConstants.IconSizes.medium == 24)
@@ -42,7 +42,7 @@ struct UIConstantsTests {
 
     // MARK: - Timing Constants Tests
 
-    @Test("Timing constants exist and have expected values")
+    @Test("Timing constants exist and have expected values", .tags(.unit, .fast, .parallel, .validation, .userInterface))
     func testTimingConstants() {
         #expect(UIConstants.Timing.biometricTimeoutSeconds == 30)
         #expect(UIConstants.Timing.macCatalystPollingInterval == 10.0)
@@ -50,7 +50,7 @@ struct UIConstantsTests {
         #expect(UIConstants.Timing.nanosecondMultiplier == 1_000_000_000)
     }
 
-    @Test("Timing constants have proper types")
+    @Test("Timing constants have proper types", .tags(.unit, .fast, .parallel, .validation, .userInterface))
     func testTimingTypes() {
         // Verify proper typing for different timing use cases
         let timeoutSeconds: UInt64 = UIConstants.Timing.biometricTimeoutSeconds
@@ -66,7 +66,7 @@ struct UIConstantsTests {
 
     // MARK: - SwiftUI Integration Tests
 
-    @Test("Spacing constants work with SwiftUI padding")
+    @Test("Spacing constants work with SwiftUI padding", .tags(.unit, .fast, .parallel, .validation, .userInterface, .swiftui))
     func testSwiftUIIntegration() {
         // Test that constants can be used in SwiftUI contexts
         let paddingValue = UIConstants.Spacing.medium
@@ -78,7 +78,7 @@ struct UIConstantsTests {
         #expect(paddingValue == 12)
     }
 
-    @Test("All constants are positive values")
+    @Test("All constants are positive values", .tags(.unit, .fast, .parallel, .validation, .userInterface, .boundary))
     func testPositiveValues() {
         // Verify that all UI constants are positive (makes sense for UI)
         #expect(UIConstants.Spacing.tiny > 0)
@@ -97,7 +97,7 @@ struct UIConstantsTests {
         #expect(UIConstants.Timing.nanosecondMultiplier > 0)
     }
 
-    @Test("Spacing constants are in ascending order")
+    @Test("Spacing constants are in ascending order", .tags(.unit, .fast, .parallel, .validation, .userInterface, .boundary))
     func testSpacingOrder() {
         // Verify that spacing constants make logical sense (smaller to larger)
         #expect(UIConstants.Spacing.tiny < UIConstants.Spacing.small)

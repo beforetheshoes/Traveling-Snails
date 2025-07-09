@@ -10,7 +10,7 @@ import Testing
 
 @Suite("Environment Object Integration Tests")
 struct EnvironmentObjectIntegrationTests {
-    @Test("AppSettings works as @State environment object")
+    @Test("AppSettings works as @State environment object", .tags(.ui, .medium, .parallel, .swiftui, .settings, .validation, .mainActor))
     @MainActor func testAppSettingsAsStateEnvironmentObject() {
         // Clear stores to ensure clean state
         UserDefaults.standard.removeObject(forKey: "colorScheme")
@@ -39,10 +39,10 @@ struct EnvironmentObjectIntegrationTests {
 
         // This test mainly verifies that the compilation works and 
         // the @State + environment object setup doesn't crash
-        #expect(true, "@State environment object setup completed without errors")
+        #expect(Bool(true), "@State environment object setup completed without errors")
     }
 
-    @Test("Direct observation path works without @Bindable layers")
+    @Test("Direct observation path works without @Bindable layers", .tags(.ui, .medium, .parallel, .swiftui, .settings, .validation, .mainActor))
     @MainActor func testDirectObservationPath() {
         // Clear stores
         UserDefaults.standard.removeObject(forKey: "colorScheme")
@@ -59,7 +59,7 @@ struct EnvironmentObjectIntegrationTests {
         #expect(storedValue == "light", "Changes should persist to UserDefaults")
     }
 
-    @Test("External iCloud changes should be observable")
+    @Test("External iCloud changes should be observable", .tags(.ui, .medium, .parallel, .swiftui, .settings, .cloudkit, .async, .validation, .mainActor))
     @MainActor func testExternalICloudChanges() async {
         // Clear stores
         UserDefaults.standard.removeObject(forKey: "colorScheme")

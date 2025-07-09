@@ -14,7 +14,7 @@ import Testing
 
 @Suite("Attachment UI Refresh Bug - Issue #28")
 struct AttachmentUIRefreshBugTest {
-    @Test("Verify attachments exist in database after import")
+    @Test("Verify attachments exist in database after import", .tags(.integration, .medium, .parallel, .swiftdata, .fileAttachment, .dataImport, .regression, .critical))
     func verifyAttachmentsExistInDatabaseAfterImport() async throws {
         // Create test container
         let container = try ModelContainer(for: Trip.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
@@ -143,7 +143,7 @@ struct AttachmentUIRefreshBugTest {
         }
     }
 
-    @Test("Test notification-based UI refresh mechanism")
+    @Test("Test notification-based UI refresh mechanism", .tags(.integration, .fast, .parallel, .ui, .validation, .async))
     func testNotificationBasedUIRefresh() async throws {
         // This test simulates the notification pattern used for UI updates
         var receivedImportNotification = false
@@ -163,7 +163,7 @@ struct AttachmentUIRefreshBugTest {
         expectation.cancel()
     }
 
-    @Test("Test SwiftData relationship timing after context save")
+    @Test("Test SwiftData relationship timing after context save", .tags(.integration, .medium, .parallel, .swiftdata, .fileAttachment, .consistency, .regression, .async))
     func testSwiftDataRelationshipTimingAfterSave() async throws {
         let container = try ModelContainer(for: Trip.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
         let context = ModelContext(container)

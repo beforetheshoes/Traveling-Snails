@@ -18,7 +18,7 @@ struct EditTripView: View {
     private var navigationRouter
     @Environment(ModernSyncManager.self)
     private var syncManager
-    
+
     // Background context manager for save operations
     @State private var backgroundContextManager: BackgroundModelContextManager?
 
@@ -46,17 +46,35 @@ struct EditTripView: View {
     @State private var currentSaveTask: Task<Void, Never>?
 
     var body: some View {
-        Form {
-            Section("Trip Details") {
-                TextField("Name", text: $name)
-                TextField("Notes", text: $notes, axis: .vertical)
-            }
+        editTripForm
+    }
 
-            Section("Trip Dates") {
-                Toggle("Set start date", isOn: $hasStartDate)
+    private var tripDetailsSection: some View {
+        Section("Trip Details") {
+            TextField("Name", text: $name)
+                .accessibilityIdentifier("TripNameField")
+                .accessibilityLabel("Trip name")
+                .accessibilityHint("Enter the name for your trip")
+            TextField("Notes", text: $notes, axis: .vertical)
+                .accessibilityIdentifier("TripNotesField")
+                .accessibilityLabel("Trip notes")
+                .accessibilityHint("Enter notes and details about your trip")
+        }
+        .accessibilityIdentifier("TripDetailsSection")
+    }
+
+    private var tripDatesSection: some View {
+        Section("Trip Dates") {
+            Toggle("Set start date", isOn: $hasStartDate)
+                    .accessibilityIdentifier("StartDateToggle")
+                    .accessibilityLabel("Set start date")
+                    .accessibilityHint("Toggle to enable or disable trip start date")
 
                 if hasStartDate {
                     DatePicker("Start Date", selection: $startDate, displayedComponents: .date)
+                        .accessibilityIdentifier("StartDatePicker")
+                        .accessibilityLabel("Trip start date")
+                        .accessibilityHint("Select the date when your trip begins")
                         .onChange(of: startDate) { _, newValue in
                             // Ensure end date is after start date if both are set
                             if hasEndDate && endDate <= newValue {
@@ -66,9 +84,15 @@ struct EditTripView: View {
                 }
 
                 Toggle("Set end date", isOn: $hasEndDate)
+                    .accessibilityIdentifier("EndDateToggle")
+                    .accessibilityLabel("Set end date")
+                    .accessibilityHint("Toggle to enable or disable trip end date")
 
                 if hasEndDate {
                     DatePicker("End Date", selection: $endDate, displayedComponents: .date)
+                        .accessibilityIdentifier("EndDatePicker")
+                        .accessibilityLabel("Trip end date")
+                        .accessibilityHint("Select the date when your trip ends")
                         .onChange(of: endDate) { _, newValue in
                             // Ensure start date is before end date if both are set
                             if hasStartDate && startDate >= newValue {
@@ -77,150 +101,198 @@ struct EditTripView: View {
                         }
                 }
 
-                // Show warning if dates would conflict with existing activities
-                if (hasStartDate || hasEndDate) && trip.totalActivities > 0 {
-                    Text("Note: Changing trip dates may affect date picker ranges for existing activities.")
-                        .font(.caption)
-                        .foregroundColor(.orange)
-                }
+            // Show warning if dates would conflict with existing activities
+            if (hasStartDate || hasEndDate) && trip.totalActivities > 0 {
+                Text("Note: Changing trip dates may affect date picker ranges for existing activities.")
+                    .font(.caption)
+                    .foregroundColor(.orange)
+                    .accessibilityIdentifier("DateConflictWarning")
+                    .accessibilityLabel("Date change warning")
+                    .accessibilityValue("Changing trip dates may affect existing activities")
             }
+        }
+        .accessibilityIdentifier("TripDatesSection")
+    }
 
-            Section {
+    private var tripSummarySection: some View {
+        Section {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("\(trip.lodging.count) lodging")
                         .foregroundStyle(.secondary)
+                        .accessibilityLabel("\(trip.lodging.count) lodging items")
                     Text("\(trip.transportation.count) transportation")
                         .foregroundStyle(.secondary)
+                        .accessibilityLabel("\(trip.transportation.count) transportation items")
                     Text("\(trip.activity.count) activities")
                         .foregroundStyle(.secondary)
+                        .accessibilityLabel("\(trip.activity.count) activities")
                     Text("Total cost: \(trip.totalCost, format: .currency(code: "USD"))")
                         .foregroundStyle(.secondary)
+                        .accessibilityLabel("Total trip cost: \(trip.totalCost, format: .currency(code: "USD"))")
                 }
                 .font(.caption)
-            } header: {
-                Text("Trip Summary")
-            }
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("TripSummaryStats")
+                .accessibilityLabel("Trip summary")
+                .accessibilityValue("\(trip.lodging.count) lodging, \(trip.transportation.count) transportation, \(trip.activity.count) activities, total cost \(trip.totalCost, format: .currency(code: "USD"))")
+        } header: {
+            Text("Trip Summary")
         }
+        .accessibilityIdentifier("TripSummarySection")
+    }
+
+    private var editTripForm: some View {
+        Form {
+            tripDetailsSection
+            tripDatesSection
+            tripSummarySection
+        }
+        .accessibilityIdentifier("EditTripForm")
         .navigationTitle("Edit Trip")
-        .onAppear {
-            if !didAppear {
-                name = trip.name
-                notes = trip.notes
-
-                hasStartDate = trip.hasStartDate
-                if hasStartDate {
-                    startDate = trip.startDate
-                }
-
-                hasEndDate = trip.hasEndDate
-                if hasEndDate {
-                    endDate = trip.endDate
-                }
-
-                didAppear = true
-            }
-        }
-        .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") { dismiss() }
-            }
-            ToolbarItem(placement: .confirmationAction) {
-                Button("Done") {
-                    saveTrip()
-                }
-                .disabled(isSaving)
-            }
-        }
-        .overlay(alignment: .top) {
-            // Network status indicator
-            if isOffline {
-                HStack {
-                    Image(systemName: "wifi.slash")
-                        .foregroundColor(.orange)
-                        .accessibilityLabel(L(L10n.Errors.networkOfflineLabel))
-                    Text("Working offline")
-                        .font(.caption)
-                        .foregroundColor(.orange)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Color.orange.opacity(0.1))
-                .cornerRadius(8)
-                .padding(.top, 8)
-            } else if isSaving {
-                HStack {
-                    ProgressView()
-                        .scaleEffect(0.8)
-                    Text("Saving...")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Color.blue.opacity(0.1))
-                .cornerRadius(8)
-                .padding(.top, 8)
-            }
-        }
-        .safeAreaInset(edge: .bottom) {
-            VStack(spacing: 8) {
-                Button(role: .destructive) {
-                    showDeleteConfirmation = true
-                } label: {
-                    Label("Delete Trip", systemImage: "trash")
-                        .frame(maxWidth: .infinity)
-                }
-                .buttonStyle(.borderedProminent)
-            }
-            .padding()
-        }
+        .onAppear(perform: setupFormData)
+        .toolbar(content: toolbarContent)
+        .overlay(alignment: .top, content: statusOverlay)
+        .safeAreaInset(edge: .bottom, content: deleteButtonArea)
         .confirmationDialog(
             "Are you sure you want to delete this trip? This will also delete all lodging, transportation, and activities. This action cannot be undone.",
             isPresented: $showDeleteConfirmation,
-            titleVisibility: .visible
-        ) {
-            Button("Delete", role: .destructive) {
-                deleteTrip()
-            }
-            Button("Cancel", role: .cancel) {}
-        }
-        .alert("Date Range Warning", isPresented: $showDateRangeWarning) {
-            Button("Save Anyway") {
-                performSave()
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
+            titleVisibility: .visible,
+            actions: deleteConfirmationActions
+        )
+        .alert("Date Range Warning", isPresented: $showDateRangeWarning, actions: dateRangeWarningActions) {
             Text(dateRangeWarningMessage)
         }
-        .alert("Error", isPresented: $showErrorAlert) {
-            if let errorState = errorState {
-                ForEach(errorState.suggestedActions, id: \.self) { action in
-                    Button(action.displayName) {
-                        performAction(action)
-                    }
-                }
-            }
-        } message: {
+        .alert("Error", isPresented: $showErrorAlert, actions: errorAlertActions) {
             if let errorState = errorState {
                 Text(errorState.userMessage)
             }
         }
-        .onAppear {
-            // Configure operation queue to prevent concurrent saves
-            saveOperationQueue.maxConcurrentOperationCount = 1
-            saveOperationQueue.qualityOfService = .userInitiated
+        .onAppear(perform: configureOperationQueue)
+    }
 
-            // Initialize background context manager for save operations
-            backgroundContextManager = BackgroundModelContextManager(container: modelContext.container)
+    private func setupFormData() {
+        if !didAppear {
+            name = trip.name
+            notes = trip.notes
 
-            // Monitor network status
-            updateNetworkStatus()
+            hasStartDate = trip.hasStartDate
+            if hasStartDate {
+                startDate = trip.startDate
+            }
+
+            hasEndDate = trip.hasEndDate
+            if hasEndDate {
+                endDate = trip.endDate
+            }
+
+            didAppear = true
         }
-        .onDisappear {
-            // Cancel any pending save operations to prevent crashes
-            currentSaveTask?.cancel()
-            currentSaveTask = nil
+    }
+
+    @ToolbarContentBuilder
+    private func toolbarContent() -> some ToolbarContent {
+        ToolbarItem(placement: .cancellationAction) {
+            Button("Cancel") { dismiss() }
+                .accessibilityIdentifier("CancelTripEditButton")
+                .accessibilityLabel("Cancel")
+                .accessibilityHint("Cancel editing and discard changes")
         }
+        ToolbarItem(placement: .confirmationAction) {
+            Button("Done") {
+                saveTrip()
+            }
+            .disabled(isSaving)
+            .accessibilityIdentifier("SaveTripButton")
+            .accessibilityLabel(isSaving ? "Saving trip" : "Save trip")
+            .accessibilityHint(isSaving ? "Trip is being saved" : "Save trip changes")
+            .accessibilityAddTraits(isSaving ? [.updatesFrequently] : [])
+        }
+    }
+
+    @ViewBuilder
+    private func statusOverlay() -> some View {
+        // Network status indicator
+        if isOffline {
+            HStack {
+                Image(systemName: "wifi.slash")
+                    .foregroundColor(.orange)
+                    .accessibilityLabel(L(L10n.Errors.networkOfflineLabel))
+                Text("Working offline")
+                    .font(.caption)
+                    .foregroundColor(.orange)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Color.orange.opacity(0.1))
+            .cornerRadius(8)
+            .padding(.top, 8)
+        } else if isSaving {
+            HStack {
+                ProgressView()
+                    .scaleEffect(0.8)
+                Text("Saving...")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(Color.blue.opacity(0.1))
+            .cornerRadius(8)
+            .padding(.top, 8)
+        }
+    }
+
+    @ViewBuilder
+    private func deleteButtonArea() -> some View {
+        VStack(spacing: 8) {
+            Button(role: .destructive) {
+                showDeleteConfirmation = true
+            } label: {
+                Label("Delete Trip", systemImage: "trash")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .padding()
+    }
+
+    @ViewBuilder
+    private func deleteConfirmationActions() -> some View {
+        Button("Delete", role: .destructive) {
+            deleteTrip()
+        }
+        Button("Cancel", role: .cancel) {}
+    }
+
+    @ViewBuilder
+    private func dateRangeWarningActions() -> some View {
+        Button("Save Anyway") {
+            performSave()
+        }
+        Button("Cancel", role: .cancel) {}
+    }
+
+    @ViewBuilder
+    private func errorAlertActions() -> some View {
+        if let errorState = errorState {
+            ForEach(errorState.suggestedActions, id: \.self) { action in
+                Button(action.displayName) {
+                    performAction(action)
+                }
+            }
+        }
+    }
+
+    private func configureOperationQueue() {
+        // Configure operation queue to prevent concurrent saves
+        saveOperationQueue.maxConcurrentOperationCount = 1
+        saveOperationQueue.qualityOfService = .userInitiated
+
+        // Initialize background context manager for save operations
+        backgroundContextManager = BackgroundModelContextManager(container: modelContext.container)
+
+        // Monitor network status
+        updateNetworkStatus()
     }
 
     func saveTrip() {

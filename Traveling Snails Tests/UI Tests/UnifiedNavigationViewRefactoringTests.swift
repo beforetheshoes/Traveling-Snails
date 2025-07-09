@@ -15,7 +15,7 @@ struct UnifiedNavigationViewRefactoringTests {
 
     @Suite("NavigationViewModel Business Logic")
     struct NavigationViewModelTests {
-        @Test("NavigationViewModel initialization with proper dependencies")
+        @Test("NavigationViewModel initialization with proper dependencies", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .validation))
         func testNavigationViewModelInitialization() throws {
             // This test expects NavigationViewModel to exist with proper dependency injection
             let mockTrips: [Trip] = [
@@ -43,7 +43,7 @@ struct UnifiedNavigationViewRefactoringTests {
             #expect(viewModel.showingAddView == false)
         }
 
-        @Test("Search filtering logic extraction")
+        @Test("Search filtering logic extraction", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .search, .validation))
         func testSearchFilteringLogic() throws {
             let trips: [Trip] = [
                 Trip(name: "Paris Vacation"),
@@ -72,7 +72,7 @@ struct UnifiedNavigationViewRefactoringTests {
             #expect(allResults.count == 3)
         }
 
-        @Test("Item selection state management")
+        @Test("Item selection state management", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .state, .validation))
         func testItemSelectionStateManagement() throws {
             let trips: [Trip] = [Trip(name: "Test Trip")]
             let config = NavigationConfiguration<Trip>(title: "Trips")
@@ -91,7 +91,7 @@ struct UnifiedNavigationViewRefactoringTests {
             #expect(viewModel.selectedItem == nil)
         }
 
-        @Test("Tab switching coordination")
+        @Test("Tab switching coordination", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .state, .validation))
         func testTabSwitchingCoordination() throws {
             let config = NavigationConfiguration<Trip>(title: "Trips")
             let viewModel = NavigationViewModel(items: [], configuration: config, tabIndex: 1)
@@ -107,7 +107,7 @@ struct UnifiedNavigationViewRefactoringTests {
             #expect(viewModel.selectedItem == nil)
         }
 
-        @Test("Add view presentation logic")
+        @Test("Add view presentation logic", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .state, .validation))
         func testAddViewPresentationLogic() throws {
             let config = NavigationConfiguration<Trip>(title: "Trips")
             let viewModel = NavigationViewModel(items: [], configuration: config, tabIndex: 0)
@@ -129,7 +129,7 @@ struct UnifiedNavigationViewRefactoringTests {
 
     @Suite("NavigationCoordinator Service Logic")
     struct NavigationCoordinatorTests {
-        @Test("Deep linking coordination")
+        @Test("Deep linking coordination", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .deepLinking, .validation))
         func testDeepLinkingCoordination() throws {
             let coordinator = NavigationCoordinator()
 
@@ -146,7 +146,7 @@ struct UnifiedNavigationViewRefactoringTests {
             #expect(didNavigateToTrip == true)
         }
 
-        @Test("Navigation path management")
+        @Test("Navigation path management", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .state, .validation))
         func testNavigationPathManagement() throws {
             let coordinator = NavigationCoordinator()
 
@@ -167,7 +167,7 @@ struct UnifiedNavigationViewRefactoringTests {
 
     @Suite("NavigationContentView UI Logic")
     struct NavigationContentViewTests {
-        @Test("Content view receives only simple types")
+        @Test("Content view receives only simple types", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .validation))
         func testContentViewDataBinding() throws {
             // Expected: Content view should only receive simple data types
             let items: [RefactoringMockNavigationItem] = [
@@ -188,7 +188,7 @@ struct UnifiedNavigationViewRefactoringTests {
             #expect(items.count == 2)
         }
 
-        @Test("Empty state view rendering")
+        @Test("Empty state view rendering", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .state, .validation))
         func testEmptyStateViewRendering() throws {
             let config = NavigationConfiguration<RefactoringMockNavigationItem>(
                 title: "Test",
@@ -204,7 +204,7 @@ struct UnifiedNavigationViewRefactoringTests {
             #expect(config.emptyStateIcon == "tray")
         }
 
-        @Test("List view item rendering")
+        @Test("List view item rendering", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .validation))
         func testListViewItemRendering() throws {
             let item = RefactoringMockNavigationItem(name: "Test Item", subtitle: "Test Subtitle")
 
@@ -223,7 +223,7 @@ struct UnifiedNavigationViewRefactoringTests {
 
     @Suite("MVVM Integration Tests")
     struct MVVMIntegrationTests {
-        @Test("Root view coordination with ViewModel")
+        @Test("Root view coordination with ViewModel", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .integration, .validation))
         func testRootViewCoordination() throws {
             let trips: [Trip] = [Trip(name: "Integration Test Trip")]
 
@@ -239,7 +239,7 @@ struct UnifiedNavigationViewRefactoringTests {
             #expect(trips.count == 1)
         }
 
-        @Test("ViewModel to ContentView data flow")
+        @Test("ViewModel to ContentView data flow", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .integration, .validation))
         func testViewModelToContentViewDataFlow() throws {
             let config = NavigationConfiguration<Trip>(title: "Data Flow Test")
             let viewModel = NavigationViewModel(items: [], configuration: config, tabIndex: 0)
@@ -259,7 +259,7 @@ struct UnifiedNavigationViewRefactoringTests {
             #expect(selectedBinding.wrappedValue == nil)
         }
 
-        @Test("Complete navigation flow integration")
+        @Test("Complete navigation flow integration", .tags(.ui, .medium, .parallel, .swiftui, .navigation, .integration, .smoke))
         func testCompleteNavigationFlowIntegration() throws {
             // Test that the complete flow works: Root -> ViewModel -> Content -> User Action -> ViewModel Update
             let trips: [Trip] = [Trip(name: "Flow Test Trip")]

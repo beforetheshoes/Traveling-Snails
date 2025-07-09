@@ -13,7 +13,7 @@ import Testing
 @MainActor
 @Suite("SwiftData Regression Prevention Tests")
 struct SwiftDataRegressionTests {
-    @Test("Basic SwiftData CRUD operations work")
+    @Test("Basic SwiftData CRUD operations work", .tags(.swiftdata, .fast, .parallel, .dataModel, .validation, .sanity, .critical))
     func testBasicSwiftDataOperations() throws {
         let testBase = SwiftDataTestBase()
         try testBase.verifyDatabaseEmpty()
@@ -39,7 +39,7 @@ struct SwiftDataRegressionTests {
         #expect(trip.lodging.first?.name == "Test Hotel")
     }
 
-    @Test("Trip property access is fast and stable")
+    @Test("Trip property access is fast and stable", .tags(.swiftdata, .medium, .parallel, .trip, .dataModel, .validation, .performance, .regression))
     func testTripPropertyAccessPerformance() throws {
         let testBase = SwiftDataTestBase()
 
@@ -72,7 +72,7 @@ struct SwiftDataRegressionTests {
         #expect(trip.totalActivities == 5)
     }
 
-    @Test("SwiftData relationships prevent infinite recreation")
+    @Test("SwiftData relationships prevent infinite recreation", .tags(.swiftdata, .medium, .parallel, .dataModel, .regression, .critical, .boundary))
     func testSwiftDataRelationshipsPreventInfiniteRecreation() throws {
         let testBase = SwiftDataTestBase()
 
@@ -107,7 +107,7 @@ struct SwiftDataRegressionTests {
         #expect(trip.totalActivities >= 6) // Original + 5 new ones
     }
 
-    @Test("Model context environment pattern works")
+    @Test("Model context environment pattern works", .tags(.swiftdata, .fast, .parallel, .dataModel, .validation, .sanity))
     func testModelContextEnvironmentPattern() throws {
         let testBase = SwiftDataTestBase()
 
@@ -129,7 +129,7 @@ struct SwiftDataRegressionTests {
         // rather than receive arrays of model objects as parameters
     }
 
-    @Test("Query operations are efficient")
+    @Test("Query operations are efficient", .tags(.swiftdata, .medium, .parallel, .dataModel, .validation, .performance))
     func testQueryOperationsAreEfficient() throws {
         let testBase = SwiftDataTestBase()
 
@@ -152,7 +152,7 @@ struct SwiftDataRegressionTests {
         #expect(duration < 4.0, "Query operations should be fast")
     }
 
-    @Test("Regression prevention - anti-pattern documentation")
+    @Test("Regression prevention - anti-pattern documentation", .tags(.swiftdata, .fast, .parallel, .dataModel, .regression, .validation, .comprehensive))
     func testRegressionPrevention() throws {
         let testBase = SwiftDataTestBase()
 

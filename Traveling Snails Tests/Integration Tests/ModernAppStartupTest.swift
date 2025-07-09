@@ -12,7 +12,7 @@ import Testing
 /// Test to verify ModernTraveling_SnailsApp starts without crashing
 @Suite("Modern App Startup Tests")
 struct ModernAppStartupTest {
-    @Test("CloudKit service can be created without immediate CloudKit access")
+    @Test("CloudKit service can be created without immediate CloudKit access", .tags(.integration, .fast, .parallel, .cloudkit, .sync, .validation, .smoke))
     @MainActor func testCloudKitServiceDeferredInitialization() throws {
         // Create a test ModelContainer (safe - no CloudKit during init)
         let schema = Schema([Trip.self, Activity.self])
@@ -27,7 +27,7 @@ struct ModernAppStartupTest {
         print("✅ CloudKitSyncService created with deferred initialization")
     }
 
-    @Test("ServiceContainer creation works in modern app")
+    @Test("ServiceContainer creation works in modern app", .tags(.integration, .fast, .parallel, .utility, .validation, .smoke))
     func testServiceContainerCreation() throws {
         // Test that ServiceContainer can be created without issues
         let container = ServiceContainer()

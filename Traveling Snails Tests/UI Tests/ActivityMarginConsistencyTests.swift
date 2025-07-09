@@ -7,7 +7,7 @@ import Testing
 @Suite("Activity Margin Consistency Tests")
 @MainActor
 struct ActivityMarginConsistencyTests {
-    @Test("ActivityHeaderView should use reduced icon padding for alignment consistency")
+    @Test("ActivityHeaderView should use reduced icon padding for alignment consistency", .tags(.ui, .medium, .parallel, .swiftui, .activity, .validation, .regression))
     func activityHeaderViewShouldUseReducedIconPaddingForAlignmentConsistency() {
         let testBase = SwiftDataTestBase()
 
@@ -37,7 +37,7 @@ struct ActivityMarginConsistencyTests {
                "ActivityHeaderView should use 8pt icon padding for alignment consistency with other sections")
     }
 
-    @Test("UniversalAddActivityFormContent should maintain 16pt horizontal padding")
+    @Test("UniversalAddActivityFormContent should maintain 16pt horizontal padding", .tags(.ui, .medium, .parallel, .swiftui, .activity, .validation, .consistency))
     func universalAddActivityFormContentShouldMaintain16ptHorizontalPadding() {
         let testBase = SwiftDataTestBase()
 
@@ -62,7 +62,7 @@ struct ActivityMarginConsistencyTests {
                "UniversalAddActivityFormContent should use explicit 16pt horizontal padding")
     }
 
-    @Test("ActivitySectionCard should apply consistent internal padding")
+    @Test("ActivitySectionCard should apply consistent internal padding", .tags(.ui, .medium, .parallel, .swiftui, .activity, .validation, .consistency))
     func activitySectionCardShouldApplyConsistentInternalPadding() {
         // Test ActivitySectionCard padding structure
         let sectionCard = ActivitySectionCard(
@@ -81,7 +81,7 @@ struct ActivityMarginConsistencyTests {
                "ActivitySectionCard should apply 12pt internal padding consistently")
     }
 
-    @Test("Total effective margin should be consistent across view modes")
+    @Test("Total effective margin should be consistent across view modes", .tags(.ui, .medium, .parallel, .swiftui, .activity, .validation, .consistency, .regression))
     func totalEffectiveMarginShouldBeConsistentAcrossViewModes() {
         // This test verifies the combined effect of parent + internal padding
 

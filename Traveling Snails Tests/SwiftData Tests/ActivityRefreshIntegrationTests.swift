@@ -13,7 +13,7 @@ import Testing
 @MainActor
 @Suite("Activity Refresh Integration Tests")
 struct ActivityRefreshIntegrationTests {
-    @Test("Activity save should immediately update activity lists")
+    @Test("Activity save should immediately update activity lists", .tags(.swiftdata, .medium, .parallel, .integration, .trip, .activity, .validation, .critical))
     func testActivitySaveImmediatelyUpdatesLists() throws {
         let testBase = SwiftDataTestBase()
         try testBase.verifyDatabaseEmpty()
@@ -56,7 +56,7 @@ struct ActivityRefreshIntegrationTests {
         #expect(allActivities.first?.name == "Test Activity", "Database should have correct activity")
     }
 
-    @Test("Multiple activity types should all appear immediately after save")
+    @Test("Multiple activity types should all appear immediately after save", .tags(.swiftdata, .medium, .parallel, .integration, .trip, .activity, .validation, .critical))
     func testMultipleActivityTypesAppearImmediately() throws {
         let testBase = SwiftDataTestBase()
         try testBase.verifyDatabaseEmpty()
@@ -110,7 +110,7 @@ struct ActivityRefreshIntegrationTests {
         #expect(allTransportation.count == 1, "Transportation should be in database")
     }
 
-    @Test("Trip activity wrapper aggregation should work immediately after save")
+    @Test("Trip activity wrapper aggregation should work immediately after save", .tags(.swiftdata, .medium, .parallel, .integration, .trip, .activity, .dataModel, .validation, .critical))
     func testTripActivityWrapperAggregation() throws {
         let testBase = SwiftDataTestBase()
         try testBase.verifyDatabaseEmpty()

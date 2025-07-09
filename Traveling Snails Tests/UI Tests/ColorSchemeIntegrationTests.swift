@@ -32,7 +32,7 @@ struct ColorSchemeIntegrationTests {
 
     @Suite("NSUbiquitousKeyValueStore Integration")
     struct NSUbiquitousKeyValueStoreIntegrationTests {
-        @Test("AppSettings iCloud and UserDefaults dual storage")
+        @Test("AppSettings iCloud and UserDefaults dual storage", .tags(.ui, .medium, .parallel, .swiftui, .settings, .cloudkit, .validation, .mainActor))
         @MainActor func testDualStoragePattern() throws {
             // Clean up state before test
             ColorSchemeIntegrationTests.cleanupSharedState()
@@ -55,7 +55,7 @@ struct ColorSchemeIntegrationTests {
             // Note: iCloud Key-Value Store may not persist in test environment
         }
 
-        @Test("iCloud priority over UserDefaults")
+        @Test("iCloud priority over UserDefaults", .tags(.ui, .medium, .parallel, .swiftui, .settings, .cloudkit, .validation, .mainActor))
         @MainActor func testCloudPriorityOverDefaults() throws {
             // Clean up state before test
             ColorSchemeIntegrationTests.cleanupSharedState()
@@ -85,7 +85,7 @@ struct ColorSchemeIntegrationTests {
             // This is the expected behavior for performance reasons
         }
 
-        @Test("Notification handling setup")
+        @Test("Notification handling setup", .tags(.ui, .medium, .parallel, .swiftui, .settings, .validation, .mainActor))
         @MainActor func testNotificationHandlingSetup() {
             // Clean up state before test
             ColorSchemeIntegrationTests.cleanupSharedState()
@@ -109,7 +109,7 @@ struct ColorSchemeIntegrationTests {
 
     @Suite("AppSettings Integration")
     struct AppSettingsIntegrationTests {
-        @Test("AppSettings without ModelContext dependency")
+        @Test("AppSettings without ModelContext dependency", .tags(.ui, .medium, .parallel, .swiftui, .settings, .validation, .mainActor))
         @MainActor func testAppSettingsWithoutModelContext() {
             // Clean up state before test
             ColorSchemeIntegrationTests.cleanupSharedState()
@@ -125,7 +125,7 @@ struct ColorSchemeIntegrationTests {
             #expect(appSettings.colorScheme == .dark, "Should immediately reflect changes")
         }
 
-        @Test("Rapid setting changes performance")
+        @Test("Rapid setting changes performance", .tags(.ui, .medium, .parallel, .swiftui, .settings, .performance, .validation, .mainActor))
         @MainActor func testRapidSettingChangesPerformance() {
             // Clean up state before test
             ColorSchemeIntegrationTests.cleanupSharedState()
@@ -146,7 +146,7 @@ struct ColorSchemeIntegrationTests {
             #expect(appSettings.colorScheme == .light, "Final value should be correct")
         }
 
-        @Test("Settings persistence after app restart simulation")
+        @Test("Settings persistence after app restart simulation", .tags(.ui, .medium, .parallel, .swiftui, .settings, .validation, .regression, .mainActor))
         @MainActor func testSettingsPersistenceAfterRestart() {
             // Clean up state before test
             ColorSchemeIntegrationTests.cleanupSharedState()
@@ -177,7 +177,7 @@ struct ColorSchemeIntegrationTests {
 
     @Suite("ColorSchemePreference Enum")
     struct ColorSchemePreferenceEnumTests {
-        @Test("Color scheme enum mapping")
+        @Test("Color scheme enum mapping", .tags(.ui, .fast, .parallel, .swiftui, .settings, .validation, .unit))
         func testColorSchemeEnumMapping() {
             // Test that ColorSchemePreference maps correctly to SwiftUI ColorScheme
             #expect(ColorSchemePreference.system.colorScheme == nil)
@@ -190,7 +190,7 @@ struct ColorSchemeIntegrationTests {
             #expect(ColorSchemePreference.dark.displayName == "Dark")
         }
 
-        @Test("ColorSchemePreference enum completeness")
+        @Test("ColorSchemePreference enum completeness", .tags(.ui, .fast, .parallel, .swiftui, .settings, .validation, .unit))
         func testColorSchemePreferenceEnumCompleteness() {
             // Ensure all cases are tested and handled
             let allCases = ColorSchemePreference.allCases
@@ -210,7 +210,7 @@ struct ColorSchemeIntegrationTests {
             }
         }
 
-        @Test("Invalid enum values handling")
+        @Test("Invalid enum values handling", .tags(.ui, .fast, .parallel, .swiftui, .settings, .errorHandling, .validation, .unit))
         func testInvalidEnumValuesHandling() {
             // Test that ColorSchemePreference handles invalid values gracefully
             let invalidScheme = ColorSchemePreference(rawValue: "invalid_scheme")
@@ -226,7 +226,7 @@ struct ColorSchemeIntegrationTests {
 
     @Suite("ContentView Integration")
     struct ContentViewIntegrationTests {
-        @Test("ContentView color scheme integration")
+        @Test("ContentView color scheme integration", .tags(.ui, .medium, .parallel, .swiftui, .settings, .validation, .mainActor))
         @MainActor func testContentViewColorSchemeIntegration() {
             let appSettings = AppSettings.shared
 
@@ -241,7 +241,7 @@ struct ColorSchemeIntegrationTests {
             #expect(appSettings.colorScheme.colorScheme == .dark, "Dark should map to .dark")
         }
 
-        @Test("Settings ViewModel integration")
+        @Test("Settings ViewModel integration", .tags(.ui, .medium, .parallel, .swiftui, .settings, .validation, .mainActor))
         @MainActor func testSettingsViewModelIntegration() {
             let appSettings = AppSettings.shared
 
@@ -270,7 +270,7 @@ struct ColorSchemeIntegrationTests {
 
     @Suite("Error Handling and Edge Cases")
     struct ErrorHandlingEdgeCasesTests {
-        @Test("Handle corrupted iCloud data")
+        @Test("Handle corrupted iCloud data", .tags(.ui, .medium, .parallel, .swiftui, .settings, .cloudkit, .errorHandling, .validation, .mainActor))
         @MainActor func testHandleCorruptediCloudData() {
             let appSettings = AppSettings.shared
 
@@ -288,7 +288,7 @@ struct ColorSchemeIntegrationTests {
             UserDefaults.standard.removeObject(forKey: "colorScheme")
         }
 
-        @Test("Handle missing values in both stores")
+        @Test("Handle missing values in both stores", .tags(.ui, .medium, .parallel, .swiftui, .settings, .cloudkit, .errorHandling, .validation, .mainActor))
         @MainActor func testHandleMissingValuesInBothStores() {
             // Clear both stores
             NSUbiquitousKeyValueStore.default.removeObject(forKey: "colorScheme")
@@ -302,7 +302,7 @@ struct ColorSchemeIntegrationTests {
             // This validates the AppSettings continues to function correctly
         }
 
-        @Test("iCloud synchronization simulation")
+        @Test("iCloud synchronization simulation", .tags(.ui, .medium, .parallel, .swiftui, .settings, .cloudkit, .sync, .validation, .mainActor))
         @MainActor func testCloudSynchronizationSimulation() {
             let appSettings = AppSettings.shared
 

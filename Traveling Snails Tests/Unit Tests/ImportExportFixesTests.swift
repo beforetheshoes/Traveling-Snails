@@ -11,7 +11,7 @@ import Testing
 struct ImportExportFixesTests {
     @Suite("Trip Protection Preservation Tests")
     struct TripProtectionTests {
-        @Test("Trip protection status should be included in export data structure")
+        @Test("Trip protection status should be included in export data structure", .tags(.unit, .medium, .serial, .dataImport, .dataExport, .dataModel, .trip, .validation))
         @MainActor
         func testTripProtectionInExportData() async {
             let testBase = SwiftDataTestBase()
@@ -39,7 +39,7 @@ struct ImportExportFixesTests {
             #expect(exportedData["id"] != nil, "Export should include trip ID")
         }
 
-        @Test("Unprotected trip export data should include false protection status")
+        @Test("Unprotected trip export data should include false protection status", .tags(.unit, .medium, .serial, .dataImport, .dataExport, .dataModel, .trip, .validation))
         @MainActor
         func testUnprotectedTripExportData() async {
             let testBase = SwiftDataTestBase()
@@ -65,7 +65,7 @@ struct ImportExportFixesTests {
             #expect(exportedData["name"] as? String == "Regular Test Trip", "Export should include trip name")
         }
 
-        @Test("Trip model correctly stores protection status")
+        @Test("Trip model correctly stores protection status", .tags(.unit, .fast, .parallel, .dataModel, .trip, .validation))
         @MainActor
         func testTripProtectionProperty() async {
             _ = SwiftDataTestBase()
@@ -86,7 +86,7 @@ struct ImportExportFixesTests {
 
     @Suite("File Attachment Relationship Tests")
     struct AttachmentRelationshipTests {
-        @Test("Attachment parent relationship should be preserved in export data")
+        @Test("Attachment parent relationship should be preserved in export data", .tags(.unit, .medium, .serial, .dataImport, .dataExport, .dataModel, .fileAttachment, .validation))
         @MainActor
         func testAttachmentExportRelationship() async {
             let testBase = SwiftDataTestBase()
@@ -131,7 +131,7 @@ struct ImportExportFixesTests {
             #expect(exportData["parentId"] as? String == activity.id.uuidString, "Should export parent ID")
         }
 
-        @Test("Attachment model should support all three parent relationship types")
+        @Test("Attachment model should support all three parent relationship types", .tags(.unit, .medium, .serial, .dataModel, .fileAttachment, .validation))
         @MainActor
         func testAttachmentRelationshipTypes() async {
             let testBase = SwiftDataTestBase()
@@ -163,7 +163,7 @@ struct ImportExportFixesTests {
             #expect(transportAttachment.transportation?.id == transportation.id, "Transportation attachment should link correctly")
         }
 
-        @Test("Export data should include parent relationship information")
+        @Test("Export data should include parent relationship information", .tags(.unit, .fast, .parallel, .dataImport, .dataExport, .dataModel, .fileAttachment, .validation))
         @MainActor
         func testAttachmentExportDataStructure() async {
             _ = SwiftDataTestBase()

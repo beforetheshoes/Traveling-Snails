@@ -15,7 +15,7 @@ import Testing
 struct UIPickerAndSearchTests {
     @Suite("Organization Picker Tests")
     struct OrganizationPickerTests {
-        @Test("None organization creation")
+        @Test("None organization creation", .tags(.ui, .medium, .parallel, .swiftui, .organization, .validation, .swiftdata))
         func noneOrganizationCreation() throws {
             let config = ModelConfiguration(isStoredInMemoryOnly: true)
             let container = try ModelContainer(
@@ -34,7 +34,7 @@ struct UIPickerAndSearchTests {
             }
         }
 
-        @Test("Organization filtering")
+        @Test("Organization filtering", .tags(.ui, .medium, .parallel, .swiftui, .organization, .search, .validation))
         func organizationFiltering() {
             let organizations = [
                 Organization(name: "Apple Airlines"),
@@ -67,7 +67,7 @@ struct UIPickerAndSearchTests {
             #expect(noMatches.isEmpty)
         }
 
-        @Test("Search text validation")
+        @Test("Search text validation", .tags(.ui, .medium, .parallel, .swiftui, .organization, .search, .validation))
         func searchTextValidation() {
             let testSearches = [
                 ("apple", true),
@@ -85,7 +85,7 @@ struct UIPickerAndSearchTests {
             }
         }
 
-        @Test("Organization picker shows None exactly once - Issue #20 fix verification")
+        @Test("Organization picker shows None exactly once - Issue #20 fix verification", .tags(.ui, .medium, .parallel, .swiftui, .organization, .regression, .validation, .swiftdata))
         func organizationPickerShowsNoneOnce() throws {
             let config = ModelConfiguration(isStoredInMemoryOnly: true)
             let container = try ModelContainer(
@@ -121,7 +121,7 @@ struct UIPickerAndSearchTests {
 
     @Suite("Address Autocomplete Tests")
     struct AddressAutocompleteTests {
-        @Test("Address display logic")
+        @Test("Address display logic", .tags(.ui, .medium, .parallel, .swiftui, .address, .validation))
         func addressDisplayLogic() {
             // Test formatted address takes priority
             let addressWithFormatted = Address(
@@ -146,7 +146,7 @@ struct UIPickerAndSearchTests {
             #expect(emptyAddress.displayAddress == "")
         }
 
-        @Test("Address coordinate handling")
+        @Test("Address coordinate handling", .tags(.ui, .medium, .parallel, .swiftui, .address, .validation))
         func addressCoordinateHandling() {
             // Test valid coordinates
             let validAddress = Address(
@@ -166,7 +166,7 @@ struct UIPickerAndSearchTests {
             #expect(defaultAddress.coordinate == nil)
         }
 
-        @Test("Address validation")
+        @Test("Address validation", .tags(.ui, .medium, .parallel, .swiftui, .address, .validation))
         func addressValidation() {
             // Test complete address
             let completeAddress = Address(
@@ -190,7 +190,7 @@ struct UIPickerAndSearchTests {
 
     @Suite("TimeZone Picker Tests")
     struct TimeZonePickerTests {
-        @Test("Common timezones list")
+        @Test("Common timezones list", .tags(.ui, .medium, .parallel, .swiftui, .timezone, .validation))
         func commonTimezonesList() {
             let commonTimezones = TimeZoneHelper.commonTimeZones
 
@@ -201,7 +201,7 @@ struct UIPickerAndSearchTests {
             #expect(commonTimezones.contains { $0.identifier == "Asia/Tokyo" })
         }
 
-        @Test("Timezone formatting")
+        @Test("Timezone formatting", .tags(.ui, .medium, .parallel, .swiftui, .timezone, .validation))
         func timezoneFormatting() {
             let nyTimezone = TimeZone(identifier: "America/New_York")!
             let formatted = TimeZoneHelper.formatTimeZone(nyTimezone)
@@ -211,7 +211,7 @@ struct UIPickerAndSearchTests {
             #expect(formatted.contains("GMT") || formatted.contains("-") || formatted.contains("+"))
         }
 
-        @Test("Timezone grouping")
+        @Test("Timezone grouping", .tags(.ui, .medium, .parallel, .swiftui, .timezone, .validation))
         func timezoneGrouping() {
             let grouped = TimeZoneHelper.groupedTimeZones
 
@@ -226,7 +226,7 @@ struct UIPickerAndSearchTests {
             }
         }
 
-        @Test("Timezone abbreviation")
+        @Test("Timezone abbreviation", .tags(.ui, .medium, .parallel, .swiftui, .timezone, .validation))
         func timezoneAbbreviation() {
             let timezone = TimeZone(identifier: "America/New_York")!
             let abbreviation = TimeZoneHelper.getAbbreviation(for: timezone)
@@ -238,7 +238,7 @@ struct UIPickerAndSearchTests {
 
     @Suite("Search and Filter Logic Tests")
     struct SearchAndFilterLogicTests {
-        @Test("Case insensitive search")
+        @Test("Case insensitive search", .tags(.ui, .medium, .parallel, .swiftui, .search, .validation))
         func caseInsensitiveSearch() {
             let testString = "Apple Airlines International"
 
@@ -263,7 +263,7 @@ struct UIPickerAndSearchTests {
             }
         }
 
-        @Test("Partial string matching")
+        @Test("Partial string matching", .tags(.ui, .medium, .parallel, .swiftui, .search, .validation))
         func partialStringMatching() {
             let testString = "Delta Airlines Express"
 
@@ -281,7 +281,7 @@ struct UIPickerAndSearchTests {
             }
         }
 
-        @Test("Empty and whitespace search handling")
+        @Test("Empty and whitespace search handling", .tags(.ui, .medium, .parallel, .swiftui, .search, .validation))
         func emptyAndWhitespaceSearchHandling() {
             let testItems = ["Apple", "Banana", "Cherry"]
 
@@ -303,7 +303,7 @@ struct UIPickerAndSearchTests {
 
     @Suite("Currency Field Tests")
     struct CurrencyFieldTests {
-        @Test("Currency field initialization")
+        @Test("Currency field initialization", .tags(.ui, .medium, .parallel, .swiftui, .currency, .validation))
         func currencyFieldInitialization() {
             let binding = Binding.constant(Decimal(123.45))
             // Remove unused variable warning by using underscore
@@ -314,7 +314,7 @@ struct UIPickerAndSearchTests {
             #expect(defaultField.currencyCode == Locale.current.currency?.identifier || defaultField.currencyCode == "USD")
         }
 
-        @Test("Decimal to cent conversion")
+        @Test("Decimal to cent conversion", .tags(.ui, .medium, .parallel, .swiftui, .currency, .validation))
         func decimalToCentConversion() {
             let testValues = [
                 (Decimal(0), 0),
@@ -330,7 +330,7 @@ struct UIPickerAndSearchTests {
             }
         }
 
-        @Test("Cent to decimal conversion")
+        @Test("Cent to decimal conversion", .tags(.ui, .medium, .parallel, .swiftui, .currency, .validation))
         func centToDecimalConversion() {
             let testValues = [
                 (0, Decimal(0)),
@@ -349,7 +349,7 @@ struct UIPickerAndSearchTests {
 
     @Suite("File Attachment Picker Tests")
     struct FileAttachmentPickerTests {
-        @Test("File extension validation")
+        @Test("File extension validation", .tags(.ui, .medium, .parallel, .swiftui, .fileAttachment, .validation))
         func fileExtensionValidation() {
             let validImageExtensions = ["jpg", "jpeg", "png", "gif", "heic", "webp"]
             let validDocumentExtensions = ["pdf", "doc", "docx", "txt", "rtf"]
@@ -363,7 +363,7 @@ struct UIPickerAndSearchTests {
             }
         }
 
-        @Test("File type detection")
+        @Test("File type detection", .tags(.ui, .medium, .parallel, .swiftui, .fileAttachment, .validation))
         func fileTypeDetection() {
             let attachment1 = EmbeddedFileAttachment(fileExtension: "jpg")
             #expect(attachment1.isImage == true)
@@ -381,7 +381,7 @@ struct UIPickerAndSearchTests {
             #expect(attachment3.isDocument == true)
         }
 
-        @Test("System icon assignment")
+        @Test("System icon assignment", .tags(.ui, .medium, .parallel, .swiftui, .fileAttachment, .validation))
         func systemIconAssignment() {
             let imageAttachment = EmbeddedFileAttachment(fileExtension: "jpg")
             #expect(imageAttachment.systemIcon == "photo")
@@ -399,7 +399,7 @@ struct UIPickerAndSearchTests {
 
     @Suite("Date and Time Picker Tests")
     struct DateAndTimePickerTests {
-        @Test("Trip date range validation")
+        @Test("Trip date range validation", .tags(.ui, .medium, .parallel, .swiftui, .trip, .validation, .calendar))
         func tripDateRangeValidation() {
             let startDate = Date()
             let endDate = Calendar.current.date(byAdding: .day, value: 7, to: startDate)!
@@ -423,7 +423,7 @@ struct UIPickerAndSearchTests {
             }
         }
 
-        @Test("Activity date validation within trip")
+        @Test("Activity date validation within trip", .tags(.ui, .medium, .parallel, .swiftui, .activity, .validation, .calendar))
         func activityDateValidationWithinTrip() {
             let tripStart = Date()
             let tripEnd = Calendar.current.date(byAdding: .day, value: 7, to: tripStart)!
@@ -448,7 +448,7 @@ struct UIPickerAndSearchTests {
             }
         }
 
-        @Test("Timezone picker date formatting")
+        @Test("Timezone picker date formatting", .tags(.ui, .medium, .parallel, .swiftui, .timezone, .validation, .calendar))
         func timezonePickerDateFormatting() {
             let date = Date()
             let timezone = TimeZone(identifier: "America/New_York")!

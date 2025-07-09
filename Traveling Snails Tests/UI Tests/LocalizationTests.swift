@@ -10,7 +10,7 @@ import Testing
 
 @Suite("File Attachment Localization Tests")
 struct FileAttachmentLocalizationTests {
-    @Test("File attachments localization keys should return proper text")
+    @Test("File attachments localization keys should return proper text", .tags(.ui, .fast, .parallel, .swiftui, .fileAttachment, .localization, .validation))
     func fileAttachmentsLocalizationTest() {
         // Test the L() function with file attachment keys
         let titleText = L(L10n.FileAttachments.title)
@@ -23,7 +23,7 @@ struct FileAttachmentLocalizationTests {
         #expect(noAttachmentsDescText == "Add files to keep them with this activity", "Expected description but got '\(noAttachmentsDescText)'")
     }
 
-    @Test("General localization keys should work")
+    @Test("General localization keys should work", .tags(.ui, .fast, .parallel, .swiftui, .localization, .validation))
     func generalLocalizationTest() {
         let cancelText = L(L10n.General.cancel)
         let saveText = L(L10n.General.save)
@@ -34,7 +34,7 @@ struct FileAttachmentLocalizationTests {
         #expect(editText == "Edit", "Expected 'Edit' but got '\(editText)'")
     }
 
-    @Test("Localization manager should load English bundle")
+    @Test("Localization manager should load English bundle", .tags(.ui, .fast, .parallel, .swiftui, .localization, .validation))
     func localizationManagerTest() {
         let manager = LocalizationManager.shared
         let currentLanguage = manager.currentLanguage

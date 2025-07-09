@@ -12,7 +12,7 @@ import Testing
 @Suite("Advanced Mock Service Tests")
 @MainActor
 struct AdvancedMockServiceTests {
-    @Test("Mock authentication service state transitions")
+    @Test("Mock authentication service state transitions", .tags(.unit, .fast, .parallel, .utility, .authentication, .validation))
     func testAuthenticationStateTransitions() throws {
         let container = TestServiceContainer.create()
         let mockAuth = container.resolve(AuthenticationService.self) as! MockAuthenticationService
@@ -49,7 +49,7 @@ struct AdvancedMockServiceTests {
         #expect(mockAuth.allTripsLocked) // Should return to default state
     }
 
-    @Test("Mock sync service behavior under different conditions")
+    @Test("Mock sync service behavior under different conditions", .tags(.unit, .medium, .serial, .utility, .sync, .async, .validation))
     func testSyncServiceMockBehavior() async throws {
         let container = TestServiceContainer.create()
         let mockSync = container.resolve(SyncService.self) as! MockSyncService
@@ -86,7 +86,7 @@ struct AdvancedMockServiceTests {
         #expect(mockSync.syncError == nil)
     }
 
-    @Test("Mock cloud storage service state management")
+    @Test("Mock cloud storage service state management", .tags(.unit, .fast, .parallel, .utility, .cloudkit, .validation))
     func testCloudStorageMockBehavior() throws {
         let container = TestServiceContainer.create()
         let mockCloud = container.resolve(CloudStorageService.self) as! MockCloudStorageService
@@ -104,7 +104,7 @@ struct AdvancedMockServiceTests {
         #expect(mockCloud.isAvailable)
     }
 
-    @Test("Mock photo library service authorization states")
+    @Test("Mock photo library service authorization states", .tags(.unit, .medium, .serial, .utility, .permissions, .async, .validation))
     func testPhotoLibraryMockBehavior() async throws {
         let container = TestServiceContainer.create()
         let mockPhoto = container.resolve(PhotoLibraryService.self) as! MockPhotoLibraryService
@@ -133,7 +133,7 @@ struct AdvancedMockServiceTests {
         #expect(mockPhoto.authorizationStatus(for: .readWrite) == .authorized)
     }
 
-    @Test("Mock permission service comprehensive testing")
+    @Test("Mock permission service comprehensive testing", .tags(.unit, .medium, .serial, .utility, .permissions, .async, .validation))
     func testPermissionServiceMockBehavior() async throws {
         let container = TestServiceContainer.create()
         let mockPermission = container.resolve(PermissionService.self) as! MockPermissionService
@@ -162,7 +162,7 @@ struct AdvancedMockServiceTests {
         #expect(resetPhotoStatus == .authorized) // Default should be granted for easier testing
     }
 
-    @Test("Mock service interaction consistency")
+    @Test("Mock service interaction consistency", .tags(.unit, .medium, .serial, .utility, .integration, .async, .validation))
     func testMockServiceInteractionConsistency() async throws {
         let container = TestServiceContainer.create { mocks in
             // Configure all mocks for successful scenario
@@ -193,7 +193,7 @@ struct AdvancedMockServiceTests {
         #expect(sync.lastSyncDate != nil) // Should have completed
     }
 
-    @Test("Mock service failure scenario consistency")
+    @Test("Mock service failure scenario consistency", .tags(.unit, .medium, .serial, .utility, .integration, .async, .errorHandling, .negative))
     func testMockServiceFailureScenario() async throws {
         let container = TestServiceContainer.create { mocks in
             // Configure all mocks for failure scenario
@@ -223,7 +223,7 @@ struct AdvancedMockServiceTests {
         #expect(sync.syncError != nil) // Should have error
     }
 
-    @Test("Mock service state isolation between tests")
+    @Test("Mock service state isolation between tests", .tags(.unit, .fast, .parallel, .utility, .validation, .boundary))
     func testMockServiceStateIsolation() throws {
         // Create first container and modify state
         let container1 = TestServiceContainer.create()
@@ -246,7 +246,7 @@ struct AdvancedMockServiceTests {
         #expect(mockAuth1.allTripsLocked) // Should still be in failure state
     }
 
-    @Test("Mock service concurrent access safety")
+    @Test("Mock service concurrent access safety", .tags(.unit, .medium, .serial, .utility, .concurrent, .async, .stress, .validation))
     func testMockServiceConcurrentAccess() async throws {
         let container = TestServiceContainer.create()
         let mockSync = container.resolve(SyncService.self) as! MockSyncService
@@ -272,7 +272,7 @@ struct AdvancedMockServiceTests {
         #expect(!mockSync.isSyncing)
     }
 
-    @Test("TestServiceContainer scenario configurations")
+    @Test("TestServiceContainer scenario configurations", .tags(.unit, .medium, .serial, .utility, .integration, .async, .validation))
     func testScenarioConfigurations() async throws {
         // Test successful scenario
         let successContainer = TestServiceContainer.successfulScenario()

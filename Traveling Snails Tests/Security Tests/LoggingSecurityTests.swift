@@ -118,7 +118,7 @@ struct LoggingSecurityTests {
             // Test that logger exists and is properly configured
             // The logger should be using proper categories and levels
             logger.debug("Test message", category: .debug)
-            #expect(true, "Logger instance exists and can be used")
+            #expect(Bool(true), "Logger instance exists and can be used")
         }
 
         @Test("Debug logging should be conditional")
@@ -129,7 +129,7 @@ struct LoggingSecurityTests {
             // In production, this should not produce output
             #if !DEBUG
             // This test would verify no output in release builds
-            #expect(true, "Debug logging should be disabled in release")
+            #expect(Bool(true), "Debug logging should be disabled in release")
             #endif
         }
     }

@@ -313,15 +313,18 @@ struct TripEditErrorBanner: View {
             HStack {
                 Image(systemName: "exclamationmark.triangle.fill")
                     .foregroundColor(.orange)
-                    .accessibilityLabel("Error")
+                    .accessibilityLabel(errorAccessibilityLabel)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(errorState.userMessage)
                         .font(.caption)
                         .foregroundColor(.primary)
+                        .accessibilityLabel("Error message")
+                        .accessibilityValue(errorState.userMessage)
                     if errorState.canRetry {
                         Text("Retry attempt \(errorState.retryCount)/\(AppConfiguration.errorState.maxVisibleRetries)")
                             .font(.caption2)
                             .foregroundColor(.secondary)
+                            .accessibilityLabel("Retry count")
                     }
                 }
                 Spacer()
@@ -338,15 +341,90 @@ struct TripEditErrorBanner: View {
                         .padding(.vertical, 4)
                         .background(Color.blue.opacity(0.1))
                         .cornerRadius(4)
+                        .accessibilityLabel(action.displayName)
+                        .accessibilityHint(accessibilityHint(for: action))
+                        .accessibilityAddTraits(.isButton)
                     }
                     Spacer()
                 }
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("Error recovery actions")
             }
         }
         .padding(12)
         .background(Color.orange.opacity(0.1))
         .cornerRadius(8)
         .padding(.horizontal)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Error notification")
+        .accessibilityValue(errorState.userMessage)
+        .accessibilityHint("Error occurred, recovery actions available")
+        .onAppear {
+            announceErrorIfNeeded()
+        }
+    }
+
+    private var errorAccessibilityLabel: String {
+        switch errorState.error.category {
+        case .network:
+            return "Network Error"
+        case .database:
+            return "Critical Error"
+        case .app:
+            return "Validation Error"
+        case .cloudKit:
+            return "CloudKit Error"
+        default:
+            return "Error"
+        }
+    }
+
+    private func accessibilityHint(for action: TripEditAction) -> String {
+        switch action {
+        case .retry:
+            return "Attempts the operation again"
+        case .workOffline:
+            return "Continues working without network connection"
+        case .saveAsDraft:
+            return "Saves your changes locally"
+        case .fixInput:
+            return "Allows you to correct the input"
+        case .manageStorage:
+            return "Opens storage management options"
+        case .upgradeStorage:
+            return "Opens iCloud storage upgrade options"
+        case .cancel:
+            return "Dismisses the error and cancels the operation"
+        }
+    }
+
+    private func announceErrorIfNeeded() {
+        let shouldAnnounce = shouldAnnounceImmediately(for: errorState.error)
+
+        if shouldAnnounce {
+            let announcement = "\(errorAccessibilityLabel). \(errorState.userMessage)"
+
+            // Use UIAccessibility to announce the error
+            #if canImport(UIKit)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                UIAccessibility.post(
+                    notification: .announcement,
+                    argument: announcement
+                )
+            }
+            #endif
+        }
+    }
+
+    private func shouldAnnounceImmediately(for error: AppError) -> Bool {
+        switch error {
+        case .networkUnavailable, .databaseSaveFailed, .cloudKitQuotaExceeded:
+            return true
+        case .invalidInput, .invalidDateRange, .missingRequiredField:
+            return false
+        default:
+            return true
+        }
     }
 }
 

@@ -13,7 +13,7 @@ import Testing
 
 @Suite("Organization Address Picker Tests")
 struct OrganizationAddressPickerTests {
-    @Test("Empty address should not show Selected Address display")
+    @Test("Empty address should not show Selected Address display", .tags(.ui, .fast, .parallel, .swiftui, .organization, .validation, .userInterface))
     func emptyAddressShouldNotShowSelectedDisplay() {
         // Test that an empty address doesn't trigger the "Selected Address:" display
         let emptyAddress = Address()
@@ -24,7 +24,7 @@ struct OrganizationAddressPickerTests {
         #expect(shouldShowSelectedAddress == false, "Empty address should not show Selected Address display")
     }
 
-    @Test("Organization with empty address should not show selected state")
+    @Test("Organization with empty address should not show selected state", .tags(.ui, .medium, .parallel, .swiftui, .organization, .validation, .userInterface))
     func organizationWithEmptyAddressShouldNotShowSelectedState() throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(
@@ -48,7 +48,7 @@ struct OrganizationAddressPickerTests {
         #expect(shouldShowSelectedAddress == false, "Should not show Selected Address for empty address")
     }
 
-    @Test("Address picker should properly save selected address to organization")
+    @Test("Address picker should properly save selected address to organization", .tags(.ui, .medium, .parallel, .swiftui, .organization, .validation, .userInterface))
     func addressPickerShouldProperlySaveSelectedAddress() throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(
@@ -88,7 +88,7 @@ struct OrganizationAddressPickerTests {
         #expect(org.address?.displayAddress == "123 Test St, Test City, CA, USA")
     }
 
-    @Test("Address picker state should reset correctly after clearing")
+    @Test("Address picker state should reset correctly after clearing", .tags(.ui, .fast, .parallel, .swiftui, .organization, .validation, .userInterface))
     func addressPickerStateShouldResetAfterClearing() {
         // Test the clear functionality
         let address = Address(
@@ -117,7 +117,7 @@ struct OrganizationAddressPickerTests {
         #expect(searchText == "")
     }
 
-    @Test("Address picker should distinguish between nil and empty addresses")
+    @Test("Address picker should distinguish between nil and empty addresses", .tags(.ui, .fast, .parallel, .swiftui, .organization, .validation, .userInterface))
     func addressPickerShouldDistinguishBetweenNilAndEmptyAddresses() {
         // Test nil address
         let nilAddress: Address? = nil
@@ -135,7 +135,7 @@ struct OrganizationAddressPickerTests {
         #expect(shouldShowForValid == true, "Valid address should show Selected Address display")
     }
 
-    @Test("Organization editing should handle address updates correctly")
+    @Test("Organization editing should handle address updates correctly", .tags(.ui, .medium, .parallel, .swiftui, .organization, .validation, .userInterface))
     func organizationEditingShouldHandleAddressUpdatesCorrectly() throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(
@@ -179,7 +179,7 @@ struct OrganizationAddressPickerTests {
         #expect(org.hasAddress == true)
     }
 
-    @Test("Organization detail view should initialize editedAddress correctly for empty addresses")
+    @Test("Organization detail view should initialize editedAddress correctly for empty addresses", .tags(.ui, .medium, .parallel, .swiftui, .organization, .validation, .userInterface))
     func organizationDetailViewShouldInitializeEditedAddressCorrectly() throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(
@@ -213,7 +213,7 @@ struct OrganizationAddressPickerTests {
         #expect(editedAddressWithData?.street == "123 Test St")
     }
 
-    @Test("AddOrganizationForm should support logo URL field")
+    @Test("AddOrganizationForm should support logo URL field", .tags(.ui, .medium, .parallel, .swiftui, .organization, .validation, .userInterface))
     func addOrganizationFormShouldSupportLogoURL() throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(
@@ -242,7 +242,7 @@ struct OrganizationAddressPickerTests {
         #expect(organization.logoURL.isEmpty == false, "Logo URL should not be empty")
     }
 
-    @Test("AddOrganizationForm should support address field")
+    @Test("AddOrganizationForm should support address field", .tags(.ui, .medium, .parallel, .swiftui, .organization, .validation, .userInterface))
     func addOrganizationFormShouldSupportAddress() throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(
@@ -280,7 +280,7 @@ struct OrganizationAddressPickerTests {
         #expect(organization.hasAddress == true)
     }
 
-    @Test("AddOrganizationForm should validate logo URL security")
+    @Test("AddOrganizationForm should validate logo URL security", .tags(.ui, .medium, .parallel, .swiftui, .organization, .security, .validation, .userInterface))
     func addOrganizationFormShouldValidateLogoURLSecurity() {
         // Test safe URL
         let safeURL = "https://example.com/logo.png"
@@ -307,7 +307,7 @@ struct OrganizationAddressPickerTests {
         #expect(formHandlesEmpty == true, "Form should recognize empty URLs and treat as safe")
     }
 
-    @Test("AddOrganizationForm should handle blocked URLs correctly")
+    @Test("AddOrganizationForm should handle blocked URLs correctly", .tags(.ui, .medium, .parallel, .swiftui, .organization, .security, .errorHandling, .validation, .userInterface))
     func addOrganizationFormShouldHandleBlockedURLs() throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(
@@ -338,7 +338,7 @@ struct OrganizationAddressPickerTests {
         #expect(organization.logoURL.isEmpty == true, "Blocked URL should result in empty logo URL")
     }
 
-    @Test("AddOrganizationForm should create address object when address is selected")
+    @Test("AddOrganizationForm should create address object when address is selected", .tags(.ui, .medium, .parallel, .swiftui, .organization, .validation, .userInterface))
     func addOrganizationFormShouldCreateAddressObjectWhenSelected() throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(
@@ -396,7 +396,7 @@ struct OrganizationAddressPickerTests {
         #expect(organization.hasAddress == true)
     }
 
-    @Test("AddOrganizationForm should accept empty logo URL without validation")
+    @Test("AddOrganizationForm should accept empty logo URL without validation", .tags(.ui, .medium, .parallel, .swiftui, .organization, .validation, .userInterface))
     func addOrganizationFormShouldAcceptEmptyLogoURL() throws {
         let config = ModelConfiguration(isStoredInMemoryOnly: true)
         let container = try ModelContainer(

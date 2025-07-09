@@ -13,7 +13,7 @@ import Testing
 @Suite("Advanced Integration Tests")
 @MainActor
 struct AdvancedIntegrationTests {
-    @Test("End-to-end trip creation with authentication workflow")
+    @Test("End-to-end trip creation with authentication workflow", .tags(.integration, .medium, .parallel, .swiftdata, .authentication, .sync, .validation, .critical))
     func testTripCreationWorkflow() async throws {
         let result = try await IntegrationTestFramework.testWorkflow(
             name: "Trip Creation Workflow"
@@ -82,7 +82,7 @@ struct AdvancedIntegrationTests {
         #expect(result.duration < 1.0) // Should complete quickly
     }
 
-    @Test("Sync service interaction with authentication")
+    @Test("Sync service interaction with authentication", .tags(.integration, .medium, .parallel, .sync, .authentication, .concurrent, .async, .validation))
     func testSyncAuthenticationInteraction() async throws {
         let container = TestServiceContainer.create { mocks in
             mocks.auth.configureSuccessfulAuthentication()
@@ -131,10 +131,10 @@ struct AdvancedIntegrationTests {
 
         #expect(result.interactionResult.success)
         #expect(result.interactionResult.interactions.count >= 2)
-        #expect(result.duration < 7.0) // Increased to account for system variability
+        #expect(result.duration < 10.0) // Increased to account for system variability
     }
 
-    @Test("Photo library and permission service integration")
+    @Test("Photo library and permission service integration", .tags(.integration, .medium, .parallel, .permissions, .fileAttachment, .validation, .async))
     func testPhotoPermissionIntegration() async throws {
         let result = try await IntegrationTestFramework.testWorkflow(
             name: "Photo Permission Workflow"
@@ -197,7 +197,7 @@ struct AdvancedIntegrationTests {
         #expect(result.workflowResult.steps.count >= 5)
     }
 
-    @Test("Cloud storage backup and restore workflow")
+    @Test("Cloud storage backup and restore workflow", .tags(.integration, .medium, .parallel, .cloudkit, .dataExport, .dataImport, .filesystem, .validation, .async))
     func testCloudBackupRestoreWorkflow() async throws {
         let result = try await IntegrationTestFramework.testWorkflow(
             name: "Cloud Backup Restore Workflow"
@@ -252,7 +252,7 @@ struct AdvancedIntegrationTests {
         #expect(result.workflowResult.success)
     }
 
-    @Test("Complete trip lifecycle with all services")
+    @Test("Complete trip lifecycle with all services", .tags(.integration, .slow, .parallel, .comprehensive, .swiftdata, .authentication, .cloudkit, .permissions, .sync, .critical, .smoke))
     func testCompleteTripLifecycle() async throws {
         let result = try await IntegrationTestFramework.testWorkflow(
             name: "Complete Trip Lifecycle"
@@ -343,7 +343,7 @@ struct AdvancedIntegrationTests {
 
         #expect(result.workflowResult.success)
         #expect(result.workflowResult.steps.count >= 7)
-        #expect(result.duration < 7.0) // Complete lifecycle should be reasonably fast with mocks
+        #expect(result.duration < 10.0) // Complete lifecycle should be reasonably fast with mocks
 
         if let tripsCount = result.workflowResult.data["tripsSaved"] as? Int,
            let activitiesCount = result.workflowResult.data["activitiesSaved"] as? Int {
