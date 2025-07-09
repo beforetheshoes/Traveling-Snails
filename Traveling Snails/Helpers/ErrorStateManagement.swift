@@ -11,10 +11,14 @@ import SwiftUI
 
 #if DEBUG && canImport(Testing)
 import Testing
+#elseif DEBUG
+// Testing framework not available - test-related code will be excluded
 #endif
 
 #if DEBUG && canImport(XCTest)
 import XCTest
+#elseif DEBUG
+// XCTest framework not available - test-related code will be excluded
 #endif
 
 // MARK: - Accessibility Support
