@@ -19,14 +19,14 @@ struct CKShareManagerTests {
     
     @Test("CKShareManager can be created", .tags(.unit, .fast, .cloudkit, .sharing))
     func testCKShareManagerCreation() throws {
-        let shareManager = CKShareManager(container: CKContainer.default())
+        let shareManager = CKShareManager(container: CKContainer(identifier: "iCloud.TravelingSnails"))
         // CKShareManager is created successfully - test that it's not nil
         #expect(type(of: shareManager) == CKShareManager.self)
     }
     
     @Test("CKShareManager creates custom zone for sharing", .tags(.unit, .medium, .cloudkit, .sharing))
     func testCustomZoneCreation() async throws {
-        let shareManager = CKShareManager(container: CKContainer.default())
+        let shareManager = CKShareManager(container: CKContainer(identifier: "iCloud.TravelingSnails"))
         
         // Note: This will likely fail in test environment due to CloudKit unavailability
         do {
@@ -41,7 +41,7 @@ struct CKShareManagerTests {
     
     @Test("CKShareManager creates CKRecord for Trip", .tags(.unit, .medium, .cloudkit, .sharing))
     func testCKRecordCreationForTrip() async throws {
-        let shareManager = CKShareManager(container: CKContainer.default())
+        let shareManager = CKShareManager(container: CKContainer(identifier: "iCloud.TravelingSnails"))
         let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date(), isProtected: false)
         
         // Note: This will likely fail in test environment due to CloudKit unavailability
@@ -58,7 +58,7 @@ struct CKShareManagerTests {
     
     @Test("CKShareManager creates CKShare for Trip record", .tags(.unit, .medium, .cloudkit, .sharing))
     func testCKShareCreationForTripRecord() async throws {
-        let shareManager = CKShareManager(container: CKContainer.default())
+        let shareManager = CKShareManager(container: CKContainer(identifier: "iCloud.TravelingSnails"))
         let trip = Trip(name: "Shared Trip", startDate: Date(), endDate: Date(), isProtected: false)
         
         // Note: This will likely fail in test environment due to CloudKit unavailability
@@ -76,7 +76,7 @@ struct CKShareManagerTests {
     
     @Test("CKShareManager API structure validation", .tags(.unit, .fast, .cloudkit, .sharing))
     func testAPIStructure() throws {
-        let shareManager = CKShareManager(container: CKContainer.default())
+        let shareManager = CKShareManager(container: CKContainer(identifier: "iCloud.TravelingSnails"))
         
         // Test that API methods exist and are callable (structure validation)
         let mockShare = CKShare(rootRecord: CKRecord(recordType: "Trip"))

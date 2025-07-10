@@ -35,7 +35,8 @@ final class CKSyncEngineSharingService: CloudKitSyncService {
     // MARK: - Initialization
     
     override init(modelContainer: ModelContainer) {
-        self.cloudKitContainer = CKContainer.default()
+        // Use the correct container identifier from entitlements
+        self.cloudKitContainer = CKContainer(identifier: "iCloud.TravelingSnails")
         super.init(modelContainer: modelContainer)
     }
     
@@ -277,22 +278,31 @@ final class CKSyncEngineSharingService: CloudKitSyncService {
             tripRecord["endDate"] = trip.endDate as CKRecordValue
         }
         
-        // Save the record first
-        let database = cloudKitContainer.privateCloudDatabase
-        let savedRecord = try await database.save(tripRecord)
-        
-        Logger.shared.info("Trip record saved, creating share", category: .cloudKit)
-        
         // Create the share
-        let share = CKShare(rootRecord: savedRecord)
+        let share = CKShare(rootRecord: tripRecord)
         share[CKShare.SystemFieldKey.title] = trip.name as CKRecordValue
         share.publicPermission = .none // Private sharing only
         
-        // Save the share
-        let savedShareRecord = try await database.save(share)
+        Logger.shared.info("Trip record and share created, saving together", category: .cloudKit)
         
-        guard let savedShare = savedShareRecord as? CKShare else {
-            throw CloudKitSharingError.shareCreationFailed("Failed to save share record")
+        // Save both the record and share together in a single operation using CKModifyRecordsOperation
+        let database = cloudKitContainer.privateCloudDatabase
+        
+        let savedShare = try await withCheckedThrowingContinuation { continuation in
+            let operation = CKModifyRecordsOperation(recordsToSave: [tripRecord, share], recordIDsToDelete: nil)
+            
+            operation.modifyRecordsResultBlock = { result in
+                switch result {
+                case .success:
+                    Logger.shared.info("Share and record saved successfully", category: .cloudKit)
+                    continuation.resume(returning: share)
+                case .failure(let error):
+                    Logger.shared.logError(error, message: "Failed to save share and record together", category: .cloudKit)
+                    continuation.resume(throwing: error)
+                }
+            }
+            
+            database.add(operation)
         }
         
         Logger.shared.info("Share created successfully for trip: \(trip.id)", category: .cloudKit)

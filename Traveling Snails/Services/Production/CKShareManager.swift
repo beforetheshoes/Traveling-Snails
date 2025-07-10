@@ -31,7 +31,7 @@ final class CKShareManager {
     
     // MARK: - Initialization
     
-    init(container: CKContainer = CKContainer.default()) {
+    init(container: CKContainer = CKContainer(identifier: "iCloud.TravelingSnails")) {
         self.container = container
     }
     
@@ -97,12 +97,10 @@ final class CKShareManager {
             record["hasEndDate"] = true as CKRecordValue
         }
         
-        // Save the record
-        let savedRecord = try await privateDatabase.save(record)
-        
+        // Note: Don't save the record here - it should be saved together with the share
         Logger.shared.info("Created CloudKit record for trip: \(trip.id)", category: .cloudKit)
         
-        return savedRecord
+        return record
     }
     
     // MARK: - Share Management
@@ -120,16 +118,23 @@ final class CKShareManager {
         share[CKShare.SystemFieldKey.title] = record["name"] ?? "Shared Trip"
         share.publicPermission = .none // Private sharing only
         
-        // Save the share
-        let savedRecord = try await privateDatabase.save(share)
-        
-        guard let savedShare = savedRecord as? CKShare else {
-            throw CKShareManagerError.invalidShareRecord
+        // Save both the record and share together in a single operation using CKModifyRecordsOperation
+        return try await withCheckedThrowingContinuation { continuation in
+            let operation = CKModifyRecordsOperation(recordsToSave: [record, share], recordIDsToDelete: nil)
+            
+            operation.modifyRecordsResultBlock = { result in
+                switch result {
+                case .success:
+                    Logger.shared.info("Share and record saved successfully", category: .cloudKit)
+                    continuation.resume(returning: share)
+                case .failure(let error):
+                    Logger.shared.logError(error, message: "Failed to save share and record together", category: .cloudKit)
+                    continuation.resume(throwing: error)
+                }
+            }
+            
+            privateDatabase.add(operation)
         }
-        
-        Logger.shared.info("Share created successfully for record: \(record.recordID)", category: .cloudKit)
-        
-        return savedShare
     }
     
     /// Add a participant to a share using email or phone
