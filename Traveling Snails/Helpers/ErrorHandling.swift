@@ -243,10 +243,10 @@ private enum ErrorMessageFormatter {
 private enum ErrorAlertFactory {
     static func createAlert(for error: Error) -> ErrorAlert {
         // Log the technical details but show generic message to user
-        Logger.shared.error("Error alert created: \(error.localizedDescription)", category: .app)
+        Logger.shared.error(L(L10n.Errors.Log.technicalError, error.localizedDescription), category: .app)
 
         // Show generic user-friendly message
-        let userMessage = "An unexpected error occurred. Please try again."
+        let userMessage = L(L10n.Errors.Log.genericUserMessage)
         return ErrorAlert(id: UUID(), message: userMessage)
     }
 
@@ -255,7 +255,7 @@ private enum ErrorAlertFactory {
         Logger.shared.error("AppError alert created: \(error.localizedDescription)", category: error.category)
 
         // Use AppError's user-friendly message or fallback to generic
-        let userMessage = error.recoverySuggestion ?? "An error occurred. Please try again."
+        let userMessage = error.recoverySuggestion ?? L(L10n.Errors.Recovery.tryAgain)
         return ErrorAlert(id: UUID(), message: userMessage)
     }
 }
@@ -359,7 +359,7 @@ struct ErrorHandlingModifier: ViewModifier {
             }
             .alert(item: $errorAlert) { errorAlert in
                 Alert(
-                    title: Text("Error"),
+                    title: Text(L(L10n.General.error)),
                     message: Text(errorAlert.message),
                     dismissButton: .default(Text("OK"))
                 )

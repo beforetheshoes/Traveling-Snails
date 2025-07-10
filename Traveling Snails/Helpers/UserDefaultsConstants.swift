@@ -24,9 +24,9 @@ enum UserDefaultsConstants {
     /// Key for detecting if the app is running in test mode
     /// Used throughout test files and environment detection
     static let isRunningTests = "isRunningTests"
-    
+
     // MARK: - Error Management Configuration Keys
-    
+
     /// Key for configuring the maximum number of error states to retain in memory
     /// Used in: ErrorStateManagement.swift
     /// Default: 50, Range: 10-200 (reasonable bounds for memory vs. debugging needs)
@@ -80,16 +80,16 @@ extension UserDefaults {
     func setIsRunningTests(_ isRunning: Bool) {
         set(isRunning, forKey: UserDefaultsConstants.isRunningTests)
     }
-    
+
     // MARK: - Error State Configuration
-    
+
     /// Get the maximum number of error states to retain
     /// - Returns: The max count (default: 50, minimum: 10)
     func getErrorStateMaxCount() -> Int {
         let value = integer(forKey: UserDefaultsConstants.errorStateMaxCount)
         return value > 0 ? max(10, value) : 50 // Ensure minimum of 10, default 50
     }
-    
+
     /// Set the maximum number of error states to retain
     /// - Parameter count: The max count (will be clamped to 10-200 range)
     func setErrorStateMaxCount(_ count: Int) {

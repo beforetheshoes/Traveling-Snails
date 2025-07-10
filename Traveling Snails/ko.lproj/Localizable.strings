@@ -1,64 +1,71 @@
 // Localizable.strings
 // TODO: Complete translations for this language
 
+// General
+"general.error" = "오류";
+
 // Database Errors
-"errors.database.save_failed" = "Failed to save data: %@";
-"errors.database.load_failed" = "Failed to load data: %@";
-"errors.database.delete_failed" = "Failed to delete data: %@";
-"errors.database.corrupted" = "Database corruption detected: %@";
-"errors.database.relationship_integrity" = "Data relationship error: %@";
+"errors.database.save_failed" = "데이터 저장에 실패했습니다: %@";
+"errors.database.load_failed" = "데이터 로드에 실패했습니다: %@";
+"errors.database.delete_failed" = "데이터 삭제에 실패했습니다: %@";
+"errors.database.corrupted" = "데이터베이스 손상이 감지되었습니다: %@";
+"errors.database.relationship_integrity" = "데이터 관계 오류: %@";
 
 // File System Errors
-"errors.file.not_found" = "File not found: %@";
-"errors.file.permission_denied" = "Permission denied for file: %@";
-"errors.file.corrupted" = "File is corrupted: %@";
-"errors.file.disk_space_insufficient" = "Insufficient disk space";
-"errors.file.already_exists" = "File already exists: %@";
+"errors.file.not_found" = "파일을 찾을 수 없습니다: %@";
+"errors.file.permission_denied" = "파일 접근 권한이 거부되었습니다: %@";
+"errors.file.corrupted" = "파일이 손상되었습니다: %@";
+"errors.file.disk_space_insufficient" = "디스크 공간이 부족합니다";
+"errors.file.already_exists" = "파일이 이미 존재합니다: %@";
 
 // Network Errors
-"errors.network.unavailable" = "Network connection unavailable";
-"errors.network.server_error" = "Server error (%d): %@";
-"errors.network.timeout" = "Request timed out";
-"errors.network.invalid_url" = "Invalid URL: %@";
+"errors.network.unavailable" = "네트워크 연결을 사용할 수 없습니다";
+"errors.network.server_error" = "서버 오류 (%d): %@";
+"errors.network.timeout" = "요청 시간이 초과되었습니다";
+"errors.network.invalid_url" = "잘못된 URL: %@";
 
 // CloudKit Errors
-"errors.cloudkit.unavailable" = "CloudKit is unavailable";
-"errors.cloudkit.quota_exceeded" = "CloudKit storage quota exceeded";
-"errors.cloudkit.sync_failed" = "CloudKit sync failed: %@";
-"errors.cloudkit.authentication_failed" = "CloudKit authentication failed";
+"errors.cloudkit.unavailable" = "CloudKit을 사용할 수 없습니다";
+"errors.cloudkit.quota_exceeded" = "CloudKit 저장소 할당량을 초과했습니다";
+"errors.cloudkit.sync_failed" = "CloudKit 동기화에 실패했습니다: %@";
+"errors.cloudkit.authentication_failed" = "CloudKit 인증에 실패했습니다";
 
 // Import/Export Errors
-"errors.import.failed" = "Import failed: %@";
-"errors.export.failed" = "Export failed: %@";
-"errors.import.invalid_format" = "Invalid file format: %@";
-"errors.import.corrupted_data" = "Import data is corrupted: %@";
+"errors.import.failed" = "가져오기에 실패했습니다: %@";
+"errors.export.failed" = "내보내기에 실패했습니다: %@";
+"errors.import.invalid_format" = "잘못된 파일 형식: %@";
+"errors.import.corrupted_data" = "가져오기 데이터가 손상되었습니다: %@";
 
 // Validation Errors
-"errors.validation.invalid_input" = "Invalid input for %@";
-"errors.validation.missing_required_field" = "Required field missing: %@";
-"errors.validation.duplicate_entry" = "Duplicate entry: %@";
-"errors.validation.invalid_date_range" = "Invalid date range: end date must be after start date";
+"errors.validation.invalid_input" = "%@에 대한 잘못된 입력";
+"errors.validation.missing_required_field" = "필수 필드가 누락되었습니다: %@";
+"errors.validation.duplicate_entry" = "중복 항목: %@";
+"errors.validation.invalid_date_range" = "잘못된 날짜 범위: 종료 날짜는 시작 날짜보다 늦어야 합니다";
 
 // Organization Errors
-"errors.organization.in_use" = "Cannot delete '%@'. It's used by %d item.";
-"errors.organization.in_use_plural" = "Cannot delete '%@'. It's used by %d items.";
-"errors.organization.cannot_delete_none" = "Cannot delete the default 'None' organization";
-"errors.organization.not_found" = "Organization not found: %@";
+"errors.organization.in_use" = "'%@'를 삭제할 수 없습니다. %d개의 항목에서 사용 중입니다.";
+"errors.organization.in_use_plural" = "'%@'를 삭제할 수 없습니다. %d개의 항목에서 사용 중입니다.";
+"errors.organization.cannot_delete_none" = "기본 '없음' 조직은 삭제할 수 없습니다";
+"errors.organization.not_found" = "조직을 찾을 수 없습니다: %@";
 
 // Generic Errors
-"errors.general.unknown" = "An unexpected error occurred: %@";
-"errors.general.operation_cancelled" = "Operation was cancelled";
-"errors.general.feature_not_available" = "Feature not available: %@";
+"errors.general.unknown" = "예기치 않은 오류가 발생했습니다: %@";
+"errors.general.operation_cancelled" = "작업이 취소되었습니다";
+"errors.general.feature_not_available" = "기능을 사용할 수 없습니다: %@";
 
 // Recovery Suggestions
-"errors.recovery.restart_app" = "Try restarting the app. If the problem persists, contact support.";
-"errors.recovery.check_connection" = "Check your internet connection and try again.";
-"errors.recovery.free_space" = "Free up some storage space and try again.";
-"errors.recovery.check_permissions" = "Check file permissions and try again.";
-"errors.recovery.contact_support" = "Contact support for assistance.";
-"errors.recovery.try_again" = "Please try again.";
-"errors.recovery.restore_from_backup" = "Your data may be corrupted. Please restore from a backup if available.";
-"errors.recovery.check_icloud_settings" = "Check your iCloud settings and internet connection.";
-"errors.recovery.upgrade_icloud_storage" = "Upgrade your iCloud storage plan or delete some data.";
-"errors.recovery.ensure_end_date_after_start" = "Please ensure the end date is after the start date.";
-"errors.recovery.remove_associated_items" = "Remove all associated items before deleting this organization.";
+"errors.recovery.restart_app" = "앱을 다시 시작해 보세요. 문제가 지속되면 지원팀에 문의하세요.";
+"errors.recovery.check_connection" = "인터넷 연결을 확인하고 다시 시도하세요.";
+"errors.recovery.free_space" = "저장 공간을 확보하고 다시 시도하세요.";
+"errors.recovery.check_permissions" = "파일 권한을 확인하고 다시 시도하세요.";
+"errors.recovery.contact_support" = "지원팀에 문의하여 도움을 받으세요.";
+"errors.recovery.try_again" = "다시 시도해 주세요.";
+"errors.recovery.restore_from_backup" = "데이터가 손상되었을 수 있습니다. 가능하면 백업에서 복원하세요.";
+"errors.recovery.check_icloud_settings" = "iCloud 설정과 인터넷 연결을 확인하세요.";
+"errors.recovery.upgrade_icloud_storage" = "iCloud 저장 공간 요금제를 업그레이드하거나 일부 데이터를 삭제하세요.";
+"errors.recovery.ensure_end_date_after_start" = "종료 날짜가 시작 날짜보다 늦는지 확인하세요.";
+"errors.recovery.remove_associated_items" = "이 조직을 삭제하기 전에 연결된 모든 항목을 제거하세요.";
+
+// Error Logging
+"errors.log.technical_error" = "오류 알림이 생성되었습니다: %@";
+"errors.log.generic_user_message" = "예기치 않은 오류가 발생했습니다. 다시 시도해 주세요.";

@@ -806,7 +806,7 @@ struct ErrorPresentation {
 class ErrorStateManager: ObservableObject {
     @Published private(set) var errorStates: [ViewErrorState] = []
     private let logger = Logger.shared
-    
+
     /// Maximum number of error states to retain in memory
     /// Configurable via UserDefaults for flexibility across different deployment scenarios
     private var maxErrorStates: Int {
@@ -823,8 +823,9 @@ class ErrorStateManager: ObservableObject {
 
         // Keep only recent errors to prevent unbounded growth
         if errorStates.count > maxErrorStates {
+            // Performance optimization: Use suffix instead of removeFirst to avoid O(n) shifts
             let removedCount = errorStates.count - maxErrorStates
-            errorStates.removeFirst(removedCount)
+            errorStates = Array(errorStates.suffix(maxErrorStates))
             logger.log("Removed \(removedCount) old error states", category: .app, level: .debug)
         }
 

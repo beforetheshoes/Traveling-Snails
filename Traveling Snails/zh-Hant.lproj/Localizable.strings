@@ -1,64 +1,71 @@
 // Localizable.strings
 // TODO: Complete translations for this language
 
+// General
+"general.error" = "錯誤";
+
 // Database Errors
-"errors.database.save_failed" = "Failed to save data: %@";
-"errors.database.load_failed" = "Failed to load data: %@";
-"errors.database.delete_failed" = "Failed to delete data: %@";
-"errors.database.corrupted" = "Database corruption detected: %@";
-"errors.database.relationship_integrity" = "Data relationship error: %@";
+"errors.database.save_failed" = "儲存資料失敗：%@";
+"errors.database.load_failed" = "載入資料失敗：%@";
+"errors.database.delete_failed" = "刪除資料失敗：%@";
+"errors.database.corrupted" = "偵測到資料庫損壞：%@";
+"errors.database.relationship_integrity" = "資料關係錯誤：%@";
 
 // File System Errors
-"errors.file.not_found" = "File not found: %@";
-"errors.file.permission_denied" = "Permission denied for file: %@";
-"errors.file.corrupted" = "File is corrupted: %@";
-"errors.file.disk_space_insufficient" = "Insufficient disk space";
-"errors.file.already_exists" = "File already exists: %@";
+"errors.file.not_found" = "檔案未找到：%@";
+"errors.file.permission_denied" = "檔案權限被拒絕：%@";
+"errors.file.corrupted" = "檔案已損壞：%@";
+"errors.file.disk_space_insufficient" = "磁碟空間不足";
+"errors.file.already_exists" = "檔案已存在：%@";
 
 // Network Errors
-"errors.network.unavailable" = "Network connection unavailable";
-"errors.network.server_error" = "Server error (%d): %@";
-"errors.network.timeout" = "Request timed out";
-"errors.network.invalid_url" = "Invalid URL: %@";
+"errors.network.unavailable" = "網路連線不可用";
+"errors.network.server_error" = "伺服器錯誤 (%d)：%@";
+"errors.network.timeout" = "請求逾時";
+"errors.network.invalid_url" = "無效的網址：%@";
 
 // CloudKit Errors
-"errors.cloudkit.unavailable" = "CloudKit is unavailable";
-"errors.cloudkit.quota_exceeded" = "CloudKit storage quota exceeded";
-"errors.cloudkit.sync_failed" = "CloudKit sync failed: %@";
-"errors.cloudkit.authentication_failed" = "CloudKit authentication failed";
+"errors.cloudkit.unavailable" = "CloudKit 不可用";
+"errors.cloudkit.quota_exceeded" = "CloudKit 儲存配額已超出";
+"errors.cloudkit.sync_failed" = "CloudKit 同步失敗：%@";
+"errors.cloudkit.authentication_failed" = "CloudKit 身分驗證失敗";
 
 // Import/Export Errors
-"errors.import.failed" = "Import failed: %@";
-"errors.export.failed" = "Export failed: %@";
-"errors.import.invalid_format" = "Invalid file format: %@";
-"errors.import.corrupted_data" = "Import data is corrupted: %@";
+"errors.import.failed" = "匯入失敗：%@";
+"errors.export.failed" = "匯出失敗：%@";
+"errors.import.invalid_format" = "無效的檔案格式：%@";
+"errors.import.corrupted_data" = "匯入資料已損壞：%@";
 
 // Validation Errors
-"errors.validation.invalid_input" = "Invalid input for %@";
-"errors.validation.missing_required_field" = "Required field missing: %@";
-"errors.validation.duplicate_entry" = "Duplicate entry: %@";
-"errors.validation.invalid_date_range" = "Invalid date range: end date must be after start date";
+"errors.validation.invalid_input" = "%@ 的輸入無效";
+"errors.validation.missing_required_field" = "缺少必填欄位：%@";
+"errors.validation.duplicate_entry" = "重複項目：%@";
+"errors.validation.invalid_date_range" = "無效的日期範圍：結束日期必須晚於開始日期";
 
 // Organization Errors
-"errors.organization.in_use" = "Cannot delete '%@'. It's used by %d item.";
-"errors.organization.in_use_plural" = "Cannot delete '%@'. It's used by %d items.";
-"errors.organization.cannot_delete_none" = "Cannot delete the default 'None' organization";
-"errors.organization.not_found" = "Organization not found: %@";
+"errors.organization.in_use" = "無法刪除 '%@'。它被 %d 個項目使用。";
+"errors.organization.in_use_plural" = "無法刪除 '%@'。它被 %d 個項目使用。";
+"errors.organization.cannot_delete_none" = "無法刪除預設的「無」組織";
+"errors.organization.not_found" = "組織未找到：%@";
 
 // Generic Errors
-"errors.general.unknown" = "An unexpected error occurred: %@";
-"errors.general.operation_cancelled" = "Operation was cancelled";
-"errors.general.feature_not_available" = "Feature not available: %@";
+"errors.general.unknown" = "發生了意外錯誤：%@";
+"errors.general.operation_cancelled" = "操作已取消";
+"errors.general.feature_not_available" = "功能不可用：%@";
 
 // Recovery Suggestions
-"errors.recovery.restart_app" = "Try restarting the app. If the problem persists, contact support.";
-"errors.recovery.check_connection" = "Check your internet connection and try again.";
-"errors.recovery.free_space" = "Free up some storage space and try again.";
-"errors.recovery.check_permissions" = "Check file permissions and try again.";
-"errors.recovery.contact_support" = "Contact support for assistance.";
-"errors.recovery.try_again" = "Please try again.";
-"errors.recovery.restore_from_backup" = "Your data may be corrupted. Please restore from a backup if available.";
-"errors.recovery.check_icloud_settings" = "Check your iCloud settings and internet connection.";
-"errors.recovery.upgrade_icloud_storage" = "Upgrade your iCloud storage plan or delete some data.";
-"errors.recovery.ensure_end_date_after_start" = "Please ensure the end date is after the start date.";
-"errors.recovery.remove_associated_items" = "Remove all associated items before deleting this organization.";
+"errors.recovery.restart_app" = "嘗試重新啟動應用程式。如果問題仍然存在，請聯絡支援。";
+"errors.recovery.check_connection" = "檢查您的網路連線並重試。";
+"errors.recovery.free_space" = "釋放一些儲存空間並重試。";
+"errors.recovery.check_permissions" = "檢查檔案權限並重試。";
+"errors.recovery.contact_support" = "聯絡支援獲取協助。";
+"errors.recovery.try_again" = "請重試。";
+"errors.recovery.restore_from_backup" = "您的資料可能已損壞。如果可能，請從備份中恢復。";
+"errors.recovery.check_icloud_settings" = "檢查您的 iCloud 設定和網路連線。";
+"errors.recovery.upgrade_icloud_storage" = "升級您的 iCloud 儲存方案或刪除一些資料。";
+"errors.recovery.ensure_end_date_after_start" = "請確保結束日期晚於開始日期。";
+"errors.recovery.remove_associated_items" = "在刪除此組織之前，請移除所有關聯項目。";
+
+// Error Logging
+"errors.log.technical_error" = "錯誤警報已建立：%@";
+"errors.log.generic_user_message" = "發生了意外錯誤。請重試。";

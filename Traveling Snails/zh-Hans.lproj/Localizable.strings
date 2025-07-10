@@ -1,64 +1,59 @@
-// Localizable.strings
-// TODO: Complete translations for this language
+/* Chinese Simplified Localizations */
 
-// Database Errors
-"errors.database.save_failed" = "Failed to save data: %@";
-"errors.database.load_failed" = "Failed to load data: %@";
-"errors.database.delete_failed" = "Failed to delete data: %@";
-"errors.database.corrupted" = "Database corruption detected: %@";
-"errors.database.relationship_integrity" = "Data relationship error: %@";
+"general.error" = "错误";
 
-// File System Errors
-"errors.file.not_found" = "File not found: %@";
-"errors.file.permission_denied" = "Permission denied for file: %@";
-"errors.file.corrupted" = "File is corrupted: %@";
-"errors.file.disk_space_insufficient" = "Insufficient disk space";
-"errors.file.already_exists" = "File already exists: %@";
+"errors.database.save_failed" = "保存数据失败：%@";
+"errors.database.load_failed" = "加载数据失败：%@";
+"errors.database.delete_failed" = "删除数据失败：%@";
+"errors.database.corrupted" = "检测到数据库损坏：%@";
+"errors.database.relationship_integrity" = "数据关系错误：%@";
 
-// Network Errors
-"errors.network.unavailable" = "Network connection unavailable";
-"errors.network.server_error" = "Server error (%d): %@";
-"errors.network.timeout" = "Request timed out";
-"errors.network.invalid_url" = "Invalid URL: %@";
+"errors.file.not_found" = "文件未找到：%@";
+"errors.file.permission_denied" = "文件权限被拒绝：%@";
+"errors.file.corrupted" = "文件已损坏：%@";
+"errors.file.disk_space_insufficient" = "磁盘空间不足";
+"errors.file.already_exists" = "文件已存在：%@";
 
-// CloudKit Errors
-"errors.cloudkit.unavailable" = "CloudKit is unavailable";
-"errors.cloudkit.quota_exceeded" = "CloudKit storage quota exceeded";
-"errors.cloudkit.sync_failed" = "CloudKit sync failed: %@";
-"errors.cloudkit.authentication_failed" = "CloudKit authentication failed";
+"errors.network.unavailable" = "网络连接不可用";
+"errors.network.server_error" = "服务器错误 (%d)：%@";
+"errors.network.timeout" = "请求超时";
+"errors.network.invalid_url" = "无效的网址：%@";
 
-// Import/Export Errors
-"errors.import.failed" = "Import failed: %@";
-"errors.export.failed" = "Export failed: %@";
-"errors.import.invalid_format" = "Invalid file format: %@";
-"errors.import.corrupted_data" = "Import data is corrupted: %@";
+"errors.cloudkit.unavailable" = "CloudKit 不可用";
+"errors.cloudkit.quota_exceeded" = "CloudKit 存储配额已超出";
+"errors.cloudkit.sync_failed" = "CloudKit 同步失败：%@";
+"errors.cloudkit.authentication_failed" = "CloudKit 身份验证失败";
 
-// Validation Errors
-"errors.validation.invalid_input" = "Invalid input for %@";
-"errors.validation.missing_required_field" = "Required field missing: %@";
-"errors.validation.duplicate_entry" = "Duplicate entry: %@";
-"errors.validation.invalid_date_range" = "Invalid date range: end date must be after start date";
+"errors.import.failed" = "导入失败：%@";
+"errors.export.failed" = "导出失败：%@";
+"errors.import.invalid_format" = "无效的文件格式：%@";
+"errors.import.corrupted_data" = "导入数据已损坏：%@";
 
-// Organization Errors
-"errors.organization.in_use" = "Cannot delete '%@'. It's used by %d item.";
-"errors.organization.in_use_plural" = "Cannot delete '%@'. It's used by %d items.";
-"errors.organization.cannot_delete_none" = "Cannot delete the default 'None' organization";
-"errors.organization.not_found" = "Organization not found: %@";
+"errors.validation.invalid_input" = "%@ 的输入无效";
+"errors.validation.missing_required_field" = "缺少必填字段：%@";
+"errors.validation.duplicate_entry" = "重复条目：%@";
+"errors.validation.invalid_date_range" = "无效的日期范围：结束日期必须晚于开始日期";
 
-// Generic Errors
-"errors.general.unknown" = "An unexpected error occurred: %@";
-"errors.general.operation_cancelled" = "Operation was cancelled";
-"errors.general.feature_not_available" = "Feature not available: %@";
+"errors.organization.in_use" = "无法删除 '%@'。它被 %d 个项目使用。";
+"errors.organization.in_use_plural" = "无法删除 '%@'。它被 %d 个项目使用。";
+"errors.organization.cannot_delete_none" = "无法删除默认的\"无\"组织";
+"errors.organization.not_found" = "组织未找到：%@";
 
-// Recovery Suggestions
-"errors.recovery.restart_app" = "Try restarting the app. If the problem persists, contact support.";
-"errors.recovery.check_connection" = "Check your internet connection and try again.";
-"errors.recovery.free_space" = "Free up some storage space and try again.";
-"errors.recovery.check_permissions" = "Check file permissions and try again.";
-"errors.recovery.contact_support" = "Contact support for assistance.";
-"errors.recovery.try_again" = "Please try again.";
-"errors.recovery.restore_from_backup" = "Your data may be corrupted. Please restore from a backup if available.";
-"errors.recovery.check_icloud_settings" = "Check your iCloud settings and internet connection.";
-"errors.recovery.upgrade_icloud_storage" = "Upgrade your iCloud storage plan or delete some data.";
-"errors.recovery.ensure_end_date_after_start" = "Please ensure the end date is after the start date.";
-"errors.recovery.remove_associated_items" = "Remove all associated items before deleting this organization.";
+"errors.general.unknown" = "发生了意外错误：%@";
+"errors.general.operation_cancelled" = "操作已取消";
+"errors.general.feature_not_available" = "功能不可用：%@";
+
+"errors.recovery.restart_app" = "尝试重启应用。如果问题仍然存在，请联系支持。";
+"errors.recovery.check_connection" = "检查您的网络连接并重试。";
+"errors.recovery.free_space" = "释放一些存储空间并重试。";
+"errors.recovery.check_permissions" = "检查文件权限并重试。";
+"errors.recovery.contact_support" = "联系支持获取帮助。";
+"errors.recovery.try_again" = "请重试。";
+"errors.recovery.restore_from_backup" = "您的数据可能已损坏。如果可能，请从备份中恢复。";
+"errors.recovery.check_icloud_settings" = "检查您的 iCloud 设置和网络连接。";
+"errors.recovery.upgrade_icloud_storage" = "升级您的 iCloud 存储计划或删除一些数据。";
+"errors.recovery.ensure_end_date_after_start" = "请确保结束日期晚于开始日期。";
+"errors.recovery.remove_associated_items" = "在删除此组织之前，请移除所有关联项目。";
+
+"errors.log.technical_error" = "错误警报已创建：%@";
+"errors.log.generic_user_message" = "发生了意外错误。请重试。";

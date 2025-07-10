@@ -331,7 +331,7 @@ enum L10n {
         static let diskSpaceFull = "errors.disk_space_full"
         static let operationCancelled = "errors.operation_cancelled"
         static let featureNotAvailable = "errors.feature_not_available"
-        
+
         // Database errors
         enum Database {
             static let saveFailed = "errors.database.save_failed"
@@ -340,7 +340,7 @@ enum L10n {
             static let corrupted = "errors.database.corrupted"
             static let relationshipIntegrity = "errors.database.relationship_integrity"
         }
-        
+
         // File system errors
         enum File {
             static let notFound = "errors.file.not_found"
@@ -349,7 +349,7 @@ enum L10n {
             static let diskSpaceInsufficient = "errors.file.disk_space_insufficient"
             static let alreadyExists = "errors.file.already_exists"
         }
-        
+
         // Network errors
         enum Network {
             static let unavailable = "errors.network.unavailable"
@@ -357,7 +357,7 @@ enum L10n {
             static let timeout = "errors.network.timeout"
             static let invalidURL = "errors.network.invalid_url"
         }
-        
+
         // CloudKit errors
         enum CloudKit {
             static let unavailable = "errors.cloudkit.unavailable"
@@ -365,18 +365,18 @@ enum L10n {
             static let syncFailed = "errors.cloudkit.sync_failed"
             static let authenticationFailed = "errors.cloudkit.authentication_failed"
         }
-        
+
         // Import/Export errors
         enum Import {
             static let failed = "errors.import.failed"
             static let invalidFormat = "errors.import.invalid_format"
             static let corruptedData = "errors.import.corrupted_data"
         }
-        
+
         enum Export {
             static let failed = "errors.export.failed"
         }
-        
+
         // Validation errors
         enum Validation {
             static let invalidInput = "errors.validation.invalid_input"
@@ -384,7 +384,7 @@ enum L10n {
             static let duplicateEntry = "errors.validation.duplicate_entry"
             static let invalidDateRange = "errors.validation.invalid_date_range"
         }
-        
+
         // Organization errors
         enum Organization {
             static let inUse = "errors.organization.in_use"
@@ -392,14 +392,14 @@ enum L10n {
             static let cannotDeleteNone = "errors.organization.cannot_delete_none"
             static let notFound = "errors.organization.not_found"
         }
-        
+
         // Generic errors
         enum General {
             static let unknown = "errors.general.unknown"
             static let operationCancelled = "errors.general.operation_cancelled"
             static let featureNotAvailable = "errors.general.feature_not_available"
         }
-        
+
         // Recovery suggestions
         enum Recovery {
             static let restartApp = "errors.recovery.restart_app"
@@ -413,6 +413,12 @@ enum L10n {
             static let upgradeiCloudStorage = "errors.recovery.upgrade_icloud_storage"
             static let ensureEndDateAfterStart = "errors.recovery.ensure_end_date_after_start"
             static let removeAssociatedItems = "errors.recovery.remove_associated_items"
+        }
+
+        // Error logging
+        enum Log {
+            static let technicalError = "errors.log.technical_error"
+            static let genericUserMessage = "errors.log.generic_user_message"
         }
     }
 

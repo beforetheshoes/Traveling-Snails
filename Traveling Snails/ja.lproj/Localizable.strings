@@ -1,64 +1,71 @@
 // Localizable.strings
 // TODO: Complete translations for this language
 
+// General
+"general.error" = "エラー";
+
 // Database Errors
-"errors.database.save_failed" = "Failed to save data: %@";
-"errors.database.load_failed" = "Failed to load data: %@";
-"errors.database.delete_failed" = "Failed to delete data: %@";
-"errors.database.corrupted" = "Database corruption detected: %@";
-"errors.database.relationship_integrity" = "Data relationship error: %@";
+"errors.database.save_failed" = "データの保存に失敗しました: %@";
+"errors.database.load_failed" = "データの読み込みに失敗しました: %@";
+"errors.database.delete_failed" = "データの削除に失敗しました: %@";
+"errors.database.corrupted" = "データベースの破損が検出されました: %@";
+"errors.database.relationship_integrity" = "データ関係エラー: %@";
 
 // File System Errors
-"errors.file.not_found" = "File not found: %@";
-"errors.file.permission_denied" = "Permission denied for file: %@";
-"errors.file.corrupted" = "File is corrupted: %@";
-"errors.file.disk_space_insufficient" = "Insufficient disk space";
-"errors.file.already_exists" = "File already exists: %@";
+"errors.file.not_found" = "ファイルが見つかりません: %@";
+"errors.file.permission_denied" = "ファイルのアクセス許可が拒否されました: %@";
+"errors.file.corrupted" = "ファイルが破損しています: %@";
+"errors.file.disk_space_insufficient" = "ディスク容量が不足しています";
+"errors.file.already_exists" = "ファイルは既に存在します: %@";
 
 // Network Errors
-"errors.network.unavailable" = "Network connection unavailable";
-"errors.network.server_error" = "Server error (%d): %@";
-"errors.network.timeout" = "Request timed out";
-"errors.network.invalid_url" = "Invalid URL: %@";
+"errors.network.unavailable" = "ネットワーク接続が利用できません";
+"errors.network.server_error" = "サーバーエラー (%d): %@";
+"errors.network.timeout" = "リクエストがタイムアウトしました";
+"errors.network.invalid_url" = "無効なURL: %@";
 
 // CloudKit Errors
-"errors.cloudkit.unavailable" = "CloudKit is unavailable";
-"errors.cloudkit.quota_exceeded" = "CloudKit storage quota exceeded";
-"errors.cloudkit.sync_failed" = "CloudKit sync failed: %@";
-"errors.cloudkit.authentication_failed" = "CloudKit authentication failed";
+"errors.cloudkit.unavailable" = "CloudKitが利用できません";
+"errors.cloudkit.quota_exceeded" = "CloudKitストレージ容量を超過しました";
+"errors.cloudkit.sync_failed" = "CloudKit同期に失敗しました: %@";
+"errors.cloudkit.authentication_failed" = "CloudKit認証に失敗しました";
 
 // Import/Export Errors
-"errors.import.failed" = "Import failed: %@";
-"errors.export.failed" = "Export failed: %@";
-"errors.import.invalid_format" = "Invalid file format: %@";
-"errors.import.corrupted_data" = "Import data is corrupted: %@";
+"errors.import.failed" = "インポートに失敗しました: %@";
+"errors.export.failed" = "エクスポートに失敗しました: %@";
+"errors.import.invalid_format" = "無効なファイル形式: %@";
+"errors.import.corrupted_data" = "インポートデータが破損しています: %@";
 
 // Validation Errors
-"errors.validation.invalid_input" = "Invalid input for %@";
-"errors.validation.missing_required_field" = "Required field missing: %@";
-"errors.validation.duplicate_entry" = "Duplicate entry: %@";
-"errors.validation.invalid_date_range" = "Invalid date range: end date must be after start date";
+"errors.validation.invalid_input" = "%@の入力が無効です";
+"errors.validation.missing_required_field" = "必須フィールドがありません: %@";
+"errors.validation.duplicate_entry" = "重複エントリ: %@";
+"errors.validation.invalid_date_range" = "無効な日付範囲: 終了日は開始日より後である必要があります";
 
 // Organization Errors
-"errors.organization.in_use" = "Cannot delete '%@'. It's used by %d item.";
-"errors.organization.in_use_plural" = "Cannot delete '%@'. It's used by %d items.";
-"errors.organization.cannot_delete_none" = "Cannot delete the default 'None' organization";
-"errors.organization.not_found" = "Organization not found: %@";
+"errors.organization.in_use" = "'%@'を削除できません。%d個のアイテムで使用されています。";
+"errors.organization.in_use_plural" = "'%@'を削除できません。%d個のアイテムで使用されています。";
+"errors.organization.cannot_delete_none" = "デフォルトの「なし」組織は削除できません";
+"errors.organization.not_found" = "組織が見つかりません: %@";
 
 // Generic Errors
-"errors.general.unknown" = "An unexpected error occurred: %@";
-"errors.general.operation_cancelled" = "Operation was cancelled";
-"errors.general.feature_not_available" = "Feature not available: %@";
+"errors.general.unknown" = "予期しないエラーが発生しました: %@";
+"errors.general.operation_cancelled" = "操作がキャンセルされました";
+"errors.general.feature_not_available" = "機能が利用できません: %@";
 
 // Recovery Suggestions
-"errors.recovery.restart_app" = "Try restarting the app. If the problem persists, contact support.";
-"errors.recovery.check_connection" = "Check your internet connection and try again.";
-"errors.recovery.free_space" = "Free up some storage space and try again.";
-"errors.recovery.check_permissions" = "Check file permissions and try again.";
-"errors.recovery.contact_support" = "Contact support for assistance.";
-"errors.recovery.try_again" = "Please try again.";
-"errors.recovery.restore_from_backup" = "Your data may be corrupted. Please restore from a backup if available.";
-"errors.recovery.check_icloud_settings" = "Check your iCloud settings and internet connection.";
-"errors.recovery.upgrade_icloud_storage" = "Upgrade your iCloud storage plan or delete some data.";
-"errors.recovery.ensure_end_date_after_start" = "Please ensure the end date is after the start date.";
-"errors.recovery.remove_associated_items" = "Remove all associated items before deleting this organization.";
+"errors.recovery.restart_app" = "アプリを再起動してください。問題が続く場合は、サポートにお問い合わせください。";
+"errors.recovery.check_connection" = "インターネット接続を確認して、もう一度お試しください。";
+"errors.recovery.free_space" = "ストレージ容量を空けて、もう一度お試しください。";
+"errors.recovery.check_permissions" = "ファイルのアクセス許可を確認して、もう一度お試しください。";
+"errors.recovery.contact_support" = "サポートにお問い合わせください。";
+"errors.recovery.try_again" = "もう一度お試しください。";
+"errors.recovery.restore_from_backup" = "データが破損している可能性があります。可能であればバックアップから復元してください。";
+"errors.recovery.check_icloud_settings" = "iCloud設定とインターネット接続を確認してください。";
+"errors.recovery.upgrade_icloud_storage" = "iCloudストレージプランをアップグレードするか、一部のデータを削除してください。";
+"errors.recovery.ensure_end_date_after_start" = "終了日が開始日より後になるようにしてください。";
+"errors.recovery.remove_associated_items" = "この組織を削除する前に、関連するすべてのアイテムを削除してください。";
+
+// Error Logging
+"errors.log.technical_error" = "エラーアラートが作成されました: %@";
+"errors.log.generic_user_message" = "予期しないエラーが発生しました。もう一度お試しください。";

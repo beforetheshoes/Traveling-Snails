@@ -1,0 +1,56 @@
+== Known SDKs ==
+    appletvos18.5
+    iphoneos18.5
+    watchos11.5
+    xros2.5
+
+
+== Preferred Build Map ==
+(None)
+
+
+== User Overrides ==
+(None)
+
+
+== Evaluation Results ==
+appletvos18.5:
+    SDK Version: 18.5
+    SDK Build: 22L572
+    SDK Directory: /Applications/Xcode.app/Contents/Developer/Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS18.5.sdk
+    Platform: com.apple.platform.appletvos
+    Chosen Runtime: 22L572
+        User Override: (null)
+        Preferred: (null)
+        Default: 22L572
+
+iphoneos18.5:
+    SDK Version: 18.5
+    SDK Build: 22F76
+    SDK Directory: /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk
+    Platform: com.apple.platform.iphoneos
+    Chosen Runtime: iOS 18.5 (18.5 - 22F77) - com.apple.CoreSimulator.SimRuntime.iOS-18-5
+        User Override: (null)
+        Preferred: (null)
+        Default: 22F76
+
+watchos11.5:
+    SDK Version: 11.5
+    SDK Build: 22T572
+    SDK Directory: /Applications/Xcode.app/Contents/Developer/Platforms/WatchOS.platform/Developer/SDKs/WatchOS.sdk
+    Platform: com.apple.platform.watchos
+    Chosen Runtime: watchOS 11.5 (11.5 - 22T572) - com.apple.CoreSimulator.SimRuntime.watchOS-11-5
+        User Override: (null)
+        Preferred: (null)
+        Default: watchOS 11.5 (11.5 - 22T572) - com.apple.CoreSimulator.SimRuntime.watchOS-11-5
+
+xros2.5:
+    SDK Version: 2.5
+    SDK Build: 22O473
+    SDK Directory: /Applications/Xcode.app/Contents/Developer/Platforms/XROS.platform/Developer/SDKs/XROS2.5.sdk
+    Platform: com.apple.platform.xros
+    Chosen Runtime: 22O473
+        User Override: (null)
+        Preferred: (null)
+        Default: 22O473
+

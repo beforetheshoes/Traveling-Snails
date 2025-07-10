@@ -62,3 +62,7 @@
 "errors.recovery.upgrade_icloud_storage" = "Actualiza tu plan de almacenamiento de iCloud o elimina algunos datos.";
 "errors.recovery.ensure_end_date_after_start" = "Por favor asegúrate de que la fecha final sea posterior a la fecha inicial.";
 "errors.recovery.remove_associated_items" = "Elimina todos los elementos asociados antes de borrar esta organización.";
+
+// Error Logging
+"errors.log.technical_error" = "Alerta de error creada: %@";
+"errors.log.generic_user_message" = "Ocurrió un error inesperado. Inténtelo de nuevo.";

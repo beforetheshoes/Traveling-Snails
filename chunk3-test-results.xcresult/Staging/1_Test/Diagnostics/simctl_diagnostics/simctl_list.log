@@ -1,0 +1,179 @@
+== Device Types ==
+iPhone 16 Pro (com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 16 Pro.simdevicetype]
+iPhone 16 Pro Max (com.apple.CoreSimulator.SimDeviceType.iPhone-16-Pro-Max) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 16 Pro Max.simdevicetype]
+iPhone 16e (com.apple.CoreSimulator.SimDeviceType.iPhone-16e) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 16e.simdevicetype]
+iPhone 16 (com.apple.CoreSimulator.SimDeviceType.iPhone-16) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 16.simdevicetype]
+iPhone 16 Plus (com.apple.CoreSimulator.SimDeviceType.iPhone-16-Plus) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 16 Plus.simdevicetype]
+iPhone 15 Pro (com.apple.CoreSimulator.SimDeviceType.iPhone-15-Pro) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 15 Pro.simdevicetype]
+iPhone 15 Pro Max (com.apple.CoreSimulator.SimDeviceType.iPhone-15-Pro-Max) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 15 Pro Max.simdevicetype]
+iPhone 15 (com.apple.CoreSimulator.SimDeviceType.iPhone-15) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 15.simdevicetype]
+iPhone 15 Plus (com.apple.CoreSimulator.SimDeviceType.iPhone-15-Plus) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 15 Plus.simdevicetype]
+iPhone 14 Pro (com.apple.CoreSimulator.SimDeviceType.iPhone-14-Pro) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 14 Pro.simdevicetype]
+iPhone 14 Pro Max (com.apple.CoreSimulator.SimDeviceType.iPhone-14-Pro-Max) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 14 Pro Max.simdevicetype]
+iPhone 14 (com.apple.CoreSimulator.SimDeviceType.iPhone-14) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 14.simdevicetype]
+iPhone 14 Plus (com.apple.CoreSimulator.SimDeviceType.iPhone-14-Plus) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 14 Plus.simdevicetype]
+iPhone SE (3rd generation) (com.apple.CoreSimulator.SimDeviceType.iPhone-SE-3rd-generation) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone SE (3rd generation).simdevicetype]
+iPhone 13 Pro (com.apple.CoreSimulator.SimDeviceType.iPhone-13-Pro) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 13 Pro.simdevicetype]
+iPhone 13 Pro Max (com.apple.CoreSimulator.SimDeviceType.iPhone-13-Pro-Max) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 13 Pro Max.simdevicetype]
+iPhone 13 (com.apple.CoreSimulator.SimDeviceType.iPhone-13) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 13.simdevicetype]
+iPhone 13 mini (com.apple.CoreSimulator.SimDeviceType.iPhone-13-mini) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 13 mini.simdevicetype]
+iPhone 12 Pro (com.apple.CoreSimulator.SimDeviceType.iPhone-12-Pro) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 12 Pro.simdevicetype]
+iPhone 12 Pro Max (com.apple.CoreSimulator.SimDeviceType.iPhone-12-Pro-Max) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 12 Pro Max.simdevicetype]
+iPhone 12 (com.apple.CoreSimulator.SimDeviceType.iPhone-12) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 12.simdevicetype]
+iPhone 12 mini (com.apple.CoreSimulator.SimDeviceType.iPhone-12-mini) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 12 mini.simdevicetype]
+iPhone SE (2nd generation) (com.apple.CoreSimulator.SimDeviceType.iPhone-SE--2nd-generation-) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone SE (2nd generation).simdevicetype]
+iPhone 11 Pro (com.apple.CoreSimulator.SimDeviceType.iPhone-11-Pro) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 11 Pro.simdevicetype]
+iPhone 11 Pro Max (com.apple.CoreSimulator.SimDeviceType.iPhone-11-Pro-Max) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 11 Pro Max.simdevicetype]
+iPhone 11 (com.apple.CoreSimulator.SimDeviceType.iPhone-11) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 11.simdevicetype]
+iPhone Xʀ (com.apple.CoreSimulator.SimDeviceType.iPhone-XR) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone Xʀ.simdevicetype]
+iPhone Xs (com.apple.CoreSimulator.SimDeviceType.iPhone-XS) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone Xs.simdevicetype]
+iPhone Xs Max (com.apple.CoreSimulator.SimDeviceType.iPhone-XS-Max) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone Xs Max.simdevicetype]
+iPhone X (com.apple.CoreSimulator.SimDeviceType.iPhone-X) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone X.simdevicetype]
+iPhone 8 (com.apple.CoreSimulator.SimDeviceType.iPhone-8) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 8.simdevicetype]
+iPhone 8 Plus (com.apple.CoreSimulator.SimDeviceType.iPhone-8-Plus) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 8 Plus.simdevicetype]
+iPhone 7 (com.apple.CoreSimulator.SimDeviceType.iPhone-7) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 7.simdevicetype]
+iPhone 7 Plus (com.apple.CoreSimulator.SimDeviceType.iPhone-7-Plus) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 7 Plus.simdevicetype]
+iPhone SE (1st generation) (com.apple.CoreSimulator.SimDeviceType.iPhone-SE) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone SE (1st generation).simdevicetype]
+iPhone 6s (com.apple.CoreSimulator.SimDeviceType.iPhone-6s) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 6s.simdevicetype]
+iPhone 6s Plus (com.apple.CoreSimulator.SimDeviceType.iPhone-6s-Plus) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone 6s Plus.simdevicetype]
+iPad Pro 11-inch (M4) (16GB) (com.apple.CoreSimulator.SimDeviceType.iPad-Pro-11-inch-M4-16GB) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad Pro 11-inch (M4) (16GB).simdevicetype]
+iPad Pro 11-inch (M4) (com.apple.CoreSimulator.SimDeviceType.iPad-Pro-11-inch-M4-8GB) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad Pro 11-inch (M4).simdevicetype]
+iPad Pro 13-inch (M4) (16GB) (com.apple.CoreSimulator.SimDeviceType.iPad-Pro-13-inch-M4-16GB) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad Pro 13-inch (M4) (16GB).simdevicetype]
+iPad Pro 13-inch (M4) (com.apple.CoreSimulator.SimDeviceType.iPad-Pro-13-inch-M4-8GB) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad Pro 13-inch (M4).simdevicetype]
+iPad (A16) (com.apple.CoreSimulator.SimDeviceType.iPad-A16) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad (A16).simdevicetype]
+iPad Air 13-inch (M3) (com.apple.CoreSimulator.SimDeviceType.iPad-Air-13-inch-M3) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad Air 13-inch (M3).simdevicetype]
+iPad Air 11-inch (M3) (com.apple.CoreSimulator.SimDeviceType.iPad-Air-11-inch-M3) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad Air 11-inch (M3).simdevicetype]
+iPad Air 11-inch (M2) (com.apple.CoreSimulator.SimDeviceType.iPad-Air-11-inch-M2) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad Air 11-inch (M2).simdevicetype]
+iPad Air 13-inch (M2) (com.apple.CoreSimulator.SimDeviceType.iPad-Air-13-inch-M2) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad Air 13-inch (M2).simdevicetype]
+iPad mini (A17 Pro) (com.apple.CoreSimulator.SimDeviceType.iPad-mini-A17-Pro) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad mini (A17 Pro).simdevicetype]
+iPad Pro (11-inch) (4th generation) (16GB) (com.apple.CoreSimulator.SimDeviceType.iPad-Pro-11-inch-4th-generation-16GB) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad Pro (11-inch) (4th generation) (16GB).simdevicetype]
+iPad Pro (11-inch) (4th generation) (com.apple.CoreSimulator.SimDeviceType.iPad-Pro-11-inch-4th-generation-8GB) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad Pro (11-inch) (4th generation).simdevicetype]
+iPad Pro (12.9-inch) (6th generation) (16GB) (com.apple.CoreSimulator.SimDeviceType.iPad-Pro-12-9-inch-6th-generation-16GB) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad Pro (12.9-inch) (6th generation) (16GB).simdevicetype]
+iPad Pro (12.9-inch) (6th generation) (com.apple.CoreSimulator.SimDeviceType.iPad-Pro-12-9-inch-6th-generation-8GB) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad Pro (12.9-inch) (6th generation).simdevicetype]
+iPad (10th generation) (com.apple.CoreSimulator.SimDeviceType.iPad-10th-generation) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad (10th generation).simdevicetype]
+iPad Air (5th generation) (com.apple.CoreSimulator.SimDeviceType.iPad-Air-5th-generation) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad Air (5th generation).simdevicetype]
+iPad mini (6th generation) (com.apple.CoreSimulator.SimDeviceType.iPad-mini-6th-generation) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad mini (6th generation).simdevicetype]
+iPad Pro (11-inch) (3rd generation) (com.apple.CoreSimulator.SimDeviceType.iPad-Pro-11-inch-3rd-generation) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad Pro (11-inch) (3rd generation).simdevicetype]
+iPad Pro (12.9-inch) (5th generation) (com.apple.CoreSimulator.SimDeviceType.iPad-Pro-12-9-inch-5th-generation) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad Pro (12.9-inch) (5th generation).simdevicetype]
+iPad (9th generation) (com.apple.CoreSimulator.SimDeviceType.iPad-9th-generation) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad (9th generation).simdevicetype]
+iPad Air (4th generation) (com.apple.CoreSimulator.SimDeviceType.iPad-Air--4th-generation-) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad Air (4th generation).simdevicetype]
+iPad (8th generation) (com.apple.CoreSimulator.SimDeviceType.iPad--8th-generation-) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad (8th generation).simdevicetype]
+iPad Air (3rd generation) (com.apple.CoreSimulator.SimDeviceType.iPad-Air--3rd-generation-) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad Air (3rd generation).simdevicetype]
+iPad mini (5th generation) (com.apple.CoreSimulator.SimDeviceType.iPad-mini--5th-generation-) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad mini (5th generation).simdevicetype]
+iPad Pro (11-inch) (2nd generation) (com.apple.CoreSimulator.SimDeviceType.iPad-Pro--11-inch---2nd-generation-) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad Pro (11-inch) (2nd generation).simdevicetype]
+iPad Pro (12.9-inch) (4th generation) (com.apple.CoreSimulator.SimDeviceType.iPad-Pro--12-9-inch---4th-generation-) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad Pro (12.9-inch) (4th generation).simdevicetype]
+iPad Pro (11-inch) (1st generation) (com.apple.CoreSimulator.SimDeviceType.iPad-Pro--11-inch-) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad Pro (11-inch) (1st generation).simdevicetype]
+iPad Pro (12.9-inch) (3rd generation) (com.apple.CoreSimulator.SimDeviceType.iPad-Pro--12-9-inch---3rd-generation-) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad Pro (12.9-inch) (3rd generation).simdevicetype]
+iPad (7th generation) (com.apple.CoreSimulator.SimDeviceType.iPad--7th-generation-) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad (7th generation).simdevicetype]
+iPad Pro (10.5-inch) (com.apple.CoreSimulator.SimDeviceType.iPad-Pro--10-5-inch-) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad Pro (10.5-inch).simdevicetype]
+iPad Pro (12.9-inch) (2nd generation) (com.apple.CoreSimulator.SimDeviceType.iPad-Pro--12-9-inch---2nd-generation-) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad Pro (12.9-inch) (2nd generation).simdevicetype]
+iPad (6th generation) (com.apple.CoreSimulator.SimDeviceType.iPad--6th-generation-) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad (6th generation).simdevicetype]
+iPad Pro (9.7-inch) (com.apple.CoreSimulator.SimDeviceType.iPad-Pro--9-7-inch-) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad Pro (9.7-inch).simdevicetype]
+iPad Pro (12.9-inch) (1st generation) (com.apple.CoreSimulator.SimDeviceType.iPad-Pro) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad Pro (12.9-inch) (1st generation).simdevicetype]
+iPad (5th generation) (com.apple.CoreSimulator.SimDeviceType.iPad--5th-generation-) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad (5th generation).simdevicetype]
+iPad Air 2 (com.apple.CoreSimulator.SimDeviceType.iPad-Air-2) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad Air 2.simdevicetype]
+iPad mini 4 (com.apple.CoreSimulator.SimDeviceType.iPad-mini-4) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPad mini 4.simdevicetype]
+Apple TV 4K (3rd generation) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-4K) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple TV 4K (3rd generation).simdevicetype]
+Apple TV 4K (3rd generation) (at 1080p) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-3rd-generation-1080p) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple TV 4K (3rd generation) (at 1080p).simdevicetype]
+Apple TV 4K (2nd generation) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-2nd-generation-4K) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple TV 4K (2nd generation).simdevicetype]
+Apple TV 4K (2nd generation) (at 1080p) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-2nd-generation-1080p) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple TV 4K (2nd generation) (at 1080p).simdevicetype]
+Apple TV 4K (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-4K) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple TV 4K.simdevicetype]
+Apple TV 4K (at 1080p) (com.apple.CoreSimulator.SimDeviceType.Apple-TV-4K-1080p) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple TV 4K (at 1080p).simdevicetype]
+Apple TV (com.apple.CoreSimulator.SimDeviceType.Apple-TV-1080p) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple TV.simdevicetype]
+Apple Watch Series 10 (46mm) (com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-10-46mm) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple Watch Series 10 (46mm).simdevicetype]
+Apple Watch Series 10 (42mm) (com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-10-42mm) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple Watch Series 10 (42mm).simdevicetype]
+Apple Watch Series 9 (45mm) (com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-9-45mm) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple Watch Series 9 (45mm).simdevicetype]
+Apple Watch Series 9 (41mm) (com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-9-41mm) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple Watch Series 9 (41mm).simdevicetype]
+Apple Watch Ultra 2 (49mm) (com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Ultra-2-49mm) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple Watch Ultra 2 (49mm).simdevicetype]
+Apple Watch Series 8 (45mm) (com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-8-45mm) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple Watch Series 8 (45mm).simdevicetype]
+Apple Watch Series 8 (41mm) (com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-8-41mm) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple Watch Series 8 (41mm).simdevicetype]
+Apple Watch Ultra (49mm) (com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Ultra-49mm) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple Watch Ultra (49mm).simdevicetype]
+Apple Watch SE (44mm) (2nd generation) (com.apple.CoreSimulator.SimDeviceType.Apple-Watch-SE-44mm-2nd-generation) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple Watch SE (44mm) (2nd generation).simdevicetype]
+Apple Watch SE (40mm) (2nd generation) (com.apple.CoreSimulator.SimDeviceType.Apple-Watch-SE-40mm-2nd-generation) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple Watch SE (40mm) (2nd generation).simdevicetype]
+Apple Watch Series 7 (45mm) (com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-7-45mm) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple Watch Series 7 (45mm).simdevicetype]
+Apple Watch Series 7 (41mm) (com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-7-41mm) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple Watch Series 7 (41mm).simdevicetype]
+Apple Watch Series 6 (44mm) (com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-6-44mm) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple Watch Series 6 (44mm).simdevicetype]
+Apple Watch Series 6 (40mm) (com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-6-40mm) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple Watch Series 6 (40mm).simdevicetype]
+Apple Watch SE (44mm) (com.apple.CoreSimulator.SimDeviceType.Apple-Watch-SE-44mm) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple Watch SE (44mm).simdevicetype]
+Apple Watch SE (40mm) (com.apple.CoreSimulator.SimDeviceType.Apple-Watch-SE-40mm) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple Watch SE (40mm).simdevicetype]
+Apple Watch Series 5 (44mm) (com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-5-44mm) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple Watch Series 5 (44mm).simdevicetype]
+Apple Watch Series 5 (40mm) (com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-5-40mm) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple Watch Series 5 (40mm).simdevicetype]
+Apple Watch Series 4 (44mm) (com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-4-44mm) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple Watch Series 4 (44mm).simdevicetype]
+Apple Watch Series 4 (40mm) (com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-4-40mm) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple Watch Series 4 (40mm).simdevicetype]
+Apple Watch Series 3 (42mm) (com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-3-42mm) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple Watch Series 3 (42mm).simdevicetype]
+Apple Watch Series 3 (38mm) (com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-3-38mm) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple Watch Series 3 (38mm).simdevicetype]
+Apple Watch Series 2 (42mm) (com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-2-42mm) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple Watch Series 2 (42mm).simdevicetype]
+Apple Watch Series 2 (38mm) (com.apple.CoreSimulator.SimDeviceType.Apple-Watch-Series-2-38mm) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple Watch Series 2 (38mm).simdevicetype]
+Apple Vision Pro (com.apple.CoreSimulator.SimDeviceType.Apple-Vision-Pro) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple Vision Pro.simdevicetype]
+Apple Vision Pro 4K (com.apple.CoreSimulator.SimDeviceType.Apple-Vision-Pro-4K) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/Apple Vision Pro 4K.simdevicetype]
+iPod touch (7th generation) (com.apple.CoreSimulator.SimDeviceType.iPod-touch--7th-generation-) [/Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPod touch (7th generation).simdevicetype]
+== Runtimes ==
+iOS 18.5 (18.5 - 22F77) - com.apple.CoreSimulator.SimRuntime.iOS-18-5 [/Library/Developer/CoreSimulator/Volumes/iOS_22F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 18.5.simruntime]
+iOS 26.0 (26.0 - 23A5260l) - com.apple.CoreSimulator.SimRuntime.iOS-26-0 [/Library/Developer/CoreSimulator/Volumes/iOS_23A5260l/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.0.simruntime]
+tvOS 16.4 (16.4 - 20L494) - com.apple.CoreSimulator.SimRuntime.tvOS-16-4 [/Library/Developer/CoreSimulator/Volumes/tvOS_20L494/Library/Developer/CoreSimulator/Profiles/Runtimes/tvOS 16.4.simruntime]
+tvOS 17.0 (17.0 - 21J5352a) - com.apple.CoreSimulator.SimRuntime.tvOS-17-0 [/Library/Developer/CoreSimulator/Volumes/tvOS_21J5352a/Library/Developer/CoreSimulator/Profiles/Runtimes/tvOS 17.0.simruntime]
+watchOS 9.4 (9.4 - 20T253) - com.apple.CoreSimulator.SimRuntime.watchOS-9-4 [/Library/Developer/CoreSimulator/Volumes/watchOS_20T253/Library/Developer/CoreSimulator/Profiles/Runtimes/watchOS 9.4.simruntime]
+watchOS 10.0 (10.0 - 21R355) - com.apple.CoreSimulator.SimRuntime.watchOS-10-0 [/Library/Developer/CoreSimulator/Volumes/watchOS_21R355/Library/Developer/CoreSimulator/Profiles/Runtimes/watchOS 10.0.simruntime]
+watchOS 10.0 (10.0 - 21R5355a) - com.apple.CoreSimulator.SimRuntime.watchOS-10-0 [/Library/Developer/CoreSimulator/Volumes/watchOS_21R5355a/Library/Developer/CoreSimulator/Profiles/Runtimes/watchOS 10.0.simruntime]
+watchOS 11.5 (11.5 - 22T572) - com.apple.CoreSimulator.SimRuntime.watchOS-11-5 [/Library/Developer/CoreSimulator/Volumes/watchOS_22T572/Library/Developer/CoreSimulator/Profiles/Runtimes/watchOS 11.5.simruntime]
+watchOS 26.0 (26.0 - 23R5280m) - com.apple.CoreSimulator.SimRuntime.watchOS-26-0 [/Library/Developer/CoreSimulator/Volumes/watchOS_23R5280m/Library/Developer/CoreSimulator/Profiles/Runtimes/watchOS 26.0.simruntime]
+== Devices ==
+-- iOS 18.5 (22F77) [/Library/Developer/CoreSimulator/Volumes/iOS_22F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 18.5.simruntime] --
+    iPhone 16 Pro (B437D3EB-E9C7-4440-83AB-292844A82395) (Shutdown) 
+    iPhone 16 Pro Max (C6FF8AF7-BF17-4EFB-9D0A-D127AA6E772D) (Shutdown) 
+    iPhone 16e (80E676F6-09BF-42F5-AB8C-F6043D9F35DE) (Shutdown) 
+    iPhone 16 (3EE872C7-916D-4BFB-887B-33963686F6C5) (Shutdown) 
+    iPhone 16 Plus (FC9A05BE-40C8-4099-85C1-97F040A6FB9B) (Shutdown) 
+    iPad Pro 11-inch (M4) (36F7ED9B-9666-4D9C-BCF3-27878C45C46F) (Shutdown) 
+    iPad Pro 13-inch (M4) (8266723E-A7D3-4847-AC2A-3FA11634F29C) (Shutdown) 
+    iPad mini (A17 Pro) (38B74DF0-27AC-4E66-839E-FF79F8CDE610) (Shutdown) 
+    iPad (A16) (3E2314C6-2E2D-4EC7-BDFC-42273D1F9AD9) (Shutdown) 
+    iPad Air 13-inch (M3) (6375D378-2C1D-4E81-A34C-75AD24F1FA3D) (Shutdown) 
+    iPad Air 11-inch (M3) (FB570F50-F546-448B-8CA1-89AAA5A072FF) (Shutdown) 
+-- iOS 26.0 (23A5260l) [/Library/Developer/CoreSimulator/Volumes/iOS_23A5260l/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.0.simruntime] --
+    dsxfa (21E7AFDA-01DE-491D-9305-745B1E03F37E) (Shutdown) 
+    iPhone 16 Pro (B47B0B5C-100E-42CD-83C7-573EFBB231E7) (Shutdown) 
+    iPhone 16 Pro Max (B239E32C-70DE-4432-8A32-C4031E1146BB) (Shutdown) 
+    iPhone 16e (B232C864-BFFF-497D-9B44-A9B4C9CC6A98) (Shutdown) 
+    iPhone 16 (EFB188BA-B1C4-4E2E-9D45-819B389E3A62) (Shutdown) 
+    iPhone 16 Plus (607F57C7-D35D-4922-9E6F-C6B292EF9202) (Shutdown) 
+    iPad Pro 11-inch (M4) (B79D59B9-DFB3-471B-9303-DDFD9303C3E2) (Shutdown) 
+    iPad Pro 13-inch (M4) (9F27D9DE-2BD6-422F-9497-96EFB8DAEDDC) (Shutdown) 
+    iPad mini (A17 Pro) (F0A9AB4A-F984-41F6-8D71-896A177DF4F5) (Shutdown) 
+    iPad (A16) (7309FAEB-DBB4-460B-A5CD-29C94A0B792B) (Shutdown) 
+    iPad Air 13-inch (M3) (F0A17900-9815-4162-AB46-0C0343CD3C44) (Shutdown) 
+    iPad Air 11-inch (M3) (20D3CD13-EA9F-4B13-B185-E4B3F9825D6D) (Shutdown) 
+-- tvOS 16.4 (20L494) [/Library/Developer/CoreSimulator/Volumes/tvOS_20L494/Library/Developer/CoreSimulator/Profiles/Runtimes/tvOS 16.4.simruntime] --
+    Apple TV 4K (3rd generation) (7822189D-1B5C-400F-ADB4-3C537F1A9495) (Shutdown) 
+    Apple TV 4K (3rd generation) (at 1080p) (3FA1488B-9CB7-4C0A-ABC0-8B345D677707) (Shutdown) 
+    Apple TV (D24A8682-A22C-4D2C-B94D-A0DD5F75B278) (Shutdown) 
+-- tvOS 17.0 (21J5352a) [/Library/Developer/CoreSimulator/Volumes/tvOS_21J5352a/Library/Developer/CoreSimulator/Profiles/Runtimes/tvOS 17.0.simruntime] --
+    Apple TV 4K (3rd generation) (5771808E-FD6A-442C-924B-CEBDC19ACA68) (Shutdown) 
+    Apple TV 4K (3rd generation) (at 1080p) (64CB184C-71B6-4F87-9FD5-C29150A5A681) (Shutdown) 
+    Apple TV (D9B90978-2BC9-4A06-81A6-7C23ABAD0192) (Shutdown) 
+-- watchOS 9.4 (20T253) [/Library/Developer/CoreSimulator/Volumes/watchOS_20T253/Library/Developer/CoreSimulator/Profiles/Runtimes/watchOS 9.4.simruntime] --
+    Apple Watch Series 8 (45mm) (0D18298C-39E1-46CF-9535-0EF78C74DF69) (Shutdown) 
+    Apple Watch Series 8 (41mm) (CC9A5E92-E746-41B1-9A6A-0C94EB07D2B3) (Shutdown) 
+    Apple Watch Ultra (49mm) (6DDCE352-BB62-4C74-B730-5673D7E62124) (Shutdown) 
+    Apple Watch SE (44mm) (2nd generation) (578E503E-20BA-4A11-BF8D-D5344A533453) (Shutdown) 
+    Apple Watch SE (40mm) (2nd generation) (0DA0607D-42A4-42C8-B9AE-3D217E3CE049) (Shutdown) 
+-- watchOS 10.0 (21R355) [/Library/Developer/CoreSimulator/Volumes/watchOS_21R355/Library/Developer/CoreSimulator/Profiles/Runtimes/watchOS 10.0.simruntime] --
+-- watchOS 10.0 (21R5355a) [/Library/Developer/CoreSimulator/Volumes/watchOS_21R5355a/Library/Developer/CoreSimulator/Profiles/Runtimes/watchOS 10.0.simruntime] --
+    Apple Watch Series 9 (45mm) (D4509386-F8B3-4C90-B02F-DB47C6B418FE) (Shutdown) 
+    Apple Watch Series 9 (41mm) (16D17572-219B-409A-9368-17B24EC9DFEC) (Shutdown) 
+    Apple Watch Ultra 2 (49mm) (597BEDAC-7012-44E3-8388-19DF87F1B8CC) (Shutdown) 
+    Apple Watch SE (44mm) (2nd generation) (08A9F1FD-ADD1-4DBC-96BF-1AEC729F9BB1) (Shutdown) 
+    Apple Watch SE (40mm) (2nd generation) (9976A92C-A850-46F4-A518-8FAB704AF4D2) (Shutdown) 
+-- watchOS 11.5 (22T572) [/Library/Developer/CoreSimulator/Volumes/watchOS_22T572/Library/Developer/CoreSimulator/Profiles/Runtimes/watchOS 11.5.simruntime] --
+    Apple Watch Series 10 (46mm) (5858054C-C1A7-46A0-A920-EE6AD9A332F5) (Shutdown) 
+    Apple Watch Series 10 (42mm) (8257F5A2-C9CC-4928-9659-6822504227BE) (Shutdown) 
+    Apple Watch Ultra 2 (49mm) (AF1301AC-081A-4F21-B415-48B93B3C5266) (Shutdown) 
+    Apple Watch SE (44mm) (2nd generation) (4B5D4A29-98D3-49AA-B287-A9765EDD28B3) (Shutdown) 
+    Apple Watch SE (40mm) (2nd generation) (9EE3806C-EE44-4746-90BB-A5BBB634A565) (Shutdown) 
+-- watchOS 26.0 (23R5280m) [/Library/Developer/CoreSimulator/Volumes/watchOS_23R5280m/Library/Developer/CoreSimulator/Profiles/Runtimes/watchOS 26.0.simruntime] --
+    Apple Watch Series 10 (46mm) (C06F89D3-C61F-4FE3-BF47-7C00B6073F38) (Shutdown) 
+    Apple Watch Series 10 (42mm) (4F7AA523-373D-44FF-BB55-C6C2B84AA91C) (Shutdown) 
+    Apple Watch Ultra 2 (49mm) (AC9E7586-C6DE-472C-8ACB-FBF7512C87D9) (Shutdown) 
+    Apple Watch SE (44mm) (2nd generation) (4F15F4C1-3BAC-4560-A7B7-A16F875084EB) (Shutdown) 
+    Apple Watch SE (40mm) (2nd generation) (3EF970A7-9B4C-4583-8BF4-09C74BE91C69) (Shutdown) 
+== Device Pairs ==

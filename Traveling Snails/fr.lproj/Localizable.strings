@@ -1,6 +1,9 @@
 // Localizable.strings
 // French localization for Traveling Snails
 
+// General
+"general.error" = "Erreur";
+
 // Database Errors
 "errors.database.save_failed" = "Échec de la sauvegarde des données : %@";
 "errors.database.load_failed" = "Échec du chargement des données : %@";
@@ -62,3 +65,7 @@
 "errors.recovery.upgrade_icloud_storage" = "Mettez à niveau votre plan de stockage iCloud ou supprimez certaines données.";
 "errors.recovery.ensure_end_date_after_start" = "Veuillez vous assurer que la date de fin est postérieure à la date de début.";
 "errors.recovery.remove_associated_items" = "Supprimez tous les éléments associés avant de supprimer cette organisation.";
+
+// Error Logging
+"errors.log.technical_error" = "Alerte d'erreur créée : %@";
+"errors.log.generic_user_message" = "Une erreur inattendue s'est produite. Veuillez réessayer.";
