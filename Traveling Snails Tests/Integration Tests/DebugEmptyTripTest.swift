@@ -7,14 +7,21 @@
 import Foundation
 import os
 import Testing
+import SwiftData
 
 @testable import Traveling_Snails
 
 @Suite("Debug Empty Trip Issue")
 struct DebugEmptyTripIssue {
     @Test("Investigate empty trip activity count", .tags(.integration, .fast, .parallel, .trip, .swiftdata, .regression, .validation))
-    func investigateEmptyTripActivityCount() {
+    func investigateEmptyTripActivityCount() throws {
+        // Use in-memory container for testing
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: Trip.self, Activity.self, Lodging.self, Transportation.self, Organization.self, EmbeddedFileAttachment.self, configurations: config)
+        let context = ModelContext(container)
+        
         let emptyTrip = Trip(name: "")
+        context.insert(emptyTrip)
 
         #if DEBUG
         Logger.secure(category: .debug).debug("Empty trip created with ID: \(emptyTrip.id, privacy: .public)")
@@ -64,42 +71,51 @@ struct DebugEmptyTripIssue {
     }
 
     @Test("Compare different trip creation methods", .tags(.integration, .fast, .parallel, .trip, .swiftdata, .regression, .validation))
-    func compareDifferentTripCreationMethods() {
+    func compareDifferentTripCreationMethods() throws {
+        // Use in-memory container for testing
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: Trip.self, Activity.self, Lodging.self, Transportation.self, Organization.self, EmbeddedFileAttachment.self, configurations: config)
+        let context = ModelContext(container)
+        
         // Method 1: Empty name
         let trip1 = Trip(name: "")
+        context.insert(trip1)
         #if DEBUG
         Logger.secure(category: .debug).debug("Trip1 (empty name) ID: \(trip1.id, privacy: .public) - totalActivities: \(trip1.totalActivities, privacy: .public)")
         #endif
 
-        // Method 2: Default initializer
-        let trip2 = Trip()
+        // Method 2: With name
+        let trip2 = Trip(name: "Normal Trip")
+        context.insert(trip2)
         #if DEBUG
-        Logger.secure(category: .debug).debug("Trip2 (default init) ID: \(trip2.id, privacy: .public) - totalActivities: \(trip2.totalActivities, privacy: .public)")
+        Logger.secure(category: .debug).debug("Trip2 (normal name) ID: \(trip2.id, privacy: .public) - totalActivities: \(trip2.totalActivities, privacy: .public)")
         #endif
 
-        // Method 3: Normal name
-        let trip3 = Trip(name: "Normal Trip")
+        // Method 3: With dates
+        let trip3 = Trip(name: "Trip with dates", startDate: Date(), endDate: Date())
+        context.insert(trip3)
         #if DEBUG
-        Logger.secure(category: .debug).debug("Trip3 (normal name) ID: \(trip3.id, privacy: .public) - totalActivities: \(trip3.totalActivities, privacy: .public)")
-        #endif
-
-        // Method 4: With dates
-        let trip4 = Trip(name: "Trip with dates", startDate: Date(), endDate: Date())
-        #if DEBUG
-        Logger.secure(category: .debug).debug("Trip4 (with dates) ID: \(trip4.id, privacy: .public) - totalActivities: \(trip4.totalActivities, privacy: .public)")
+        Logger.secure(category: .debug).debug("Trip3 (with dates) ID: \(trip3.id, privacy: .public) - totalActivities: \(trip3.totalActivities, privacy: .public)")
         #endif
 
         // Check if the issue is specific to empty name or general
-        let allCounts = [trip1.totalActivities, trip2.totalActivities, trip3.totalActivities, trip4.totalActivities]
+        let allCounts = [trip1.totalActivities, trip2.totalActivities, trip3.totalActivities]
         #if DEBUG
         Logger.secure(category: .debug).debug("All trip activity counts: \(allCounts, privacy: .public)")
         #endif
     }
 
     @Test("Investigate empty activity creation", .tags(.integration, .fast, .parallel, .activity, .swiftdata, .regression, .validation))
-    func investigateEmptyActivityCreation() {
+    func investigateEmptyActivityCreation() throws {
+        // Use in-memory container for testing
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: Trip.self, Activity.self, Lodging.self, Transportation.self, Organization.self, EmbeddedFileAttachment.self, configurations: config)
+        let context = ModelContext(container)
+        
         let emptyTrip = Trip(name: "")
         let emptyOrg = Organization(name: "")
+        context.insert(emptyTrip)
+        context.insert(emptyOrg)
 
         let emptyActivity = Activity(
             name: "",
@@ -108,6 +124,7 @@ struct DebugEmptyTripIssue {
             trip: emptyTrip,
             organization: emptyOrg
         )
+        context.insert(emptyActivity)
 
         #if DEBUG
         Logger.secure(category: .debug).debug("Created empty activity with ID: \(emptyActivity.id, privacy: .public)")
