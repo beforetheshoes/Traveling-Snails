@@ -19,11 +19,11 @@ export PROJECT_NAME="Traveling Snails"
 export SCHEME_NAME="Traveling Snails"
 
 # Multiple destination support - Use proper simulator names with fallback
-export IOS_SIMULATOR_NAME="iPhone 15 Pro"
+export IOS_SIMULATOR_NAME="iPhone 16 Pro"
 export IPAD_SIMULATOR_NAME="iPad Pro (12.9-inch) (6th generation)"
 
 # Fallback simulator names if primary ones aren't available
-export IOS_SIMULATOR_FALLBACK="iPhone 14 Pro"
+export IOS_SIMULATOR_FALLBACK="iPhone 15 Pro"
 export IPAD_SIMULATOR_FALLBACK="iPad Air (5th generation)"
 
 # Last resort: use any available simulator (for local development)
@@ -407,7 +407,7 @@ check_simulator() {
     
     # Try fallback simulators based on destination type
     if [ "$DESTINATION_TYPE" = "ios" ]; then
-        fallback_sims="$IOS_SIMULATOR_FALLBACK iPhone 14 iPhone 13 Pro iPhone 12 Pro"
+        fallback_sims="$IOS_SIMULATOR_FALLBACK iPhone 16 Pro iPhone 16 iPhone 14 Pro iPhone 14 iPhone 13 Pro iPhone 12 Pro"
         available_sim=$(find_available_simulator "$fallback_sims")
         
         if [ -n "$available_sim" ]; then

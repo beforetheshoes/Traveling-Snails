@@ -67,15 +67,15 @@ echo -e "${CYAN}🔨 Quick build verification...${NC}"
 
 # Find available simulator
 find_available_simulator() {
-    local primary_sim="iPhone 15 Pro"
-    local fallback_sim="iPhone 14 Pro"
+    local primary_sim="iPhone 16 Pro"
+    local fallback_sim="iPhone 15 Pro"
     
     if xcrun simctl list devices | grep -q "$primary_sim"; then
         echo "$primary_sim"
         return 0
     fi
     
-    local fallback_list="$fallback_sim iPhone 14 iPhone 13 Pro iPhone 12 Pro"
+    local fallback_list="$fallback_sim iPhone 16 iPhone 14 Pro iPhone 14 iPhone 13 Pro iPhone 12 Pro"
     for sim_name in $fallback_list; do
         if xcrun simctl list devices | grep -q "$sim_name"; then
             echo "$sim_name"

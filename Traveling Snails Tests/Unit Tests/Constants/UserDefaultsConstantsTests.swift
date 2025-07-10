@@ -59,13 +59,20 @@ struct UserDefaultsConstantsTests {
     func testUserDefaultsIntegration() {
         let testValue = "testValue"
 
+        // Store the original value to restore later
+        let originalValue = UserDefaults.standard.string(forKey: UserDefaultsConstants.colorScheme)
+
         // Test that our constants work with actual UserDefaults operations
         UserDefaults.standard.set(testValue, forKey: UserDefaultsConstants.colorScheme)
         let retrievedValue = UserDefaults.standard.string(forKey: UserDefaultsConstants.colorScheme)
 
         #expect(retrievedValue == testValue)
 
-        // Clean up
-        UserDefaults.standard.removeObject(forKey: UserDefaultsConstants.colorScheme)
+        // Restore original value or remove if there was none
+        if let originalValue = originalValue {
+            UserDefaults.standard.set(originalValue, forKey: UserDefaultsConstants.colorScheme)
+        } else {
+            UserDefaults.standard.removeObject(forKey: UserDefaultsConstants.colorScheme)
+        }
     }
 }

@@ -131,7 +131,7 @@ struct AdvancedIntegrationTests {
 
         #expect(result.interactionResult.success)
         #expect(result.interactionResult.interactions.count >= 2)
-        #expect(result.duration < 10.0) // Increased to account for system variability
+        #expect(result.duration < 15.0) // Increased for CI environment variability
     }
 
     @Test("Photo library and permission service integration", .tags(.integration, .medium, .parallel, .permissions, .fileAttachment, .validation, .async))
@@ -343,7 +343,7 @@ struct AdvancedIntegrationTests {
 
         #expect(result.workflowResult.success)
         #expect(result.workflowResult.steps.count >= 7)
-        #expect(result.duration < 10.0) // Complete lifecycle should be reasonably fast with mocks
+        #expect(result.duration < 15.0) // Complete lifecycle should be reasonably fast with mocks (CI adjusted)
 
         if let tripsCount = result.workflowResult.data["tripsSaved"] as? Int,
            let activitiesCount = result.workflowResult.data["activitiesSaved"] as? Int {

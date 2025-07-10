@@ -51,14 +51,15 @@ struct AccessibilityInfo {
 // MARK: - Error State Types
 
 /// Error state for view lifecycle management
-struct ViewErrorState {
+/// Thread-safe value type that conforms to Sendable for safe concurrent access
+struct ViewErrorState: Sendable {
     let errorType: ErrorType
     let message: String
     let isRecoverable: Bool
     let retryCount: Int
     let timestamp: Date
 
-    enum ErrorType: String, CaseIterable {
+    enum ErrorType: String, CaseIterable, Sendable, Codable {
         case saveFailure
         case networkFailure
         case validationError
@@ -566,54 +567,7 @@ enum ErrorRecoveryEngine {
     }
 }
 
-class ErrorStateManager {
-    private var errors: [ErrorEntry] = []
-    private let maxDisplayedErrors = 3
-    private let queue = DispatchQueue(label: "com.traveling-snails.error-state", attributes: .concurrent)
-
-    func addError(_ error: AppError, context: String) {
-        let entry = ErrorEntry(
-            error: error,
-            context: context,
-            timestamp: Date()
-        )
-        queue.async(flags: .barrier) {
-            self.errors.append(entry)
-        }
-    }
-
-    func getUniqueErrors() -> [AppError] {
-        queue.sync {
-            var seen: Set<Logger.Category> = []
-            var unique: [AppError] = []
-
-            for error in errors.map(\.error) {
-                let category = error.category
-                if !seen.contains(category) {
-                    seen.insert(category)
-                    unique.append(error)
-                }
-            }
-
-            return unique
-        }
-    }
-
-    func getDisplayableErrors() -> [ErrorEntry] {
-        queue.sync {
-            Array(errors.suffix(maxDisplayedErrors))
-        }
-    }
-
-    func getAggregatedErrors() -> [AggregatedError] {
-        queue.sync {
-            let grouped = Dictionary(grouping: errors) { $0.error.category }
-            return grouped.map { category, entries in
-                AggregatedError(errorType: category, count: entries.count)
-            }
-        }
-    }
-}
+// Old ErrorStateManager class removed - replaced with @MainActor thread-safe version below
 
 struct ErrorEntry {
     let error: AppError
@@ -830,5 +784,147 @@ struct ErrorPresentation {
         case low
         case medium
         case high
+    }
+}
+
+// MARK: - Thread-Safe Error State Management
+
+/// Thread-safe error state manager using @MainActor isolation
+/// 
+/// This class provides centralized error state management with the following guarantees:
+/// - Thread safety: All operations are isolated to the MainActor
+/// - Memory bounds: Automatically limits stored error states to prevent memory growth
+/// - Performance: Optimized for sequential access patterns typical in UI applications
+/// - Observability: Integrates with SwiftUI's @Published for reactive UI updates
+///
+/// Design Rationale:
+/// - @MainActor isolation chosen over concurrent patterns to eliminate data races
+/// - Sequential processing reflects real app usage (user interactions are inherently sequential)
+/// - Bounded collection prevents memory leaks from accumulated error states
+/// - Simple architecture prioritizes reliability over premature optimization
+@MainActor
+class ErrorStateManager: ObservableObject {
+    @Published private(set) var errorStates: [ViewErrorState] = []
+    private let logger = Logger.shared
+    
+    /// Maximum number of error states to retain in memory
+    /// Configurable via UserDefaults for flexibility across different deployment scenarios
+    private var maxErrorStates: Int {
+        UserDefaults.standard.getErrorStateMaxCount()
+    }
+
+    init() {
+        logger.log("ErrorStateManager initialized with maxErrorStates=\(maxErrorStates)", category: .app, level: .info)
+    }
+
+    /// Add a new error state with automatic cleanup of old states
+    func addErrorState(_ errorState: ViewErrorState) {
+        errorStates.append(errorState)
+
+        // Keep only recent errors to prevent unbounded growth
+        if errorStates.count > maxErrorStates {
+            let removedCount = errorStates.count - maxErrorStates
+            errorStates.removeFirst(removedCount)
+            logger.log("Removed \(removedCount) old error states", category: .app, level: .debug)
+        }
+
+        logger.log("Added error state: \(errorState.errorType.rawValue)", category: .app, level: .debug)
+    }
+
+    /// Add an AppError with automatic conversion to ViewErrorState
+    func addAppError(_ error: AppError, context: String? = nil) {
+        let errorState = ViewErrorState(
+            errorType: mapAppErrorToErrorType(error),
+            message: error.localizedDescription,
+            isRecoverable: error.isRecoverable,
+            retryCount: 0,
+            timestamp: Date()
+        )
+
+        addErrorState(errorState)
+
+        // Log the error using existing error handling patterns
+        let contextInfo = context.map { " Context: \($0)" } ?? ""
+        logger.log("AppError converted to ViewErrorState\(contextInfo): \(error.localizedDescription)",
+                  category: error.category, level: error.isRecoverable ? .warning : .error)
+    }
+
+    /// Get all current error states (thread-safe read)
+    func getErrorStates() -> [ViewErrorState] {
+        errorStates
+    }
+
+    /// Get recent error states within specified time window
+    func getRecentErrorStates(within timeInterval: TimeInterval) -> [ViewErrorState] {
+        let cutoffTime = Date().addingTimeInterval(-timeInterval)
+        return errorStates.filter { $0.timestamp >= cutoffTime }
+    }
+
+    /// Clear all error states
+    func clearErrorStates() {
+        let clearedCount = errorStates.count
+        errorStates.removeAll()
+        logger.log("Cleared \(clearedCount) error states", category: .app, level: .info)
+    }
+
+    /// Get error states grouped by type
+    func getErrorStatesByType() -> [ViewErrorState.ErrorType: [ViewErrorState]] {
+        Dictionary(grouping: errorStates) { $0.errorType }
+    }
+
+    /// Map AppError to ViewErrorState.ErrorType
+    private func mapAppErrorToErrorType(_ error: AppError) -> ViewErrorState.ErrorType {
+        switch error {
+        case .databaseSaveFailed, .databaseLoadFailed, .databaseDeleteFailed, .databaseCorrupted:
+            return .saveFailure
+        case .networkUnavailable, .serverError, .timeoutError, .cloudKitSyncFailed, .cloudKitUnavailable:
+            return .networkFailure
+        case .invalidInput, .missingRequiredField, .invalidDateRange, .duplicateEntry:
+            return .validationError
+        default:
+            return .saveFailure // Default fallback
+        }
+    }
+}
+
+// MARK: - Performance Optimized Serialization
+
+/// Thread-safe error state serialization following Swift 6 patterns
+@MainActor
+extension ErrorStateManager {
+    /// Serialize all current error states to Data
+    func serializeErrorStates() -> Data {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+
+        do {
+            let data = try encoder.encode(errorStates)
+            logger.log("Serialized \(errorStates.count) error states", category: .app, level: .debug)
+            return data
+        } catch {
+            logger.log("Failed to serialize error states: \(error.localizedDescription)", category: .app, level: .error)
+            return Data()
+        }
+    }
+
+    /// Deserialize error states from Data
+    func deserializeErrorStates(from data: Data) {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+
+        do {
+            let decodedStates = try decoder.decode([ViewErrorState].self, from: data)
+            errorStates = decodedStates
+            logger.log("Deserialized \(decodedStates.count) error states", category: .app, level: .info)
+        } catch {
+            logger.log("Failed to deserialize error states: \(error.localizedDescription)", category: .app, level: .error)
+        }
+    }
+}
+
+// Make ViewErrorState Codable for serialization
+extension ViewErrorState: Codable {
+    enum CodingKeys: String, CodingKey {
+        case errorType, message, isRecoverable, retryCount, timestamp
     }
 }
