@@ -63,40 +63,20 @@ final class LocalizationManager {
             value = getHardcodedTranslation(for: key) ?? defaultValue ?? key
         }
 
-        // Log missing translations for debugging
+        // Log missing translations for debugging (DEBUG only)
+        #if DEBUG
         if value == key && defaultValue == nil {
             Logger.shared.warning("Missing localization for key: \(key)", category: .app)
         }
+        #endif
 
         return value
     }
 
     private func getHardcodedTranslation(for key: String) -> String? {
-        // Hardcoded fallbacks for critical UI text
-        switch key {
-        case "file_attachments.title":
-            return "Attachments"
-        case "file_attachments.no_attachments":
-            return "No attachments yet"
-        case "file_attachments.no_attachments_description":
-            return "Add files to keep them with this activity"
-        case "file_attachments.add_attachment":
-            return "Add Attachment"
-        case "general.cancel":
-            return "Cancel"
-        case "general.save":
-            return "Save"
-        case "general.edit":
-            return "Edit"
-        case "general.delete":
-            return "Delete"
-        case "general.untitled":
-            return "Untitled"
-        case "errors.network_offline_label":
-            return "No internet connection"
-        default:
-            return nil
-        }
+        // All strings now properly localized - no hardcoded fallbacks needed
+        // This method remains for backwards compatibility but returns nil
+        nil
     }
 
     func localizedString(for key: String, arguments: CVarArg...) -> String {

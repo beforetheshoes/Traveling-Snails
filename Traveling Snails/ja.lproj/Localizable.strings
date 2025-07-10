@@ -1,9 +1,271 @@
 // Localizable.strings
-// TODO: Complete translations for this language
+// Japanese localization for Traveling Snails
 
 // General
+"general.cancel" = "キャンセル";
+"general.save" = "保存";
+"general.delete" = "削除";
+"general.edit" = "編集";
+"general.add" = "追加";
+"general.done" = "完了";
+"general.ok" = "OK";
+"general.yes" = "はい";
+"general.no" = "いいえ";
+"general.search" = "検索";
+"general.clear" = "クリア";
+"general.loading" = "読み込み中...";
 "general.error" = "エラー";
+"general.warning" = "警告";
+"general.info" = "情報";
+"general.none" = "なし";
+"general.unknown" = "不明";
+"general.untitled" = "無題";
 
+// Navigation
+"navigation.trips" = "旅行";
+"navigation.organizations" = "組織";
+"navigation.files" = "ファイル";
+"navigation.settings" = "設定";
+"navigation.debug" = "デバッグ";
+"navigation.back" = "戻る";
+"navigation.close" = "閉じる";
+
+// Trips
+"trips.title" = "旅行";
+"trips.empty_state" = "旅行がありません";
+"trips.empty_state_description" = "最初の旅行を作成して始めましょう";
+"trips.add_trip" = "旅行を追加";
+"trips.edit_trip" = "旅行を編集";
+"trips.delete_trip" = "旅行を削除";
+"trips.name" = "旅行名";
+"trips.notes" = "メモ";
+"trips.start_date" = "開始日";
+"trips.end_date" = "終了日";
+"trips.total_cost" = "総費用";
+"trips.total_activities" = "総アクティビティ数";
+"trips.search_placeholder" = "旅行を検索...";
+"trips.date_range" = "日付範囲";
+"trips.no_dates_set" = "日付が設定されていません";
+
+// Activities
+"trips.activities.transportation" = "交通手段";
+"trips.activities.lodging" = "宿泊";
+"trips.activities.activities" = "アクティビティ";
+"trips.activities.add_activity" = "アクティビティを追加";
+"trips.activities.no_activities" = "まだアクティビティがありません";
+
+// Organizations
+"organizations.title" = "組織";
+"organizations.empty_state" = "組織がありません";
+"organizations.empty_state_description" = "旅行サービスを追跡するために組織を追加してください";
+"organizations.add_organization" = "組織を追加";
+"organizations.edit_organization" = "組織を編集";
+"organizations.delete_organization" = "組織を削除";
+"organizations.name" = "組織名";
+"organizations.phone" = "電話番号";
+"organizations.email" = "メール";
+"organizations.website" = "ウェブサイト";
+"organizations.address" = "住所";
+"organizations.search_placeholder" = "組織を検索...";
+"organizations.cannot_delete_in_use" = "組織を削除できません：%d個のアイテムで使用されています";
+"organizations.cannot_delete_none" = "デフォルトの「なし」組織は削除できません";
+
+// File Attachments
+"file_attachments.title" = "添付ファイル";
+"file_attachments.add_attachment" = "添付ファイルを追加";
+"file_attachments.choose_photo" = "写真を選択";
+"file_attachments.choose_document" = "ドキュメントを選択";
+"file_attachments.no_attachments" = "まだ添付ファイルがありません";
+"file_attachments.no_attachments_description" = "このアクティビティでファイルを保持するために追加してください";
+"file_attachments.description" = "説明";
+"file_attachments.original_name" = "元の名前";
+"file_attachments.file_type" = "ファイルタイプ";
+"file_attachments.file_size" = "ファイルサイズ";
+"file_attachments.created_date" = "作成日";
+"file_attachments.edit_attachment" = "添付ファイルを編集";
+"file_attachments.delete_attachment" = "添付ファイルを削除";
+
+// File Attachment Settings
+"file_attachments.settings.title" = "添付ファイル設定";
+"file_attachments.settings.management" = "管理";
+"file_attachments.settings.storage" = "ストレージ";
+"file_attachments.settings.file_types" = "ファイルタイプ";
+"file_attachments.settings.total_files" = "総ファイル数";
+"file_attachments.settings.total_size" = "総サイズ";
+"file_attachments.settings.find_orphaned" = "孤立ファイルを検索";
+"file_attachments.settings.cleanup_orphaned" = "孤立ファイルをクリーンアップ";
+"file_attachments.settings.clear_all" = "すべての添付ファイルをクリア";
+"file_attachments.settings.images" = "画像";
+"file_attachments.settings.documents" = "ドキュメント";
+"file_attachments.settings.other" = "その他";
+
+// File Attachment Errors
+"file_attachments.errors.failed_to_load" = "ファイルの読み込みに失敗しました";
+"file_attachments.errors.failed_to_save" = "ファイルの保存に失敗しました";
+"file_attachments.errors.failed_to_delete" = "ファイルの削除に失敗しました";
+"file_attachments.errors.invalid_format" = "無効なファイル形式";
+"file_attachments.errors.too_large" = "ファイルが大きすぎます";
+
+// Activities
+"activities.name" = "名前";
+"activities.start" = "開始";
+"activities.end" = "終了";
+"activities.cost" = "費用";
+"activities.notes" = "メモ";
+"activities.organization" = "組織";
+"activities.confirmation" = "確認";
+"activities.reservation" = "予約";
+"activities.paid" = "支払い状況";
+"activities.duration" = "期間";
+"activities.location" = "場所";
+"activities.custom_location" = "カスタム場所";
+"activities.hide_location" = "場所を非表示";
+"activities.attachments" = "添付ファイル";
+
+// Transportation
+"activities.transportation.title" = "交通手段";
+"activities.transportation.type" = "タイプ";
+"activities.transportation.plane" = "飛行機";
+"activities.transportation.train" = "電車";
+"activities.transportation.bus" = "バス";
+"activities.transportation.car" = "車";
+"activities.transportation.ship" = "船";
+"activities.transportation.other" = "その他";
+
+// Lodging
+"activities.lodging.title" = "宿泊";
+"activities.lodging.check_in" = "チェックイン";
+"activities.lodging.check_out" = "チェックアウト";
+
+// Activity
+"activities.activity.title" = "アクティビティ";
+
+// Payment
+"activities.payment.none" = "なし";
+"activities.payment.partial" = "一部";
+"activities.payment.full" = "全額支払い済み";
+
+// Settings
+"settings.title" = "設定";
+"settings.appearance" = "外観";
+"settings.color_scheme" = "カラースキーム";
+"settings.system_default" = "システムデフォルト";
+"settings.light" = "ライト";
+"settings.dark" = "ダーク";
+"settings.language" = "言語";
+"settings.data_management" = "データ管理";
+"settings.export_data" = "データをエクスポート";
+"settings.import_data" = "データをインポート";
+"settings.clear_data" = "データをクリア";
+"settings.about" = "について";
+"settings.version" = "バージョン";
+"settings.build" = "ビルド";
+"settings.file_attachment_settings" = "ファイル添付設定";
+"settings.management_description" = "ファイル添付とストレージを管理";
+
+// Errors
+"errors.title" = "エラー";
+"errors.unknown" = "予期しないエラーが発生しました";
+"errors.network_unavailable" = "ネットワーク接続が利用できません";
+"errors.database_error" = "データベースエラーが発生しました";
+"errors.file_error" = "ファイル操作が失敗しました";
+"errors.validation_error" = "検証に失敗しました";
+"errors.permission_denied" = "アクセス許可が拒否されました";
+"errors.disk_space_full" = "ストレージ容量が不足しています";
+"errors.operation_cancelled" = "操作がキャンセルされました";
+"errors.feature_not_available" = "機能が利用できません";
+
+// Validation
+"validation.required" = "このフィールドは必須です";
+"validation.invalid_email" = "無効なメールアドレス";
+"validation.invalid_url" = "無効なURL";
+"validation.invalid_phone" = "無効な電話番号";
+"validation.invalid_date_range" = "無効な日付範囲";
+"validation.duplicate_entry" = "重複エントリ";
+"validation.too_long" = "長すぎます";
+"validation.too_short" = "短すぎます";
+"validation.invalid_format" = "無効な形式";
+
+// Time and Dates
+"time.now" = "今";
+"time.today" = "今日";
+"time.yesterday" = "昨日";
+"time.tomorrow" = "明日";
+"time.this_week" = "今週";
+"time.last_week" = "先週";
+"time.next_week" = "来週";
+"time.this_month" = "今月";
+"time.last_month" = "先月";
+"time.next_month" = "来月";
+"time.duration" = "期間";
+"time.starts" = "開始";
+"time.ends" = "終了";
+
+// Time Units
+"time.units.seconds" = "秒";
+"time.units.minutes" = "分";
+"time.units.hours" = "時間";
+"time.units.days" = "日";
+"time.units.weeks" = "週";
+"time.units.months" = "月";
+"time.units.years" = "年";
+
+// Database
+"database.title" = "データベース";
+"database.maintenance" = "メンテナンス";
+"database.compact" = "コンパクト";
+"database.rebuild" = "再構築";
+"database.validate" = "検証";
+"database.create_test_data" = "テストデータを作成";
+"database.operations" = "操作";
+"database.browser" = "ブラウザ";
+"database.diagnostics" = "診断";
+"database.repair" = "修復";
+
+// Database Status
+"database.status.healthy" = "正常";
+"database.status.needs_attention" = "要注意";
+"database.status.corrupted" = "破損";
+"database.status.optimizing" = "最適化中";
+"database.status.repairing" = "修復中";
+
+// Database Operations
+"database.operations.reset_failed" = "データベースのリセットに失敗しました";
+"database.operations.compact_failed" = "データベースのコンパクトに失敗しました";
+"database.operations.rebuild_failed" = "関係の再構築に失敗しました";
+"database.operations.export_failed" = "データのエクスポートに失敗しました";
+"database.operations.cleanup_failed" = "データのクリーンアップに失敗しました";
+
+// Save Operations
+"save.failed" = "変更の保存に失敗しました";
+"save.organization_failed" = "組織の保存に失敗しました";
+"save.activity_failed" = "アクティビティの保存に失敗しました";
+"save.attachment_failed" = "添付ファイルの保存に失敗しました";
+"save.trip_failed" = "旅行の保存に失敗しました";
+
+// Delete Operations
+"delete.failed" = "アイテムの削除に失敗しました";
+"delete.organization_failed" = "組織の削除に失敗しました";
+"delete.attachment_failed" = "添付ファイルの削除に失敗しました";
+
+// File Operations
+"file.access_failed" = "ファイルへのアクセスに失敗しました";
+"file.processing_failed" = "ファイルの処理に失敗しました";
+"file.selection_failed" = "ファイルの選択に失敗しました";
+"file.photo_failed" = "写真の処理に失敗しました";
+"file.document_failed" = "ドキュメントの処理に失敗しました";
+"file.database_save_failed" = "データベースへのファイル保存に失敗しました";
+
+// Generic Operations
+"operation.failed" = "操作が失敗しました";
+"operation.cancelled" = "操作がキャンセルされました";
+"operation.completed_with_errors" = "操作がエラーで完了しました";
+
+// Error Logging
+"errors.log.technical_error" = "エラーアラートが作成されました: %@";
+"errors.log.generic_user_message" = "予期しないエラーが発生しました。もう一度お試しください。";
+
+// Comprehensive Error Messages
 // Database Errors
 "errors.database.save_failed" = "データの保存に失敗しました: %@";
 "errors.database.load_failed" = "データの読み込みに失敗しました: %@";
@@ -65,7 +327,3 @@
 "errors.recovery.upgrade_icloud_storage" = "iCloudストレージプランをアップグレードするか、一部のデータを削除してください。";
 "errors.recovery.ensure_end_date_after_start" = "終了日が開始日より後になるようにしてください。";
 "errors.recovery.remove_associated_items" = "この組織を削除する前に、関連するすべてのアイテムを削除してください。";
-
-// Error Logging
-"errors.log.technical_error" = "エラーアラートが作成されました: %@";
-"errors.log.generic_user_message" = "予期しないエラーが発生しました。もう一度お試しください。";

@@ -254,7 +254,7 @@ private enum ErrorAlertFactory {
         // Log the technical details
         Logger.shared.error("AppError alert created: \(error.localizedDescription)", category: error.category)
 
-        // Use AppError's user-friendly message or fallback to generic
+        // Use AppError's user-friendly message or fallback to localized generic
         let userMessage = error.recoverySuggestion ?? L(L10n.Errors.Recovery.tryAgain)
         return ErrorAlert(id: UUID(), message: userMessage)
     }
@@ -361,7 +361,7 @@ struct ErrorHandlingModifier: ViewModifier {
                 Alert(
                     title: Text(L(L10n.General.error)),
                     message: Text(errorAlert.message),
-                    dismissButton: .default(Text("OK"))
+                    dismissButton: .default(Text(L(L10n.General.ok)))
                 )
             }
     }

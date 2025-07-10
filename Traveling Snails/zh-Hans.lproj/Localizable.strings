@@ -1,48 +1,321 @@
-/* Chinese Simplified Localizations */
+// Localizable.strings
+// Chinese Simplified localization for Traveling Snails
 
+// General
+"general.cancel" = "取消";
+"general.save" = "保存";
+"general.delete" = "删除";
+"general.edit" = "编辑";
+"general.add" = "添加";
+"general.done" = "完成";
+"general.ok" = "确定";
+"general.yes" = "是";
+"general.no" = "否";
+"general.search" = "搜索";
+"general.clear" = "清除";
+"general.loading" = "加载中...";
 "general.error" = "错误";
+"general.warning" = "警告";
+"general.info" = "信息";
+"general.none" = "无";
+"general.unknown" = "未知";
+"general.untitled" = "无标题";
 
+// Navigation
+"navigation.trips" = "旅行";
+"navigation.organizations" = "组织";
+"navigation.files" = "文件";
+"navigation.settings" = "设置";
+"navigation.debug" = "调试";
+"navigation.back" = "返回";
+"navigation.close" = "关闭";
+
+// Trips
+"trips.title" = "旅行";
+"trips.empty_state" = "暂无旅行";
+"trips.empty_state_description" = "创建您的第一次旅行开始使用";
+"trips.add_trip" = "添加旅行";
+"trips.edit_trip" = "编辑旅行";
+"trips.delete_trip" = "删除旅行";
+"trips.name" = "旅行名称";
+"trips.notes" = "备注";
+"trips.start_date" = "开始日期";
+"trips.end_date" = "结束日期";
+"trips.total_cost" = "总费用";
+"trips.total_activities" = "总活动数";
+"trips.search_placeholder" = "搜索旅行...";
+"trips.date_range" = "日期范围";
+"trips.no_dates_set" = "未设置日期";
+
+// Activities
+"trips.activities.transportation" = "交通";
+"trips.activities.lodging" = "住宿";
+"trips.activities.activities" = "活动";
+"trips.activities.add_activity" = "添加活动";
+"trips.activities.no_activities" = "暂无活动";
+
+// Organizations
+"organizations.title" = "组织";
+"organizations.empty_state" = "暂无组织";
+"organizations.empty_state_description" = "添加组织以跟踪您的旅行服务";
+"organizations.add_organization" = "添加组织";
+"organizations.edit_organization" = "编辑组织";
+"organizations.delete_organization" = "删除组织";
+"organizations.name" = "组织名称";
+"organizations.phone" = "电话";
+"organizations.email" = "邮箱";
+"organizations.website" = "网站";
+"organizations.address" = "地址";
+"organizations.search_placeholder" = "搜索组织...";
+"organizations.cannot_delete_in_use" = "无法删除组织：它被 %d 个项目使用";
+"organizations.cannot_delete_none" = "无法删除默认的\"无\"组织";
+
+// File Attachments
+"file_attachments.title" = "附件";
+"file_attachments.add_attachment" = "添加附件";
+"file_attachments.choose_photo" = "选择照片";
+"file_attachments.choose_document" = "选择文档";
+"file_attachments.no_attachments" = "暂无附件";
+"file_attachments.no_attachments_description" = "添加文件以在此活动中保留它们";
+"file_attachments.description" = "描述";
+"file_attachments.original_name" = "原始名称";
+"file_attachments.file_type" = "文件类型";
+"file_attachments.file_size" = "文件大小";
+"file_attachments.created_date" = "创建时间";
+"file_attachments.edit_attachment" = "编辑附件";
+"file_attachments.delete_attachment" = "删除附件";
+
+// File Attachment Settings
+"file_attachments.settings.title" = "附件设置";
+"file_attachments.settings.management" = "管理";
+"file_attachments.settings.storage" = "存储";
+"file_attachments.settings.file_types" = "文件类型";
+"file_attachments.settings.total_files" = "总文件数";
+"file_attachments.settings.total_size" = "总大小";
+"file_attachments.settings.find_orphaned" = "查找孤立文件";
+"file_attachments.settings.cleanup_orphaned" = "清理孤立文件";
+"file_attachments.settings.clear_all" = "清除所有附件";
+"file_attachments.settings.images" = "图片";
+"file_attachments.settings.documents" = "文档";
+"file_attachments.settings.other" = "其他";
+
+// File Attachment Errors
+"file_attachments.errors.failed_to_load" = "文件加载失败";
+"file_attachments.errors.failed_to_save" = "文件保存失败";
+"file_attachments.errors.failed_to_delete" = "文件删除失败";
+"file_attachments.errors.invalid_format" = "无效的文件格式";
+"file_attachments.errors.too_large" = "文件过大";
+
+// Activities
+"activities.name" = "名称";
+"activities.start" = "开始";
+"activities.end" = "结束";
+"activities.cost" = "费用";
+"activities.notes" = "备注";
+"activities.organization" = "组织";
+"activities.confirmation" = "确认";
+"activities.reservation" = "预订";
+"activities.paid" = "支付状态";
+"activities.duration" = "持续时间";
+"activities.location" = "位置";
+"activities.custom_location" = "自定义位置";
+"activities.hide_location" = "隐藏位置";
+"activities.attachments" = "附件";
+
+// Transportation
+"activities.transportation.title" = "交通";
+"activities.transportation.type" = "类型";
+"activities.transportation.plane" = "飞机";
+"activities.transportation.train" = "火车";
+"activities.transportation.bus" = "公交车";
+"activities.transportation.car" = "汽车";
+"activities.transportation.ship" = "船";
+"activities.transportation.other" = "其他";
+
+// Lodging
+"activities.lodging.title" = "住宿";
+"activities.lodging.check_in" = "入住";
+"activities.lodging.check_out" = "退房";
+
+// Activity
+"activities.activity.title" = "活动";
+
+// Payment
+"activities.payment.none" = "无";
+"activities.payment.partial" = "部分";
+"activities.payment.full" = "全额支付";
+
+// Settings
+"settings.title" = "设置";
+"settings.appearance" = "外观";
+"settings.color_scheme" = "颜色方案";
+"settings.system_default" = "系统默认";
+"settings.light" = "浅色";
+"settings.dark" = "深色";
+"settings.language" = "语言";
+"settings.data_management" = "数据管理";
+"settings.export_data" = "导出数据";
+"settings.import_data" = "导入数据";
+"settings.clear_data" = "清除数据";
+"settings.about" = "关于";
+"settings.version" = "版本";
+"settings.build" = "构建版本";
+"settings.file_attachment_settings" = "文件附件设置";
+"settings.management_description" = "管理您的文件附件和存储";
+
+// Errors
+"errors.title" = "错误";
+"errors.unknown" = "发生未知错误";
+"errors.network_unavailable" = "网络连接不可用";
+"errors.database_error" = "数据库错误";
+"errors.file_error" = "文件操作失败";
+"errors.validation_error" = "验证失败";
+"errors.permission_denied" = "权限被拒绝";
+"errors.disk_space_full" = "存储空间不足";
+"errors.operation_cancelled" = "操作已取消";
+"errors.feature_not_available" = "功能不可用";
+
+// Validation
+"validation.required" = "此字段为必填项";
+"validation.invalid_email" = "无效的邮箱地址";
+"validation.invalid_url" = "无效的网址";
+"validation.invalid_phone" = "无效的电话号码";
+"validation.invalid_date_range" = "无效的日期范围";
+"validation.duplicate_entry" = "重复条目";
+"validation.too_long" = "太长";
+"validation.too_short" = "太短";
+"validation.invalid_format" = "无效格式";
+
+// Time and Dates
+"time.now" = "现在";
+"time.today" = "今天";
+"time.yesterday" = "昨天";
+"time.tomorrow" = "明天";
+"time.this_week" = "本周";
+"time.last_week" = "上周";
+"time.next_week" = "下周";
+"time.this_month" = "本月";
+"time.last_month" = "上月";
+"time.next_month" = "下月";
+"time.duration" = "持续时间";
+"time.starts" = "开始";
+"time.ends" = "结束";
+
+// Time Units
+"time.units.seconds" = "秒";
+"time.units.minutes" = "分钟";
+"time.units.hours" = "小时";
+"time.units.days" = "天";
+"time.units.weeks" = "周";
+"time.units.months" = "月";
+"time.units.years" = "年";
+
+// Database
+"database.title" = "数据库";
+"database.maintenance" = "维护";
+"database.compact" = "压缩";
+"database.rebuild" = "重建";
+"database.validate" = "验证";
+"database.create_test_data" = "创建测试数据";
+"database.operations" = "操作";
+"database.browser" = "浏览器";
+"database.diagnostics" = "诊断";
+"database.repair" = "修复";
+
+// Database Status
+"database.status.healthy" = "健康";
+"database.status.needs_attention" = "需要注意";
+"database.status.corrupted" = "已损坏";
+"database.status.optimizing" = "优化中";
+"database.status.repairing" = "修复中";
+
+// Database Operations
+"database.operations.reset_failed" = "重置数据库失败";
+"database.operations.compact_failed" = "压缩数据库失败";
+"database.operations.rebuild_failed" = "重建关系失败";
+"database.operations.export_failed" = "导出数据失败";
+"database.operations.cleanup_failed" = "清理数据失败";
+
+// Save Operations
+"save.failed" = "保存更改失败";
+"save.organization_failed" = "保存组织失败";
+"save.activity_failed" = "保存活动失败";
+"save.attachment_failed" = "保存附件失败";
+"save.trip_failed" = "保存旅行失败";
+
+// Delete Operations
+"delete.failed" = "删除项目失败";
+"delete.organization_failed" = "删除组织失败";
+"delete.attachment_failed" = "移除附件失败";
+
+// File Operations
+"file.access_failed" = "访问文件失败";
+"file.processing_failed" = "处理文件失败";
+"file.selection_failed" = "选择文件失败";
+"file.photo_failed" = "处理照片失败";
+"file.document_failed" = "处理文档失败";
+"file.database_save_failed" = "保存文件到数据库失败";
+
+// Generic Operations
+"operation.failed" = "操作失败";
+"operation.cancelled" = "操作已取消";
+"operation.completed_with_errors" = "操作完成但有错误";
+
+// Error Logging
+"errors.log.technical_error" = "错误警报已创建：%@";
+"errors.log.generic_user_message" = "发生了意外错误。请重试。";
+
+// Comprehensive Error Messages
+// Database Errors
 "errors.database.save_failed" = "保存数据失败：%@";
 "errors.database.load_failed" = "加载数据失败：%@";
 "errors.database.delete_failed" = "删除数据失败：%@";
 "errors.database.corrupted" = "检测到数据库损坏：%@";
 "errors.database.relationship_integrity" = "数据关系错误：%@";
 
+// File System Errors
 "errors.file.not_found" = "文件未找到：%@";
 "errors.file.permission_denied" = "文件权限被拒绝：%@";
 "errors.file.corrupted" = "文件已损坏：%@";
 "errors.file.disk_space_insufficient" = "磁盘空间不足";
 "errors.file.already_exists" = "文件已存在：%@";
 
+// Network Errors
 "errors.network.unavailable" = "网络连接不可用";
 "errors.network.server_error" = "服务器错误 (%d)：%@";
 "errors.network.timeout" = "请求超时";
 "errors.network.invalid_url" = "无效的网址：%@";
 
+// CloudKit Errors
 "errors.cloudkit.unavailable" = "CloudKit 不可用";
 "errors.cloudkit.quota_exceeded" = "CloudKit 存储配额已超出";
 "errors.cloudkit.sync_failed" = "CloudKit 同步失败：%@";
 "errors.cloudkit.authentication_failed" = "CloudKit 身份验证失败";
 
+// Import/Export Errors
 "errors.import.failed" = "导入失败：%@";
 "errors.export.failed" = "导出失败：%@";
 "errors.import.invalid_format" = "无效的文件格式：%@";
 "errors.import.corrupted_data" = "导入数据已损坏：%@";
 
+// Validation Errors
 "errors.validation.invalid_input" = "%@ 的输入无效";
 "errors.validation.missing_required_field" = "缺少必填字段：%@";
 "errors.validation.duplicate_entry" = "重复条目：%@";
 "errors.validation.invalid_date_range" = "无效的日期范围：结束日期必须晚于开始日期";
 
+// Organization Errors
 "errors.organization.in_use" = "无法删除 '%@'。它被 %d 个项目使用。";
 "errors.organization.in_use_plural" = "无法删除 '%@'。它被 %d 个项目使用。";
 "errors.organization.cannot_delete_none" = "无法删除默认的\"无\"组织";
 "errors.organization.not_found" = "组织未找到：%@";
 
+// Generic Errors
 "errors.general.unknown" = "发生了意外错误：%@";
 "errors.general.operation_cancelled" = "操作已取消";
 "errors.general.feature_not_available" = "功能不可用：%@";
 
+// Recovery Suggestions
 "errors.recovery.restart_app" = "尝试重启应用。如果问题仍然存在，请联系支持。";
 "errors.recovery.check_connection" = "检查您的网络连接并重试。";
 "errors.recovery.free_space" = "释放一些存储空间并重试。";
@@ -54,6 +327,3 @@
 "errors.recovery.upgrade_icloud_storage" = "升级您的 iCloud 存储计划或删除一些数据。";
 "errors.recovery.ensure_end_date_after_start" = "请确保结束日期晚于开始日期。";
 "errors.recovery.remove_associated_items" = "在删除此组织之前，请移除所有关联项目。";
-
-"errors.log.technical_error" = "错误警报已创建：%@";
-"errors.log.generic_user_message" = "发生了意外错误。请重试。";

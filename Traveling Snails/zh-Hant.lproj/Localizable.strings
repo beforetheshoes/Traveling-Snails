@@ -1,9 +1,271 @@
 // Localizable.strings
-// TODO: Complete translations for this language
+// Chinese Traditional localization for Traveling Snails
 
 // General
+"general.cancel" = "取消";
+"general.save" = "儲存";
+"general.delete" = "刪除";
+"general.edit" = "編輯";
+"general.add" = "新增";
+"general.done" = "完成";
+"general.ok" = "確定";
+"general.yes" = "是";
+"general.no" = "否";
+"general.search" = "搜尋";
+"general.clear" = "清除";
+"general.loading" = "載入中...";
 "general.error" = "錯誤";
+"general.warning" = "警告";
+"general.info" = "資訊";
+"general.none" = "無";
+"general.unknown" = "未知";
+"general.untitled" = "無標題";
 
+// Navigation
+"navigation.trips" = "旅行";
+"navigation.organizations" = "組織";
+"navigation.files" = "檔案";
+"navigation.settings" = "設定";
+"navigation.debug" = "除錯";
+"navigation.back" = "返回";
+"navigation.close" = "關閉";
+
+// Trips
+"trips.title" = "旅行";
+"trips.empty_state" = "暫無旅行";
+"trips.empty_state_description" = "建立您的第一次旅行開始使用";
+"trips.add_trip" = "新增旅行";
+"trips.edit_trip" = "編輯旅行";
+"trips.delete_trip" = "刪除旅行";
+"trips.name" = "旅行名稱";
+"trips.notes" = "備註";
+"trips.start_date" = "開始日期";
+"trips.end_date" = "結束日期";
+"trips.total_cost" = "總費用";
+"trips.total_activities" = "總活動數";
+"trips.search_placeholder" = "搜尋旅行...";
+"trips.date_range" = "日期範圍";
+"trips.no_dates_set" = "未設定日期";
+
+// Activities
+"trips.activities.transportation" = "交通";
+"trips.activities.lodging" = "住宿";
+"trips.activities.activities" = "活動";
+"trips.activities.add_activity" = "新增活動";
+"trips.activities.no_activities" = "暫無活動";
+
+// Organizations
+"organizations.title" = "組織";
+"organizations.empty_state" = "暫無組織";
+"organizations.empty_state_description" = "新增組織以追蹤您的旅行服務";
+"organizations.add_organization" = "新增組織";
+"organizations.edit_organization" = "編輯組織";
+"organizations.delete_organization" = "刪除組織";
+"organizations.name" = "組織名稱";
+"organizations.phone" = "電話";
+"organizations.email" = "電子郵件";
+"organizations.website" = "網站";
+"organizations.address" = "地址";
+"organizations.search_placeholder" = "搜尋組織...";
+"organizations.cannot_delete_in_use" = "無法刪除組織：它被 %d 個項目使用";
+"organizations.cannot_delete_none" = "無法刪除預設的「無」組織";
+
+// File Attachments
+"file_attachments.title" = "附件";
+"file_attachments.add_attachment" = "新增附件";
+"file_attachments.choose_photo" = "選擇照片";
+"file_attachments.choose_document" = "選擇文件";
+"file_attachments.no_attachments" = "暫無附件";
+"file_attachments.no_attachments_description" = "新增檔案以在此活動中保留它們";
+"file_attachments.description" = "描述";
+"file_attachments.original_name" = "原始名稱";
+"file_attachments.file_type" = "檔案類型";
+"file_attachments.file_size" = "檔案大小";
+"file_attachments.created_date" = "建立時間";
+"file_attachments.edit_attachment" = "編輯附件";
+"file_attachments.delete_attachment" = "刪除附件";
+
+// File Attachment Settings
+"file_attachments.settings.title" = "附件設定";
+"file_attachments.settings.management" = "管理";
+"file_attachments.settings.storage" = "儲存";
+"file_attachments.settings.file_types" = "檔案類型";
+"file_attachments.settings.total_files" = "總檔案數";
+"file_attachments.settings.total_size" = "總大小";
+"file_attachments.settings.find_orphaned" = "尋找孤立檔案";
+"file_attachments.settings.cleanup_orphaned" = "清理孤立檔案";
+"file_attachments.settings.clear_all" = "清除所有附件";
+"file_attachments.settings.images" = "圖片";
+"file_attachments.settings.documents" = "文件";
+"file_attachments.settings.other" = "其他";
+
+// File Attachment Errors
+"file_attachments.errors.failed_to_load" = "檔案載入失敗";
+"file_attachments.errors.failed_to_save" = "檔案儲存失敗";
+"file_attachments.errors.failed_to_delete" = "檔案刪除失敗";
+"file_attachments.errors.invalid_format" = "無效的檔案格式";
+"file_attachments.errors.too_large" = "檔案過大";
+
+// Activities
+"activities.name" = "名稱";
+"activities.start" = "開始";
+"activities.end" = "結束";
+"activities.cost" = "費用";
+"activities.notes" = "備註";
+"activities.organization" = "組織";
+"activities.confirmation" = "確認";
+"activities.reservation" = "預訂";
+"activities.paid" = "付款狀態";
+"activities.duration" = "持續時間";
+"activities.location" = "位置";
+"activities.custom_location" = "自訂位置";
+"activities.hide_location" = "隱藏位置";
+"activities.attachments" = "附件";
+
+// Transportation
+"activities.transportation.title" = "交通";
+"activities.transportation.type" = "類型";
+"activities.transportation.plane" = "飛機";
+"activities.transportation.train" = "火車";
+"activities.transportation.bus" = "公車";
+"activities.transportation.car" = "汽車";
+"activities.transportation.ship" = "船";
+"activities.transportation.other" = "其他";
+
+// Lodging
+"activities.lodging.title" = "住宿";
+"activities.lodging.check_in" = "入住";
+"activities.lodging.check_out" = "退房";
+
+// Activity
+"activities.activity.title" = "活動";
+
+// Payment
+"activities.payment.none" = "無";
+"activities.payment.partial" = "部分";
+"activities.payment.full" = "全額付款";
+
+// Settings
+"settings.title" = "設定";
+"settings.appearance" = "外觀";
+"settings.color_scheme" = "色彩配置";
+"settings.system_default" = "系統預設";
+"settings.light" = "淺色";
+"settings.dark" = "深色";
+"settings.language" = "語言";
+"settings.data_management" = "資料管理";
+"settings.export_data" = "匯出資料";
+"settings.import_data" = "匯入資料";
+"settings.clear_data" = "清除資料";
+"settings.about" = "關於";
+"settings.version" = "版本";
+"settings.build" = "建置版本";
+"settings.file_attachment_settings" = "檔案附件設定";
+"settings.management_description" = "管理您的檔案附件和儲存";
+
+// Errors
+"errors.title" = "錯誤";
+"errors.unknown" = "發生未知錯誤";
+"errors.network_unavailable" = "網路連線不可用";
+"errors.database_error" = "資料庫錯誤";
+"errors.file_error" = "檔案操作失敗";
+"errors.validation_error" = "驗證失敗";
+"errors.permission_denied" = "權限被拒絕";
+"errors.disk_space_full" = "儲存空間不足";
+"errors.operation_cancelled" = "操作已取消";
+"errors.feature_not_available" = "功能不可用";
+
+// Validation
+"validation.required" = "此欄位為必填項";
+"validation.invalid_email" = "無效的電子郵件地址";
+"validation.invalid_url" = "無效的網址";
+"validation.invalid_phone" = "無效的電話號碼";
+"validation.invalid_date_range" = "無效的日期範圍";
+"validation.duplicate_entry" = "重複項目";
+"validation.too_long" = "太長";
+"validation.too_short" = "太短";
+"validation.invalid_format" = "無效格式";
+
+// Time and Dates
+"time.now" = "現在";
+"time.today" = "今天";
+"time.yesterday" = "昨天";
+"time.tomorrow" = "明天";
+"time.this_week" = "本週";
+"time.last_week" = "上週";
+"time.next_week" = "下週";
+"time.this_month" = "本月";
+"time.last_month" = "上月";
+"time.next_month" = "下月";
+"time.duration" = "持續時間";
+"time.starts" = "開始";
+"time.ends" = "結束";
+
+// Time Units
+"time.units.seconds" = "秒";
+"time.units.minutes" = "分鐘";
+"time.units.hours" = "小時";
+"time.units.days" = "天";
+"time.units.weeks" = "週";
+"time.units.months" = "月";
+"time.units.years" = "年";
+
+// Database
+"database.title" = "資料庫";
+"database.maintenance" = "維護";
+"database.compact" = "壓縮";
+"database.rebuild" = "重建";
+"database.validate" = "驗證";
+"database.create_test_data" = "建立測試資料";
+"database.operations" = "操作";
+"database.browser" = "瀏覽器";
+"database.diagnostics" = "診斷";
+"database.repair" = "修復";
+
+// Database Status
+"database.status.healthy" = "健康";
+"database.status.needs_attention" = "需要注意";
+"database.status.corrupted" = "已損壞";
+"database.status.optimizing" = "最佳化中";
+"database.status.repairing" = "修復中";
+
+// Database Operations
+"database.operations.reset_failed" = "重設資料庫失敗";
+"database.operations.compact_failed" = "壓縮資料庫失敗";
+"database.operations.rebuild_failed" = "重建關係失敗";
+"database.operations.export_failed" = "匯出資料失敗";
+"database.operations.cleanup_failed" = "清理資料失敗";
+
+// Save Operations
+"save.failed" = "儲存變更失敗";
+"save.organization_failed" = "儲存組織失敗";
+"save.activity_failed" = "儲存活動失敗";
+"save.attachment_failed" = "儲存附件失敗";
+"save.trip_failed" = "儲存旅行失敗";
+
+// Delete Operations
+"delete.failed" = "刪除項目失敗";
+"delete.organization_failed" = "刪除組織失敗";
+"delete.attachment_failed" = "移除附件失敗";
+
+// File Operations
+"file.access_failed" = "存取檔案失敗";
+"file.processing_failed" = "處理檔案失敗";
+"file.selection_failed" = "選擇檔案失敗";
+"file.photo_failed" = "處理照片失敗";
+"file.document_failed" = "處理文件失敗";
+"file.database_save_failed" = "儲存檔案到資料庫失敗";
+
+// Generic Operations
+"operation.failed" = "操作失敗";
+"operation.cancelled" = "操作已取消";
+"operation.completed_with_errors" = "操作完成但有錯誤";
+
+// Error Logging
+"errors.log.technical_error" = "錯誤警報已建立：%@";
+"errors.log.generic_user_message" = "發生了意外錯誤。請重試。";
+
+// Comprehensive Error Messages
 // Database Errors
 "errors.database.save_failed" = "儲存資料失敗：%@";
 "errors.database.load_failed" = "載入資料失敗：%@";
@@ -65,7 +327,3 @@
 "errors.recovery.upgrade_icloud_storage" = "升級您的 iCloud 儲存方案或刪除一些資料。";
 "errors.recovery.ensure_end_date_after_start" = "請確保結束日期晚於開始日期。";
 "errors.recovery.remove_associated_items" = "在刪除此組織之前，請移除所有關聯項目。";
-
-// Error Logging
-"errors.log.technical_error" = "錯誤警報已建立：%@";
-"errors.log.generic_user_message" = "發生了意外錯誤。請重試。";
