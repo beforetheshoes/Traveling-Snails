@@ -6,6 +6,7 @@
 
 import Foundation
 import SwiftData
+import CloudKit
 
 @Model
 class Trip: Identifiable {
@@ -20,6 +21,32 @@ class Trip: Identifiable {
     var endDate = Date.distantFuture
     var hasStartDate: Bool = false
     var hasEndDate: Bool = false
+    
+    // CloudKit sharing metadata - stored as string for SwiftData compatibility
+    private var _shareIDString: String? = nil
+    
+    /// CloudKit share record ID
+    var shareID: CKRecord.ID? {
+        get {
+            guard let shareIDString = _shareIDString else { return nil }
+            // Parse the string back to CKRecord.ID
+            let components = shareIDString.components(separatedBy: ":")
+            if components.count == 2 {
+                let recordName = components[0]
+                let zoneID = CKRecordZone.ID(zoneName: components[1])
+                return CKRecord.ID(recordName: recordName, zoneID: zoneID)
+            }
+            return nil
+        }
+        set {
+            if let newShareID = newValue {
+                // Store as "recordName:zoneName" string format
+                _shareIDString = "\(newShareID.recordName):\(newShareID.zoneID.zoneName)"
+            } else {
+                _shareIDString = nil
+            }
+        }
+    }
 
     // CRITICAL FIX: Use explicit relationships with proper inverse declarations
     // to prevent infinite loops and auto-insertion issues

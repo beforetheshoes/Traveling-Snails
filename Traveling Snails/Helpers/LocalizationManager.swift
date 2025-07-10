@@ -12,6 +12,10 @@ import SwiftUI
 @Observable
 final class LocalizationManager {
     static let shared = LocalizationManager()
+    
+    /// Enable/disable missing translation debug logging
+    /// Set to true to log missing translations during development
+    static var isLocalizationDebuggingEnabled: Bool = false
 
     private(set) var currentLanguage: String
     private var bundle: Bundle
@@ -63,10 +67,10 @@ final class LocalizationManager {
             value = getHardcodedTranslation(for: key) ?? defaultValue ?? key
         }
 
-        // Log missing translations for debugging (DEBUG only)
+        // Log missing translations with dedicated localization debug flag
         #if DEBUG
-        if value == key && defaultValue == nil {
-            Logger.shared.warning("Missing localization for key: \(key)", category: .app)
+        if value == key && defaultValue == nil && LocalizationManager.isLocalizationDebuggingEnabled {
+            Logger.shared.debug("Missing localization for key: \(key)", category: .localization)
         }
         #endif
 
@@ -85,234 +89,32 @@ final class LocalizationManager {
     }
 }
 
-// MARK: - Localization Keys Enum
+// MARK: - Localization Keys Base Enum
+// Feature-specific keys are organized in separate extension files:
+// - L10n+Errors.swift: Error messages and recovery suggestions
+// - L10n+Trips.swift: Trips and Activities functionality
+// - L10n+Organizations.swift: Organizations management
+// - L10n+UI.swift: General UI, Navigation, Settings, FileAttachments
+// - L10n+Data.swift: Database, Validation, Time, Operations
 
 enum L10n {
-    // MARK: - General
     enum General {
-        static let cancel = "general.cancel"
         static let save = "general.save"
+        static let cancel = "general.cancel"
         static let delete = "general.delete"
         static let edit = "general.edit"
-        static let add = "general.add"
-        static let done = "general.done"
         static let ok = "general.ok"
-        static let yes = "general.yes"
-        static let no = "general.no"
-        static let search = "general.search"
-        static let clear = "general.clear"
-        static let loading = "general.loading"
         static let error = "general.error"
-        static let warning = "general.warning"
-        static let info = "general.info"
-        static let none = "general.none"
-        static let unknown = "general.unknown"
         static let untitled = "general.untitled"
+        static let info = "general.info"
+        static let loading = "general.loading"
     }
-
-    // MARK: - Navigation
-    enum Navigation {
-        static let trips = "navigation.trips"
-        static let organizations = "navigation.organizations"
-        static let files = "navigation.files"
-        static let settings = "navigation.settings"
-        static let debug = "navigation.debug"
-        static let back = "navigation.back"
-        static let close = "navigation.close"
-    }
-
-    // MARK: - Trips
-    enum Trips {
-        static let title = "trips.title"
-        static let emptyState = "trips.empty_state"
-        static let emptyStateDescription = "trips.empty_state_description"
-        static let addTrip = "trips.add_trip"
-        static let editTrip = "trips.edit_trip"
-        static let deleteTrip = "trips.delete_trip"
-        static let tripName = "trips.name"
-        static let tripNotes = "trips.notes"
-        static let startDate = "trips.start_date"
-        static let endDate = "trips.end_date"
-        static let totalCost = "trips.total_cost"
-        static let totalActivities = "trips.total_activities"
-        static let searchPlaceholder = "trips.search_placeholder"
-        static let dateRange = "trips.date_range"
-        static let noDatesSet = "trips.no_dates_set"
-
-        enum Activities {
-            static let transportation = "trips.activities.transportation"
-            static let lodging = "trips.activities.lodging"
-            static let activities = "trips.activities.activities"
-            static let addActivity = "trips.activities.add_activity"
-            static let noActivities = "trips.activities.no_activities"
-        }
-    }
-
-    // MARK: - Organizations
-    enum Organizations {
-        static let title = "organizations.title"
-        static let emptyState = "organizations.empty_state"
-        static let emptyStateDescription = "organizations.empty_state_description"
-        static let addOrganization = "organizations.add_organization"
-        static let editOrganization = "organizations.edit_organization"
-        static let deleteOrganization = "organizations.delete_organization"
-        static let name = "organizations.name"
-        static let phone = "organizations.phone"
-        static let email = "organizations.email"
-        static let website = "organizations.website"
-        static let address = "organizations.address"
-        static let searchPlaceholder = "organizations.search_placeholder"
-        static let cannotDeleteInUse = "organizations.cannot_delete_in_use"
-        static let cannotDeleteNone = "organizations.cannot_delete_none"
-
-        enum Usage {
-            static let usedBy = "organizations.usage.used_by"
-            static let transportCount = "organizations.usage.transport_count"
-            static let lodgingCount = "organizations.usage.lodging_count"
-            static let activityCount = "organizations.usage.activity_count"
-        }
-    }
-
-    // MARK: - Activities
-    enum Activities {
-        static let name = "activities.name"
-        static let start = "activities.start"
-        static let end = "activities.end"
-        static let cost = "activities.cost"
-        static let notes = "activities.notes"
-        static let organization = "activities.organization"
-        static let confirmation = "activities.confirmation"
-        static let reservation = "activities.reservation"
-        static let paid = "activities.paid"
-        static let duration = "activities.duration"
-        static let location = "activities.location"
-        static let customLocation = "activities.custom_location"
-        static let hideLocation = "activities.hide_location"
-        static let attachments = "activities.attachments"
-
-        enum Transportation {
-            static let title = "activities.transportation.title"
-            static let type = "activities.transportation.type"
-            static let plane = "activities.transportation.plane"
-            static let train = "activities.transportation.train"
-            static let bus = "activities.transportation.bus"
-            static let car = "activities.transportation.car"
-            static let ship = "activities.transportation.ship"
-            static let other = "activities.transportation.other"
-        }
-
-        enum Lodging {
-            static let title = "activities.lodging.title"
-            static let checkIn = "activities.lodging.check_in"
-            static let checkOut = "activities.lodging.check_out"
-        }
-
-        enum Activity {
-            static let title = "activities.activity.title"
-        }
-
-        enum Payment {
-            static let none = "activities.payment.none"
-            static let partial = "activities.payment.partial"
-            static let full = "activities.payment.full"
-        }
-    }
-
-    // MARK: - File Attachments
-    enum FileAttachments {
-        static let title = "file_attachments.title"
-        static let addAttachment = "file_attachments.add_attachment"
-        static let choosePhoto = "file_attachments.choose_photo"
-        static let chooseDocument = "file_attachments.choose_document"
-        static let noAttachments = "file_attachments.no_attachments"
-        static let noAttachmentsDescription = "file_attachments.no_attachments_description"
-        static let description = "file_attachments.description"
-        static let originalName = "file_attachments.original_name"
-        static let fileType = "file_attachments.file_type"
-        static let fileSize = "file_attachments.file_size"
-        static let createdDate = "file_attachments.created_date"
-        static let editAttachment = "file_attachments.edit_attachment"
-        static let deleteAttachment = "file_attachments.delete_attachment"
-
-        enum Settings {
-            static let title = "file_attachments.settings.title"
-            static let management = "file_attachments.settings.management"
-            static let storage = "file_attachments.settings.storage"
-            static let fileTypes = "file_attachments.settings.file_types"
-            static let totalFiles = "file_attachments.settings.total_files"
-            static let totalSize = "file_attachments.settings.total_size"
-            static let findOrphaned = "file_attachments.settings.find_orphaned"
-            static let cleanupOrphaned = "file_attachments.settings.cleanup_orphaned"
-            static let clearAll = "file_attachments.settings.clear_all"
-            static let images = "file_attachments.settings.images"
-            static let documents = "file_attachments.settings.documents"
-            static let other = "file_attachments.settings.other"
-        }
-
-        enum Errors {
-            static let failedToLoad = "file_attachments.errors.failed_to_load"
-            static let failedToSave = "file_attachments.errors.failed_to_save"
-            static let failedToDelete = "file_attachments.errors.failed_to_delete"
-            static let invalidFormat = "file_attachments.errors.invalid_format"
-            static let tooLarge = "file_attachments.errors.too_large"
-        }
-    }
-
-    // MARK: - Settings
-    enum Settings {
-        static let title = "settings.title"
-        static let appearance = "settings.appearance"
-        static let colorScheme = "settings.color_scheme"
-        static let systemDefault = "settings.system_default"
-        static let light = "settings.light"
-        static let dark = "settings.dark"
-        static let language = "settings.language"
-        static let dataManagement = "settings.data_management"
-        static let exportData = "settings.export_data"
-        static let importData = "settings.import_data"
-        static let clearData = "settings.clear_data"
-        static let about = "settings.about"
-        static let version = "settings.version"
-        static let build = "settings.build"
-        static let fileAttachmentSettings = "settings.file_attachment_settings"
-        static let managementDescription = "settings.management_description"
-
-        enum Import {
-            static let title = "settings.import.title"
-            static let selectFile = "settings.import.select_file"
-            static let importing = "settings.import.importing"
-            static let success = "settings.import.success"
-            static let failed = "settings.import.failed"
-            static let invalidFile = "settings.import.invalid_file"
-            static let progress = "settings.import.progress"
-        }
-
-        enum Export {
-            static let title = "settings.export.title"
-            static let exporting = "settings.export.exporting"
-            static let success = "settings.export.success"
-            static let failed = "settings.export.failed"
-            static let format = "settings.export.format"
-            static let json = "settings.export.json"
-            static let csv = "settings.export.csv"
-        }
-    }
-
-    // MARK: - Errors
+    
     enum Errors {
-        static let title = "errors.title"
         static let unknown = "errors.unknown"
-        static let networkUnavailable = "errors.network_unavailable"
-        static let networkOfflineLabel = "errors.network_offline_label"
-        static let databaseError = "errors.database_error"
-        static let fileError = "errors.file_error"
-        static let validationError = "errors.validation_error"
         static let permissionDenied = "errors.permission_denied"
-        static let diskSpaceFull = "errors.disk_space_full"
-        static let operationCancelled = "errors.operation_cancelled"
-        static let featureNotAvailable = "errors.feature_not_available"
-
-        // Database errors
+        static let networkOfflineLabel = "errors.network_offline_label"
+        
         enum Database {
             static let saveFailed = "errors.database.save_failed"
             static let loadFailed = "errors.database.load_failed"
@@ -320,187 +122,202 @@ enum L10n {
             static let corrupted = "errors.database.corrupted"
             static let relationshipIntegrity = "errors.database.relationship_integrity"
         }
-
-        // File system errors
+        
         enum File {
             static let notFound = "errors.file.not_found"
             static let permissionDenied = "errors.file.permission_denied"
             static let corrupted = "errors.file.corrupted"
+            static let invalidFormat = "errors.file.invalid_format"
+            static let sizeTooLarge = "errors.file.size_too_large"
             static let diskSpaceInsufficient = "errors.file.disk_space_insufficient"
             static let alreadyExists = "errors.file.already_exists"
         }
-
-        // Network errors
+        
         enum Network {
             static let unavailable = "errors.network.unavailable"
-            static let serverError = "errors.network.server_error"
             static let timeout = "errors.network.timeout"
+            static let invalidResponse = "errors.network.invalid_response"
+            static let unauthorized = "errors.network.unauthorized"
+            static let serverError = "errors.network.server_error"
             static let invalidURL = "errors.network.invalid_url"
         }
-
-        // CloudKit errors
+        
         enum CloudKit {
-            static let unavailable = "errors.cloudkit.unavailable"
             static let quotaExceeded = "errors.cloudkit.quota_exceeded"
+            static let accountUnavailable = "errors.cloudkit.account_unavailable"
             static let syncFailed = "errors.cloudkit.sync_failed"
+            static let shareUnavailable = "errors.cloudkit.share_unavailable"
+            static let unavailable = "errors.cloudkit.unavailable"
             static let authenticationFailed = "errors.cloudkit.authentication_failed"
         }
-
-        // Import/Export errors
+        
         enum Import {
+            static let invalidFile = "errors.import.invalid_file"
+            static let unsupportedFormat = "errors.import.unsupported_format"
+            static let dataCorrupted = "errors.import.data_corrupted"
             static let failed = "errors.import.failed"
             static let invalidFormat = "errors.import.invalid_format"
             static let corruptedData = "errors.import.corrupted_data"
         }
-
+        
         enum Export {
+            static let writeFailed = "errors.export.write_failed"
             static let failed = "errors.export.failed"
         }
-
-        // Validation errors
+        
         enum Validation {
+            static let required = "errors.validation.required"
+            static let invalidFormat = "errors.validation.invalid_format"
+            static let outOfRange = "errors.validation.out_of_range"
+            static let tooLong = "errors.validation.too_long"
             static let invalidInput = "errors.validation.invalid_input"
             static let missingRequiredField = "errors.validation.missing_required_field"
             static let duplicateEntry = "errors.validation.duplicate_entry"
             static let invalidDateRange = "errors.validation.invalid_date_range"
         }
-
-        // Organization errors
+        
         enum Organization {
+            static let notFound = "errors.organization.not_found"
+            static let cannotDelete = "errors.organization.cannot_delete"
+            static let creationFailed = "errors.organization.creation_failed"
             static let inUse = "errors.organization.in_use"
             static let inUsePlural = "errors.organization.in_use_plural"
             static let cannotDeleteNone = "errors.organization.cannot_delete_none"
-            static let notFound = "errors.organization.not_found"
         }
-
-        // Generic errors
+        
         enum General {
+            static let operationFailed = "errors.general.operation_failed"
+            static let unexpectedError = "errors.general.unexpected_error"
+            static let notImplemented = "errors.general.not_implemented"
             static let unknown = "errors.general.unknown"
             static let operationCancelled = "errors.general.operation_cancelled"
             static let featureNotAvailable = "errors.general.feature_not_available"
         }
-
-        // Recovery suggestions
+        
         enum Recovery {
-            static let restartApp = "errors.recovery.restart_app"
-            static let checkConnection = "errors.recovery.check_connection"
-            static let freeSpace = "errors.recovery.free_space"
-            static let checkPermissions = "errors.recovery.check_permissions"
-            static let contactSupport = "errors.recovery.contact_support"
             static let tryAgain = "errors.recovery.try_again"
+            static let checkConnection = "errors.recovery.check_connection"
+            static let contactSupport = "errors.recovery.contact_support"
+            static let restartApp = "errors.recovery.restart_app"
+            static let checkPermissions = "errors.recovery.check_permissions"
+            static let freeSpace = "errors.recovery.free_space"
+            static let updateApp = "errors.recovery.update_app"
+            static let reLogin = "errors.recovery.re_login"
+            static let checkSettings = "errors.recovery.check_settings"
             static let restoreFromBackup = "errors.recovery.restore_from_backup"
             static let checkiCloudSettings = "errors.recovery.check_icloud_settings"
             static let upgradeiCloudStorage = "errors.recovery.upgrade_icloud_storage"
             static let ensureEndDateAfterStart = "errors.recovery.ensure_end_date_after_start"
             static let removeAssociatedItems = "errors.recovery.remove_associated_items"
         }
-
-        // Error logging
+        
         enum Log {
+            static let errorOccurred = "errors.log.error_occurred"
+            static let details = "errors.log.details"
             static let technicalError = "errors.log.technical_error"
             static let genericUserMessage = "errors.log.generic_user_message"
         }
     }
-
-    // MARK: - Validation
-    enum Validation {
-        static let required = "validation.required"
-        static let invalidEmail = "validation.invalid_email"
-        static let invalidURL = "validation.invalid_url"
-        static let invalidPhone = "validation.invalid_phone"
-        static let invalidDateRange = "validation.invalid_date_range"
-        static let duplicateEntry = "validation.duplicate_entry"
-        static let tooLong = "validation.too_long"
-        static let tooShort = "validation.too_short"
-        static let invalidFormat = "validation.invalid_format"
-    }
-
-    // MARK: - Time and Dates
-    enum Time {
-        static let now = "time.now"
-        static let today = "time.today"
-        static let yesterday = "time.yesterday"
-        static let tomorrow = "time.tomorrow"
-        static let thisWeek = "time.this_week"
-        static let lastWeek = "time.last_week"
-        static let nextWeek = "time.next_week"
-        static let thisMonth = "time.this_month"
-        static let lastMonth = "time.last_month"
-        static let nextMonth = "time.next_month"
-        static let duration = "time.duration"
-        static let starts = "time.starts"
-        static let ends = "time.ends"
-
-        enum Units {
-            static let seconds = "time.units.seconds"
-            static let minutes = "time.units.minutes"
-            static let hours = "time.units.hours"
-            static let days = "time.units.days"
-            static let weeks = "time.units.weeks"
-            static let months = "time.units.months"
-            static let years = "time.units.years"
+    
+    enum Settings {
+        static let language = "settings.language"
+        
+        enum Import {
+            static let failed = "settings.import.failed"
         }
     }
-
-    // MARK: - Database and Tools
+    
+    enum File {
+        static let selectFile = "file.select_file"
+        static let noFileSelected = "file.no_file_selected"
+        static let unsupportedType = "file.unsupported_type"
+        static let tooLarge = "file.too_large"
+        static let photoFailed = "file.photo_failed"
+        static let documentFailed = "file.document_failed"
+        static let selectionFailed = "file.selection_failed"
+        static let databaseSaveFailed = "file.database_save_failed"
+        static let accessFailed = "file.access_failed"
+    }
+    
     enum Database {
-        static let title = "database.title"
-        static let maintenance = "database.maintenance"
-        static let compact = "database.compact"
-        static let rebuild = "database.rebuild"
-        static let validate = "database.validate"
-        static let createTestData = "database.create_test_data"
-        static let operations = "database.operations"
-        static let browser = "database.browser"
-        static let diagnostics = "database.diagnostics"
-        static let repair = "database.repair"
-
-        enum Status {
-            static let healthy = "database.status.healthy"
-            static let needsAttention = "database.status.needs_attention"
-            static let corrupted = "database.status.corrupted"
-            static let optimizing = "database.status.optimizing"
-            static let repairing = "database.status.repairing"
-        }
-
+        static let cleanup = "database.cleanup"
+        static let export = "database.export"
+        
         enum Operations {
+            static let cleanup = "database.operations.cleanup"
             static let resetFailed = "database.operations.reset_failed"
-            static let compactFailed = "database.operations.compact_failed"
-            static let rebuildFailed = "database.operations.rebuild_failed"
-            static let exportFailed = "database.operations.export_failed"
             static let cleanupFailed = "database.operations.cleanup_failed"
+            static let exportFailed = "database.operations.export_failed"
         }
     }
-
-    // MARK: - Operations
+    
     enum Save {
-        static let failed = "save.failed"
-        static let organizationFailed = "save.organization_failed"
+        static let activity = "save.activity"
         static let activityFailed = "save.activity_failed"
+        static let failed = "save.failed"
         static let attachmentFailed = "save.attachment_failed"
-        static let tripFailed = "save.trip_failed"
+        static let organizationFailed = "save.organization_failed"
     }
-
+    
+    enum FileAttachments {
+        static let title = "file_attachments.title"
+        static let noAttachments = "file_attachments.no_attachments"
+        static let noAttachmentsDescription = "file_attachments.no_attachments_description"
+    }
+    
     enum Delete {
+        static let attachment = "delete.attachment"
         static let failed = "delete.failed"
         static let organizationFailed = "delete.organization_failed"
         static let attachmentFailed = "delete.attachment_failed"
     }
-
-    enum File {
-        static let accessFailed = "file.access_failed"
-        static let processingFailed = "file.processing_failed"
-        static let selectionFailed = "file.selection_failed"
-        static let photoFailed = "file.photo_failed"
-        static let documentFailed = "file.document_failed"
-        static let databaseSaveFailed = "file.database_save_failed"
+    
+    enum Validation {
+        static let required = "validation.required"
+        static let invalidDateRange = "validation.invalid_date_range"
+        static let invalidPhone = "validation.invalid_phone"
+        static let invalidEmail = "validation.invalid_email"
+        static let invalidURL = "validation.invalid_url"
     }
-
-    enum Operation {
-        static let failed = "operation.failed"
-        static let cancelled = "operation.cancelled"
-        static let completedWithErrors = "operation.completed_with_errors"
+    
+    enum Trips {
+        static let startDate = "trips.start_date"
+        static let endDate = "trips.end_date"
+        static let name = "trips.name"
+        static let notes = "trips.notes"
+        static let addTrip = "trips.add_trip"
+        static let editTrip = "trips.edit_trip"
+        static let tripName = "trips.trip_name"
+        static let tripNotes = "trips.trip_notes"
+        static let dateRange = "trips.date_range"
     }
+    
+    enum Organizations {
+        static let name = "organizations.name"
+        static let address = "organizations.address"
+        static let phone = "organizations.phone"
+        static let email = "organizations.email"
+        static let website = "organizations.website"
+        static let selectOrganization = "organizations.select_organization"
+        static let createNew = "organizations.create_new"
+        static let addOrganization = "organizations.add_organization"
+        static let editOrganization = "organizations.edit_organization"
+    }
+    
+    enum Activities {
+        static let name = "activities.name"
+        static let startDate = "activities.start_date"
+        static let endDate = "activities.end_date"
+        static let cost = "activities.cost"
+        static let reservation = "activities.reservation"
+        static let notes = "activities.notes"
+        static let start = "activities.start"
+        static let end = "activities.end"
+        static let confirmation = "activities.confirmation"
+    }
+    
+    // Base enum - specific feature keys are defined in extension files
+    // This enum serves as the namespace for all localization keys
 }
 
 // MARK: - Localized String Function

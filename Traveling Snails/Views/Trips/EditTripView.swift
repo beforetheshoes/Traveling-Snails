@@ -666,15 +666,8 @@ struct EditTripView: View {
 }
 
 #Preview {
-    do {
-        let config = ModelConfiguration(isStoredInMemoryOnly: true)
-        let container = try ModelContainer(for: Trip.self, configurations: config)
-        let trip = Trip(name: "Test Trip")
-        return NavigationStack {
-            EditTripView(trip: trip)
-        }
-        .modelContainer(container)
-    } catch {
-        return Text(L(L10n.Errors.unknown))
+    @Previewable @State var trip = Trip(name: "Test Trip")
+    NavigationStack {
+        EditTripView(trip: trip)
     }
 }

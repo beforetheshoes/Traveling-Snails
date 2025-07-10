@@ -67,6 +67,8 @@ extension Tag {
     @Tag static var timezone: Self      // Timezone handling testing
     @Tag static var currency: Self      // Currency and financial testing
     @Tag static var state: Self         // State management testing
+    @Tag static var models: Self        // Data model and entity testing
+    @Tag static var sharing: Self       // CloudKit sharing functionality testing
 
     // MARK: - Functional Area Tags
     // These group tests by functional areas for targeted testing

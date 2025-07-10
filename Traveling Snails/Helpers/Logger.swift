@@ -70,6 +70,7 @@ final class Logger {
         case userPrefs = "UserPreferences"
         case fileManagement = "FileManagement"
         case sync = "Sync"
+        case localization = "Localization"
 
         var emoji: String {
             switch self {
@@ -90,6 +91,7 @@ final class Logger {
             case .userPrefs: return "🔑"
             case .fileManagement: return "📂"
             case .sync: return "🔄"
+            case .localization: return "🌍"
             }
         }
     }
