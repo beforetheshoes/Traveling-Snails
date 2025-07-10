@@ -790,15 +790,31 @@ struct ErrorPresentation {
 // MARK: - Thread-Safe Error State Management
 
 /// Thread-safe error state manager using @MainActor isolation
-/// Follows project's established patterns for UI-related state management
+/// 
+/// This class provides centralized error state management with the following guarantees:
+/// - Thread safety: All operations are isolated to the MainActor
+/// - Memory bounds: Automatically limits stored error states to prevent memory growth
+/// - Performance: Optimized for sequential access patterns typical in UI applications
+/// - Observability: Integrates with SwiftUI's @Published for reactive UI updates
+///
+/// Design Rationale:
+/// - @MainActor isolation chosen over concurrent patterns to eliminate data races
+/// - Sequential processing reflects real app usage (user interactions are inherently sequential)
+/// - Bounded collection prevents memory leaks from accumulated error states
+/// - Simple architecture prioritizes reliability over premature optimization
 @MainActor
 class ErrorStateManager: ObservableObject {
     @Published private(set) var errorStates: [ViewErrorState] = []
-    private let maxErrorStates = 50
     private let logger = Logger.shared
+    
+    /// Maximum number of error states to retain in memory
+    /// Configurable via UserDefaults for flexibility across different deployment scenarios
+    private var maxErrorStates: Int {
+        UserDefaults.standard.getErrorStateMaxCount()
+    }
 
     init() {
-        logger.log("ErrorStateManager initialized", category: .app, level: .info)
+        logger.log("ErrorStateManager initialized with maxErrorStates=\(maxErrorStates)", category: .app, level: .info)
     }
 
     /// Add a new error state with automatic cleanup of old states
