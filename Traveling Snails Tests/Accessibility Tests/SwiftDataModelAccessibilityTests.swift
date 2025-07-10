@@ -210,7 +210,7 @@ struct SwiftDataModelAccessibilityTests {
             if shouldError {
                 // Simulate error during rapid changes
                 let error = AppError.invalidInput("Empty name not allowed")
-                errorStateManager.addError(error, context: "Rapid change test")
+                errorStateManager.addAppError(error, context: "Rapid change test")
 
                 // Don't apply the invalid change
                 continue
@@ -229,8 +229,8 @@ struct SwiftDataModelAccessibilityTests {
         #expect(trip.name == "Final Name", "Trip should have final name")
 
         // Test error deduplication during rapid changes
-        let uniqueErrors = errorStateManager.getUniqueErrors()
-        #expect(uniqueErrors.count <= 1, "Should deduplicate similar rapid errors")
+        let errorStates = errorStateManager.getErrorStates()
+        #expect(errorStates.count <= 1, "Should deduplicate similar rapid errors")
     }
 
     @Test("Accessibility undo operations integration")
