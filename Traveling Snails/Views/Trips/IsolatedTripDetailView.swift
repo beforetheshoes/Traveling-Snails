@@ -32,6 +32,7 @@ struct IsolatedTripDetailView: View {
     @State private var showingEditTripSheet: Bool = false
     @State private var showingCalendarView: Bool = false
     @State private var showingRemoveProtectionConfirmation: Bool = false
+    @State private var showingTripSharingView: Bool = false
 
     enum ViewMode: String, CaseIterable {
         case list = "List"
@@ -298,6 +299,9 @@ struct IsolatedTripDetailView: View {
                  EditTripView(trip: trip)
              }
          }
+         .sheet(isPresented: $showingTripSharingView) {
+             TripSharingView(trip: trip)
+         }
          .fullScreenCover(isPresented: $showingCalendarView) {
              TripCalendarRootView(trip: trip)
          }
@@ -355,6 +359,16 @@ struct IsolatedTripDetailView: View {
                     } label: {
                         Label("Full Calendar View", systemImage: "calendar.badge.plus")
                     }
+
+                    Divider()
+
+                    // CloudKit sharing controls
+                    Button {
+                        showingTripSharingView = true
+                    } label: {
+                        Label("Share Trip", systemImage: "person.2.badge.plus")
+                    }
+                    .disabled(isTripProtected) // Protected trips cannot be shared
 
                     Divider()
 
