@@ -1,0 +1,177 @@
+{"app_name":"siriinferenced","timestamp":"2025-07-09 21:59:05.00 -0400","app_version":"1.0","slice_uuid":"a9f7b341-9768-387e-8341-ca805326b2f0","build_version":"1","platform":7,"share_with_app_devs":0,"is_first_party":1,"bug_type":"309","os_version":"macOS 26.0 (25A5306g)","roots_installed":0,"incident_id":"50460709-440C-4103-85C1-0FE81CFDAFE2","name":"siriinferenced"}
+{
+  "uptime" : 15000,
+  "procRole" : "Unspecified",
+  "version" : 2,
+  "userID" : 501,
+  "deployVersion" : 210,
+  "modelCode" : "Mac14,5",
+  "coalitionID" : 8650,
+  "osVersion" : {
+    "train" : "macOS 26.0",
+    "build" : "25A5306g",
+    "releaseType" : "User"
+  },
+  "captureTime" : "2025-07-09 21:59:03.5459 -0400",
+  "codeSigningMonitor" : 2,
+  "incident" : "50460709-440C-4103-85C1-0FE81CFDAFE2",
+  "pid" : 39913,
+  "translated" : false,
+  "cpuType" : "ARM-64",
+  "roots_installed" : 0,
+  "bug_type" : "309",
+  "procLaunch" : "2025-07-09 21:58:36.0857 -0400",
+  "procStartAbsTime" : 360746645945,
+  "procExitAbsTime" : 361405659063,
+  "procName" : "siriinferenced",
+  "procPath" : "\/Volumes\/VOLUME\/*\/SiriInference.framework\/Support\/siriinferenced",
+  "bundleInfo" : {"CFBundleVersion":"1","CFBundleShortVersionString":"1.0"},
+  "parentProc" : "Exited process",
+  "parentPid" : 39824,
+  "coalitionName" : "com.apple.CoreSimulator.SimDevice.402D39F9-8AFE-4541-822C-E1373EAC0572",
+  "crashReporterKey" : "309788C5-4C75-2F5E-A8CF-F4C464E3392F",
+  "developerMode" : 1,
+  "responsiblePid" : 1987,
+  "responsibleProc" : "SimulatorTrampoline",
+  "codeSigningID" : "com.apple.siriinferenced",
+  "codeSigningTeamID" : "",
+  "codeSigningFlags" : 570442241,
+  "codeSigningValidationCategory" : 1,
+  "codeSigningTrustLevel" : 4294967295,
+  "codeSigningAuxiliaryInfo" : 0,
+  "instructionByteStream" : {"beforePC":"HOf\/l78DAJH9e8GowANf1sADX9ZAAAC0AABAuQEAABRQM4DSARAA1A==","atPC":"4wAAVP17v6n9AwCRD+f\/l78DAJH9e8GowANf1sADX9YwAIDSARAA1A=="},
+  "bootSessionUUID" : "55E5BA6A-A2A4-4B0D-9A5E-9D433A87C669",
+  "wakeTime" : 14718,
+  "sleepWakeUUID" : "91BDA974-5992-497E-8570-AF7BA51F9C70",
+  "sip" : "enabled",
+  "exception" : {"codes":"0x0000000000000000, 0x0000000000000000","rawCodes":[0,0],"type":"EXC_CRASH","signal":"SIGKILL"},
+  "termination" : {"flags":6,"code":4,"namespace":"LIBXPC","indicator":"XPC_EXIT_REASON_SIGTERM_TIMEOUT"},
+  "extMods" : {"caller":{"thread_create":0,"thread_set_state":0,"task_for_pid":0},"system":{"thread_create":0,"thread_set_state":2996,"task_for_pid":44},"targeted":{"thread_create":0,"thread_set_state":0,"task_for_pid":0},"warnings":0},
+  "faultingThread" : 3,
+  "threads" : [{"id":555087,"frames":[{"imageOffset":6532,"symbol":"start_wqthread","symbolLocation":0,"imageIndex":4}],"threadState":{"x":[{"value":6131363840},{"value":4867},{"value":6130827264},{"value":0},{"value":409604},{"value":18446744073709551615},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0}],"flavor":"ARM_THREAD_STATE64","lr":{"value":0},"cpsr":{"value":4096},"fp":{"value":0},"sp":{"value":6131363840},"esr":{"value":1442840704,"description":"(PC alignment)"},"pc":{"value":4339374468},"far":{"value":0}}},{"id":555586,"frames":[{"imageOffset":6532,"symbol":"start_wqthread","symbolLocation":0,"imageIndex":4}],"threadState":{"x":[{"value":6135951360},{"value":14599},{"value":6135414784},{"value":0},{"value":409604},{"value":18446744073709551615},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0}],"flavor":"ARM_THREAD_STATE64","lr":{"value":0},"cpsr":{"value":4096},"fp":{"value":0},"sp":{"value":6135951360},"esr":{"value":1442840704,"description":"(PC alignment)"},"pc":{"value":4339374468},"far":{"value":0}}},{"id":556738,"frames":[{"imageOffset":6532,"symbol":"start_wqthread","symbolLocation":0,"imageIndex":4}],"threadState":{"x":[{"value":6131937280},{"value":0},{"value":6131400704},{"value":0},{"value":278532},{"value":18446744073709551615},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0}],"flavor":"ARM_THREAD_STATE64","lr":{"value":0},"cpsr":{"value":4096},"fp":{"value":0},"sp":{"value":6131937280},"esr":{"value":0},"pc":{"value":4339374468},"far":{"value":0}}},{"triggered":true,"id":556987,"threadState":{"x":[{"value":4},{"value":0},{"value":0},{"value":6132510656},{"value":6132510784},{"value":419432703},{"value":0},{"value":0},{"value":6132510656},{"value":6132510656},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":410},{"value":0},{"value":0},{"value":6444499984,"symbolLocation":0,"symbol":"_dispatch_sigsuspend.mask"},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0}],"flavor":"ARM_THREAD_STATE64","lr":{"value":6444341344},"cpsr":{"value":536875008},"fp":{"value":6132510624},"sp":{"value":6132510608},"esr":{"value":1442840704,"description":"(PC alignment)"},"pc":{"value":4338448540,"matchesCrashFrame":1},"far":{"value":0}},"frames":[{"imageOffset":30876,"symbol":"__sigsuspend_nocancel","symbolLocation":8,"imageIndex":3},{"imageOffset":92256,"symbol":"_dispatch_sigsuspend","symbolLocation":44,"imageIndex":8},{"imageOffset":92212,"symbol":"_dispatch_sig_thread","symbolLocation":52,"imageIndex":8}]}],
+  "usedImages" : [
+  {
+    "source" : "P",
+    "arch" : "arm64e",
+    "base" : 4337156096,
+    "size" : 655360,
+    "uuid" : "ff357121-622e-3ea0-9ef0-8d706f44dc1a",
+    "path" : "\/usr\/lib\/dyld",
+    "name" : "dyld"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 4336074752,
+    "size" : 114688,
+    "uuid" : "a9f7b341-9768-387e-8341-ca805326b2f0",
+    "path" : "\/Volumes\/VOLUME\/*\/SiriInference.framework\/Support\/siriinferenced",
+    "name" : "siriinferenced"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 4336861184,
+    "size" : 32768,
+    "uuid" : "f77d8041-529c-3659-ac12-4821c1c301fc",
+    "path" : "\/usr\/lib\/system\/libsystem_platform.dylib",
+    "name" : "libsystem_platform.dylib"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 4338417664,
+    "size" : 245760,
+    "uuid" : "f30ad29e-a6a0-3f43-8f6e-3770f040794d",
+    "path" : "\/usr\/lib\/system\/libsystem_kernel.dylib",
+    "name" : "libsystem_kernel.dylib"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 4339367936,
+    "size" : 65536,
+    "uuid" : "7d5c0390-4e96-3458-ad9c-5c41b02beefd",
+    "path" : "\/usr\/lib\/system\/libsystem_pthread.dylib",
+    "name" : "libsystem_pthread.dylib"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 4342366208,
+    "CFBundleShortVersionString" : "1.0",
+    "CFBundleIdentifier" : "com.apple.SiriSuggestions.SiriSuggestionsInferenceBridge",
+    "size" : 32768,
+    "uuid" : "7b5412d2-05d4-3692-a691-40dde103d8af",
+    "path" : "\/Volumes\/VOLUME\/*\/SiriSuggestionsInferenceBridge.bundle\/SiriSuggestionsInferenceBridge",
+    "name" : "SiriSuggestionsInferenceBridge",
+    "CFBundleVersion" : "1"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 4341006336,
+    "size" : 49152,
+    "uuid" : "7fadc96e-39a1-3e1b-9c13-5b16e90cc5ec",
+    "path" : "\/Volumes\/VOLUME\/*\/libobjc-trampolines.dylib",
+    "name" : "libobjc-trampolines.dylib"
+  },
+  {
+    "size" : 0,
+    "source" : "A",
+    "base" : 0,
+    "uuid" : "00000000-0000-0000-0000-000000000000"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 6444249088,
+    "size" : 283072,
+    "uuid" : "9f4c3ca6-19e3-347e-812b-8ecd1715d0cc",
+    "path" : "\/Volumes\/VOLUME\/*\/libdispatch.dylib",
+    "name" : "libdispatch.dylib"
+  }
+],
+  "sharedCache" : {
+  "base" : 6442450944,
+  "size" : 4264263680,
+  "uuid" : "f2c47372-efa2-3438-8de9-040856e73e55"
+},
+  "vmSummary" : "ReadOnly portion of Libraries: Total=1.8G resident=0K(0%) swapped_out_or_unallocated=1.8G(100%)\nWritable regions: Total=1.5G written=1923K(0%) resident=1923K(0%) swapped_out=0K(0%) unallocated=1.5G(100%)\n\n                                VIRTUAL   REGION \nREGION TYPE                        SIZE    COUNT (non-coalesced) \n===========                     =======  ======= \nActivity Tracing                   256K        1 \nFoundation                          16K        1 \nKernel Alloc Once                   32K        1 \nMALLOC                             1.5G       40 \nMALLOC guard page                   96K        6 \nSTACK GUARD                         64K        4 \nStack                             2208K        5 \nStack Guard                       64.0M        2 \nVM_ALLOCATE                        656K        3 \n__DATA                            52.6M      961 \n__DATA_CONST                     118.2M      990 \n__DATA_DIRTY                       139K       13 \n__FONT_DATA                        2352        1 \n__LINKEDIT                       704.4M        8 \n__OBJC_RO                         63.0M        1 \n__OBJC_RW                         2839K        1 \n__TEXT                             1.1G     1001 \n__TPRO_CONST                       148K        2 \ndyld private memory                2.2G       16 \nmapped file                       33.2M        9 \npage table in kernel              1923K        1 \nshared memory                       48K        3 \n===========                     =======  ======= \nTOTAL                              5.8G     3070 \n",
+  "legacyInfo" : {
+  "threadTriggered" : {
+
+  }
+},
+  "logWritingSignature" : "520aa0f1e58d7c8f3e2649d452536cdc255f4436",
+  "trialInfo" : {
+  "rollouts" : [
+    {
+      "rolloutId" : "5f72dc58705eff005a46b3a9",
+      "factorPackIds" : [
+
+      ],
+      "deploymentId" : 250000014
+    },
+    {
+      "rolloutId" : "616061f15c43822edc9b3b70",
+      "factorPackIds" : [
+        "684ab815879e5d16f0e65aba"
+      ],
+      "deploymentId" : 250000019
+    }
+  ],
+  "experiments" : [
+    {
+      "treatmentId" : "cc637087-5f6a-4428-bea8-ad080e9a6232",
+      "experimentId" : "68630692e1874a7adc676348",
+      "deploymentId" : 500000001
+    },
+    {
+      "treatmentId" : "28060e10-d4e5-4163-aa2b-d8bd088d5cbf",
+      "experimentId" : "6685b283afc7c17197d69eec",
+      "deploymentId" : 400000012
+    }
+  ]
+}
+}

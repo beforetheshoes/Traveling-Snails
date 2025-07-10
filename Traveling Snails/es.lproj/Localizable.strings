@@ -1,0 +1,332 @@
+// Localizable.strings
+// Spanish localization for Traveling Snails
+
+// General
+"general.cancel" = "Cancelar";
+"general.save" = "Guardar";
+"general.delete" = "Eliminar";
+"general.edit" = "Editar";
+"general.add" = "Agregar";
+"general.done" = "Hecho";
+"general.ok" = "OK";
+"general.yes" = "Sí";
+"general.no" = "No";
+"general.search" = "Buscar";
+"general.clear" = "Limpiar";
+"general.loading" = "Cargando...";
+"general.error" = "Error";
+"general.warning" = "Advertencia";
+"general.info" = "Información";
+"general.none" = "Ninguno";
+"general.unknown" = "Desconocido";
+"general.untitled" = "Sin título";
+
+// Navigation
+"navigation.trips" = "Viajes";
+"navigation.organizations" = "Organizaciones";
+"navigation.files" = "Archivos";
+"navigation.settings" = "Configuración";
+"navigation.debug" = "Depurar";
+"navigation.back" = "Atrás";
+"navigation.close" = "Cerrar";
+
+// Trips
+"trips.title" = "Viajes";
+"trips.empty_state" = "Sin Viajes";
+"trips.empty_state_description" = "Crea tu primer viaje para comenzar";
+"trips.add_trip" = "Agregar Viaje";
+"trips.edit_trip" = "Editar Viaje";
+"trips.delete_trip" = "Eliminar Viaje";
+"trips.name" = "Nombre del Viaje";
+"trips.notes" = "Notas";
+"trips.start_date" = "Fecha de Inicio";
+"trips.end_date" = "Fecha de Fin";
+"trips.total_cost" = "Costo Total";
+"trips.total_activities" = "Total de Actividades";
+"trips.search_placeholder" = "Buscar viajes...";
+"trips.date_range" = "Rango de Fechas";
+"trips.no_dates_set" = "Sin fechas establecidas";
+
+// Activities
+"trips.activities.transportation" = "Transporte";
+"trips.activities.lodging" = "Alojamiento";
+"trips.activities.activities" = "Actividades";
+"trips.activities.add_activity" = "Agregar Actividad";
+"trips.activities.no_activities" = "Aún no hay actividades";
+
+// Organizations
+"organizations.title" = "Organizaciones";
+"organizations.empty_state" = "Sin Organizaciones";
+"organizations.empty_state_description" = "Agrega organizaciones para rastrear tus servicios de viaje";
+"organizations.add_organization" = "Agregar Organización";
+"organizations.edit_organization" = "Editar Organización";
+"organizations.delete_organization" = "Eliminar Organización";
+"organizations.name" = "Nombre de la Organización";
+"organizations.phone" = "Teléfono";
+"organizations.email" = "Correo Electrónico";
+"organizations.website" = "Sitio Web";
+"organizations.address" = "Dirección";
+"organizations.search_placeholder" = "Buscar organizaciones...";
+"organizations.cannot_delete_in_use" = "No se puede eliminar la organización: está siendo usada por %d elementos";
+"organizations.cannot_delete_none" = "No se puede eliminar la organización predeterminada 'Ninguna'";
+
+// File Attachments
+"file_attachments.title" = "Archivos Adjuntos";
+"file_attachments.add_attachment" = "Agregar Archivo Adjunto";
+"file_attachments.choose_photo" = "Elegir Foto";
+"file_attachments.choose_document" = "Elegir Documento";
+"file_attachments.no_attachments" = "Aún no hay archivos adjuntos";
+"file_attachments.no_attachments_description" = "Agrega archivos para mantenerlos con esta actividad";
+"file_attachments.description" = "Descripción";
+"file_attachments.original_name" = "Nombre Original";
+"file_attachments.file_type" = "Tipo de Archivo";
+"file_attachments.file_size" = "Tamaño del Archivo";
+"file_attachments.created_date" = "Creado";
+"file_attachments.edit_attachment" = "Editar Archivo Adjunto";
+"file_attachments.delete_attachment" = "Eliminar Archivo Adjunto";
+
+// File Attachment Settings
+"file_attachments.settings.title" = "Configuración de Archivos Adjuntos";
+"file_attachments.settings.management" = "Gestión";
+"file_attachments.settings.storage" = "Almacenamiento";
+"file_attachments.settings.file_types" = "Tipos de Archivo";
+"file_attachments.settings.total_files" = "Total de Archivos";
+"file_attachments.settings.total_size" = "Tamaño Total";
+"file_attachments.settings.find_orphaned" = "Encontrar Archivos Huérfanos";
+"file_attachments.settings.cleanup_orphaned" = "Limpiar Archivos Huérfanos";
+"file_attachments.settings.clear_all" = "Limpiar Todos los Archivos Adjuntos";
+"file_attachments.settings.images" = "Imágenes";
+"file_attachments.settings.documents" = "Documentos";
+"file_attachments.settings.other" = "Otros";
+
+// File Attachment Errors
+"file_attachments.errors.failed_to_load" = "Error al cargar archivo";
+"file_attachments.errors.failed_to_save" = "Error al guardar archivo";
+"file_attachments.errors.failed_to_delete" = "Error al eliminar archivo";
+"file_attachments.errors.invalid_format" = "Formato de archivo inválido";
+"file_attachments.errors.too_large" = "El archivo es demasiado grande";
+
+// Activities
+"activities.name" = "Nombre";
+"activities.start" = "Inicio";
+"activities.end" = "Fin";
+"activities.cost" = "Costo";
+"activities.notes" = "Notas";
+"activities.organization" = "Organización";
+"activities.confirmation" = "Confirmación";
+"activities.reservation" = "Reserva";
+"activities.paid" = "Estado de Pago";
+"activities.duration" = "Duración";
+"activities.location" = "Ubicación";
+"activities.custom_location" = "Ubicación Personalizada";
+"activities.hide_location" = "Ocultar Ubicación";
+"activities.attachments" = "Archivos Adjuntos";
+
+// Transportation
+"activities.transportation.title" = "Transporte";
+"activities.transportation.type" = "Tipo";
+"activities.transportation.plane" = "Avión";
+"activities.transportation.train" = "Tren";
+"activities.transportation.bus" = "Autobús";
+"activities.transportation.car" = "Automóvil";
+"activities.transportation.ship" = "Barco";
+"activities.transportation.other" = "Otros";
+
+// Lodging
+"activities.lodging.title" = "Alojamiento";
+"activities.lodging.check_in" = "Check-in";
+"activities.lodging.check_out" = "Check-out";
+
+// Activity
+"activities.activity.title" = "Actividad";
+
+// Payment
+"activities.payment.none" = "Ninguno";
+"activities.payment.partial" = "Parcial";
+"activities.payment.full" = "Pagado Completo";
+
+// Settings
+"settings.title" = "Configuración";
+"settings.appearance" = "Apariencia";
+"settings.color_scheme" = "Esquema de Color";
+"settings.system_default" = "Predeterminado del Sistema";
+"settings.light" = "Claro";
+"settings.dark" = "Oscuro";
+"settings.language" = "Idioma";
+"settings.data_management" = "Gestión de Datos";
+"settings.export_data" = "Exportar Datos";
+"settings.import_data" = "Importar Datos";
+"settings.clear_data" = "Limpiar Datos";
+"settings.about" = "Acerca de";
+"settings.version" = "Versión";
+"settings.build" = "Compilación";
+"settings.file_attachment_settings" = "Configuración de Archivos Adjuntos";
+"settings.management_description" = "Gestiona tus archivos adjuntos y almacenamiento";
+
+// Errors
+"errors.title" = "Error";
+"errors.unknown" = "Ocurrió un error inesperado";
+"errors.network_unavailable" = "Conexión de red no disponible";
+"errors.database_error" = "Ocurrió un error de base de datos";
+"errors.file_error" = "Error en operación de archivo";
+"errors.validation_error" = "Error de validación";
+"errors.permission_denied" = "Permiso denegado";
+"errors.disk_space_full" = "Espacio de almacenamiento insuficiente";
+"errors.operation_cancelled" = "Operación cancelada";
+"errors.feature_not_available" = "Función no disponible";
+
+// Validation
+"validation.required" = "Este campo es obligatorio";
+"validation.invalid_email" = "Dirección de correo electrónico inválida";
+"validation.invalid_url" = "URL inválida";
+"validation.invalid_phone" = "Número de teléfono inválido";
+"validation.invalid_date_range" = "Rango de fechas inválido";
+"validation.duplicate_entry" = "Entrada duplicada";
+"validation.too_long" = "Demasiado largo";
+"validation.too_short" = "Demasiado corto";
+"validation.invalid_format" = "Formato inválido";
+
+// Time and Dates
+"time.now" = "Ahora";
+"time.today" = "Hoy";
+"time.yesterday" = "Ayer";
+"time.tomorrow" = "Mañana";
+"time.this_week" = "Esta Semana";
+"time.last_week" = "Semana Pasada";
+"time.next_week" = "Próxima Semana";
+"time.this_month" = "Este Mes";
+"time.last_month" = "Mes Pasado";
+"time.next_month" = "Próximo Mes";
+"time.duration" = "Duración";
+"time.starts" = "Comienza";
+"time.ends" = "Termina";
+
+// Time Units
+"time.units.seconds" = "segundos";
+"time.units.minutes" = "minutos";
+"time.units.hours" = "horas";
+"time.units.days" = "días";
+"time.units.weeks" = "semanas";
+"time.units.months" = "meses";
+"time.units.years" = "años";
+
+// Database
+"database.title" = "Base de Datos";
+"database.maintenance" = "Mantenimiento";
+"database.compact" = "Compactar";
+"database.rebuild" = "Reconstruir";
+"database.validate" = "Validar";
+"database.create_test_data" = "Crear Datos de Prueba";
+"database.operations" = "Operaciones";
+"database.browser" = "Navegador";
+"database.diagnostics" = "Diagnósticos";
+"database.repair" = "Reparar";
+
+// Database Status
+"database.status.healthy" = "Saludable";
+"database.status.needs_attention" = "Necesita Atención";
+"database.status.corrupted" = "Corrupta";
+"database.status.optimizing" = "Optimizando";
+"database.status.repairing" = "Reparando";
+
+// Database Operations
+"database.operations.reset_failed" = "Error al reiniciar la base de datos";
+"database.operations.compact_failed" = "Error al compactar la base de datos";
+"database.operations.rebuild_failed" = "Error al reconstruir relaciones";
+"database.operations.export_failed" = "Error al exportar datos";
+"database.operations.cleanup_failed" = "Error al limpiar datos";
+
+// Save Operations
+"save.failed" = "Error al guardar cambios";
+"save.organization_failed" = "Error al guardar organización";
+"save.activity_failed" = "Error al guardar actividad";
+"save.attachment_failed" = "Error al guardar archivo adjunto";
+"save.trip_failed" = "Error al guardar viaje";
+
+// Delete Operations
+"delete.failed" = "Error al eliminar elemento";
+"delete.organization_failed" = "Error al eliminar organización";
+"delete.attachment_failed" = "Error al remover archivo adjunto";
+
+// File Operations
+"file.access_failed" = "Error al acceder al archivo";
+"file.processing_failed" = "Error al procesar archivo";
+"file.selection_failed" = "Error al seleccionar archivo";
+"file.photo_failed" = "Error al procesar foto";
+"file.document_failed" = "Error al procesar documento";
+"file.database_save_failed" = "Error al guardar archivo en la base de datos";
+
+// Generic Operations
+"operation.failed" = "La operación falló";
+"operation.cancelled" = "La operación fue cancelada";
+"operation.completed_with_errors" = "Operación completada con errores";
+
+// Error Logging
+"errors.log.technical_error" = "Alerta de error creada: %@";
+"errors.log.generic_user_message" = "Ocurrió un error inesperado. Inténtelo de nuevo.";
+
+// Database Errors
+"errors.database.save_failed" = "Error al guardar datos: %@";
+"errors.database.load_failed" = "Error al cargar datos: %@";
+"errors.database.delete_failed" = "Error al eliminar datos: %@";
+"errors.database.corrupted" = "Corrupción de base de datos detectada: %@";
+"errors.database.relationship_integrity" = "Error de relación de datos: %@";
+
+// File System Errors
+"errors.file.not_found" = "Archivo no encontrado: %@";
+"errors.file.permission_denied" = "Permiso denegado para el archivo: %@";
+"errors.file.corrupted" = "El archivo está corrupto: %@";
+"errors.file.disk_space_insufficient" = "Espacio en disco insuficiente";
+"errors.file.already_exists" = "El archivo ya existe: %@";
+
+// Network Errors
+"errors.network.unavailable" = "Conexión de red no disponible";
+"errors.network.server_error" = "Error del servidor (%d): %@";
+"errors.network.timeout" = "Tiempo de espera agotado";
+"errors.network.invalid_url" = "URL inválida: %@";
+
+// CloudKit Errors
+"errors.cloudkit.unavailable" = "CloudKit no está disponible";
+"errors.cloudkit.quota_exceeded" = "Cuota de almacenamiento de CloudKit excedida";
+"errors.cloudkit.sync_failed" = "Sincronización de CloudKit falló: %@";
+"errors.cloudkit.authentication_failed" = "Autenticación de CloudKit falló";
+
+// Import/Export Errors
+"errors.import.failed" = "Importación falló: %@";
+"errors.export.failed" = "Exportación falló: %@";
+"errors.import.invalid_format" = "Formato de archivo inválido: %@";
+"errors.import.corrupted_data" = "Los datos de importación están corruptos: %@";
+
+// Validation Errors
+"errors.validation.invalid_input" = "Entrada inválida para %@";
+"errors.validation.missing_required_field" = "Campo requerido faltante: %@";
+"errors.validation.duplicate_entry" = "Entrada duplicada: %@";
+"errors.validation.invalid_date_range" = "Rango de fechas inválido: la fecha final debe ser posterior a la fecha inicial";
+
+// Organization Errors
+"errors.organization.in_use" = "No se puede eliminar '%@'. Se usa en %d elemento.";
+"errors.organization.in_use_plural" = "No se puede eliminar '%@'. Se usa en %d elementos.";
+"errors.organization.cannot_delete_none" = "No se puede eliminar la organización predeterminada 'Ninguna'";
+"errors.organization.not_found" = "Organización no encontrada: %@";
+
+// Generic Errors
+"errors.general.unknown" = "Ocurrió un error inesperado: %@";
+"errors.general.operation_cancelled" = "Operación cancelada";
+"errors.general.feature_not_available" = "Función no disponible: %@";
+
+// Recovery Suggestions
+"errors.recovery.restart_app" = "Intenta reiniciar la aplicación. Si el problema persiste, contacta soporte.";
+"errors.recovery.check_connection" = "Verifica tu conexión a internet e intenta de nuevo.";
+"errors.recovery.free_space" = "Libera espacio de almacenamiento e intenta de nuevo.";
+"errors.recovery.check_permissions" = "Verifica los permisos del archivo e intenta de nuevo.";
+"errors.recovery.contact_support" = "Contacta soporte para asistencia.";
+"errors.recovery.try_again" = "Por favor, intenta de nuevo.";
+"errors.recovery.restore_from_backup" = "Tus datos pueden estar corruptos. Por favor restaura desde una copia de seguridad si está disponible.";
+"errors.recovery.check_icloud_settings" = "Verifica tu configuración de iCloud y conexión a internet.";
+"errors.recovery.upgrade_icloud_storage" = "Actualiza tu plan de almacenamiento de iCloud o elimina algunos datos.";
+"errors.recovery.ensure_end_date_after_start" = "Por favor asegúrate de que la fecha final sea posterior a la fecha inicial.";
+"errors.recovery.remove_associated_items" = "Elimina todos los elementos asociados antes de borrar esta organización.";
+
+// Error Logging
+"errors.log.technical_error" = "Alerta de error creada: %@";
+"errors.log.generic_user_message" = "Ocurrió un error inesperado. Inténtelo de nuevo.";

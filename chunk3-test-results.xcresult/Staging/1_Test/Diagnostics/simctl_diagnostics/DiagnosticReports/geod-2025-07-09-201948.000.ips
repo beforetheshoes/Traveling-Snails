@@ -1,0 +1,156 @@
+{"app_name":"geod","timestamp":"2025-07-09 20:19:48.00 -0400","app_version":"","slice_uuid":"c1bdfda4-5ea4-3865-9804-e0c1172011cb","build_version":"1","platform":7,"share_with_app_devs":0,"is_first_party":1,"bug_type":"309","os_version":"macOS 26.0 (25A5306g)","roots_installed":0,"incident_id":"1C6ED54B-E7B2-4520-BB61-1F3D11339C3F","name":"geod"}
+{
+  "uptime" : 9100,
+  "procRole" : "Unspecified",
+  "version" : 2,
+  "userID" : 501,
+  "deployVersion" : 210,
+  "modelCode" : "Mac14,5",
+  "coalitionID" : 8323,
+  "osVersion" : {
+    "train" : "macOS 26.0",
+    "build" : "25A5306g",
+    "releaseType" : "User"
+  },
+  "captureTime" : "2025-07-09 20:19:47.1419 -0400",
+  "codeSigningMonitor" : 2,
+  "incident" : "1C6ED54B-E7B2-4520-BB61-1F3D11339C3F",
+  "pid" : 25899,
+  "translated" : false,
+  "cpuType" : "ARM-64",
+  "roots_installed" : 0,
+  "bug_type" : "309",
+  "procLaunch" : "2025-07-09 20:18:40.5273 -0400",
+  "procStartAbsTime" : 216855337512,
+  "procExitAbsTime" : 218453779248,
+  "procName" : "geod",
+  "procPath" : "\/Volumes\/VOLUME\/*\/GeoServices.framework\/geod",
+  "bundleInfo" : {"CFBundleVersion":"1"},
+  "parentProc" : "Exited process",
+  "parentPid" : 25840,
+  "coalitionName" : "com.apple.CoreSimulator.SimDevice.85ED0580-F7CC-4EB9-91B8-34A04F1C7CFD",
+  "crashReporterKey" : "309788C5-4C75-2F5E-A8CF-F4C464E3392F",
+  "developerMode" : 1,
+  "responsiblePid" : 1987,
+  "responsibleProc" : "SimulatorTrampoline",
+  "codeSigningID" : "com.apple.geod",
+  "codeSigningTeamID" : "",
+  "codeSigningFlags" : 570442241,
+  "codeSigningValidationCategory" : 1,
+  "codeSigningTrustLevel" : 4294967295,
+  "codeSigningAuxiliaryInfo" : 0,
+  "instructionByteStream" : {"beforePC":"HOf\/l78DAJH9e8GowANf1sADX9ZAAAC0AABAuQEAABRQM4DSARAA1A==","atPC":"4wAAVP17v6n9AwCRD+f\/l78DAJH9e8GowANf1sADX9YwAIDSARAA1A=="},
+  "bootSessionUUID" : "55E5BA6A-A2A4-4B0D-9A5E-9D433A87C669",
+  "wakeTime" : 8762,
+  "sleepWakeUUID" : "91BDA974-5992-497E-8570-AF7BA51F9C70",
+  "sip" : "enabled",
+  "exception" : {"codes":"0x0000000000000000, 0x0000000000000000","rawCodes":[0,0],"type":"EXC_CRASH","signal":"SIGKILL"},
+  "termination" : {"flags":6,"code":4,"namespace":"LIBXPC","indicator":"XPC_EXIT_REASON_SIGTERM_TIMEOUT"},
+  "extMods" : {"caller":{"thread_create":0,"thread_set_state":0,"task_for_pid":0},"system":{"thread_create":0,"thread_set_state":1864,"task_for_pid":28},"targeted":{"thread_create":0,"thread_set_state":0,"task_for_pid":0},"warnings":0},
+  "faultingThread" : 0,
+  "threads" : [{"triggered":true,"id":361864,"threadState":{"x":[{"value":4},{"value":0},{"value":0},{"value":6165180352},{"value":6165180480},{"value":419432703},{"value":0},{"value":0},{"value":6165180352},{"value":6165180352},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":410},{"value":0},{"value":0},{"value":6444252912,"symbolLocation":0,"symbol":"_dispatch_sigsuspend.mask"},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0}],"flavor":"ARM_THREAD_STATE64","lr":{"value":6444095148},"cpsr":{"value":536875008},"fp":{"value":6165180320},"sp":{"value":6165180304},"esr":{"value":1442840704,"description":"(PC alignment)"},"pc":{"value":4307482780,"matchesCrashFrame":1},"far":{"value":0}},"frames":[{"imageOffset":30876,"symbol":"__sigsuspend_nocancel","symbolLocation":8,"imageIndex":3},{"imageOffset":91820,"symbol":"_dispatch_sigsuspend","symbolLocation":44,"imageIndex":5},{"imageOffset":91776,"symbol":"_dispatch_sig_thread","symbolLocation":52,"imageIndex":5}]},{"id":365715,"frames":[{"imageOffset":6532,"symbol":"start_wqthread","symbolLocation":0,"imageIndex":4}],"threadState":{"x":[{"value":6161739776},{"value":26887},{"value":6161203200},{"value":0},{"value":409604},{"value":18446744073709551615},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0}],"flavor":"ARM_THREAD_STATE64","lr":{"value":0},"cpsr":{"value":4096},"fp":{"value":0},"sp":{"value":6161739776},"esr":{"value":1442840704,"description":"(PC alignment)"},"pc":{"value":4306917764},"far":{"value":0}}},{"id":366272,"frames":[{"imageOffset":6532,"symbol":"start_wqthread","symbolLocation":0,"imageIndex":4}],"threadState":{"x":[{"value":6164606976},{"value":40963},{"value":6164070400},{"value":0},{"value":409604},{"value":18446744073709551615},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0}],"flavor":"ARM_THREAD_STATE64","lr":{"value":0},"cpsr":{"value":4096},"fp":{"value":0},"sp":{"value":6164606976},"esr":{"value":1442840704,"description":"(PC alignment)"},"pc":{"value":4306917764},"far":{"value":0}}},{"id":366380,"frames":[{"imageOffset":6532,"symbol":"start_wqthread","symbolLocation":0,"imageIndex":4}],"threadState":{"x":[{"value":6170341376},{"value":38935},{"value":6169804800},{"value":0},{"value":409604},{"value":18446744073709551615},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0}],"flavor":"ARM_THREAD_STATE64","lr":{"value":0},"cpsr":{"value":4096},"fp":{"value":0},"sp":{"value":6170341376},"esr":{"value":1442840704,"description":"(PC alignment)"},"pc":{"value":4306917764},"far":{"value":0}}},{"id":367117,"frames":[{"imageOffset":6532,"symbol":"start_wqthread","symbolLocation":0,"imageIndex":4}],"threadState":{"x":[{"value":6161166336},{"value":35343},{"value":6160629760},{"value":6161165184},{"value":5193732},{"value":2},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0}],"flavor":"ARM_THREAD_STATE64","lr":{"value":0},"cpsr":{"value":4096},"fp":{"value":0},"sp":{"value":6161164960},"esr":{"value":1442840704,"description":"(PC alignment)"},"pc":{"value":4306917764},"far":{"value":0}}},{"id":367370,"frames":[{"imageOffset":6532,"symbol":"start_wqthread","symbolLocation":0,"imageIndex":4}],"threadState":{"x":[{"value":6162313216},{"value":0},{"value":6161776640},{"value":0},{"value":278532},{"value":18446744073709551615},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0}],"flavor":"ARM_THREAD_STATE64","lr":{"value":0},"cpsr":{"value":4096},"fp":{"value":0},"sp":{"value":6162313216},"esr":{"value":0},"pc":{"value":4306917764},"far":{"value":0}}}],
+  "usedImages" : [
+  {
+    "source" : "P",
+    "arch" : "arm64e",
+    "base" : 4310941696,
+    "size" : 655360,
+    "uuid" : "ff357121-622e-3ea0-9ef0-8d706f44dc1a",
+    "path" : "\/usr\/lib\/dyld",
+    "name" : "dyld"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 4306272256,
+    "size" : 425984,
+    "uuid" : "c1bdfda4-5ea4-3865-9804-e0c1172011cb",
+    "path" : "\/Volumes\/VOLUME\/*\/GeoServices.framework\/geod",
+    "name" : "geod"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 4307320832,
+    "size" : 32768,
+    "uuid" : "f77d8041-529c-3659-ac12-4821c1c301fc",
+    "path" : "\/usr\/lib\/system\/libsystem_platform.dylib",
+    "name" : "libsystem_platform.dylib"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 4307451904,
+    "size" : 245760,
+    "uuid" : "f30ad29e-a6a0-3f43-8f6e-3770f040794d",
+    "path" : "\/usr\/lib\/system\/libsystem_kernel.dylib",
+    "name" : "libsystem_kernel.dylib"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 4306911232,
+    "size" : 65536,
+    "uuid" : "7d5c0390-4e96-3458-ad9c-5c41b02beefd",
+    "path" : "\/usr\/lib\/system\/libsystem_pthread.dylib",
+    "name" : "libsystem_pthread.dylib"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 6444003328,
+    "size" : 281504,
+    "uuid" : "990151a6-fd18-3496-84e3-f565307fbc2f",
+    "path" : "\/Volumes\/VOLUME\/*\/libdispatch.dylib",
+    "name" : "libdispatch.dylib"
+  },
+  {
+    "size" : 0,
+    "source" : "A",
+    "base" : 0,
+    "uuid" : "00000000-0000-0000-0000-000000000000"
+  }
+],
+  "sharedCache" : {
+  "base" : 6442450944,
+  "size" : 3915218944,
+  "uuid" : "197e44a5-4546-37f4-8533-db09ce21f1e6"
+},
+  "vmSummary" : "ReadOnly portion of Libraries: Total=904.8M resident=0K(0%) swapped_out_or_unallocated=904.8M(100%)\nWritable regions: Total=2.1G written=1763K(0%) resident=1763K(0%) swapped_out=0K(0%) unallocated=2.1G(100%)\n\n                                VIRTUAL   REGION \nREGION TYPE                        SIZE    COUNT (non-coalesced) \n===========                     =======  ======= \nActivity Tracing                   256K        1 \nKernel Alloc Once                   32K        1 \nMALLOC                             2.1G       61 \nMALLOC guard page                  192K       12 \nSQLite page cache                 1536K       12 \nSTACK GUARD                         96K        6 \nStack                             3296K        7 \nStack Guard                       64.0M        2 \nVM_ALLOCATE                        128K        1 \n__DATA                            4402K      239 \n__DATA_CONST                      29.2M      256 \n__DATA_DIRTY                       139K       11 \n__FONT_DATA                        2352        1 \n__LINKEDIT                       686.8M        6 \n__OBJC_RO                         61.3M        1 \n__OBJC_RW                         2727K        1 \n__TEXT                           218.0M      263 \n__TPRO_CONST                       148K        2 \ndyld private memory                2.5G        9 \nlibnetwork                        3456K       80 \nmapped file                       34.7M       11 \npage table in kernel              1763K        1 \nshared memory                       48K        2 \n===========                     =======  ======= \nTOTAL                              5.7G      986 \n",
+  "legacyInfo" : {
+  "threadTriggered" : {
+
+  }
+},
+  "logWritingSignature" : "77a0c230aae59f0b9942799b6119582d9643976a",
+  "trialInfo" : {
+  "rollouts" : [
+    {
+      "rolloutId" : "5f72dc58705eff005a46b3a9",
+      "factorPackIds" : [
+
+      ],
+      "deploymentId" : 250000014
+    },
+    {
+      "rolloutId" : "616061f15c43822edc9b3b70",
+      "factorPackIds" : [
+        "684ab815879e5d16f0e65aba"
+      ],
+      "deploymentId" : 250000019
+    }
+  ],
+  "experiments" : [
+    {
+      "treatmentId" : "cc637087-5f6a-4428-bea8-ad080e9a6232",
+      "experimentId" : "68630692e1874a7adc676348",
+      "deploymentId" : 500000001
+    },
+    {
+      "treatmentId" : "28060e10-d4e5-4163-aa2b-d8bd088d5cbf",
+      "experimentId" : "6685b283afc7c17197d69eec",
+      "deploymentId" : 400000012
+    }
+  ]
+}
+}

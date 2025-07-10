@@ -1,0 +1,329 @@
+// Localizable.strings
+// Korean localization for Traveling Snails
+
+// General
+"general.cancel" = "취소";
+"general.save" = "저장";
+"general.delete" = "삭제";
+"general.edit" = "편집";
+"general.add" = "추가";
+"general.done" = "완료";
+"general.ok" = "확인";
+"general.yes" = "예";
+"general.no" = "아니오";
+"general.search" = "검색";
+"general.clear" = "지우기";
+"general.loading" = "로딩 중...";
+"general.error" = "오류";
+"general.warning" = "경고";
+"general.info" = "정보";
+"general.none" = "없음";
+"general.unknown" = "알 수 없음";
+"general.untitled" = "제목 없음";
+
+// Navigation
+"navigation.trips" = "여행";
+"navigation.organizations" = "조직";
+"navigation.files" = "파일";
+"navigation.settings" = "설정";
+"navigation.debug" = "디버그";
+"navigation.back" = "뒤로";
+"navigation.close" = "닫기";
+
+// Trips
+"trips.title" = "여행";
+"trips.empty_state" = "여행 없음";
+"trips.empty_state_description" = "첫 번째 여행을 만들어 시작하세요";
+"trips.add_trip" = "여행 추가";
+"trips.edit_trip" = "여행 편집";
+"trips.delete_trip" = "여행 삭제";
+"trips.name" = "여행 이름";
+"trips.notes" = "메모";
+"trips.start_date" = "시작 날짜";
+"trips.end_date" = "종료 날짜";
+"trips.total_cost" = "총 비용";
+"trips.total_activities" = "총 활동";
+"trips.search_placeholder" = "여행 검색...";
+"trips.date_range" = "날짜 범위";
+"trips.no_dates_set" = "날짜가 설정되지 않음";
+
+// Activities
+"trips.activities.transportation" = "교통";
+"trips.activities.lodging" = "숙박";
+"trips.activities.activities" = "활동";
+"trips.activities.add_activity" = "활동 추가";
+"trips.activities.no_activities" = "아직 활동이 없습니다";
+
+// Organizations
+"organizations.title" = "조직";
+"organizations.empty_state" = "조직 없음";
+"organizations.empty_state_description" = "여행 서비스를 추적하기 위해 조직을 추가하세요";
+"organizations.add_organization" = "조직 추가";
+"organizations.edit_organization" = "조직 편집";
+"organizations.delete_organization" = "조직 삭제";
+"organizations.name" = "조직 이름";
+"organizations.phone" = "전화번호";
+"organizations.email" = "이메일";
+"organizations.website" = "웹사이트";
+"organizations.address" = "주소";
+"organizations.search_placeholder" = "조직 검색...";
+"organizations.cannot_delete_in_use" = "조직을 삭제할 수 없습니다: %d개의 항목에서 사용 중입니다";
+"organizations.cannot_delete_none" = "기본 '없음' 조직은 삭제할 수 없습니다";
+
+// File Attachments
+"file_attachments.title" = "첨부 파일";
+"file_attachments.add_attachment" = "첨부 파일 추가";
+"file_attachments.choose_photo" = "사진 선택";
+"file_attachments.choose_document" = "문서 선택";
+"file_attachments.no_attachments" = "아직 첨부 파일이 없습니다";
+"file_attachments.no_attachments_description" = "이 활동과 함께 보관할 파일을 추가하세요";
+"file_attachments.description" = "설명";
+"file_attachments.original_name" = "원본 이름";
+"file_attachments.file_type" = "파일 유형";
+"file_attachments.file_size" = "파일 크기";
+"file_attachments.created_date" = "생성됨";
+"file_attachments.edit_attachment" = "첨부 파일 편집";
+"file_attachments.delete_attachment" = "첨부 파일 삭제";
+
+// File Attachment Settings
+"file_attachments.settings.title" = "첨부 파일 설정";
+"file_attachments.settings.management" = "관리";
+"file_attachments.settings.storage" = "저장소";
+"file_attachments.settings.file_types" = "파일 유형";
+"file_attachments.settings.total_files" = "총 파일";
+"file_attachments.settings.total_size" = "총 크기";
+"file_attachments.settings.find_orphaned" = "고아 파일 찾기";
+"file_attachments.settings.cleanup_orphaned" = "고아 파일 정리";
+"file_attachments.settings.clear_all" = "모든 첨부 파일 지우기";
+"file_attachments.settings.images" = "이미지";
+"file_attachments.settings.documents" = "문서";
+"file_attachments.settings.other" = "기타";
+
+// File Attachment Errors
+"file_attachments.errors.failed_to_load" = "파일 로드 실패";
+"file_attachments.errors.failed_to_save" = "파일 저장 실패";
+"file_attachments.errors.failed_to_delete" = "파일 삭제 실패";
+"file_attachments.errors.invalid_format" = "잘못된 파일 형식";
+"file_attachments.errors.too_large" = "파일이 너무 큽니다";
+
+// Activities
+"activities.name" = "이름";
+"activities.start" = "시작";
+"activities.end" = "종료";
+"activities.cost" = "비용";
+"activities.notes" = "메모";
+"activities.organization" = "조직";
+"activities.confirmation" = "확인";
+"activities.reservation" = "예약";
+"activities.paid" = "결제 상태";
+"activities.duration" = "기간";
+"activities.location" = "위치";
+"activities.custom_location" = "사용자 정의 위치";
+"activities.hide_location" = "위치 숨기기";
+"activities.attachments" = "첨부 파일";
+
+// Transportation
+"activities.transportation.title" = "교통";
+"activities.transportation.type" = "유형";
+"activities.transportation.plane" = "비행기";
+"activities.transportation.train" = "기차";
+"activities.transportation.bus" = "버스";
+"activities.transportation.car" = "자동차";
+"activities.transportation.ship" = "배";
+"activities.transportation.other" = "기타";
+
+// Lodging
+"activities.lodging.title" = "숙박";
+"activities.lodging.check_in" = "체크인";
+"activities.lodging.check_out" = "체크아웃";
+
+// Activity
+"activities.activity.title" = "활동";
+
+// Payment
+"activities.payment.none" = "없음";
+"activities.payment.partial" = "부분";
+"activities.payment.full" = "전액 지불됨";
+
+// Settings
+"settings.title" = "설정";
+"settings.appearance" = "외관";
+"settings.color_scheme" = "색상 테마";
+"settings.system_default" = "시스템 기본값";
+"settings.light" = "밝음";
+"settings.dark" = "어둠";
+"settings.language" = "언어";
+"settings.data_management" = "데이터 관리";
+"settings.export_data" = "데이터 내보내기";
+"settings.import_data" = "데이터 가져오기";
+"settings.clear_data" = "데이터 지우기";
+"settings.about" = "정보";
+"settings.version" = "버전";
+"settings.build" = "빌드";
+"settings.file_attachment_settings" = "파일 첨부 설정";
+"settings.management_description" = "파일 첨부 및 저장소 관리";
+
+// Errors
+"errors.title" = "오류";
+"errors.unknown" = "예기치 않은 오류가 발생했습니다";
+"errors.network_unavailable" = "네트워크 연결을 사용할 수 없습니다";
+"errors.database_error" = "데이터베이스 오류가 발생했습니다";
+"errors.file_error" = "파일 작업이 실패했습니다";
+"errors.validation_error" = "검증에 실패했습니다";
+"errors.permission_denied" = "권한이 거부되었습니다";
+"errors.disk_space_full" = "저장 공간이 부족합니다";
+"errors.operation_cancelled" = "작업이 취소되었습니다";
+"errors.feature_not_available" = "기능을 사용할 수 없습니다";
+
+// Validation
+"validation.required" = "이 필드는 필수입니다";
+"validation.invalid_email" = "잘못된 이메일 주소";
+"validation.invalid_url" = "잘못된 URL";
+"validation.invalid_phone" = "잘못된 전화번호";
+"validation.invalid_date_range" = "잘못된 날짜 범위";
+"validation.duplicate_entry" = "중복 항목";
+"validation.too_long" = "너무 깁니다";
+"validation.too_short" = "너무 짧습니다";
+"validation.invalid_format" = "잘못된 형식";
+
+// Time and Dates
+"time.now" = "지금";
+"time.today" = "오늘";
+"time.yesterday" = "어제";
+"time.tomorrow" = "내일";
+"time.this_week" = "이번 주";
+"time.last_week" = "지난 주";
+"time.next_week" = "다음 주";
+"time.this_month" = "이번 달";
+"time.last_month" = "지난 달";
+"time.next_month" = "다음 달";
+"time.duration" = "기간";
+"time.starts" = "시작";
+"time.ends" = "종료";
+
+// Time Units
+"time.units.seconds" = "초";
+"time.units.minutes" = "분";
+"time.units.hours" = "시간";
+"time.units.days" = "일";
+"time.units.weeks" = "주";
+"time.units.months" = "개월";
+"time.units.years" = "년";
+
+// Database
+"database.title" = "데이터베이스";
+"database.maintenance" = "유지보수";
+"database.compact" = "압축";
+"database.rebuild" = "재구축";
+"database.validate" = "검증";
+"database.create_test_data" = "테스트 데이터 생성";
+"database.operations" = "작업";
+"database.browser" = "브라우저";
+"database.diagnostics" = "진단";
+"database.repair" = "복구";
+
+// Database Status
+"database.status.healthy" = "정상";
+"database.status.needs_attention" = "주의 필요";
+"database.status.corrupted" = "손상됨";
+"database.status.optimizing" = "최적화 중";
+"database.status.repairing" = "복구 중";
+
+// Database Operations
+"database.operations.reset_failed" = "데이터베이스 재설정 실패";
+"database.operations.compact_failed" = "데이터베이스 압축 실패";
+"database.operations.rebuild_failed" = "관계 재구축 실패";
+"database.operations.export_failed" = "데이터 내보내기 실패";
+"database.operations.cleanup_failed" = "데이터 정리 실패";
+
+// Save Operations
+"save.failed" = "변경 사항 저장 실패";
+"save.organization_failed" = "조직 저장 실패";
+"save.activity_failed" = "활동 저장 실패";
+"save.attachment_failed" = "첨부 파일 저장 실패";
+"save.trip_failed" = "여행 저장 실패";
+
+// Delete Operations
+"delete.failed" = "항목 삭제 실패";
+"delete.organization_failed" = "조직 삭제 실패";
+"delete.attachment_failed" = "첨부 파일 제거 실패";
+
+// File Operations
+"file.access_failed" = "파일 접근 실패";
+"file.processing_failed" = "파일 처리 실패";
+"file.selection_failed" = "파일 선택 실패";
+"file.photo_failed" = "사진 처리 실패";
+"file.document_failed" = "문서 처리 실패";
+"file.database_save_failed" = "데이터베이스에 파일 저장 실패";
+
+// Generic Operations
+"operation.failed" = "작업 실패";
+"operation.cancelled" = "작업이 취소되었습니다";
+"operation.completed_with_errors" = "오류와 함께 작업 완료";
+
+// Error Logging
+"errors.log.technical_error" = "오류 알림이 생성되었습니다: %@";
+"errors.log.generic_user_message" = "예기치 않은 오류가 발생했습니다. 다시 시도해 주세요.";
+
+// Comprehensive Error Messages
+// Database Errors
+"errors.database.save_failed" = "데이터 저장에 실패했습니다: %@";
+"errors.database.load_failed" = "데이터 로드에 실패했습니다: %@";
+"errors.database.delete_failed" = "데이터 삭제에 실패했습니다: %@";
+"errors.database.corrupted" = "데이터베이스 손상이 감지되었습니다: %@";
+"errors.database.relationship_integrity" = "데이터 관계 오류: %@";
+
+// File System Errors
+"errors.file.not_found" = "파일을 찾을 수 없습니다: %@";
+"errors.file.permission_denied" = "파일 접근 권한이 거부되었습니다: %@";
+"errors.file.corrupted" = "파일이 손상되었습니다: %@";
+"errors.file.disk_space_insufficient" = "디스크 공간이 부족합니다";
+"errors.file.already_exists" = "파일이 이미 존재합니다: %@";
+
+// Network Errors
+"errors.network.unavailable" = "네트워크 연결을 사용할 수 없습니다";
+"errors.network.server_error" = "서버 오류 (%d): %@";
+"errors.network.timeout" = "요청 시간이 초과되었습니다";
+"errors.network.invalid_url" = "잘못된 URL: %@";
+
+// CloudKit Errors
+"errors.cloudkit.unavailable" = "CloudKit을 사용할 수 없습니다";
+"errors.cloudkit.quota_exceeded" = "CloudKit 저장소 할당량을 초과했습니다";
+"errors.cloudkit.sync_failed" = "CloudKit 동기화에 실패했습니다: %@";
+"errors.cloudkit.authentication_failed" = "CloudKit 인증에 실패했습니다";
+
+// Import/Export Errors
+"errors.import.failed" = "가져오기에 실패했습니다: %@";
+"errors.export.failed" = "내보내기에 실패했습니다: %@";
+"errors.import.invalid_format" = "잘못된 파일 형식: %@";
+"errors.import.corrupted_data" = "가져오기 데이터가 손상되었습니다: %@";
+
+// Validation Errors
+"errors.validation.invalid_input" = "%@에 대한 잘못된 입력";
+"errors.validation.missing_required_field" = "필수 필드가 누락되었습니다: %@";
+"errors.validation.duplicate_entry" = "중복 항목: %@";
+"errors.validation.invalid_date_range" = "잘못된 날짜 범위: 종료 날짜는 시작 날짜보다 늦어야 합니다";
+
+// Organization Errors
+"errors.organization.in_use" = "'%@'를 삭제할 수 없습니다. %d개의 항목에서 사용 중입니다.";
+"errors.organization.in_use_plural" = "'%@'를 삭제할 수 없습니다. %d개의 항목에서 사용 중입니다.";
+"errors.organization.cannot_delete_none" = "기본 '없음' 조직은 삭제할 수 없습니다";
+"errors.organization.not_found" = "조직을 찾을 수 없습니다: %@";
+
+// Generic Errors
+"errors.general.unknown" = "예기치 않은 오류가 발생했습니다: %@";
+"errors.general.operation_cancelled" = "작업이 취소되었습니다";
+"errors.general.feature_not_available" = "기능을 사용할 수 없습니다: %@";
+
+// Recovery Suggestions
+"errors.recovery.restart_app" = "앱을 다시 시작해 보세요. 문제가 지속되면 지원팀에 문의하세요.";
+"errors.recovery.check_connection" = "인터넷 연결을 확인하고 다시 시도하세요.";
+"errors.recovery.free_space" = "저장 공간을 확보하고 다시 시도하세요.";
+"errors.recovery.check_permissions" = "파일 권한을 확인하고 다시 시도하세요.";
+"errors.recovery.contact_support" = "지원팀에 문의하여 도움을 받으세요.";
+"errors.recovery.try_again" = "다시 시도해 주세요.";
+"errors.recovery.restore_from_backup" = "데이터가 손상되었을 수 있습니다. 가능하면 백업에서 복원하세요.";
+"errors.recovery.check_icloud_settings" = "iCloud 설정과 인터넷 연결을 확인하세요.";
+"errors.recovery.upgrade_icloud_storage" = "iCloud 저장 공간 요금제를 업그레이드하거나 일부 데이터를 삭제하세요.";
+"errors.recovery.ensure_end_date_after_start" = "종료 날짜가 시작 날짜보다 늦는지 확인하세요.";
+"errors.recovery.remove_associated_items" = "이 조직을 삭제하기 전에 연결된 모든 항목을 제거하세요.";

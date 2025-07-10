@@ -1,0 +1,207 @@
+{"app_name":"intelligenceplatformd","timestamp":"2025-07-09 15:51:22.00 -0400","app_version":"1.0","slice_uuid":"bed2bde1-3bd6-3e45-a453-383c44fa0ff8","build_version":"146.101","platform":7,"share_with_app_devs":0,"is_first_party":1,"bug_type":"309","os_version":"macOS 26.0 (25A5295e)","roots_installed":0,"incident_id":"226AE5FA-F784-4255-A204-C423B2DC2E64","name":"intelligenceplatformd"}
+{
+  "uptime" : 900000,
+  "procRole" : "Unspecified",
+  "version" : 2,
+  "userID" : 501,
+  "deployVersion" : 210,
+  "modelCode" : "Mac14,5",
+  "coalitionID" : 98825,
+  "osVersion" : {
+    "train" : "macOS 26.0",
+    "build" : "25A5295e",
+    "releaseType" : "User"
+  },
+  "captureTime" : "2025-07-09 15:51:20.4384 -0400",
+  "codeSigningMonitor" : 2,
+  "incident" : "226AE5FA-F784-4255-A204-C423B2DC2E64",
+  "pid" : 85330,
+  "translated" : false,
+  "cpuType" : "ARM-64",
+  "roots_installed" : 0,
+  "bug_type" : "309",
+  "procLaunch" : "2025-07-09 15:51:15.8136 -0400",
+  "procStartAbsTime" : 21799191150684,
+  "procExitAbsTime" : 21799302120357,
+  "procName" : "intelligenceplatformd",
+  "procPath" : "\/Volumes\/VOLUME\/*\/IntelligencePlatformCore.framework\/intelligenceplatformd",
+  "bundleInfo" : {"CFBundleVersion":"146.101","CFBundleShortVersionString":"1.0"},
+  "parentProc" : "Exited process",
+  "parentPid" : 84960,
+  "coalitionName" : "com.apple.CoreSimulator.SimDevice.980F9839-2AF4-4689-BE51-391708AB4CC1",
+  "crashReporterKey" : "309788C5-4C75-2F5E-A8CF-F4C464E3392F",
+  "developerMode" : 1,
+  "responsiblePid" : 42691,
+  "responsibleProc" : "SimulatorTrampoline",
+  "codeSigningID" : "com.apple.intelligenceplatformd",
+  "codeSigningTeamID" : "",
+  "codeSigningFlags" : 570442241,
+  "codeSigningValidationCategory" : 1,
+  "codeSigningTrustLevel" : 4294967295,
+  "codeSigningAuxiliaryInfo" : 0,
+  "instructionByteStream" : {"beforePC":"kyYAlIjyXzgfFQFx4f7\/VKgqQHmo\/hc2qQJA+QoA0NIqAQqLSv1w0w==","atPC":"Kv3\/tQkEgFJq+59S6v\/\/F\/QDGKr3ogCRL\/r\/F\/oDGar2CkD5yG7AeQ=="},
+  "bootSessionUUID" : "D64520E9-B25A-4EA6-AC7D-D293B226022E",
+  "wakeTime" : 1851,
+  "sleepWakeUUID" : "BFACA77E-3E8A-4750-AEBF-AFAD69B772DD",
+  "sip" : "enabled",
+  "exception" : {"codes":"0x0000000000000000, 0x0000000000000000","rawCodes":[0,0],"type":"EXC_CRASH","signal":"SIGKILL"},
+  "termination" : {"flags":6,"code":4,"namespace":"LIBXPC","indicator":"XPC_EXIT_REASON_SIGTERM_TIMEOUT"},
+  "extMods" : {"caller":{"thread_create":0,"thread_set_state":0,"task_for_pid":0},"system":{"thread_create":0,"thread_set_state":26774,"task_for_pid":1537},"targeted":{"thread_create":0,"thread_set_state":0,"task_for_pid":0},"warnings":0},
+  "faultingThread" : 0,
+  "threads" : [{"triggered":true,"id":44165789,"threadState":{"x":[{"value":4966135808},{"value":69},{"value":1},{"value":6494584336,"symbolLocation":0,"symbol":"btreeParseCellPtr"},{"value":5100535608},{"value":42},{"value":0},{"value":9351935004},{"value":8260},{"value":1},{"value":0},{"value":4952},{"value":88},{"value":88},{"value":2147483648},{"value":2147483648},{"value":4340959108,"symbolLocation":0,"symbol":"os_unfair_lock_unlock"},{"value":1},{"value":0},{"value":18446744073709551615},{"value":105553116285559},{"value":4966135808},{"value":483519685872},{"value":4966097776},{"value":0},{"value":4966096896},{"value":4966096896},{"value":4364200864},{"value":26}],"flavor":"ARM_THREAD_STATE64","lr":{"value":6494644396},"cpsr":{"value":1610616832},"fp":{"value":6127123264},"sp":{"value":6127122656},"esr":{"value":1442840704,"description":"(PC alignment)"},"pc":{"value":6494644432,"matchesCrashFrame":1},"far":{"value":0}},"frames":[{"imageOffset":399568,"symbol":"sqlite3VdbeExec","symbolLocation":6392,"imageIndex":6},{"imageOffset":58952,"symbol":"sqlite3_step","symbolLocation":2016,"imageIndex":6},{"imageOffset":910860,"imageIndex":7},{"imageOffset":531752,"imageIndex":7},{"imageOffset":531468,"imageIndex":7},{"imageOffset":2452020,"imageIndex":8},{"imageOffset":2441796,"imageIndex":8},{"imageOffset":2438628,"imageIndex":8},{"imageOffset":2435608,"imageIndex":8},{"imageOffset":2431656,"imageIndex":8},{"imageOffset":2452720,"imageIndex":8},{"imageOffset":14988,"imageIndex":7},{"imageOffset":26092,"imageIndex":7},{"imageOffset":26056,"imageIndex":7},{"imageOffset":26216,"imageIndex":7},{"imageOffset":952384,"imageIndex":7},{"imageOffset":14096,"imageIndex":7},{"imageOffset":14256,"imageIndex":7},{"imageOffset":852512,"imageIndex":7},{"imageOffset":854420,"imageIndex":7},{"imageOffset":27232,"symbol":"partial apply for thunk for @callee_guaranteed () -> (@out A, @error @owned Error)","symbolLocation":20,"imageIndex":9},{"imageOffset":27464,"symbol":"partial apply for thunk for @callee_guaranteed () -> (@out A, @error @owned Error)","symbolLocation":12,"imageIndex":9},{"imageOffset":17732,"symbol":"closure #1 in closure #1 in OS_dispatch_queue._syncHelper<A>(fn:execute:rescue:)","symbolLocation":108,"imageIndex":9},{"imageOffset":6228,"symbol":"<deduplicated_symbol>","symbolLocation":20,"imageIndex":9},{"imageOffset":17136,"symbol":"thunk for @escaping @callee_guaranteed () -> ()","symbolLocation":20,"imageIndex":9},{"imageOffset":115888,"symbol":"_dispatch_client_callout","symbolLocation":12,"imageIndex":10},{"imageOffset":73808,"symbol":"_dispatch_lane_barrier_sync_invoke_and_complete","symbolLocation":92,"imageIndex":10},{"imageOffset":19728,"symbol":"implicit closure #2 in implicit closure #1 in OS_dispatch_queue.asyncAndWait<A>(execute:)","symbolLocation":160,"imageIndex":9},{"imageOffset":24436,"symbol":"partial apply for implicit closure #2 in implicit closure #1 in OS_dispatch_queue.sync<A>(execute:)","symbolLocation":48,"imageIndex":9},{"imageOffset":17368,"symbol":"OS_dispatch_queue._syncHelper<A>(fn:execute:rescue:)","symbolLocation":220,"imageIndex":9},{"imageOffset":19520,"symbol":"OS_dispatch_queue.asyncAndWait<A>(execute:)","symbolLocation":136,"imageIndex":9},{"imageOffset":19376,"symbol":"OS_dispatch_queue.sync<A>(execute:)","symbolLocation":36,"imageIndex":9},{"imageOffset":849900,"imageIndex":7},{"imageOffset":829384,"imageIndex":7},{"imageOffset":829356,"imageIndex":7},{"imageOffset":13724,"imageIndex":7},{"imageOffset":2768664,"imageIndex":8},{"imageOffset":2429520,"imageIndex":8},{"imageOffset":2455840,"imageIndex":8},{"imageOffset":4672240,"imageIndex":8},{"imageOffset":4719728,"imageIndex":8},{"imageOffset":4670368,"imageIndex":8},{"imageOffset":4669848,"imageIndex":8},{"imageOffset":4562764,"imageIndex":8},{"imageOffset":4562984,"imageIndex":8},{"imageOffset":5330320,"imageIndex":8},{"imageOffset":5329908,"imageIndex":8},{"imageOffset":5328404,"imageIndex":8},{"imageOffset":5327912,"imageIndex":8},{"imageOffset":6320788,"imageIndex":8},{"imageOffset":5325368,"imageIndex":8},{"imageOffset":3378476,"imageIndex":8},{"imageOffset":5304,"imageIndex":1},{"imageOffset":5032,"symbol":"main","symbolLocation":32,"imageIndex":1},{"imageOffset":4341715924,"imageIndex":11},{"imageOffset":34900,"symbol":"start","symbolLocation":6256,"imageIndex":0}]},{"id":44165863,"frames":[{"imageOffset":6532,"symbol":"start_wqthread","symbolLocation":0,"imageIndex":4}],"threadState":{"x":[{"value":6127693824},{"value":6147},{"value":6127157248},{"value":0},{"value":409604},{"value":18446744073709551615},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0}],"flavor":"ARM_THREAD_STATE64","lr":{"value":0},"cpsr":{"value":4096},"fp":{"value":0},"sp":{"value":6127693824},"esr":{"value":1442840704,"description":"(PC alignment)"},"pc":{"value":4340554116},"far":{"value":0}}},{"id":44166296,"frames":[{"imageOffset":6532,"symbol":"start_wqthread","symbolLocation":0,"imageIndex":4}],"threadState":{"x":[{"value":6128267264},{"value":8195},{"value":6127730688},{"value":0},{"value":409602},{"value":18446744073709551615},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0}],"flavor":"ARM_THREAD_STATE64","lr":{"value":0},"cpsr":{"value":4096},"fp":{"value":0},"sp":{"value":6128267264},"esr":{"value":1442840704,"description":"(PC alignment)"},"pc":{"value":4340554116},"far":{"value":0}}},{"id":44166321,"frames":[{"imageOffset":6532,"symbol":"start_wqthread","symbolLocation":0,"imageIndex":4}],"threadState":{"x":[{"value":6128840704},{"value":0},{"value":6128304128},{"value":0},{"value":278530},{"value":18446744073709551615},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0}],"flavor":"ARM_THREAD_STATE64","lr":{"value":0},"cpsr":{"value":4096},"fp":{"value":0},"sp":{"value":6128840704},"esr":{"value":0},"pc":{"value":4340554116},"far":{"value":0}}}],
+  "usedImages" : [
+  {
+    "source" : "P",
+    "arch" : "arm64e",
+    "base" : 4343939072,
+    "size" : 655360,
+    "uuid" : "1abcd48a-9dc5-320a-b685-14c9f00b609d",
+    "path" : "\/usr\/lib\/dyld",
+    "name" : "dyld"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 4339744768,
+    "size" : 32768,
+    "uuid" : "bed2bde1-3bd6-3e45-a453-383c44fa0ff8",
+    "path" : "\/Volumes\/VOLUME\/*\/IntelligencePlatformCore.framework\/intelligenceplatformd",
+    "name" : "intelligenceplatformd"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 4340957184,
+    "size" : 32768,
+    "uuid" : "b3e7e678-cacb-3876-adc4-2b5e1fdc700f",
+    "path" : "\/usr\/lib\/system\/libsystem_platform.dylib",
+    "name" : "libsystem_platform.dylib"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 4341088256,
+    "size" : 245760,
+    "uuid" : "a9712233-ce10-3e88-a2a7-9c05f909ab25",
+    "path" : "\/usr\/lib\/system\/libsystem_kernel.dylib",
+    "name" : "libsystem_kernel.dylib"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 4340547584,
+    "size" : 65536,
+    "uuid" : "b4b89b35-7eb7-3869-b636-c7e6bc23698f",
+    "path" : "\/usr\/lib\/system\/libsystem_pthread.dylib",
+    "name" : "libsystem_pthread.dylib"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 4347281408,
+    "size" : 49152,
+    "uuid" : "7fadc96e-39a1-3e1b-9c13-5b16e90cc5ec",
+    "path" : "\/Volumes\/VOLUME\/*\/libobjc-trampolines.dylib",
+    "name" : "libobjc-trampolines.dylib"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 6494244864,
+    "size" : 1732504,
+    "uuid" : "0d3aa24a-f2bb-3986-90d6-7e5a60cbf356",
+    "path" : "\/Volumes\/VOLUME\/*\/libsqlite3.dylib",
+    "name" : "libsqlite3.dylib"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 9351876608,
+    "CFBundleShortVersionString" : "1.0",
+    "CFBundleIdentifier" : "com.apple.GRDB.GRDBInternal",
+    "size" : 1397587,
+    "uuid" : "48f9b217-a8bf-3cc7-a450-515455720bbf",
+    "path" : "\/Volumes\/VOLUME\/*\/GRDBInternal.framework\/GRDBInternal",
+    "name" : "GRDBInternal",
+    "CFBundleVersion" : "12"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 9447858176,
+    "CFBundleShortVersionString" : "1.0",
+    "CFBundleIdentifier" : "com.apple.intelligenceplatform.IntelligencePlatformCore",
+    "size" : 10668256,
+    "uuid" : "6463e92c-d808-39f9-b5b1-23bb0189493b",
+    "path" : "\/Volumes\/VOLUME\/*\/IntelligencePlatformCore.framework\/IntelligencePlatformCore",
+    "name" : "IntelligencePlatformCore",
+    "CFBundleVersion" : "146.101"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 7788949504,
+    "size" : 83057,
+    "uuid" : "90790bfd-8dc2-3726-a219-fafddc2462a3",
+    "path" : "\/Volumes\/VOLUME\/*\/libswiftDispatch.dylib",
+    "name" : "libswiftDispatch.dylib"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 6444249088,
+    "size" : 283072,
+    "uuid" : "9f4c3ca6-19e3-347e-812b-8ecd1715d0cc",
+    "path" : "\/Volumes\/VOLUME\/*\/libdispatch.dylib",
+    "name" : "libdispatch.dylib"
+  },
+  {
+    "size" : 0,
+    "source" : "A",
+    "base" : 0,
+    "uuid" : "00000000-0000-0000-0000-000000000000"
+  }
+],
+  "sharedCache" : {
+  "base" : 6442450944,
+  "size" : 4264263680,
+  "uuid" : "9bc82398-f998-3b77-a16d-9684b68b44b7"
+},
+  "vmSummary" : "ReadOnly portion of Libraries: Total=1.0G resident=0K(0%) swapped_out_or_unallocated=1.0G(100%)\nWritable regions: Total=2.1G written=2003K(0%) resident=2003K(0%) swapped_out=0K(0%) unallocated=2.1G(100%)\n\n                                VIRTUAL   REGION \nREGION TYPE                        SIZE    COUNT (non-coalesced) \n===========                     =======  ======= \nActivity Tracing                   256K        1 \nFoundation                          16K        1 \nKernel Alloc Once                   32K        1 \nMALLOC                             2.1G       46 \nMALLOC guard page                   96K        6 \nSQLite page cache                 2560K       20 \nSTACK GUARD                       56.1M        4 \nStack                             9808K        4 \nVM_ALLOCATE                        656K        3 \n__DATA                            25.0M      600 \n__DATA_CONST                      73.9M      620 \n__DATA_DIRTY                       139K       12 \n__FONT_DATA                        2352        1 \n__LINKEDIT                       406.0M        7 \n__OBJC_RO                         63.0M        1 \n__OBJC_RW                         2839K        1 \n__TEXT                           616.8M      629 \n__TPRO_CONST                       148K        2 \ndyld private memory                2.2G       11 \nmapped file                       33.5M       19 \npage table in kernel              2003K        1 \nshared memory                       48K        3 \n===========                     =======  ======= \nTOTAL                              5.5G     1993 \n",
+  "legacyInfo" : {
+  "threadTriggered" : {
+
+  }
+},
+  "logWritingSignature" : "ba7436ade61803984955f484455db7164e0e1075",
+  "trialInfo" : {
+  "rollouts" : [
+    {
+      "rolloutId" : "5f72dc58705eff005a46b3a9",
+      "factorPackIds" : [
+
+      ],
+      "deploymentId" : 250000014
+    },
+    {
+      "rolloutId" : "616061f15c43822edc9b3b70",
+      "factorPackIds" : [
+        "684ab815879e5d16f0e65aba"
+      ],
+      "deploymentId" : 250000019
+    }
+  ],
+  "experiments" : [
+    {
+      "treatmentId" : "cc637087-5f6a-4428-bea8-ad080e9a6232",
+      "experimentId" : "68630692e1874a7adc676348",
+      "deploymentId" : 500000001
+    },
+    {
+      "treatmentId" : "28060e10-d4e5-4163-aa2b-d8bd088d5cbf",
+      "experimentId" : "6685b283afc7c17197d69eec",
+      "deploymentId" : 400000012
+    }
+  ]
+}
+}

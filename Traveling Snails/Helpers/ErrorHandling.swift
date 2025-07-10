@@ -61,99 +61,101 @@ enum AppError: LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .databaseSaveFailed(let details):
-            return "Failed to save data: \(details)"
+            return L(L10n.Errors.Database.saveFailed, details)
         case .databaseLoadFailed(let details):
-            return "Failed to load data: \(details)"
+            return L(L10n.Errors.Database.loadFailed, details)
         case .databaseDeleteFailed(let details):
-            return "Failed to delete data: \(details)"
+            return L(L10n.Errors.Database.deleteFailed, details)
         case .databaseCorrupted(let details):
-            return "Database corruption detected: \(details)"
+            return L(L10n.Errors.Database.corrupted, details)
         case .relationshipIntegrityError(let details):
-            return "Data relationship error: \(details)"
+            return L(L10n.Errors.Database.relationshipIntegrity, details)
 
         case .fileNotFound(let path):
-            return "File not found: \(path)"
+            return L(L10n.Errors.File.notFound, path)
         case .filePermissionDenied(let path):
-            return "Permission denied for file: \(path)"
+            return L(L10n.Errors.File.permissionDenied, path)
         case .fileCorrupted(let path):
-            return "File is corrupted: \(path)"
+            return L(L10n.Errors.File.corrupted, path)
         case .diskSpaceInsufficient:
-            return "Insufficient disk space"
+            return L(L10n.Errors.File.diskSpaceInsufficient)
         case .fileAlreadyExists(let path):
-            return "File already exists: \(path)"
+            return L(L10n.Errors.File.alreadyExists, path)
 
         case .networkUnavailable:
-            return "Network connection unavailable"
+            return L(L10n.Errors.Network.unavailable)
         case .serverError(let code, let message):
-            return "Server error (\(code)): \(message)"
+            return L(L10n.Errors.Network.serverError, code, message)
         case .timeoutError:
-            return "Request timed out"
+            return L(L10n.Errors.Network.timeout)
         case .invalidURL(let url):
-            return "Invalid URL: \(url)"
+            return L(L10n.Errors.Network.invalidURL, url)
 
         case .cloudKitUnavailable:
-            return "CloudKit is unavailable"
+            return L(L10n.Errors.CloudKit.unavailable)
         case .cloudKitQuotaExceeded:
-            return "CloudKit storage quota exceeded"
+            return L(L10n.Errors.CloudKit.quotaExceeded)
         case .cloudKitSyncFailed(let details):
-            return "CloudKit sync failed: \(details)"
+            return L(L10n.Errors.CloudKit.syncFailed, details)
         case .cloudKitAuthenticationFailed:
-            return "CloudKit authentication failed"
+            return L(L10n.Errors.CloudKit.authenticationFailed)
 
         case .importFailed(let details):
-            return "Import failed: \(details)"
+            return L(L10n.Errors.Import.failed, details)
         case .exportFailed(let details):
-            return "Export failed: \(details)"
+            return L(L10n.Errors.Export.failed, details)
         case .invalidFileFormat(let format):
-            return "Invalid file format: \(format)"
+            return L(L10n.Errors.Import.invalidFormat, format)
         case .corruptedImportData(let details):
-            return "Import data is corrupted: \(details)"
+            return L(L10n.Errors.Import.corruptedData, details)
 
         case .invalidInput(let field):
-            return "Invalid input for \(field)"
+            return L(L10n.Errors.Validation.invalidInput, field)
         case .missingRequiredField(let field):
-            return "Required field missing: \(field)"
+            return L(L10n.Errors.Validation.missingRequiredField, field)
         case .duplicateEntry(let item):
-            return "Duplicate entry: \(item)"
+            return L(L10n.Errors.Validation.duplicateEntry, item)
         case .invalidDateRange:
-            return "Invalid date range: end date must be after start date"
+            return L(L10n.Errors.Validation.invalidDateRange)
 
         case .organizationInUse(let name, let count):
-            return "Cannot delete '\(name)'. It's used by \(count) items."
+            // Use pluralization for better localization
+            let key = count == 1 ? L10n.Errors.Organization.inUse : L10n.Errors.Organization.inUsePlural
+            return L(key, name, count)
         case .cannotDeleteNoneOrganization:
-            return "Cannot delete the default 'None' organization"
+            return L(L10n.Errors.Organization.cannotDeleteNone)
         case .organizationNotFound(let name):
-            return "Organization not found: \(name)"
+            return L(L10n.Errors.Organization.notFound, name)
 
         case .unknown(let details):
-            return "An unexpected error occurred: \(details)"
+            return L(L10n.Errors.General.unknown, details)
         case .operationCancelled:
-            return "Operation was cancelled"
+            return L(L10n.Errors.General.operationCancelled)
         case .featureNotAvailable(let feature):
-            return "Feature not available: \(feature)"
+            return L(L10n.Errors.General.featureNotAvailable, feature)
         }
     }
 
     var recoverySuggestion: String? {
         switch self {
         case .databaseSaveFailed, .databaseLoadFailed:
-            return "Try restarting the app. If the problem persists, contact support."
+            return L(L10n.Errors.Recovery.restartApp)
         case .databaseCorrupted:
-            return "Your data may be corrupted. Please restore from a backup if available."
+            return L(L10n.Errors.Recovery.restoreFromBackup)
         case .filePermissionDenied:
-            return "Check file permissions and try again."
+            return L(L10n.Errors.Recovery.checkPermissions)
         case .diskSpaceInsufficient:
-            return "Free up some storage space and try again."
+            return L(L10n.Errors.Recovery.freeSpace)
         case .networkUnavailable:
-            return "Check your internet connection and try again."
+            return L(L10n.Errors.Recovery.checkConnection)
         case .cloudKitUnavailable:
-            return "Check your iCloud settings and internet connection."
+            return L(L10n.Errors.Recovery.checkiCloudSettings)
         case .cloudKitQuotaExceeded:
-            return "Upgrade your iCloud storage plan or delete some data."
+            return L(L10n.Errors.Recovery.upgradeiCloudStorage)
         case .invalidDateRange:
-            return "Please ensure the end date is after the start date."
+            return L(L10n.Errors.Recovery.ensureEndDateAfterStart)
         case .organizationInUse:
-            return "Remove all associated items before deleting this organization."
+            return L(L10n.Errors.Recovery.removeAssociatedItems)
         default:
             return nil
         }
@@ -241,10 +243,10 @@ private enum ErrorMessageFormatter {
 private enum ErrorAlertFactory {
     static func createAlert(for error: Error) -> ErrorAlert {
         // Log the technical details but show generic message to user
-        Logger.shared.error("Error alert created: \(error.localizedDescription)", category: .app)
+        Logger.shared.error(L(L10n.Errors.Log.technicalError, error.localizedDescription), category: .app)
 
         // Show generic user-friendly message
-        let userMessage = "An unexpected error occurred. Please try again."
+        let userMessage = L(L10n.Errors.Log.genericUserMessage)
         return ErrorAlert(id: UUID(), message: userMessage)
     }
 
@@ -252,8 +254,8 @@ private enum ErrorAlertFactory {
         // Log the technical details
         Logger.shared.error("AppError alert created: \(error.localizedDescription)", category: error.category)
 
-        // Use AppError's user-friendly message or fallback to generic
-        let userMessage = error.recoverySuggestion ?? "An error occurred. Please try again."
+        // Use AppError's user-friendly message or fallback to localized generic
+        let userMessage = error.recoverySuggestion ?? L(L10n.Errors.Recovery.tryAgain)
         return ErrorAlert(id: UUID(), message: userMessage)
     }
 }
@@ -357,9 +359,9 @@ struct ErrorHandlingModifier: ViewModifier {
             }
             .alert(item: $errorAlert) { errorAlert in
                 Alert(
-                    title: Text("Error"),
+                    title: Text(L(L10n.General.error)),
                     message: Text(errorAlert.message),
-                    dismissButton: .default(Text("OK"))
+                    dismissButton: .default(Text(L(L10n.General.ok)))
                 )
             }
     }

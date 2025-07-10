@@ -1,0 +1,115 @@
+== Disk Images ==
+-- iOS --
+iOS 26.0 (23A5260l) - 0BE2F17C-BB70-497F-B436-0789A26F6FD6
+    State: Ready
+    Image Kind: Patchable Cryptex Disk Image
+    Signature State: Verified
+    Deletable: YES
+    Last Used At: 2025-07-10 12:44:07 +0000
+    Mounting Mode: Automatic
+    Mount Policy: Automatic
+    Mount Path: /Library/Developer/CoreSimulator/Volumes/iOS_23A5260l
+    Image Path: /System/Library/AssetsV2/com_apple_MobileAsset_iOSSimulatorRuntime/8656ddc0f728feefca872aacab4c35379c50fff8.asset/AssetData/Restore/iOSSimulatorRuntime_Cryptex.dmg
+    Size: 9.3G
+    Bundle Path: /Library/Developer/CoreSimulator/Volumes/iOS_23A5260l/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.0.simruntime
+    Parent Mount Path: /System/Library/AssetsV2/com_apple_MobileAsset_iOSSimulatorRuntime/8656ddc0f728feefca872aacab4c35379c50fff8.asset/AssetData
+iOS 18.5 (22F77) - DF7B0DA2-A709-4D0F-AACD-0103A44DD3FA
+    State: Ready
+    Image Kind: Cryptex Disk Image
+    Signature State: Verified
+    Deletable: YES
+    Last Used At: 2025-07-10 12:37:54 +0000
+    Mounting Mode: Automatic
+    Mount Policy: Automatic
+    Mount Path: /Library/Developer/CoreSimulator/Volumes/iOS_22F77
+    Image Path: /Library/Developer/CoreSimulator/Cryptex/Images/bundle/SimRuntimeBundle-90DCD2CF-4F12-43E3-80C1-CD0DC4B7490D/Restore/044-89417-100.dmg
+    Size: 8.2G
+    Bundle Path: /Library/Developer/CoreSimulator/Volumes/iOS_22F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 18.5.simruntime
+    Parent ID: 90DCD2CF-4F12-43E3-80C1-CD0DC4B7490D
+    Parent Image Path: /System/Library/AssetsV2/com_apple_MobileAsset_iOSSimulatorRuntime/c0d3fd05106683ba0b3680d4d1afec65f098d700.asset/AssetData/044-89849-100.dmg
+    Parent Mount Path: /Library/Developer/CoreSimulator/Cryptex/Images/bundle/SimRuntimeBundle-90DCD2CF-4F12-43E3-80C1-CD0DC4B7490D
+-- tvOS --
+tvOS 16.4 (20L494) - 1EFAB82E-A75D-435B-8531-A8D826FB3D55
+    State: Ready
+    Image Kind: Disk Image
+    Signature State: Verified
+    Deletable: YES
+    Mounting Mode: Automatic
+    Mount Policy: Automatic
+    Mount Path: /Library/Developer/CoreSimulator/Volumes/tvOS_20L494
+    Image Path: /Library/Developer/CoreSimulator/Images/1EFAB82E-A75D-435B-8531-A8D826FB3D55.dmg
+    Size: 3.2G
+    Bundle Path: /Library/Developer/CoreSimulator/Volumes/tvOS_20L494/Library/Developer/CoreSimulator/Profiles/Runtimes/tvOS 16.4.simruntime
+tvOS 17.0 (21J5352a) - 86F64086-C9CC-4A59-9FA8-A12ECEC62277
+    State: Ready
+    Image Kind: Disk Image
+    Signature State: Verified
+    Deletable: YES
+    Mounting Mode: Automatic
+    Mount Policy: Automatic
+    Mount Path: /Library/Developer/CoreSimulator/Volumes/tvOS_21J5352a
+    Image Path: /Library/Developer/CoreSimulator/Images/86F64086-C9CC-4A59-9FA8-A12ECEC62277.dmg
+    Size: 3.5G
+    Bundle Path: /Library/Developer/CoreSimulator/Volumes/tvOS_21J5352a/Library/Developer/CoreSimulator/Profiles/Runtimes/tvOS 17.0.simruntime
+-- watchOS --
+watchOS 11.5 (22T572) - 36D8C3D1-5168-4004-98E1-00FCE455A437
+    State: Ready
+    Image Kind: Cryptex Disk Image
+    Signature State: Verified
+    Deletable: YES
+    Mounting Mode: Automatic
+    Mount Policy: Automatic
+    Mount Path: /Library/Developer/CoreSimulator/Volumes/watchOS_22T572
+    Image Path: /Library/Developer/CoreSimulator/Cryptex/Images/bundle/SimRuntimeBundle-AB50DD8F-BE03-4D0B-8C09-2A3E968EE66E/Restore/044-88672-082.dmg
+    Size: 4.4G
+    Bundle Path: /Library/Developer/CoreSimulator/Volumes/watchOS_22T572/Library/Developer/CoreSimulator/Profiles/Runtimes/watchOS 11.5.simruntime
+    Parent ID: AB50DD8F-BE03-4D0B-8C09-2A3E968EE66E
+    Parent Image Path: /System/Library/AssetsV2/com_apple_MobileAsset_watchOSSimulatorRuntime/4f193649c2f58e7eb94bdf77990a06cc1ff118f7.asset/AssetData/044-88931-082.dmg
+    Parent Mount Path: /Library/Developer/CoreSimulator/Cryptex/Images/bundle/SimRuntimeBundle-AB50DD8F-BE03-4D0B-8C09-2A3E968EE66E
+watchOS 26.0 (23R5280m) - 9A065A03-91FB-432D-BB14-67F022F170CC
+    State: Ready
+    Image Kind: Patchable Cryptex Disk Image
+    Signature State: Verified
+    Deletable: YES
+    Mounting Mode: Automatic
+    Mount Policy: Automatic
+    Mount Path: /Library/Developer/CoreSimulator/Volumes/watchOS_23R5280m
+    Image Path: /System/Library/AssetsV2/com_apple_MobileAsset_watchOSSimulatorRuntime/6255ac30e6f94809007191b08da5097917a54f66.asset/AssetData/Restore/WatchOSSimulatorRuntime_Cryptex.dmg
+    Size: 4.8G
+    Bundle Path: /Library/Developer/CoreSimulator/Volumes/watchOS_23R5280m/Library/Developer/CoreSimulator/Profiles/Runtimes/watchOS 26.0.simruntime
+    Parent Mount Path: /System/Library/AssetsV2/com_apple_MobileAsset_watchOSSimulatorRuntime/6255ac30e6f94809007191b08da5097917a54f66.asset/AssetData
+watchOS 10.0 (21R355) - 422F8D79-4EC9-48A3-87EC-6DB748BFB923
+    State: Ready
+    Image Kind: Disk Image
+    Signature State: Verified
+    Deletable: YES
+    Mounting Mode: Automatic
+    Mount Policy: Automatic
+    Mount Path: /Library/Developer/CoreSimulator/Volumes/watchOS_21R355
+    Image Path: /Library/Developer/CoreSimulator/Images/422F8D79-4EC9-48A3-87EC-6DB748BFB923.dmg
+    Size: 3.7G
+    Bundle Path: /Library/Developer/CoreSimulator/Volumes/watchOS_21R355/Library/Developer/CoreSimulator/Profiles/Runtimes/watchOS 10.0.simruntime
+watchOS 9.4 (20T253) - CAA94D19-02E0-44FE-9230-0FF4A732D451
+    State: Ready
+    Image Kind: Disk Image
+    Signature State: Verified
+    Deletable: YES
+    Mounting Mode: Automatic
+    Mount Policy: Automatic
+    Mount Path: /Library/Developer/CoreSimulator/Volumes/watchOS_20T253
+    Image Path: /Library/Developer/CoreSimulator/Images/CAA94D19-02E0-44FE-9230-0FF4A732D451.dmg
+    Size: 3.4G
+    Bundle Path: /Library/Developer/CoreSimulator/Volumes/watchOS_20T253/Library/Developer/CoreSimulator/Profiles/Runtimes/watchOS 9.4.simruntime
+watchOS 10.0 (21R5355a) - 3EADD0DC-DBEE-499E-A8D7-A620FD11B485
+    State: Ready
+    Image Kind: Disk Image
+    Signature State: Verified
+    Deletable: YES
+    Mounting Mode: Automatic
+    Mount Policy: Automatic
+    Mount Path: /Library/Developer/CoreSimulator/Volumes/watchOS_21R5355a
+    Image Path: /Library/Developer/CoreSimulator/Images/3EADD0DC-DBEE-499E-A8D7-A620FD11B485.dmg
+    Size: 3.7G
+    Bundle Path: /Library/Developer/CoreSimulator/Volumes/watchOS_21R5355a/Library/Developer/CoreSimulator/Profiles/Runtimes/watchOS 10.0.simruntime
+
+Total Disk Images: 9 (44.3G)

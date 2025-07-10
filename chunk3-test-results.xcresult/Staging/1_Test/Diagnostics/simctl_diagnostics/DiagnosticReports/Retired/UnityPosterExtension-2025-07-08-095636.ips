@@ -1,0 +1,196 @@
+{"app_name":"UnityPosterExtension","timestamp":"2025-07-08 09:56:36.00 -0400","app_version":"1.0","slice_uuid":"f051f1c0-c23e-3b7c-8896-35a4611c55ab","build_version":"1","platform":7,"bundleID":"com.apple.UnityPoster.UnityPosterExtension","share_with_app_devs":0,"is_first_party":1,"bug_type":"309","os_version":"macOS 26.0 (25A5295e)","roots_installed":0,"name":"UnityPosterExtension","incident_id":"F01A8FDD-69D8-47DA-8864-A85450742E89"}
+{
+  "uptime" : 800000,
+  "procRole" : "Background",
+  "version" : 2,
+  "userID" : 501,
+  "deployVersion" : 210,
+  "modelCode" : "Mac14,5",
+  "coalitionID" : 89749,
+  "osVersion" : {
+    "train" : "macOS 26.0",
+    "build" : "25A5295e",
+    "releaseType" : "User"
+  },
+  "captureTime" : "2025-07-08 09:56:30.7985 -0400",
+  "codeSigningMonitor" : 2,
+  "incident" : "F01A8FDD-69D8-47DA-8864-A85450742E89",
+  "pid" : 60099,
+  "translated" : false,
+  "cpuType" : "ARM-64",
+  "roots_installed" : 0,
+  "bug_type" : "309",
+  "procLaunch" : "2025-07-08 09:56:30.1994 -0400",
+  "procStartAbsTime" : 19276985728672,
+  "procExitAbsTime" : 19277000090252,
+  "procName" : "UnityPosterExtension",
+  "procPath" : "\/Volumes\/VOLUME\/*\/UnityPoster.framework\/PlugIns\/UnityPosterExtension.appex\/UnityPosterExtension",
+  "bundleInfo" : {"CFBundleShortVersionString":"1.0","CFBundleVersion":"1","CFBundleIdentifier":"com.apple.UnityPoster.UnityPosterExtension"},
+  "parentProc" : "launchd_sim",
+  "parentPid" : 59727,
+  "coalitionName" : "com.apple.CoreSimulator.SimDevice.F1B5F475-78C3-41BE-B97F-068BE2F80F30",
+  "crashReporterKey" : "309788C5-4C75-2F5E-A8CF-F4C464E3392F",
+  "developerMode" : 1,
+  "responsiblePid" : 42691,
+  "responsibleProc" : "SimulatorTrampoline",
+  "codeSigningID" : "com.apple.UnityPoster.UnityPosterExtension",
+  "codeSigningTeamID" : "",
+  "codeSigningFlags" : 570442241,
+  "codeSigningValidationCategory" : 1,
+  "codeSigningTrustLevel" : 4294967295,
+  "codeSigningAuxiliaryInfo" : 0,
+  "instructionByteStream" : {"beforePC":"IAAg1IEF+LfpAwC54gMDquMDBKrkAwWq5QMGquYDB6rnAwiqKAMAlA==","atPC":"IAAg1IgSgFL\/EwC56AcA+UgAgFLoAwA5YBUA0ACQG5FjFQDQY0AmkQ=="},
+  "bootSessionUUID" : "D64520E9-B25A-4EA6-AC7D-D293B226022E",
+  "wakeTime" : 40044,
+  "sleepWakeUUID" : "17DBF1CF-D79B-4FDC-8B30-2CCB6FDDC859",
+  "sip" : "enabled",
+  "exception" : {"codes":"0x0000000000000001, 0x00000001972edce8","rawCodes":[1,6831398120],"type":"EXC_BREAKPOINT","signal":"SIGTRAP"},
+  "termination" : {"flags":0,"code":5,"namespace":"SIGNAL","indicator":"Trace\/BPT trap: 5","byProc":"exc handler","byPid":60099},
+  "os_fault" : {"process":"UnityPosterExtension"},
+  "extMods" : {"caller":{"thread_create":0,"thread_set_state":0,"task_for_pid":0},"system":{"thread_create":0,"thread_set_state":24308,"task_for_pid":1336},"targeted":{"thread_create":0,"thread_set_state":0,"task_for_pid":0},"warnings":0},
+  "faultingThread" : 0,
+  "threads" : [{"triggered":true,"id":40033310,"threadState":{"x":[{"value":9223372044686107200},{"value":0},{"value":0},{"value":105553140385408},{"value":0},{"value":6165535200},{"value":115},{"value":0},{"value":256},{"value":3376859149},{"value":255},{"value":1600},{"value":2043},{"value":2045},{"value":3378958362},{"value":3376859149},{"value":3378511872},{"value":26},{"value":0},{"value":8153754008,"symbolLocation":0,"symbol":"__NSTheOneTruePredicate"},{"value":6165538216},{"value":8191987928,"symbolLocation":0,"symbol":"value witness table for Builtin.UnknownObject"},{"value":105553156195840},{"value":3},{"value":6165536064},{"value":6165538216},{"value":105553156130784},{"value":105553128915328},{"value":6165535856}],"flavor":"ARM_THREAD_STATE64","lr":{"value":6831398120},"cpsr":{"value":1610616832},"fp":{"value":6165535616},"sp":{"value":6165535488},"esr":{"value":4060086273,"description":"(Breakpoint) brk 1"},"pc":{"value":6831398120,"matchesCrashFrame":1},"far":{"value":0}},"frames":[{"imageOffset":1060072,"symbol":"_assertionFailure(_:_:file:line:flags:)","symbolLocation":156,"imageIndex":5},{"imageOffset":221132,"symbol":"_EXRunningExtension._start(withArguments:count:)","symbolLocation":2900,"imageIndex":6},{"imageOffset":97348,"imageIndex":7},{"imageOffset":189292,"symbol":"EXExtensionMain(_:_:)","symbolLocation":636,"imageIndex":6},{"imageOffset":9338624,"symbol":"NSExtensionMain","symbolLocation":172,"imageIndex":8},{"imageOffset":4304704468,"imageIndex":9},{"imageOffset":34900,"symbol":"start","symbolLocation":6256,"imageIndex":0}]},{"id":40033333,"frames":[{"imageOffset":6532,"symbol":"start_wqthread","symbolLocation":0,"imageIndex":4}],"threadState":{"x":[{"value":6166097920},{"value":5635},{"value":6165561344},{"value":0},{"value":409604},{"value":18446744073709551615},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0}],"flavor":"ARM_THREAD_STATE64","lr":{"value":0},"cpsr":{"value":4096},"fp":{"value":0},"sp":{"value":6166097920},"esr":{"value":1442840704,"description":"(PC alignment)"},"pc":{"value":4303395204},"far":{"value":0}}},{"id":40033334,"frames":[{"imageOffset":6532,"symbol":"start_wqthread","symbolLocation":0,"imageIndex":4}],"threadState":{"x":[{"value":6166671360},{"value":4099},{"value":6166134784},{"value":0},{"value":409604},{"value":18446744073709551615},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0},{"value":0}],"flavor":"ARM_THREAD_STATE64","lr":{"value":0},"cpsr":{"value":4096},"fp":{"value":0},"sp":{"value":6166671360},"esr":{"value":1442840704,"description":"(PC alignment)"},"pc":{"value":4303395204},"far":{"value":0}}}],
+  "usedImages" : [
+  {
+    "source" : "P",
+    "arch" : "arm64e",
+    "base" : 4302127104,
+    "size" : 655360,
+    "uuid" : "1abcd48a-9dc5-320a-b685-14c9f00b609d",
+    "path" : "\/usr\/lib\/dyld",
+    "name" : "dyld"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 4301340672,
+    "CFBundleShortVersionString" : "1.0",
+    "CFBundleIdentifier" : "com.apple.UnityPoster.UnityPosterExtension",
+    "size" : 49152,
+    "uuid" : "f051f1c0-c23e-3b7c-8896-35a4611c55ab",
+    "path" : "\/Volumes\/VOLUME\/*\/UnityPosterExtension",
+    "name" : "UnityPosterExtension",
+    "CFBundleVersion" : "1"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 4303798272,
+    "size" : 32768,
+    "uuid" : "b3e7e678-cacb-3876-adc4-2b5e1fdc700f",
+    "path" : "\/usr\/lib\/system\/libsystem_platform.dylib",
+    "name" : "libsystem_platform.dylib"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 4303929344,
+    "size" : 245760,
+    "uuid" : "a9712233-ce10-3e88-a2a7-9c05f909ab25",
+    "path" : "\/usr\/lib\/system\/libsystem_kernel.dylib",
+    "name" : "libsystem_kernel.dylib"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 4303388672,
+    "size" : 65536,
+    "uuid" : "b4b89b35-7eb7-3869-b636-c7e6bc23698f",
+    "path" : "\/usr\/lib\/system\/libsystem_pthread.dylib",
+    "name" : "libsystem_pthread.dylib"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 6830338048,
+    "size" : 4856544,
+    "uuid" : "ec014c74-3086-33af-b101-6a4964c5f6c5",
+    "path" : "\/Volumes\/VOLUME\/*\/libswiftCore.dylib",
+    "name" : "libswiftCore.dylib"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 7830482944,
+    "CFBundleShortVersionString" : "97",
+    "CFBundleIdentifier" : "com.apple.ExtensionFoundation",
+    "size" : 1025984,
+    "uuid" : "5e60f39d-403e-3cff-8e84-77571ee5359a",
+    "path" : "\/Volumes\/VOLUME\/*\/ExtensionFoundation.framework\/ExtensionFoundation",
+    "name" : "ExtensionFoundation",
+    "CFBundleVersion" : "97"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 7831511040,
+    "CFBundleShortVersionString" : "97",
+    "CFBundleIdentifier" : "com.apple.ExtensionKit",
+    "size" : 263808,
+    "uuid" : "efa8adc8-3f05-3210-a5d7-383283b788e2",
+    "path" : "\/Volumes\/VOLUME\/*\/ExtensionKit.framework\/ExtensionKit",
+    "name" : "ExtensionKit",
+    "CFBundleVersion" : "97"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 6451171328,
+    "CFBundleShortVersionString" : "6.9",
+    "CFBundleIdentifier" : "com.apple.Foundation",
+    "size" : 14109696,
+    "uuid" : "5abdb7a3-f2ba-3c6b-b755-f8fcf6b75b6f",
+    "path" : "\/Volumes\/VOLUME\/*\/Foundation.framework\/Foundation",
+    "name" : "Foundation",
+    "CFBundleVersion" : "4030.1.101"
+  },
+  {
+    "size" : 0,
+    "source" : "A",
+    "base" : 0,
+    "uuid" : "00000000-0000-0000-0000-000000000000"
+  }
+],
+  "sharedCache" : {
+  "base" : 6442450944,
+  "size" : 4264263680,
+  "uuid" : "9bc82398-f998-3b77-a16d-9684b68b44b7"
+},
+  "vmSummary" : "ReadOnly portion of Libraries: Total=1.2G resident=0K(0%) swapped_out_or_unallocated=1.2G(100%)\nWritable regions: Total=833.5M written=1779K(0%) resident=1779K(0%) swapped_out=0K(0%) unallocated=831.7M(100%)\n\n                                VIRTUAL   REGION \nREGION TYPE                        SIZE    COUNT (non-coalesced) \n===========                     =======  ======= \nActivity Tracing                   256K        1 \nKernel Alloc Once                   32K        1 \nMALLOC                           822.2M       23 \nMALLOC guard page                   96K        6 \nSTACK GUARD                       56.0M        3 \nStack                             9264K        3 \nVM_ALLOCATE                        656K        3 \n__DATA                            30.1M      732 \n__DATA_CONST                      90.3M      755 \n__DATA_DIRTY                       139K       13 \n__FONT_DATA                        2352        1 \n__LINKEDIT                       405.9M        6 \n__OBJC_RO                         63.0M        1 \n__OBJC_RW                         2839K        1 \n__TEXT                           829.8M      765 \n__TPRO_CONST                       148K        2 \ndyld private memory                2.2G       11 \nmapped file                       8176K        8 \npage table in kernel              1779K        1 \nshared memory                       32K        2 \n===========                     =======  ======= \nTOTAL                              4.4G     2338 \n",
+  "legacyInfo" : {
+  "threadTriggered" : {
+
+  }
+},
+  "logWritingSignature" : "84e5c98fe00cb6e42b1005e0cfc643ec7f1608d5",
+  "trialInfo" : {
+  "rollouts" : [
+    {
+      "rolloutId" : "5f72dc58705eff005a46b3a9",
+      "factorPackIds" : [
+
+      ],
+      "deploymentId" : 250000014
+    },
+    {
+      "rolloutId" : "616061f15c43822edc9b3b70",
+      "factorPackIds" : [
+        "684ab815879e5d16f0e65aba"
+      ],
+      "deploymentId" : 250000019
+    }
+  ],
+  "experiments" : [
+    {
+      "treatmentId" : "cc637087-5f6a-4428-bea8-ad080e9a6232",
+      "experimentId" : "68630692e1874a7adc676348",
+      "deploymentId" : 500000001
+    },
+    {
+      "treatmentId" : "28060e10-d4e5-4163-aa2b-d8bd088d5cbf",
+      "experimentId" : "6685b283afc7c17197d69eec",
+      "deploymentId" : 400000012
+    }
+  ]
+}
+}

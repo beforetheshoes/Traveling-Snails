@@ -7,6 +7,51 @@ Command line invocation:
 { platform:iOS Simulator, id:dvtdevice-DVTiOSDeviceSimulatorPlaceholder-iphonesimulator:placeholder, name:Any iOS Simulator Device }
 { platform:iOS Simulator, arch:arm64, id:21E7AFDA-01DE-491D-9305-745B1E03F37E, OS:26.0, name:dsxfa }
 { platform:iOS Simulator, arch:x86_64, id:21E7AFDA-01DE-491D-9305-745B1E03F37E, OS:26.0, name:dsxfa }
+{ platform:iOS Simulator, arch:arm64, id:3E2314C6-2E2D-4EC7-BDFC-42273D1F9AD9, OS:18.5, name:iPad (A16) }
+{ platform:iOS Simulator, arch:x86_64, id:3E2314C6-2E2D-4EC7-BDFC-42273D1F9AD9, OS:18.5, name:iPad (A16) }
+{ platform:iOS Simulator, arch:arm64, id:7309FAEB-DBB4-460B-A5CD-29C94A0B792B, OS:26.0, name:iPad (A16) }
+{ platform:iOS Simulator, arch:x86_64, id:7309FAEB-DBB4-460B-A5CD-29C94A0B792B, OS:26.0, name:iPad (A16) }
+{ platform:iOS Simulator, arch:arm64, id:FB570F50-F546-448B-8CA1-89AAA5A072FF, OS:18.5, name:iPad Air 11-inch (M3) }
+{ platform:iOS Simulator, arch:x86_64, id:FB570F50-F546-448B-8CA1-89AAA5A072FF, OS:18.5, name:iPad Air 11-inch (M3) }
+{ platform:iOS Simulator, arch:arm64, id:20D3CD13-EA9F-4B13-B185-E4B3F9825D6D, OS:26.0, name:iPad Air 11-inch (M3) }
+{ platform:iOS Simulator, arch:x86_64, id:20D3CD13-EA9F-4B13-B185-E4B3F9825D6D, OS:26.0, name:iPad Air 11-inch (M3) }
+{ platform:iOS Simulator, arch:arm64, id:6375D378-2C1D-4E81-A34C-75AD24F1FA3D, OS:18.5, name:iPad Air 13-inch (M3) }
+{ platform:iOS Simulator, arch:x86_64, id:6375D378-2C1D-4E81-A34C-75AD24F1FA3D, OS:18.5, name:iPad Air 13-inch (M3) }
+{ platform:iOS Simulator, arch:arm64, id:F0A17900-9815-4162-AB46-0C0343CD3C44, OS:26.0, name:iPad Air 13-inch (M3) }
+{ platform:iOS Simulator, arch:x86_64, id:F0A17900-9815-4162-AB46-0C0343CD3C44, OS:26.0, name:iPad Air 13-inch (M3) }
+{ platform:iOS Simulator, arch:arm64, id:36F7ED9B-9666-4D9C-BCF3-27878C45C46F, OS:18.5, name:iPad Pro 11-inch (M4) }
+{ platform:iOS Simulator, arch:x86_64, id:36F7ED9B-9666-4D9C-BCF3-27878C45C46F, OS:18.5, name:iPad Pro 11-inch (M4) }
+{ platform:iOS Simulator, arch:arm64, id:B79D59B9-DFB3-471B-9303-DDFD9303C3E2, OS:26.0, name:iPad Pro 11-inch (M4) }
+{ platform:iOS Simulator, arch:x86_64, id:B79D59B9-DFB3-471B-9303-DDFD9303C3E2, OS:26.0, name:iPad Pro 11-inch (M4) }
+{ platform:iOS Simulator, arch:arm64, id:8266723E-A7D3-4847-AC2A-3FA11634F29C, OS:18.5, name:iPad Pro 13-inch (M4) }
+{ platform:iOS Simulator, arch:x86_64, id:8266723E-A7D3-4847-AC2A-3FA11634F29C, OS:18.5, name:iPad Pro 13-inch (M4) }
+{ platform:iOS Simulator, arch:arm64, id:9F27D9DE-2BD6-422F-9497-96EFB8DAEDDC, OS:26.0, name:iPad Pro 13-inch (M4) }
+{ platform:iOS Simulator, arch:x86_64, id:9F27D9DE-2BD6-422F-9497-96EFB8DAEDDC, OS:26.0, name:iPad Pro 13-inch (M4) }
+{ platform:iOS Simulator, arch:arm64, id:38B74DF0-27AC-4E66-839E-FF79F8CDE610, OS:18.5, name:iPad mini (A17 Pro) }
+{ platform:iOS Simulator, arch:x86_64, id:38B74DF0-27AC-4E66-839E-FF79F8CDE610, OS:18.5, name:iPad mini (A17 Pro) }
+{ platform:iOS Simulator, arch:arm64, id:F0A9AB4A-F984-41F6-8D71-896A177DF4F5, OS:26.0, name:iPad mini (A17 Pro) }
+{ platform:iOS Simulator, arch:x86_64, id:F0A9AB4A-F984-41F6-8D71-896A177DF4F5, OS:26.0, name:iPad mini (A17 Pro) }
+{ platform:iOS Simulator, arch:arm64, id:3EE872C7-916D-4BFB-887B-33963686F6C5, OS:18.5, name:iPhone 16 }
+{ platform:iOS Simulator, arch:x86_64, id:3EE872C7-916D-4BFB-887B-33963686F6C5, OS:18.5, name:iPhone 16 }
+{ platform:iOS Simulator, arch:arm64, id:EFB188BA-B1C4-4E2E-9D45-819B389E3A62, OS:26.0, name:iPhone 16 }
+{ platform:iOS Simulator, arch:x86_64, id:EFB188BA-B1C4-4E2E-9D45-819B389E3A62, OS:26.0, name:iPhone 16 }
+{ platform:iOS Simulator, arch:arm64, id:FC9A05BE-40C8-4099-85C1-97F040A6FB9B, OS:18.5, name:iPhone 16 Plus }
+{ platform:iOS Simulator, arch:x86_64, id:FC9A05BE-40C8-4099-85C1-97F040A6FB9B, OS:18.5, name:iPhone 16 Plus }
+{ platform:iOS Simulator, arch:arm64, id:607F57C7-D35D-4922-9E6F-C6B292EF9202, OS:26.0, name:iPhone 16 Plus }
+{ platform:iOS Simulator, arch:x86_64, id:607F57C7-D35D-4922-9E6F-C6B292EF9202, OS:26.0, name:iPhone 16 Plus }
+{ platform:iOS Simulator, arch:arm64, id:B437D3EB-E9C7-4440-83AB-292844A82395, OS:18.5, name:iPhone 16 Pro }
+{ platform:iOS Simulator, arch:x86_64, id:B437D3EB-E9C7-4440-83AB-292844A82395, OS:18.5, name:iPhone 16 Pro }
+{ platform:iOS Simulator, arch:arm64, id:B47B0B5C-100E-42CD-83C7-573EFBB231E7, OS:26.0, name:iPhone 16 Pro }
+{ platform:iOS Simulator, arch:x86_64, id:B47B0B5C-100E-42CD-83C7-573EFBB231E7, OS:26.0, name:iPhone 16 Pro }
+{ platform:iOS Simulator, arch:arm64, id:C6FF8AF7-BF17-4EFB-9D0A-D127AA6E772D, OS:18.5, name:iPhone 16 Pro Max }
+{ platform:iOS Simulator, arch:x86_64, id:C6FF8AF7-BF17-4EFB-9D0A-D127AA6E772D, OS:18.5, name:iPhone 16 Pro Max }
+{ platform:iOS Simulator, arch:arm64, id:B239E32C-70DE-4432-8A32-C4031E1146BB, OS:26.0, name:iPhone 16 Pro Max }
+{ platform:iOS Simulator, arch:x86_64, id:B239E32C-70DE-4432-8A32-C4031E1146BB, OS:26.0, name:iPhone 16 Pro Max }
+{ platform:iOS Simulator, arch:arm64, id:80E676F6-09BF-42F5-AB8C-F6043D9F35DE, OS:18.5, name:iPhone 16e }
+{ platform:iOS Simulator, arch:x86_64, id:80E676F6-09BF-42F5-AB8C-F6043D9F35DE, OS:18.5, name:iPhone 16e }
+{ platform:iOS Simulator, arch:arm64, id:B232C864-BFFF-497D-9B44-A9B4C9CC6A98, OS:26.0, name:iPhone 16e }
+{ platform:iOS Simulator, arch:x86_64, id:B232C864-BFFF-497D-9B44-A9B4C9CC6A98, OS:26.0, name:iPhone 16e }
+{ platform:iOS, arch:arm64, id:00008101-001E3C881181001E, name:Ryan’s iPad }
 { platform:iOS, arch:arm64, id:00008140-001855520082201C, name:Ryan’s Telephone }
 Build settings for action build and target "Traveling Snails":
     ACTION = build
@@ -344,10 +389,10 @@ Build settings for action build and target "Traveling Snails":
     LOCROOT = /Users/ryan/Developer/Swift/Traveling Snails
     LOCSYMROOT = /Users/ryan/Developer/Swift/Traveling Snails
     MACH_O_TYPE = mh_execute
-    MAC_OS_X_PRODUCT_BUILD_VERSION = 25A5295e
-    MAC_OS_X_VERSION_ACTUAL = 160000
-    MAC_OS_X_VERSION_MAJOR = 160000
-    MAC_OS_X_VERSION_MINOR = 160000
+    MAC_OS_X_PRODUCT_BUILD_VERSION = 25A5306g
+    MAC_OS_X_VERSION_ACTUAL = 260000
+    MAC_OS_X_VERSION_MAJOR = 260000
+    MAC_OS_X_VERSION_MINOR = 260000
     MAKE_MERGEABLE = NO
     MARKETING_VERSION = 1.0
     MERGEABLE_LIBRARY = NO
@@ -372,7 +417,7 @@ Build settings for action build and target "Traveling Snails":
     OSAC = /usr/bin/osacompile
     PACKAGE_TYPE = com.apple.package-type.wrapper.application
     PASCAL_STRINGS = YES
-    PATH = /Applications/Xcode.app/Contents/SharedFrameworks/SwiftBuild.framework/Versions/A/PlugIns/SWBBuildService.bundle/Contents/PlugIns/SWBUniversalPlatformPlugin.bundle/Contents/Frameworks/SWBUniversalPlatform.framework/Resources:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/local/bin:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/libexec:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/usr/bin:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/usr/local/bin:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/local/bin:/Applications/Xcode.app/Contents/Developer/usr/bin:/Applications/Xcode.app/Contents/Developer/usr/local/bin:/opt/homebrew/opt/git/libexec/git-core:/Users/ryan/.bun/bin:/Users/ryan/.gem/ruby/3.3.1/bin:/Users/ryan/.rubies/ruby-3.3.1/lib/ruby/gems/3.3.0/bin:/Users/ryan/.rubies/ruby-3.3.1/bin:/opt/homebrew/opt/php@8.0/sbin:/opt/homebrew/opt/php@8.0/bin:/Users/ryan/.yarn/bin:/Users/ryan/.config/yarn/global/node_modules/.bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/Library/Apple/usr/bin:/usr/local/share/dotnet:/Users/ryan/.cargo/bin:/Applications/iTerm.app/Contents/Resources/utilities
+    PATH = /Applications/Xcode.app/Contents/SharedFrameworks/SwiftBuild.framework/Versions/A/PlugIns/SWBBuildService.bundle/Contents/PlugIns/SWBUniversalPlatformPlugin.bundle/Contents/Frameworks/SWBUniversalPlatform.framework/Resources:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/local/bin:/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/libexec:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/usr/bin:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/usr/local/bin:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/bin:/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/usr/local/bin:/Applications/Xcode.app/Contents/Developer/usr/bin:/Applications/Xcode.app/Contents/Developer/usr/local/bin:/Users/ryan/.bun/bin:/Users/ryan/.gem/ruby/3.3.1/bin:/Users/ryan/.rubies/ruby-3.3.1/lib/ruby/gems/3.3.0/bin:/Users/ryan/.rubies/ruby-3.3.1/bin:/opt/homebrew/opt/php@8.0/sbin:/opt/homebrew/opt/php@8.0/bin:/Users/ryan/.yarn/bin:/Users/ryan/.config/yarn/global/node_modules/.bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/Library/Apple/usr/bin:/usr/local/share/dotnet:/Users/ryan/.cargo/bin:/Applications/iTerm.app/Contents/Resources/utilities
     PATH_PREFIXES_EXCLUDED_FROM_HEADER_DEPENDENCIES = /usr/include /usr/local/include /System/Library/Frameworks /System/Library/PrivateFrameworks /Applications/Xcode.app/Contents/Developer/Headers /Applications/Xcode.app/Contents/Developer/SDKs /Applications/Xcode.app/Contents/Developer/Platforms
     PBDEVELOPMENTPLIST_PATH = Traveling Snails.app/pbdevelopment.plist
     PER_ARCH_MODULE_FILE_DIR = /Users/ryan/Library/Developer/Xcode/DerivedData/Traveling_Snails-ackkzpghnwayaydvsnwvqosotsnv/Build/Intermediates.noindex/Traveling Snails.build/Debug-iphoneos/Traveling Snails.build/Objects-normal/undefined_arch
@@ -523,7 +568,7 @@ Build settings for action build and target "Traveling Snails":
     TARGET_BUILD_DIR = /Users/ryan/Library/Developer/Xcode/DerivedData/Traveling_Snails-ackkzpghnwayaydvsnwvqosotsnv/Build/Products/Debug-iphoneos
     TARGET_DEVICE_IDENTIFIER = 00006021-000408C63C47401E
     TARGET_DEVICE_MODEL = Mac14,5
-    TARGET_DEVICE_OS_VERSION = 16.0
+    TARGET_DEVICE_OS_VERSION = 26.0
     TARGET_DEVICE_PLATFORM_NAME = macosx
     TARGET_NAME = Traveling Snails
     TARGET_TEMP_DIR = /Users/ryan/Library/Developer/Xcode/DerivedData/Traveling_Snails-ackkzpghnwayaydvsnwvqosotsnv/Build/Intermediates.noindex/Traveling Snails.build/Debug-iphoneos/Traveling Snails.build

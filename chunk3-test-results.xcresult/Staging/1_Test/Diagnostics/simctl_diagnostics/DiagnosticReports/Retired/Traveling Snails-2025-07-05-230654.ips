@@ -1,0 +1,143 @@
+{"app_name":"Traveling Snails","timestamp":"2025-07-05 23:06:54.00 -0400","app_version":"1.0","slice_uuid":"386c4ddb-05e1-30c2-99cc-c48791c819e6","build_version":"1","platform":7,"bundleID":"com.ryanleewilliams.Traveling-Snails","share_with_app_devs":0,"is_first_party":0,"bug_type":"309","os_version":"macOS 26.0 (25A5295e)","roots_installed":0,"name":"Traveling Snails","incident_id":"C0409E4E-E4DD-400A-8792-19BE7C4AB5EC"}
+{
+  "uptime" : 640000,
+  "procRole" : "Foreground",
+  "version" : 2,
+  "userID" : 501,
+  "deployVersion" : 210,
+  "modelCode" : "Mac14,5",
+  "coalitionID" : 73301,
+  "osVersion" : {
+    "train" : "macOS 26.0",
+    "build" : "25A5295e",
+    "releaseType" : "User"
+  },
+  "captureTime" : "2025-07-05 23:06:54.2133 -0400",
+  "codeSigningMonitor" : 2,
+  "incident" : "C0409E4E-E4DD-400A-8792-19BE7C4AB5EC",
+  "pid" : 22610,
+  "translated" : false,
+  "cpuType" : "ARM-64",
+  "roots_installed" : 0,
+  "bug_type" : "309",
+  "procLaunch" : "2025-07-05 23:06:53.3372 -0400",
+  "procStartAbsTime" : 15523671387884,
+  "procExitAbsTime" : 15523692407653,
+  "procName" : "Traveling Snails",
+  "procPath" : "\/Users\/USER\/Library\/Developer\/XCTestDevices\/7A1ECE14-0A5B-4122-8A19-47AAAE15A056\/data\/Containers\/Bundle\/Application\/11937E62-443A-4DEF-870E-0B638E401D8C\/Traveling Snails.app\/Traveling Snails",
+  "bundleInfo" : {"CFBundleShortVersionString":"1.0","CFBundleVersion":"1","CFBundleIdentifier":"com.ryanleewilliams.Traveling-Snails"},
+  "storeInfo" : {"deviceIdentifierForVendor":"D150D009-2A9C-56CB-93FA-9340F6AED466","thirdParty":true},
+  "parentProc" : "launchd_sim",
+  "parentPid" : 21588,
+  "coalitionName" : "com.apple.CoreSimulator.SimDevice.7A1ECE14-0A5B-4122-8A19-47AAAE15A056",
+  "crashReporterKey" : "309788C5-4C75-2F5E-A8CF-F4C464E3392F",
+  "developerMode" : 1,
+  "responsiblePid" : 1919,
+  "responsibleProc" : "SimulatorTrampoline",
+  "codeSigningID" : "com.ryanleewilliams.Traveling-Snails",
+  "codeSigningTeamID" : "",
+  "codeSigningFlags" : 570425857,
+  "codeSigningValidationCategory" : 10,
+  "codeSigningTrustLevel" : 4294967295,
+  "codeSigningAuxiliaryInfo" : 0,
+  "instructionByteStream" : {"beforePC":"eAAAALwAAAAoAQAAcAAAAAABAABoAAAAGAEAADgBAAAwQYDSARAA1A==","atPC":"AwEAVH8jA9X9e7+p\/QMAkV31\/5e\/AwCR\/XvBqP8PX9bAA1\/WEC2A0g=="},
+  "bootSessionUUID" : "D64520E9-B25A-4EA6-AC7D-D293B226022E",
+  "wakeTime" : 148215,
+  "fatalDyldError" : 1,
+  "sleepWakeUUID" : "30436A0E-2B7E-45BE-B4DF-9014E9901AEF",
+  "sip" : "enabled",
+  "exception" : {"codes":"0x0000000000000000, 0x0000000000000000","rawCodes":[0,0],"type":"EXC_CRASH","signal":"SIGABRT"},
+  "termination" : {"code":1,"flags":518,"namespace":"DYLD","indicator":"Library missing","details":["(terminated at launch; ignore backtrace)"],"reasons":["Library not loaded: @rpath\/Traveling Snails.debug.dylib","Referenced from: <386C4DDB-05E1-30C2-99CC-C48791C819E6> \/Users\/USER\/Library\/Developer\/XCTestDevices\/7A1ECE14-0A5B-4122-8A19-47AAAE15A056\/data\/Containers\/Bundle\/Application\/11937E62-443A-4DEF-870E-0B638E401D8C\/Traveling Snails.app\/Traveling Snails","Reason: tried: '\/Users\/ryan\/Library\/Developer\/Xcode\/DerivedData\/Traveling_Snails-ackkzpghnwayaydvsnwvqosotsnv\/Build\/Products\/Debug-iphonesimulator\/Traveling Snails.debug.dylib' (no such file), '\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/iPhoneSimulator.platform\/Developer\/usr\/lib\/Traveling Snails.debug.dylib' (no such file), '\/Users\/USER\/Library\/Developer\/XCTestDevices\/7A1ECE14-0A5B-4122-8A19-47AAAE15A056\/data\/Containers\/Bundle\/Application\/11937E62-443A-4DEF-870E-0B638E401D8C\/Traveling Snails.app\/Traveling Snails.debug.dylib' (code signature in <2DC21173-4D8A-3CF4-8D74-30DB396CF31C> '\/Users\/ryan\/Library\/Developer\/XCTestDevices\/7A1ECE14-0A5B-4122-8A19-47AAAE15A056\/data\/Containers\/Bundle\/Application\/"]},
+  "extMods" : {"caller":{"thread_create":0,"thread_set_state":0,"task_for_pid":0},"system":{"thread_create":0,"thread_set_state":22924,"task_for_pid":875},"targeted":{"thread_create":0,"thread_set_state":0,"task_for_pid":0},"warnings":0},
+  "faultingThread" : 0,
+  "threads" : [{"triggered":true,"id":31488449,"threadState":{"x":[{"value":6},{"value":1},{"value":6171769120},{"value":247},{"value":6171768096},{"value":0},{"value":224},{"value":0},{"value":32},{"value":18},{"value":0},{"value":2340027244252129612},{"value":99},{"value":60},{"value":10281885913},{"value":108},{"value":521},{"value":4297932572,"symbolLocation":56,"symbol":"fcntl"},{"value":0},{"value":0},{"value":6171768096},{"value":247},{"value":6171769120},{"value":1},{"value":6},{"value":0},{"value":1067805},{"value":4296507392},{"value":0}],"flavor":"ARM_THREAD_STATE64","lr":{"value":4298483700},"cpsr":{"value":4096},"fp":{"value":6171768032},"sp":{"value":6171767968},"esr":{"value":1442840704,"description":"(PC alignment)"},"pc":{"value":4297938912,"matchesCrashFrame":1},"far":{"value":0}},"frames":[{"imageOffset":22496,"symbol":"__abort_with_payload","symbolLocation":8,"imageIndex":0},{"imageOffset":567284,"symbol":"abort_with_payload_wrapper_internal","symbolLocation":104,"imageIndex":0},{"imageOffset":567336,"symbol":"abort_with_payload","symbolLocation":16,"imageIndex":0},{"imageOffset":4296775072,"imageIndex":4},{"imageOffset":4296526740,"imageIndex":4},{"imageOffset":4296515436,"imageIndex":4},{"imageOffset":4296512328,"imageIndex":4},{"imageOffset":42332,"symbol":"dyld4::prepareSim(dyld4::RuntimeState&, char const*)","symbolLocation":1308,"imageIndex":0},{"imageOffset":36864,"symbol":"dyld4::prepare(dyld4::APIs&, mach_o::Header const*)","symbolLocation":344,"imageIndex":0},{"imageOffset":36500,"symbol":"dyld4::start(dyld4::KernelArgs*, void*, void*)::$_0::operator()() const","symbolLocation":236,"imageIndex":0},{"imageOffset":34824,"symbol":"start","symbolLocation":6180,"imageIndex":0}]}],
+  "usedImages" : [
+  {
+    "source" : "P",
+    "arch" : "arm64e",
+    "base" : 4297916416,
+    "size" : 655360,
+    "uuid" : "1abcd48a-9dc5-320a-b685-14c9f00b609d",
+    "path" : "\/usr\/lib\/dyld",
+    "name" : "dyld"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 4295098368,
+    "CFBundleShortVersionString" : "1.0",
+    "CFBundleIdentifier" : "com.ryanleewilliams.Traveling-Snails",
+    "size" : 16384,
+    "uuid" : "386c4ddb-05e1-30c2-99cc-c48791c819e6",
+    "path" : "\/Users\/USER\/Library\/Developer\/XCTestDevices\/7A1ECE14-0A5B-4122-8A19-47AAAE15A056\/data\/Containers\/Bundle\/Application\/11937E62-443A-4DEF-870E-0B638E401D8C\/Traveling Snails.app\/Traveling Snails",
+    "name" : "Traveling Snails",
+    "CFBundleVersion" : "1"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 4295360512,
+    "size" : 16384,
+    "uuid" : "104f4b20-a02d-3b0f-8212-219e580a6429",
+    "path" : "\/Applications\/Xcode.app\/Contents\/Developer\/Platforms\/iPhoneSimulator.platform\/Developer\/usr\/lib\/libXCTestBundleInject.dylib",
+    "name" : "libXCTestBundleInject.dylib"
+  },
+  {
+    "source" : "P",
+    "arch" : "arm64",
+    "base" : 4299177984,
+    "size" : 278528,
+    "uuid" : "36af4d3c-ebc4-3390-98ef-8a04d43fa4f7",
+    "path" : "\/Volumes\/VOLUME\/*\/libMainThreadChecker.dylib",
+    "name" : "libMainThreadChecker.dylib"
+  },
+  {
+    "size" : 0,
+    "source" : "A",
+    "base" : 0,
+    "uuid" : "00000000-0000-0000-0000-000000000000"
+  }
+],
+  "sharedCache" : {
+  "base" : 6442450944,
+  "size" : 4264263680,
+  "uuid" : "9bc82398-f998-3b77-a16d-9684b68b44b7"
+},
+  "vmSummary" : "ReadOnly portion of Libraries: Total=1424K resident=0K(0%) swapped_out_or_unallocated=1424K(100%)\nWritable regions: Total=9488K written=128K(1%) resident=128K(1%) swapped_out=0K(0%) unallocated=9360K(99%)\n\n                                VIRTUAL   REGION \nREGION TYPE                        SIZE    COUNT (non-coalesced) \n===========                     =======  ======= \nSTACK GUARD                       56.0M        1 \nStack                             8176K        1 \nVM_ALLOCATE                        144K        2 \n__DATA                            1088K        5 \n__DATA_CONST                        80K        4 \n__DATA_DIRTY                        16K        1 \n__LINKEDIT                         480K        4 \n__TEXT                             944K        4 \n__TPRO_CONST                       144K        1 \ndyld private memory                2.2G        5 \nmapped file                        624K        6 \npage table in kernel               128K        1 \nshared memory                       16K        1 \n===========                     =======  ======= \nTOTAL                              2.2G       36 \n",
+  "legacyInfo" : {
+  "threadTriggered" : {
+
+  }
+},
+  "logWritingSignature" : "41931aae52f52d1b228da94a83c5ab45db62790a",
+  "trialInfo" : {
+  "rollouts" : [
+    {
+      "rolloutId" : "5f72dc58705eff005a46b3a9",
+      "factorPackIds" : [
+
+      ],
+      "deploymentId" : 250000014
+    },
+    {
+      "rolloutId" : "616061f15c43822edc9b3b70",
+      "factorPackIds" : [
+        "684ab815879e5d16f0e65aba"
+      ],
+      "deploymentId" : 250000019
+    }
+  ],
+  "experiments" : [
+    {
+      "treatmentId" : "cc637087-5f6a-4428-bea8-ad080e9a6232",
+      "experimentId" : "68630692e1874a7adc676348",
+      "deploymentId" : 500000001
+    },
+    {
+      "treatmentId" : "28060e10-d4e5-4163-aa2b-d8bd088d5cbf",
+      "experimentId" : "6685b283afc7c17197d69eec",
+      "deploymentId" : 400000012
+    }
+  ]
+}
+}

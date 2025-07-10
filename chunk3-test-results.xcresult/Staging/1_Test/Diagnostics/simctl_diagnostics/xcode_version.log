@@ -1,0 +1,124 @@
+DriverKit24.5.sdk - DriverKit 24.5 (driverkit24.5)
+SDKVersion: 24.5
+Path: /Applications/Xcode.app/Contents/Developer/Platforms/DriverKit.platform/Developer/SDKs/DriverKit24.5.sdk
+PlatformVersion: 24.5
+PlatformPath: /Applications/Xcode.app/Contents/Developer/Platforms/DriverKit.platform
+
+iPhoneOS18.5.sdk - iOS 18.5 (iphoneos18.5)
+SDKVersion: 18.5
+Path: /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.5.sdk
+PlatformVersion: 18.5
+PlatformPath: /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform
+BuildID: 372EBB42-2AF3-11F0-90D2-821BAB17A0CD
+ProductBuildVersion: 22F76
+ProductCopyright: 1983-2025 Apple Inc.
+ProductName: iPhone OS
+ProductVersion: 18.5
+
+iPhoneSimulator18.5.sdk - Simulator - iOS 18.5 (iphonesimulator18.5)
+SDKVersion: 18.5
+Path: /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator18.5.sdk
+PlatformVersion: 18.5
+PlatformPath: /Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform
+BuildID: 372EBB42-2AF3-11F0-90D2-821BAB17A0CD
+ProductBuildVersion: 22F76
+ProductCopyright: 1983-2025 Apple Inc.
+ProductName: iPhone OS
+ProductVersion: 18.5
+
+MacOSX15.5.sdk - macOS 15.5 (macosx15.5)
+SDKVersion: 15.5
+Path: /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.5.sdk
+PlatformVersion: 15.5
+PlatformPath: /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform
+BuildID: BFCF2A8A-28A1-11F0-9AFD-BCEF5F3A4767
+ProductBuildVersion: 24F74
+ProductCopyright: 1983-2025 Apple Inc.
+ProductName: macOS
+ProductUserVisibleVersion: 15.5
+ProductVersion: 15.5
+iOSSupportVersion: 18.5
+
+MacOSX15.sdk - macOS 15.5 (macosx15.5)
+SDKVersion: 15.5
+Path: /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.sdk
+PlatformVersion: 15.5
+PlatformPath: /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform
+BuildID: BFCF2A8A-28A1-11F0-9AFD-BCEF5F3A4767
+ProductBuildVersion: 24F74
+ProductCopyright: 1983-2025 Apple Inc.
+ProductName: macOS
+ProductUserVisibleVersion: 15.5
+ProductVersion: 15.5
+iOSSupportVersion: 18.5
+
+AppleTVOS18.5.sdk - tvOS 18.5 (appletvos18.5)
+SDKVersion: 18.5
+Path: /Applications/Xcode.app/Contents/Developer/Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS18.5.sdk
+PlatformVersion: 18.5
+PlatformPath: /Applications/Xcode.app/Contents/Developer/Platforms/AppleTVOS.platform
+BuildID: 27C97DC0-2659-11F0-BD2F-2BAA836FDCD7
+ProductBuildVersion: 22L572
+ProductCopyright: 1983-2025 Apple Inc.
+ProductName: Apple TVOS
+ProductVersion: 18.5
+
+AppleTVSimulator18.5.sdk - Simulator - tvOS 18.5 (appletvsimulator18.5)
+SDKVersion: 18.5
+Path: /Applications/Xcode.app/Contents/Developer/Platforms/AppleTVSimulator.platform/Developer/SDKs/AppleTVSimulator18.5.sdk
+PlatformVersion: 18.5
+PlatformPath: /Applications/Xcode.app/Contents/Developer/Platforms/AppleTVSimulator.platform
+BuildID: 27C97DC0-2659-11F0-BD2F-2BAA836FDCD7
+ProductBuildVersion: 22L572
+ProductCopyright: 1983-2025 Apple Inc.
+ProductName: Apple TVOS
+ProductVersion: 18.5
+
+XROS2.5.sdk - visionOS 2.5 (xros2.5)
+SDKVersion: 2.5
+Path: /Applications/Xcode.app/Contents/Developer/Platforms/XROS.platform/Developer/SDKs/XROS2.5.sdk
+PlatformVersion: 2.5
+PlatformPath: /Applications/Xcode.app/Contents/Developer/Platforms/XROS.platform
+BuildID: 0A7A919A-28B2-11F0-A456-F49C306A4B79
+ProductBuildVersion: 22O473
+ProductCopyright: 1983-2025 Apple Inc.
+ProductName: xrOS
+ProductVersion: 2.5
+iOSSupportVersion: 18.5
+
+XRSimulator2.5.sdk - Simulator - visionOS 2.5 (xrsimulator2.5)
+SDKVersion: 2.5
+Path: /Applications/Xcode.app/Contents/Developer/Platforms/XRSimulator.platform/Developer/SDKs/XRSimulator2.5.sdk
+PlatformVersion: 2.5
+PlatformPath: /Applications/Xcode.app/Contents/Developer/Platforms/XRSimulator.platform
+BuildID: 0A7A919A-28B2-11F0-A456-F49C306A4B79
+ProductBuildVersion: 22O473
+ProductCopyright: 1983-2025 Apple Inc.
+ProductName: xrOS
+ProductVersion: 2.5
+iOSSupportVersion: 18.5
+
+WatchOS11.5.sdk - watchOS 11.5 (watchos11.5)
+SDKVersion: 11.5
+Path: /Applications/Xcode.app/Contents/Developer/Platforms/WatchOS.platform/Developer/SDKs/WatchOS11.5.sdk
+PlatformVersion: 11.5
+PlatformPath: /Applications/Xcode.app/Contents/Developer/Platforms/WatchOS.platform
+BuildID: E6E57B42-2658-11F0-9FCE-F41B9CB81AAA
+ProductBuildVersion: 22T572
+ProductCopyright: 1983-2025 Apple Inc.
+ProductName: Watch OS
+ProductVersion: 11.5
+
+WatchSimulator11.5.sdk - Simulator - watchOS 11.5 (watchsimulator11.5)
+SDKVersion: 11.5
+Path: /Applications/Xcode.app/Contents/Developer/Platforms/WatchSimulator.platform/Developer/SDKs/WatchSimulator11.5.sdk
+PlatformVersion: 11.5
+PlatformPath: /Applications/Xcode.app/Contents/Developer/Platforms/WatchSimulator.platform
+BuildID: E6E57B42-2658-11F0-9FCE-F41B9CB81AAA
+ProductBuildVersion: 22T572
+ProductCopyright: 1983-2025 Apple Inc.
+ProductName: Watch OS
+ProductVersion: 11.5
+
+Xcode 16.4
+Build version 16F6

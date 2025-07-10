@@ -1,0 +1,170 @@
+Port:
+    UUID: 64782880-763E-413B-A694-D24C7BF25974
+    Class: Unknown
+    Port Identifier: com.apple.display.captureservice
+    Power state: On
+
+Port:
+    UUID: 5C9958E8-A223-4D34-808B-9C776CC27135
+    Class: Display
+    Port Identifier: com.apple.framebuffer.display
+    Power state: On
+    Display class: 0
+    Default width: 1206
+    Default height: 2622
+    Default pixel format: 'BGRA'
+
+Port:
+    UUID: A92A3098-9048-4911-A08E-AE912DB5EA72
+    Class: Display
+    Port Identifier: com.apple.framebuffer.display
+    Power state: On
+    Display class: 1
+    Default width: 720
+    Default height: 480
+    Default pixel format: 'BGRA'
+
+Port:
+    UUID: CA321E45-F76D-492A-A081-AA11795D3F41
+    Class: DisplayAdapter
+    Port Identifier: com.apple.framebuffer.server
+    Power state: On
+    Creatable Screen Properties:
+    (101) CarPlay:
+        Screen ID: 101
+        Name: CarPlay
+        Seed: 1
+        Screen Type: CarPlay
+        Pixel Size: {1206, 2622}
+        Dot Pitch: 460
+        Mask URL: (none)
+        Preferred UI Scale: 3
+        Pixel Format: 'BGRA'
+        Colorspace: sRGB
+        HDR Mode: SDR
+        Refresh Rate: 6000
+    Connected Screens:
+    (2) TVOut:
+        Screen ID: 2
+        Name: TVOut
+        Seed: 4
+        Screen Type: TVOut
+        Pixel Size: {720, 480}
+        Dot Pitch: 0
+        Mask URL: (none)
+        Preferred UI Scale: 1
+        Pixel Format: 'BGRA'
+        Colorspace: sRGB
+        HDR Mode: SDR
+        Refresh Rate: 3000
+    (1) LCD:
+        Screen ID: 1
+        Name: LCD
+        Seed: 5
+        Screen Type: Integrated
+        Pixel Size: {1206, 2622}
+        Dot Pitch: 460
+        Mask URL: file:///Library/Developer/CoreSimulator/Profiles/DeviceTypes/iPhone%2016%20Pro.simdevicetype/Contents/Resources/4E5532ED-1470-47D1-BDF4-7AA90C26957A.pdf
+        Preferred UI Scale: 3
+        Pixel Format: 'BGRA'
+        Colorspace: sRGB
+        HDR Mode: SDR
+        Refresh Rate: 6000
+
+Port:
+    UUID: 3C6D496A-0239-475F-8202-EFB35AA11DD9
+    Class: Accelerator
+    Port Identifier: com.apple.accelerator.metal
+    Power state: On
+
+Port:
+    UUID: CF02AA0D-EF1E-48F2-A8EC-3B8E881760AA
+    Class: Accelerator
+    Port Identifier: com.apple.accelerator.iosurface
+    Power state: On
+
+Port:
+    UUID: C4E19C5F-C53A-4CB0-A75B-87A4E1E1F51A
+    Class: StreamProcessor
+    Port Identifier: com.apple.SimStreamProcessor.default
+    Power state: On
+    Stream processor device
+    Specification:
+        SimStreamProcessorSpecificationPerformanceHint = SimStreamProcessorSpecificationPerformanceHint_Default
+        SimStreamProcessorSpecificationRendererHint = SimStreamProcessorSpecificationRendererHint_OpenGL
+        SimStreamProcessorSpecificationEmulationHint = SimStreamProcessorSpecificationEmulationHint_SerialProcessing
+    Renderer private name: Apple Software Renderer
+    Renderer version: 4.1 APPLE-22.0.12
+    Denylisted: No
+    Memory regions:
+        (Timed out trying to list memory regions)
+
+Port:
+    UUID: 2467F162-BD2F-4CBD-BEAD-239F4D86E7D1
+    Class: StreamProcessor
+    Port Identifier: com.apple.SimStreamProcessor.default
+    Power state: On
+    Stream processor device
+    Specification:
+        SimStreamProcessorSpecificationPerformanceHint = SimStreamProcessorSpecificationPerformanceHint_MaximizePerformance
+        SimStreamProcessorSpecificationRendererHint = SimStreamProcessorSpecificationRendererHint_Metal
+        SimStreamProcessorSpecificationEmulationHint = SimStreamProcessorSpecificationEmulationHint_NoEmulation
+    Renderer private name: Apple M2 Max
+    Renderer version: 1.3
+    Denylisted: No
+    Memory regions:
+        (Timed out trying to list memory regions)
+
+Port:
+    UUID: D31C86B0-EB3C-488A-A29B-48A94EF17CC3
+    Class: StreamProcessor
+    Port Identifier: com.apple.SimStreamProcessor.default
+    Power state: On
+    Stream processor device
+    Specification:
+        SimStreamProcessorSpecificationPerformanceHint = SimStreamProcessorSpecificationPerformanceHint_MaximizePerformance
+        SimStreamProcessorSpecificationRendererHint = SimStreamProcessorSpecificationRendererHint_OpenGL
+        SimStreamProcessorSpecificationEmulationHint = SimStreamProcessorSpecificationEmulationHint_NoEmulation
+    Renderer private name: Apple M2 Max
+    Renderer version: 4.1 Metal - 90.5
+    Denylisted: No
+    Memory regions:
+        (Timed out trying to list memory regions)
+
+Port:
+    UUID: 47975BA5-684D-4A7A-84F1-95E52CE8E68B
+    Class: Audio
+    Port Identifier: com.apple.CoreSimulator.Audio.HostRoute
+    Power state: On
+    Guest Audio Input -> Default Host Audio Device
+    Guest Audio Output -> Default Host Audio Device
+    Host Audio Devices:
+        10ACF4A0-0000-0000-241D-0104B5582578: DELL U3818DW (0 In / 2 Out)
+        63D544DC-3E31-4867-B9C4-90EC00000003: Ryan’s Telephone Microphone (1 In / 0 Out)
+        AppleUSBAudioEngine:CalDigit,Inc.:CalDigit TS4 Audio - Rear:111400:1: CalDigit TS4 Audio - Rear (0 In / 2 Out)
+        AppleUSBAudioEngine:CalDigit,Inc.:CalDigit TS4 Audio - Rear:111400:2: CalDigit TS4 Audio - Rear (2 In / 0 Out)
+        AppleUSBAudioEngine:Generic:Modern USB-C Speaker:0V334HG213001X:1: Modern USB-C Speaker (2 In / 0 Out)
+        AppleUSBAudioEngine:Generic:Modern USB-C Speaker:0V334HG213001X:2: Modern USB-C Speaker (0 In / 2 Out)
+        BGMDevice: Background Music (2 In / 2 Out)
+        BuiltInMicrophoneDevice: MacBook Pro Microphone (1 In / 0 Out)
+        BuiltInSpeakerDevice: MacBook Pro Speakers (0 In / 2 Out)
+        ImmersedAudioDriver: Immersed (2 In / 2 Out)
+
+Port:
+    UUID: CA78A549-56D7-41B7-9B1B-4593DC83E30A
+    Class: Unknown
+    Port Identifier: com.apple.gputools.service.simulator
+    Power state: On
+
+Port:
+    UUID: B61535CD-F90C-48D3-9419-249C9940AC36
+    Class: Unknown
+    Port Identifier: com.apple.gputools.GPUToolsAgentService.simulator
+    Power state: On
+
+Port:
+    UUID: 7359D396-A66C-4333-90B6-E3DA81870E1F
+    Class: LegacyHID
+    Port Identifier: com.apple.CoreSimulator.HID.LegacyHID
+    Power state: On
+

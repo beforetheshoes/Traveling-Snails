@@ -1,0 +1,51 @@
+08:47:49.615 xcodebuild[91227:3536371] Got a sim device notification for Clone 1 of iPhone 16 Pro: {
+    notification = "availableDevices_changed";
+}
+08:47:49.616 xcodebuild[91227:3536371] Got a sim device notification for Clone 1 of iPhone 16 Pro: {
+    device = "Clone 1 of iPhone 16 Pro (4EE5C83A-BCB6-42A0-BDE4-8F592759B4FF, iOS 26.0, Booting)";
+    "last_booted_at" = "2025-07-10 12:47:49 +0000";
+    "new_state" = 2;
+    notification = "device_state";
+    "prev_state" = 1;
+}
+08:47:49.616 xcodebuild[91227:3536371] Sim Clone 1 of iPhone 16 Pro state changed to 2
+08:47:49.624 xcodebuild[91227:3536398] Got a sim device notification for Clone 1 of iPhone 16 Pro: {
+    "SimDeviceNotification_NewBootStatus" = "SimDeviceBootInfo { status = 0 (Booting), elapsed = 0.000000, isTerminal = 0, info = (null) }";
+    device = "Clone 1 of iPhone 16 Pro (4EE5C83A-BCB6-42A0-BDE4-8F592759B4FF, iOS 26.0, Booting)";
+    notification = "SimDeviceNotificationType_BootStatus";
+}
+08:47:49.925 xcodebuild[91227:3536398] Got a sim device notification for Clone 1 of iPhone 16 Pro: {
+    notification = "availableDevices_changed";
+}
+08:47:49.925 xcodebuild[91227:3536398] Got a sim device notification for Clone 1 of iPhone 16 Pro: {
+    device = "Clone 1 of iPhone 16 Pro (4EE5C83A-BCB6-42A0-BDE4-8F592759B4FF, iOS 26.0, Booted)";
+    "new_state" = 3;
+    notification = "device_state";
+    "prev_state" = 2;
+}
+08:47:49.926 xcodebuild[91227:3536398] Sim Clone 1 of iPhone 16 Pro state changed to 3
+08:47:49.926 xcodebuild[91227:3536398] Sim Clone 1 of iPhone 16 Pro: Unregistering for sim device notification with token 3
+08:47:49.926 xcodebuild[91227:3536398] Calling -[SimDevice getenv:error:] for TESTMANAGERD_SIM_SOCK
+08:47:49.927 xcodebuild[91227:3536398] Sim Clone 1 of iPhone 16 Pro is booted but getenv returned nil for test connection socket path; getenv error: Error Domain=NSPOSIXErrorDomain Code=2 "No such file or directory".
+ Will retry in 1s (1 attempts so far).
+08:47:50.993 xcodebuild[91227:3538077] Calling -[SimDevice getenv:error:] for TESTMANAGERD_SIM_SOCK
+08:47:50.995 xcodebuild[91227:3538077] Sim Clone 1 of iPhone 16 Pro has testmanagerd socket at /private/tmp/com.apple.launchd.CzMFCX9tM0/com.apple.testmanagerd.unix-domain.socket
+08:47:50.995 xcodebuild[91227:3538077] Validating test connection socket path (/private/tmp/com.apple.launchd.CzMFCX9tM0/com.apple.testmanagerd.unix-domain.socket)
+08:47:50.995 xcodebuild[91227:3538077] Constructing transport for test connection socket
+08:47:50.996 xcodebuild[91227:3538077] Connected socket 45 to testmanagerd for Sim Clone 1 of iPhone 16 Pro
+08:47:50.997 xcodebuild[91227:3538077] Initiating control session with IDE capabilities: <XCTCapabilities: 0xab18e0010>: {
+}
+08:47:54.314 xcodebuild[91227:3536398] Got reply to control session initiation request (result:error): <XCTCapabilities: 0xab18e0080>: {
+    "authorize test session capability" = 1;
+    "automation mode" = 1;
+    "daemon container sandbox extension" = 1;
+    "initiate daemon control session capability" = 4;
+    "initiate test runner session capability" = 2;
+    "record UI interaction capability" = 2;
+    "recording events as source code" = 1;
+    "report crashes capability" = 1;
+    "request log archive capability" = 1;
+    "supports delayed attachment transfers" = 1;
+}: (null)
+08:47:54.314 xcodebuild[91227:3536279] Requesting crash report collection for process names: DTServiceHub, runningboardd, assertiond, debugserver, SpringBoard, xctest, backboardd, Traveling Snails Tests, Traveling Snails, testmanagerd, FrontBoard
+08:47:54.320 xcodebuild[91227:3536398] Got reply to crash report collection request (error: (null))
