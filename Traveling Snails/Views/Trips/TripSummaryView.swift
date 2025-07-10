@@ -34,6 +34,23 @@ struct TripSummaryView: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
+            
+            // Sharing status
+            if trip.shareID != nil {
+                Divider()
+                    .frame(height: 30)
+                
+                VStack {
+                    Image(systemName: "person.2.fill")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.blue)
+
+                    Text("Shared")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
 
             Divider()
                 .frame(height: 30)

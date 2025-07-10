@@ -171,10 +171,11 @@ check_test_status() {
 start_background_test "build" "$SCRIPT_DIR/test-chunk-0-config.sh"
 start_background_test "unit_tests" "$SCRIPT_DIR/test-chunk-1.sh"
 
-# Poll for a maximum of 90 seconds
-echo -e "${CYAN}📊 Polling test status for up to 90 seconds...${NC}"
+# Poll for a maximum of 75 seconds (reduced for Claude Code timeout safety)
+MAX_WAIT_TIME=75
+echo -e "${CYAN}📊 Polling test status for up to $MAX_WAIT_TIME seconds...${NC}"
 POLL_START=$(date +%s)
-MAX_POLL_TIME=90
+MAX_POLL_TIME=$MAX_WAIT_TIME
 
 while true; do
     CURRENT_TIME=$(date +%s)
@@ -227,6 +228,14 @@ for pid_file in "$TEMP_DIR"/*.pid; do
         fi
     fi
 done
+
+# CRITICAL: Run comprehensive failure detection regardless of chunk results
+# Chunk scripts can report "PASSED" even when individual tests fail
+echo -e "${CYAN}🔍 Running comprehensive failure detection...${NC}"
+if ! "$SCRIPT_DIR/detect-test-failures.sh"; then
+    echo -e "${RED}❌ FAILURE DETECTION found issues - blocking commit${NC}"
+    exit 1
+fi
 
 # Performance analysis
 END_TIME=$(date +%s)

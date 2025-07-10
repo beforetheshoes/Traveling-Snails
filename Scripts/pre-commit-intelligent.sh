@@ -107,9 +107,15 @@ determine_validation_mode() {
             echo "full"
             ;;
         "major-feature")
-            echo "async"
+            # Use fast for major features too - full only for critical changes
+            echo "fast"
             ;;
-        "ui-changes"|"configuration")
+        "ui-changes")
+            # UI changes use fast validation - most UI issues caught by SwiftLint + build
+            echo "fast"
+            ;;
+        "configuration")
+            # Config changes use full since they can break everything
             echo "full"
             ;;
         "test-only"|"documentation")
@@ -142,10 +148,10 @@ explain_validation_choice() {
             echo -e "${CYAN}   Reason: Critical infrastructure changes need thorough testing${NC}"
             ;;
         "major-feature")
-            echo -e "${CYAN}   Reason: Major feature uses async validation (fast + background)${NC}"
+            echo -e "${CYAN}   Reason: Major features use fast validation for quick feedback${NC}"
             ;;
         "ui-changes")
-            echo -e "${CYAN}   Reason: UI changes need full validation including accessibility tests${NC}"
+            echo -e "${CYAN}   Reason: UI changes use fast validation (SwiftLint + build catches most issues)${NC}"
             ;;
         "test-only")
             echo -e "${CYAN}   Reason: Test-only changes use fast validation${NC}"

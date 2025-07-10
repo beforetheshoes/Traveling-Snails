@@ -15,6 +15,7 @@ struct TripContentView: View {
     let onLockTrip: () -> Void
 
     @State private var showingRemoveProtectionConfirmation: Bool = false
+    @State private var showingTripSharingView: Bool = false
 
     init(trip: Trip, activities: [ActivityWrapper], viewMode: Binding<TripDetailView.ViewMode>, navigationPath: Binding<NavigationPath>, showingLodgingSheet: Binding<Bool>, showingTransportationSheet: Binding<Bool>, showingActivitySheet: Binding<Bool>, showingEditTripSheet: Binding<Bool>, showingCalendarView: Binding<Bool>, onLockTrip: @escaping () -> Void = {}) {
         self.trip = trip
@@ -100,6 +101,16 @@ struct TripContentView: View {
 
                     Divider()
 
+                    // CloudKit sharing controls
+                    Button {
+                        showingTripSharingView = true
+                    } label: {
+                        Label("Share Trip", systemImage: "person.2.badge.plus")
+                    }
+                    .disabled(trip.isProtected) // Protected trips cannot be shared
+
+                    Divider()
+
                     // Biometric protection controls
                     if authManager.canUseBiometrics() && authManager.isEnabled {
                         let isProtected = authManager.isProtected(trip)
@@ -157,6 +168,9 @@ struct TripContentView: View {
         }
         .fullScreenCover(isPresented: $showingCalendarView) {
             TripCalendarRootView(trip: trip)
+        }
+        .sheet(isPresented: $showingTripSharingView) {
+            TripSharingView(trip: trip)
         }
         .confirmationDialog(
             "Remove Protection",

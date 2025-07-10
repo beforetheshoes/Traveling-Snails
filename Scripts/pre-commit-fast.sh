@@ -13,9 +13,16 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
-# Get the project root directory
+# Get the project root directory  
 PROJECT_ROOT="$(git rev-parse --show-toplevel)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$PROJECT_ROOT"
+
+# Source the shared configuration for consistent setup
+source "$SCRIPT_DIR/test-chunk-0-config.sh"
+
+# Set up cleanup
+trap cleanup_build_resources EXIT
 
 echo -e "${BLUE}🚀 Running FAST pre-commit validation...${NC}"
 echo -e "${CYAN}Target: Complete in 30-60 seconds${NC}"
@@ -101,7 +108,8 @@ BUILD_LOG=$(mktemp)
 XCODEBUILD_CMD="xcodebuild build \
     -project \"Traveling Snails.xcodeproj\" \
     -scheme \"Traveling Snails\" \
-    -destination \"platform=iOS Simulator,name=$ACTUAL_SIMULATOR\""
+    -destination \"platform=iOS Simulator,name=$ACTUAL_SIMULATOR\" \
+    -derivedDataPath \"$DERIVED_DATA_PATH\""
 
 if ! eval "$XCODEBUILD_CMD" > "$BUILD_LOG" 2>&1; then
     echo -e "${RED}❌ Build failed during fast pre-commit check${NC}"

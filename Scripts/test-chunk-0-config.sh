@@ -13,8 +13,12 @@ export NC='\033[0m' # No Color
 
 # Project Configuration
 export PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-# Use Xcode's default DerivedData path to match Xcode exactly
-export DERIVED_DATA_PATH="$HOME/Library/Developer/Xcode/DerivedData/Traveling_Snails-ackkzpghnwayaydvsnwvqosotsnv"
+
+# Create unique DerivedData path per run to prevent build database locks
+# This ensures no conflicts between concurrent builds (Xcode, pre-commit, CI)
+TIMESTAMP=$(date +%s)
+PROCESS_ID=$$
+export DERIVED_DATA_PATH="$HOME/Library/Developer/Xcode/DerivedData/TravelingSnails-PreCommit-${TIMESTAMP}-${PROCESS_ID}"
 export PROJECT_NAME="Traveling Snails"
 export SCHEME_NAME="Traveling Snails"
 
@@ -28,6 +32,29 @@ export IPAD_SIMULATOR_FALLBACK="iPad Air (5th generation)"
 
 # Last resort: use any available simulator (for local development)
 export ANY_IOS_SIMULATOR="Any iOS Simulator Device"
+
+# Cleanup function to prevent resource leaks and build conflicts
+cleanup_build_resources() {
+    printf "${CYAN}🧹 Cleaning up build resources...${NC}\n"
+    
+    # Kill any xcodebuild processes for this project to prevent conflicts
+    pkill -f "xcodebuild.*Traveling.Snails" 2>/dev/null || true
+    
+    # Remove our unique DerivedData directory
+    if [ -n "$DERIVED_DATA_PATH" ] && [ -d "$DERIVED_DATA_PATH" ]; then
+        printf "${CYAN}   Removing DerivedData: $(basename "$DERIVED_DATA_PATH")${NC}\n"
+        rm -rf "$DERIVED_DATA_PATH" 2>/dev/null || true
+    fi
+    
+    # Wait a moment for processes to fully terminate
+    sleep 1
+}
+
+# Set up automatic cleanup on script exit
+if [ "${BASH_SOURCE[0]}" = "${0}" ]; then
+    # Only set trap if running directly, not when sourced
+    trap cleanup_build_resources EXIT
+fi
 
 # Use generic simulator names instead of hardcoded IDs to prevent CoreSimulator issues
 # This prevents simulator deletion/corruption that can happen with stale IDs

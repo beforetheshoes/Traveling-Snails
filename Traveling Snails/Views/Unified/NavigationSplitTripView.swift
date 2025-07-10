@@ -123,6 +123,14 @@ struct NavigationSplitTripRowView: View {
 
             // Badge
             HStack(spacing: 8) {
+                // CloudKit sharing indicator
+                if trip.shareID != nil {
+                    Image(systemName: "person.2.fill")
+                        .font(.caption)
+                        .foregroundStyle(.blue)
+                        .accessibilityLabel("Shared trip")
+                }
+                
                 // Biometric protection indicator
                 if authManager.isEnabled && authManager.isProtected(trip) {
                     Image(systemName: "lock.fill")
