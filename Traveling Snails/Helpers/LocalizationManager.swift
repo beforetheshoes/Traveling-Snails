@@ -331,14 +331,76 @@ enum L10n {
         static let diskSpaceFull = "errors.disk_space_full"
         static let operationCancelled = "errors.operation_cancelled"
         static let featureNotAvailable = "errors.feature_not_available"
-
+        
+        // Database errors
+        enum Database {
+            static let saveFailed = "errors.database.save_failed"
+            static let loadFailed = "errors.database.load_failed"
+            static let deleteFailed = "errors.database.delete_failed"
+            static let corrupted = "errors.database.corrupted"
+            static let relationshipIntegrity = "errors.database.relationship_integrity"
+        }
+        
+        // File system errors
+        enum File {
+            static let notFound = "errors.file.not_found"
+            static let permissionDenied = "errors.file.permission_denied"
+            static let corrupted = "errors.file.corrupted"
+            static let diskSpaceInsufficient = "errors.file.disk_space_insufficient"
+            static let alreadyExists = "errors.file.already_exists"
+        }
+        
+        // Network errors
+        enum Network {
+            static let unavailable = "errors.network.unavailable"
+            static let serverError = "errors.network.server_error"
+            static let timeout = "errors.network.timeout"
+            static let invalidURL = "errors.network.invalid_url"
+        }
+        
+        // CloudKit errors
         enum CloudKit {
             static let unavailable = "errors.cloudkit.unavailable"
             static let quotaExceeded = "errors.cloudkit.quota_exceeded"
             static let syncFailed = "errors.cloudkit.sync_failed"
             static let authenticationFailed = "errors.cloudkit.authentication_failed"
         }
-
+        
+        // Import/Export errors
+        enum Import {
+            static let failed = "errors.import.failed"
+            static let invalidFormat = "errors.import.invalid_format"
+            static let corruptedData = "errors.import.corrupted_data"
+        }
+        
+        enum Export {
+            static let failed = "errors.export.failed"
+        }
+        
+        // Validation errors
+        enum Validation {
+            static let invalidInput = "errors.validation.invalid_input"
+            static let missingRequiredField = "errors.validation.missing_required_field"
+            static let duplicateEntry = "errors.validation.duplicate_entry"
+            static let invalidDateRange = "errors.validation.invalid_date_range"
+        }
+        
+        // Organization errors
+        enum Organization {
+            static let inUse = "errors.organization.in_use"
+            static let inUsePlural = "errors.organization.in_use_plural"
+            static let cannotDeleteNone = "errors.organization.cannot_delete_none"
+            static let notFound = "errors.organization.not_found"
+        }
+        
+        // Generic errors
+        enum General {
+            static let unknown = "errors.general.unknown"
+            static let operationCancelled = "errors.general.operation_cancelled"
+            static let featureNotAvailable = "errors.general.feature_not_available"
+        }
+        
+        // Recovery suggestions
         enum Recovery {
             static let restartApp = "errors.recovery.restart_app"
             static let checkConnection = "errors.recovery.check_connection"
@@ -346,6 +408,11 @@ enum L10n {
             static let checkPermissions = "errors.recovery.check_permissions"
             static let contactSupport = "errors.recovery.contact_support"
             static let tryAgain = "errors.recovery.try_again"
+            static let restoreFromBackup = "errors.recovery.restore_from_backup"
+            static let checkiCloudSettings = "errors.recovery.check_icloud_settings"
+            static let upgradeiCloudStorage = "errors.recovery.upgrade_icloud_storage"
+            static let ensureEndDateAfterStart = "errors.recovery.ensure_end_date_after_start"
+            static let removeAssociatedItems = "errors.recovery.remove_associated_items"
         }
     }
 

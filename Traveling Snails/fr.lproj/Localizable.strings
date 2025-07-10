@@ -1,0 +1,64 @@
+// Localizable.strings
+// French localization for Traveling Snails
+
+// Database Errors
+"errors.database.save_failed" = "Échec de la sauvegarde des données : %@";
+"errors.database.load_failed" = "Échec du chargement des données : %@";
+"errors.database.delete_failed" = "Échec de la suppression des données : %@";
+"errors.database.corrupted" = "Corruption de base de données détectée : %@";
+"errors.database.relationship_integrity" = "Erreur de relation de données : %@";
+
+// File System Errors
+"errors.file.not_found" = "Fichier non trouvé : %@";
+"errors.file.permission_denied" = "Permission refusée pour le fichier : %@";
+"errors.file.corrupted" = "Le fichier est corrompu : %@";
+"errors.file.disk_space_insufficient" = "Espace disque insuffisant";
+"errors.file.already_exists" = "Le fichier existe déjà : %@";
+
+// Network Errors
+"errors.network.unavailable" = "Connexion réseau non disponible";
+"errors.network.server_error" = "Erreur serveur (%d) : %@";
+"errors.network.timeout" = "Délai d'attente dépassé";
+"errors.network.invalid_url" = "URL invalide : %@";
+
+// CloudKit Errors
+"errors.cloudkit.unavailable" = "CloudKit n'est pas disponible";
+"errors.cloudkit.quota_exceeded" = "Quota de stockage CloudKit dépassé";
+"errors.cloudkit.sync_failed" = "Échec de synchronisation CloudKit : %@";
+"errors.cloudkit.authentication_failed" = "Échec d'authentification CloudKit";
+
+// Import/Export Errors
+"errors.import.failed" = "Échec de l'importation : %@";
+"errors.export.failed" = "Échec de l'exportation : %@";
+"errors.import.invalid_format" = "Format de fichier invalide : %@";
+"errors.import.corrupted_data" = "Les données d'importation sont corrompues : %@";
+
+// Validation Errors
+"errors.validation.invalid_input" = "Entrée invalide pour %@";
+"errors.validation.missing_required_field" = "Champ requis manquant : %@";
+"errors.validation.duplicate_entry" = "Entrée dupliquée : %@";
+"errors.validation.invalid_date_range" = "Plage de dates invalide : la date de fin doit être postérieure à la date de début";
+
+// Organization Errors
+"errors.organization.in_use" = "Impossible de supprimer '%@'. Il est utilisé par %d élément.";
+"errors.organization.in_use_plural" = "Impossible de supprimer '%@'. Il est utilisé par %d éléments.";
+"errors.organization.cannot_delete_none" = "Impossible de supprimer l'organisation par défaut 'Aucune'";
+"errors.organization.not_found" = "Organisation non trouvée : %@";
+
+// Generic Errors
+"errors.general.unknown" = "Une erreur inattendue s'est produite : %@";
+"errors.general.operation_cancelled" = "Opération annulée";
+"errors.general.feature_not_available" = "Fonction non disponible : %@";
+
+// Recovery Suggestions
+"errors.recovery.restart_app" = "Essayez de redémarrer l'application. Si le problème persiste, contactez le support.";
+"errors.recovery.check_connection" = "Vérifiez votre connexion Internet et réessayez.";
+"errors.recovery.free_space" = "Libérez de l'espace de stockage et réessayez.";
+"errors.recovery.check_permissions" = "Vérifiez les permissions du fichier et réessayez.";
+"errors.recovery.contact_support" = "Contactez le support pour obtenir de l'aide.";
+"errors.recovery.try_again" = "Veuillez réessayer.";
+"errors.recovery.restore_from_backup" = "Vos données peuvent être corrompues. Veuillez restaurer à partir d'une sauvegarde si disponible.";
+"errors.recovery.check_icloud_settings" = "Vérifiez vos paramètres iCloud et votre connexion Internet.";
+"errors.recovery.upgrade_icloud_storage" = "Mettez à niveau votre plan de stockage iCloud ou supprimez certaines données.";
+"errors.recovery.ensure_end_date_after_start" = "Veuillez vous assurer que la date de fin est postérieure à la date de début.";
+"errors.recovery.remove_associated_items" = "Supprimez tous les éléments associés avant de supprimer cette organisation.";
