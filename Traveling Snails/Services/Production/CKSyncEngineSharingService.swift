@@ -298,6 +298,81 @@ final class CKSyncEngineSharingService: CloudKitSyncService {
     
     // MARK: - Private Implementation
     
+    /// Find the Trip record in CloudKit by searching instead of assuming record ID format
+    private func findTripRecordInCloudKit(tripName: String, tripId: UUID) async throws -> CKRecord {
+        let database = cloudKitContainer.privateCloudDatabase
+        let defaultZone = CKRecordZone.default()
+        
+        // First try: Search by trip name
+        Logger.shared.info("Searching for Trip record by name: '\(tripName)'", category: .cloudKit)
+        
+        let nameQuery = CKQuery(recordType: "Trip", predicate: NSPredicate(format: "name == %@", tripName))
+        
+        do {
+            let (matchResults, _) = try await database.records(matching: nameQuery, inZoneWith: defaultZone.zoneID)
+            
+            // Look for exact match by name
+            for (recordID, result) in matchResults {
+                switch result {
+                case .success(let record):
+                    Logger.shared.info("Found Trip record by name - ID: \(recordID.recordName)", category: .cloudKit)
+                    return record
+                case .failure(let error):
+                    Logger.shared.warning("Failed to fetch Trip record \(recordID): \(error)", category: .cloudKit)
+                }
+            }
+        } catch {
+            Logger.shared.warning("Name-based search failed: \(error)", category: .cloudKit)
+        }
+        
+        // Second try: Try the assumed UUID format anyway
+        Logger.shared.info("Name search failed, trying UUID-based record ID: \(tripId.uuidString)", category: .cloudKit)
+        let defaultZoneRecordID = CKRecord.ID(recordName: tripId.uuidString, zoneID: defaultZone.zoneID)
+        
+        do {
+            let record = try await database.record(for: defaultZoneRecordID)
+            Logger.shared.info("Found Trip record by UUID - ID: \(defaultZoneRecordID.recordName)", category: .cloudKit)
+            return record
+        } catch {
+            Logger.shared.warning("UUID-based lookup failed: \(error)", category: .cloudKit)
+        }
+        
+        // Third try: Search all Trip records and log what we find
+        await logExistingRecordsInDefaultZone()
+        
+        throw CloudKitSharingError.shareCreationFailed("Could not find Trip record in CloudKit. SwiftData may not have synced this trip yet, or it uses a different record naming scheme.")
+    }
+    
+    /// Log existing records in the default zone to understand SwiftData's record naming scheme
+    private func logExistingRecordsInDefaultZone() async {
+        do {
+            let database = cloudKitContainer.privateCloudDatabase
+            let defaultZone = CKRecordZone.default()
+            
+            Logger.shared.info("Exploring records in default zone to understand SwiftData naming scheme", category: .cloudKit)
+            
+            // Query for Trip records specifically
+            let tripQuery = CKQuery(recordType: "Trip", predicate: NSPredicate(value: true))
+            tripQuery.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
+            
+            let (matchResults, _) = try await database.records(matching: tripQuery, inZoneWith: defaultZone.zoneID)
+            
+            Logger.shared.info("Found \(matchResults.count) Trip records in default zone", category: .cloudKit)
+            
+            for (recordID, result) in matchResults {
+                switch result {
+                case .success(let record):
+                    Logger.shared.info("Trip record found - ID: \(recordID.recordName), Name: \(record["name"] as? String ?? "unknown")", category: .cloudKit)
+                case .failure(let error):
+                    Logger.shared.warning("Failed to fetch Trip record \(recordID): \(error)", category: .cloudKit)
+                }
+            }
+            
+        } catch {
+            Logger.shared.logError(error, message: "Failed to explore default zone records", category: .cloudKit)
+        }
+    }
+    
     /// Perform the actual share creation
     private func performShareCreation(for trip: Trip) async throws -> CKShare {
         guard syncEngine != nil else {
@@ -307,19 +382,16 @@ final class CKSyncEngineSharingService: CloudKitSyncService {
         Logger.shared.info("Creating CKRecord for trip: \(trip.id)", category: .cloudKit)
         
         // For SwiftData + CloudKit sharing, we need to share the existing SwiftData record
-        // First, get the actual CloudKit record for this SwiftData Trip
+        // First, find the actual CloudKit record for this SwiftData Trip by searching
         let database = cloudKitContainer.privateCloudDatabase
         
-        // SwiftData uses the default zone, but we need to move to custom zone for sharing
-        let defaultZoneRecordID = CKRecord.ID(recordName: trip.id.uuidString, zoneID: CKRecordZone.default().zoneID)
-        
-        Logger.shared.info("Fetching existing Trip record from SwiftData/CloudKit", category: .cloudKit)
+        Logger.shared.info("Searching for existing Trip record in CloudKit by name: '\(trip.name)'", category: .cloudKit)
         
         let savedShare: CKShare
         
         do {
-            // Try to fetch the existing record from the default zone
-            let existingRecord = try await database.record(for: defaultZoneRecordID)
+            // Search for the Trip record by name instead of assuming the record ID format
+            let existingRecord = try await findTripRecordInCloudKit(tripName: trip.name, tripId: trip.id)
             Logger.shared.info("Found existing Trip record: \(existingRecord.recordID)", category: .cloudKit)
             
             // Create a new record in the custom zone with the same data
@@ -365,13 +437,19 @@ final class CKSyncEngineSharingService: CloudKitSyncService {
             savedShare = share
             
         } catch {
-            Logger.shared.logError(error, message: "Could not find existing Trip record for sharing", category: .cloudKit)
+            Logger.shared.logError(error, message: "Failed to find or process existing Trip record for sharing", category: .cloudKit)
             
-            // Check if this is a "record not found" error (common when SwiftData hasn't synced yet)
-            if let ckError = error as? CKError, ckError.code == .unknownItem {
-                throw CloudKitSharingError.shareCreationFailed("This trip hasn't synced to iCloud yet. Please wait a moment and try again.")
+            // If it's already a CloudKitSharingError, re-throw it with its detailed message
+            if let sharingError = error as? CloudKitSharingError {
+                throw sharingError
+            }
+            
+            // For other errors, provide detailed logging
+            if let ckError = error as? CKError {
+                Logger.shared.error("CloudKit error details - Code: \(ckError.code), Domain: \(ckError.errorDomain), Description: \(ckError.localizedDescription)", category: .cloudKit)
+                throw CloudKitSharingError.shareCreationFailed("CloudKit error: \(ckError.localizedDescription)")
             } else {
-                throw CloudKitSharingError.shareCreationFailed("Could not access trip in iCloud. Error: \(error.localizedDescription)")
+                throw CloudKitSharingError.shareCreationFailed("Could not process trip for sharing. Error: \(error.localizedDescription)")
             }
         }
         
