@@ -12,5 +12,7 @@
 	<string>This app needs access to your photo library to let you add photos and documents to your trip activities. Your photos remain private and are only used to enhance your travel planning experience.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>This app would like to access your camera to let you take photos directly for your trip activities. Your photos remain private and are only used to enhance your travel planning experience.</string>
+	<key>CKSharingSupported</key>
+	<true/>
 </dict>
 </plist>

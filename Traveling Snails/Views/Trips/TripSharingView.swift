@@ -52,6 +52,10 @@ struct TripSharingView: View {
             .sheet(isPresented: $showingShareSheet) {
                 if let shareURL = shareURL {
                     TripShareSheet(activityItems: [shareURL])
+                } else {
+                    // Fallback to text sharing when no URL is available
+                    let shareText = "Check out my trip: \(trip.name)"
+                    TripShareSheet(activityItems: [shareText])
                 }
             }
         }
@@ -110,27 +114,92 @@ struct TripSharingView: View {
             // Share status
             Label {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Trip is shared")
-                        .font(.headline)
-                    Text("\(info.participants.count) participant\(info.participants.count == 1 ? "" : "s")")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                    let inviteeCount = max(0, info.participants.count - 1) // Exclude owner
+                    if inviteeCount == 0 {
+                        Text("Share link created")
+                            .font(.headline)
+                        Text("Ready to invite others")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    } else {
+                        Text("Trip is shared")
+                            .font(.headline)
+                        Text("\(inviteeCount) invitee\(inviteeCount == 1 ? "" : "s")")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 }
             } icon: {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(.green)
+                let inviteeCount = max(0, info.participants.count - 1)
+                Image(systemName: inviteeCount == 0 ? "link.circle.fill" : "checkmark.circle.fill")
+                    .foregroundColor(inviteeCount == 0 ? .orange : .green)
             }
             
             // Share actions
-            Button {
-                if let shareURL = info.shareURL {
+            if let shareURL = info.shareURL {
+                Button {
                     self.shareURL = shareURL
                     showingShareSheet = true
+                } label: {
+                    Label("Share Link", systemImage: "square.and.arrow.up")
                 }
-            } label: {
-                Label("Share Link", systemImage: "square.and.arrow.up")
+            } else {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        Image(systemName: "link")
+                            .foregroundColor(.secondary)
+                        Text("Share link not available")
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Button("Retry") {
+                            Task {
+                                await refreshSharingInfo()
+                            }
+                        }
+                        .font(.caption)
+                    }
+                    
+                    Text("Share link unavailable. CloudKit sharing requires a physical device and may not work in development builds.")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                        .italic()
+                    
+                    Button {
+                        // Clear URL to trigger text-based sharing
+                        self.shareURL = nil
+                        showingShareSheet = true
+                    } label: {
+                        Label("Share Trip Details", systemImage: "square.and.arrow.up")
+                    }
+                    .foregroundColor(.blue)
+                    .font(.caption)
+                    
+                    #if DEBUG
+                    if let shareInfo = sharingInfo, shareInfo.isShared {
+                        Button {
+                            // Copy share ID for development testing
+                            if let recordName = trip.shareID?.recordName {
+                                UIPasteboard.general.string = recordName
+                            }
+                        } label: {
+                            Label("Copy Share ID (Dev)", systemImage: "doc.on.clipboard")
+                        }
+                        .foregroundColor(.orange)
+                        .font(.caption2)
+                    }
+                    #endif
+                }
             }
-            .disabled(info.shareURL == nil)
+            
+            // Add invitees button
+            if info.shareURL != nil {
+                Button {
+                    // Future: Open invite interface
+                } label: {
+                    Label("Invite Others", systemImage: "person.badge.plus")
+                }
+                .foregroundColor(.blue)
+            }
             
             Button(role: .destructive) {
                 Task {
@@ -156,12 +225,13 @@ struct TripSharingView: View {
             Section("Participants") {
                 ForEach(Array(info.participants.enumerated()), id: \.offset) { index, participant in
                     HStack {
-                        Image(systemName: "person.circle")
-                            .foregroundColor(.blue)
+                        Image(systemName: index == 0 ? "person.crop.circle.fill" : "person.circle")
+                            .foregroundColor(index == 0 ? .blue : .secondary)
                         
                         VStack(alignment: .leading) {
-                            Text(participant.isEmpty ? "Unknown User" : participant)
+                            Text(index == 0 ? "You" : (participant.isEmpty ? "Unknown User" : participant))
                                 .font(.subheadline)
+                                .fontWeight(index == 0 ? .medium : .regular)
                             
                             if index < info.permissions.count {
                                 Text(permissionDescription(info.permissions[index]))
@@ -262,10 +332,10 @@ struct TripSharingView: View {
             
             await MainActor.run {
                 sharingInfo = info
-                shareURL = share.url
+                shareURL = share.url ?? info.shareURL
                 isCreatingShare = false
                 
-                if share.url != nil {
+                if shareURL != nil {
                     showingShareSheet = true
                 }
             }
@@ -309,6 +379,20 @@ struct TripSharingView: View {
                 showingError = true
                 isRemovingShare = false
             }
+        }
+    }
+    
+    private func refreshSharingInfo() async {
+        guard let sharingService = sharingService else { return }
+        
+        await MainActor.run {
+            isLoadingSharingInfo = true
+        }
+        
+        let info = await sharingService.getSharingInfo(for: trip)
+        await MainActor.run {
+            sharingInfo = info
+            isLoadingSharingInfo = false
         }
     }
     
