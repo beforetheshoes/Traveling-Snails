@@ -71,6 +71,7 @@ final class Logger {
         case fileManagement = "FileManagement"
         case sync = "Sync"
         case localization = "Localization"
+        case authentication = "Authentication"
 
         var emoji: String {
             switch self {
@@ -92,8 +93,9 @@ final class Logger {
             case .fileManagement: return "📂"
             case .sync: return "🔄"
             case .localization: return "🌍"
-            }
+            case .authentication: return "🔐"
         }
+    }
     }
 
     private func setupLoggers() {

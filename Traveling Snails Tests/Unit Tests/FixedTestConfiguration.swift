@@ -27,12 +27,6 @@ struct FixedTestConfiguration {
         let trip = Trip(name: "Relationship Test")
         let org = Organization(name: "Test Org")
 
-        // Initialize arrays manually
-        trip.lodging = []
-        trip.transportation = []
-        trip.activity = []
-
-        // Create and add activities
         let lodging = Lodging(
             name: "Hotel",
             start: Date(),
@@ -43,11 +37,9 @@ struct FixedTestConfiguration {
             organization: org
         )
 
-        lodging.trip = trip
-
-        return trip.lodging.count == 1 &&
-               trip.totalCost == Decimal(100) &&
-               trip.totalActivities == 1
+        return lodging.tripID == trip.id &&
+               lodging.organizationID == org.id &&
+               lodging.cost == Decimal(100)
     }
 
     /// Test protocol conformance

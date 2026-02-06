@@ -25,11 +25,6 @@ extension Lodging: TripActivityProtocol {
     // File attachment support - already declared in main model
     var supportsFileAttachments: Bool { true }
 
-    var customAddress: Address? {
-        get { customAddresss }
-        set { customAddresss = newValue }
-    }
-
     var transportationType: TransportationType? {
         get { nil }
         set { } // No-op for lodging
@@ -43,7 +38,7 @@ extension Lodging: TripActivityProtocol {
         TripActivityEditData(from: self)
     }
 
-    func applyEdits(from data: TripActivityEditData) {
+    mutating func applyEdits(from data: TripActivityEditData) {
         #if DEBUG
         Logger.shared.debug("Lodging.applyEdits called - cost field updated")
         #endif
@@ -59,7 +54,7 @@ extension Lodging: TripActivityProtocol {
         notes = data.notes
         organization = data.organization ?? organization
         customLocationName = data.customLocationName
-        customAddresss = data.customAddress
+        customAddress = data.customAddress
         hideLocation = data.hideLocation
 
         #if DEBUG
@@ -110,12 +105,12 @@ extension Lodging: DetailDisplayable {
         ))
 
         // Custom Location (conditional)
-        if !customLocationName.isEmpty || customAddresss != nil {
+        if !customLocationName.isEmpty || customAddress != nil {
             var locationRows: [DetailRowData] = []
             if !customLocationName.isEmpty {
                 locationRows.append(DetailRowData(label: "Location Name", value: customLocationName))
             }
-            if let address = customAddresss {
+            if let address = customAddress {
                 locationRows.append(DetailRowData(label: "Custom Address", value: address.displayAddress))
             }
             locationRows.append(DetailRowData(label: "Hide Location", boolValue: hideLocation))

@@ -6,6 +6,25 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		942BA4462F33D6E800ECB5AA /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F60718293A4B5D /* ComposableArchitecture */; };
+		942BA4472F33D6E800ECB5AA /* Dependencies in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F60718293A4B5E /* Dependencies */; };
+		942BA4482F33D6E800ECB5AA /* SQLiteData in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F60718293A4B5F /* SQLiteData */; };
+		942BA4492F33D6E800ECB5AA /* ComposableArchitecture in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F60718293A4B5D /* ComposableArchitecture */; };
+		942BA44A2F33D6E800ECB5AA /* Dependencies in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F60718293A4B5E /* Dependencies */; };
+		942BA44B2F33D6E800ECB5AA /* SQLiteData in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F60718293A4B5F /* SQLiteData */; };
+		942BA44C2F33D6E800ECB5AA /* CasePaths in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F60718293A4B74 /* CasePaths */; };
+		942BA44D2F33D6E800ECB5AA /* Perception in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F60718293A4B75 /* Perception */; };
+		942BA4542F33D6E800ECB5AA /* CasePaths in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F60718293A4B74 /* CasePaths */; };
+		942BA4552F33D6E800ECB5AA /* Perception in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F60718293A4B75 /* Perception */; };
+		942BA4602F33D6E800ECB5AA /* StructuredQueriesCore in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F60718293A4B71 /* StructuredQueriesCore */; };
+		942BA4612F33D6E800ECB5AA /* StructuredQueriesCore in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F60718293A4B71 /* StructuredQueriesCore */; };
+		942BA4622F33D6E800ECB5AA /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F60718293A4B78 /* GRDB */; };
+		942BA4632F33D6E800ECB5AA /* Clocks in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F60718293A4B79 /* Clocks */; };
+		942BA4642F33D6E800ECB5AA /* GRDB in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F60718293A4B78 /* GRDB */; };
+		942BA4652F33D6E800ECB5AA /* Clocks in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F60718293A4B79 /* Clocks */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		94C9F9AD2DECAC4B00586AA8 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +71,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				942BA44C2F33D6E800ECB5AA /* CasePaths in Frameworks */,
+				942BA44D2F33D6E800ECB5AA /* Perception in Frameworks */,
+				942BA4602F33D6E800ECB5AA /* StructuredQueriesCore in Frameworks */,
+				942BA4622F33D6E800ECB5AA /* GRDB in Frameworks */,
+				942BA4632F33D6E800ECB5AA /* Clocks in Frameworks */,
+				942BA4482F33D6E800ECB5AA /* SQLiteData in Frameworks */,
+				942BA4472F33D6E800ECB5AA /* Dependencies in Frameworks */,
+				942BA4462F33D6E800ECB5AA /* ComposableArchitecture in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -59,6 +86,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				942BA4542F33D6E800ECB5AA /* CasePaths in Frameworks */,
+				942BA4552F33D6E800ECB5AA /* Perception in Frameworks */,
+				942BA4612F33D6E800ECB5AA /* StructuredQueriesCore in Frameworks */,
+				942BA4642F33D6E800ECB5AA /* GRDB in Frameworks */,
+				942BA4652F33D6E800ECB5AA /* Clocks in Frameworks */,
+				942BA44B2F33D6E800ECB5AA /* SQLiteData in Frameworks */,
+				942BA4492F33D6E800ECB5AA /* ComposableArchitecture in Frameworks */,
+				942BA44A2F33D6E800ECB5AA /* Dependencies in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -103,6 +138,14 @@
 			);
 			name = "Traveling Snails";
 			packageProductDependencies = (
+				A1B2C3D4E5F60718293A4B74 /* CasePaths */,
+				A1B2C3D4E5F60718293A4B75 /* Perception */,
+				A1B2C3D4E5F60718293A4B71 /* StructuredQueriesCore */,
+				A1B2C3D4E5F60718293A4B78 /* GRDB */,
+				A1B2C3D4E5F60718293A4B79 /* Clocks */,
+				A1B2C3D4E5F60718293A4B5D /* ComposableArchitecture */,
+				A1B2C3D4E5F60718293A4B5E /* Dependencies */,
+				A1B2C3D4E5F60718293A4B5F /* SQLiteData */,
 			);
 			productName = "Traveling Snails";
 			productReference = 949EC36E2DE28D8300C7B358 /* Traveling Snails.app */;
@@ -126,6 +169,14 @@
 			);
 			name = "Traveling Snails Tests";
 			packageProductDependencies = (
+				A1B2C3D4E5F60718293A4B74 /* CasePaths */,
+				A1B2C3D4E5F60718293A4B75 /* Perception */,
+				A1B2C3D4E5F60718293A4B71 /* StructuredQueriesCore */,
+				A1B2C3D4E5F60718293A4B78 /* GRDB */,
+				A1B2C3D4E5F60718293A4B79 /* Clocks */,
+				A1B2C3D4E5F60718293A4B5D /* ComposableArchitecture */,
+				A1B2C3D4E5F60718293A4B5E /* Dependencies */,
+				A1B2C3D4E5F60718293A4B5F /* SQLiteData */,
 			);
 			productName = "Traveling SnailsUnitTests";
 			productReference = 94C9F9A92DECAC4B00586AA8 /* Traveling Snails Tests.xctest */;
@@ -139,7 +190,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1640;
-				LastUpgradeCheck = 2600;
+				LastUpgradeCheck = 2620;
 				TargetAttributes = {
 					949EC36D2DE28D8300C7B358 = {
 						CreatedOnToolsVersion = 16.3;
@@ -169,6 +220,15 @@
 			mainGroup = 949EC3652DE28D8300C7B358;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				A1B2C3D4E5F60718293A4B60 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */,
+				A1B2C3D4E5F60718293A4B61 /* XCRemoteSwiftPackageReference "swift-dependencies" */,
+				A1B2C3D4E5F60718293A4B62 /* XCLocalSwiftPackageReference "Vendor/sqlite-data" */,
+				A1B2C3D4E5F60718293A4B63 /* XCRemoteSwiftPackageReference "swift-structured-queries" */,
+				A1B2C3D4E5F60718293A4B64 /* XCRemoteSwiftPackageReference "swift-case-paths" */,
+				A1B2C3D4E5F60718293A4B65 /* XCRemoteSwiftPackageReference "swift-perception" */,
+				A1B2C3D4E5F60718293A4B66 /* XCRemoteSwiftPackageReference "xctest-dynamic-overlay" */,
+				A1B2C3D4E5F60718293A4B67 /* XCRemoteSwiftPackageReference "GRDB" */,
+				A1B2C3D4E5F60718293A4B68 /* XCRemoteSwiftPackageReference "swift-clocks" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 949EC36F2DE28D8300C7B358 /* Products */;
@@ -254,6 +314,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.ryanleewilliams.Traveling-Snails";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = targeted;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -289,6 +350,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.ryanleewilliams.Traveling-Snails";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = targeted;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -299,6 +361,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -364,6 +427,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
@@ -430,6 +494,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.ryanleewilliams.Traveling-SnailsUnitTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_STRICT_CONCURRENCY = targeted;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Traveling Snails.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Traveling Snails";
@@ -449,6 +514,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.ryanleewilliams.Traveling-SnailsUnitTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_STRICT_CONCURRENCY = targeted;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Traveling Snails.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Traveling Snails";
@@ -486,6 +552,123 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		A1B2C3D4E5F60718293A4B62 /* XCLocalSwiftPackageReference "Vendor/sqlite-data" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "Vendor/sqlite-data";
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A1B2C3D4E5F60718293A4B60 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-composable-architecture";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.9.0;
+			};
+		};
+		A1B2C3D4E5F60718293A4B61 /* XCRemoteSwiftPackageReference "swift-dependencies" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-dependencies";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.5.0;
+			};
+		};
+		A1B2C3D4E5F60718293A4B63 /* XCRemoteSwiftPackageReference "swift-structured-queries" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-structured-queries";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.30.0;
+			};
+		};
+		A1B2C3D4E5F60718293A4B64 /* XCRemoteSwiftPackageReference "swift-case-paths" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-case-paths";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.7.0;
+			};
+		};
+		A1B2C3D4E5F60718293A4B65 /* XCRemoteSwiftPackageReference "swift-perception" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-perception";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+		A1B2C3D4E5F60718293A4B66 /* XCRemoteSwiftPackageReference "xctest-dynamic-overlay" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/xctest-dynamic-overlay";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.5.2;
+			};
+		};
+		A1B2C3D4E5F60718293A4B67 /* XCRemoteSwiftPackageReference "GRDB" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/groue/GRDB.swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.9.0;
+			};
+		};
+		A1B2C3D4E5F60718293A4B68 /* XCRemoteSwiftPackageReference "swift-clocks" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/pointfreeco/swift-clocks";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A1B2C3D4E5F60718293A4B5D /* ComposableArchitecture */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F60718293A4B60 /* XCRemoteSwiftPackageReference "swift-composable-architecture" */;
+			productName = ComposableArchitecture;
+		};
+		A1B2C3D4E5F60718293A4B5E /* Dependencies */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F60718293A4B61 /* XCRemoteSwiftPackageReference "swift-dependencies" */;
+			productName = Dependencies;
+		};
+		A1B2C3D4E5F60718293A4B5F /* SQLiteData */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F60718293A4B62 /* XCLocalSwiftPackageReference "Vendor/sqlite-data" */;
+			productName = SQLiteData;
+		};
+		A1B2C3D4E5F60718293A4B71 /* StructuredQueriesCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F60718293A4B63 /* XCRemoteSwiftPackageReference "swift-structured-queries" */;
+			productName = StructuredQueriesCore;
+		};
+		A1B2C3D4E5F60718293A4B74 /* CasePaths */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F60718293A4B64 /* XCRemoteSwiftPackageReference "swift-case-paths" */;
+			productName = CasePaths;
+		};
+		A1B2C3D4E5F60718293A4B75 /* Perception */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F60718293A4B65 /* XCRemoteSwiftPackageReference "swift-perception" */;
+			productName = Perception;
+		};
+		A1B2C3D4E5F60718293A4B78 /* GRDB */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F60718293A4B67 /* XCRemoteSwiftPackageReference "GRDB" */;
+			productName = GRDB;
+		};
+		A1B2C3D4E5F60718293A4B79 /* Clocks */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F60718293A4B68 /* XCRemoteSwiftPackageReference "swift-clocks" */;
+			productName = Clocks;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 949EC3662DE28D8300C7B358 /* Project object */;
 }

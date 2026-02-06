@@ -1,4 +1,4 @@
-import SwiftData
+import SQLiteData
 import SwiftUI
 
 struct TripDetailView: View {
@@ -14,27 +14,24 @@ struct TripDetailView: View {
     @State private var isAuthenticating: Bool = false
     @State private var isLocallyAuthenticated: Bool = false
 
-    // FIXED: Use @Query instead of relationship access to ensure UI updates immediately
-    @Query private var lodgingActivities: [Lodging]
-    @Query private var transportationActivities: [Transportation]
-    @Query private var activityActivities: [Activity]
+    // FIXED: Use @FetchAll instead of relationship access to ensure UI updates immediately
+    @FetchAll private var lodgingActivities: [Lodging]
+    @FetchAll private var transportationActivities: [Transportation]
+    @FetchAll private var activityActivities: [Activity]
 
     init(trip: Trip) {
         self.trip = trip
 
         // Filter queries by trip ID for proper isolation
         let tripId = trip.id
-        self._lodgingActivities = Query(
-            filter: #Predicate<Lodging> { $0.trip?.id == tripId },
-            sort: \Lodging.start
+        self._lodgingActivities = FetchAll(
+            Lodging.where { $0.tripID.eq(tripId) }.order { $0.start }
         )
-        self._transportationActivities = Query(
-            filter: #Predicate<Transportation> { $0.trip?.id == tripId },
-            sort: \Transportation.start
+        self._transportationActivities = FetchAll(
+            Transportation.where { $0.tripID.eq(tripId) }.order { $0.start }
         )
-        self._activityActivities = Query(
-            filter: #Predicate<Activity> { $0.trip?.id == tripId },
-            sort: \Activity.start
+        self._activityActivities = FetchAll(
+            Activity.where { $0.tripID.eq(tripId) }.order { $0.start }
         )
     }
 
@@ -113,5 +110,4 @@ struct TripDetailView: View {
     NavigationStack {
         TripDetailView(trip: .init(name: "Test Trip"))
     }
-    .modelContainer(for: [Trip.self, Activity.self, Lodging.self, Transportation.self], inMemory: true)
 }

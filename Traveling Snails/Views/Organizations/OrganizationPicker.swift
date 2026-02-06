@@ -4,13 +4,13 @@
 //
 //
 
-import SwiftData
+import Dependencies
+import SQLiteData
 import SwiftUI
 
 struct OrganizationPicker: View {
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Query private var organizations: [Organization]
+    @FetchAll private var organizations: [Organization]
 
     @Binding var selectedOrganization: Organization?
     @State private var showingAddOrganization = false
@@ -119,7 +119,7 @@ struct OrganizationPicker: View {
 
 struct AddOrganizationForm: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.modelContext) private var modelContext
+    @Dependency(\.defaultDatabase) private var database
 
     let prefilledName: String?
     let onSave: (Organization) -> Void
@@ -258,7 +258,7 @@ struct AddOrganizationForm: View {
     }
 
     private func performSave() {
-        let organization = Organization(
+        var organization = Organization(
             name: name.trimmingCharacters(in: .whitespacesAndNewlines),
             phone: phone.trimmingCharacters(in: .whitespacesAndNewlines),
             email: email.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -267,25 +267,26 @@ struct AddOrganizationForm: View {
         )
 
         // Handle address if selected
-        if let selectedAddress = selectedAddress {
-            // Ensure organization has an address object to update
-            if organization.address == nil {
-                organization.address = Address()
-            }
-            organization.address?.street = selectedAddress.street
-            organization.address?.city = selectedAddress.city
-            organization.address?.state = selectedAddress.state
-            organization.address?.country = selectedAddress.country
-            organization.address?.postalCode = selectedAddress.postalCode
-            organization.address?.latitude = selectedAddress.latitude
-            organization.address?.longitude = selectedAddress.longitude
-            organization.address?.formattedAddress = selectedAddress.formattedAddress
-        }
-
-        modelContext.insert(organization)
-
         do {
-            try modelContext.save()
+            try database.write { db in
+                if let selectedAddress, !selectedAddress.isEmpty {
+                    let normalizedAddress = Address(
+                        id: selectedAddress.id,
+                        street: selectedAddress.street,
+                        city: selectedAddress.city,
+                        state: selectedAddress.state,
+                        country: selectedAddress.country,
+                        postalCode: selectedAddress.postalCode,
+                        latitude: selectedAddress.latitude,
+                        longitude: selectedAddress.longitude,
+                        formattedAddress: selectedAddress.formattedAddress
+                    )
+                    try Address.upsert { normalizedAddress }.execute(db)
+                    organization.addressID = normalizedAddress.id
+                }
+
+                try Organization.upsert { organization }.execute(db)
+            }
             onSave(organization)
             dismiss()
         } catch {
@@ -297,5 +298,4 @@ struct AddOrganizationForm: View {
 
 #Preview {
     OrganizationPicker(selectedOrganization: .constant(nil))
-        .modelContainer(for: Organization.self, inMemory: true)
 }

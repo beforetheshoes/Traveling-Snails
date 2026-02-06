@@ -5,8 +5,9 @@
 //
 
 import Foundation
+import SQLiteData
 
-enum PaidStatus: String, CaseIterable, Codable {
+enum PaidStatus: String, CaseIterable, Codable, QueryBindable {
     case infull
     case deposit
     case none

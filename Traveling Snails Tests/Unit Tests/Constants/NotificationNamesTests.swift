@@ -12,16 +12,6 @@ import Testing
 /// These tests verify that all notification names are properly centralized in NotificationNames.swift
 @Suite("Notification Names Tests")
 struct NotificationNamesTests {
-    // MARK: - Navigation Notifications (Legacy)
-
-    @Test("Legacy navigation notifications exist", .tags(.unit, .fast, .parallel, .validation, .navigation, .compatibility))
-    func testLegacyNavigationNotifications() {
-        // These should already exist in the current NotificationNames.swift
-        #expect(Notification.Name.tripSelectedFromList.rawValue == "tripSelectedFromList")
-        #expect(Notification.Name.clearTripSelection.rawValue == "clearTripSelection")
-        #expect(Notification.Name.navigateToTrip.rawValue == "navigateToTrip")
-    }
-
     // MARK: - Sync Notifications (To be consolidated)
 
     @Test("Sync notification names exist and match expected values", .tags(.unit, .fast, .parallel, .validation, .sync, .compatibility))
@@ -98,9 +88,6 @@ struct NotificationNamesTests {
     func testUniqueNotificationNames() {
         // Collect all notification raw values
         let notificationNames = [
-            Notification.Name.tripSelectedFromList.rawValue,
-            Notification.Name.clearTripSelection.rawValue,
-            Notification.Name.navigateToTrip.rawValue,
             Notification.Name.syncDidStart.rawValue,
             Notification.Name.syncDidComplete.rawValue,
             Notification.Name.crossDeviceSyncDidStart.rawValue,
@@ -119,9 +106,6 @@ struct NotificationNamesTests {
     @Test("All notification names are non-empty", .tags(.unit, .fast, .parallel, .validation, .boundary))
     func testNonEmptyNotificationNames() {
         let notificationNames = [
-            Notification.Name.tripSelectedFromList.rawValue,
-            Notification.Name.clearTripSelection.rawValue,
-            Notification.Name.navigateToTrip.rawValue,
             Notification.Name.syncDidStart.rawValue,
             Notification.Name.syncDidComplete.rawValue,
             Notification.Name.crossDeviceSyncDidStart.rawValue,

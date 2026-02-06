@@ -5,6 +5,7 @@
 //
 
 import Foundation
+import SQLiteData
 import Testing
 
 @testable import Traveling_Snails
@@ -144,16 +145,12 @@ struct FixedModelTests {
         }
 
         @Test("Trip with manually initialized relationships", .tags(.unit, .fast, .parallel, .dataModel, .trip, .validation))
-        func tripWithManuallyInitializedRelationships() {
+        @MainActor
+        func tripWithManuallyInitializedRelationships() async throws {
+            let database = try makeTestDatabase()
             let trip = Trip(name: "Manual Test")
             let org = Organization(name: "Test Org")
 
-            // Initialize arrays manually
-            trip.lodging = []
-            trip.transportation = []
-            trip.activity = []
-
-            // Add activities
             let lodging = Lodging(
                 name: "Hotel",
                 start: Date(),
@@ -182,15 +179,21 @@ struct FixedModelTests {
                 organization: org
             )
 
-            lodging.trip = trip
-            transport.trip = trip
-            activity.trip = trip
+            try await DatabaseAccess.withDatabase(database) {
+                try await database.write { db in
+                    try Trip.insert { trip }.execute(db)
+                    try Organization.insert { org }.execute(db)
+                    try Lodging.insert { lodging }.execute(db)
+                    try Transportation.insert { transport }.execute(db)
+                    try Activity.insert { activity }.execute(db)
+                }
 
-            #expect(trip.lodging.count == 1)
-            #expect(trip.transportation.count == 1)
-            #expect(trip.activity.count == 1)
-            #expect(trip.totalActivities == 3)
-            #expect(trip.totalCost == Decimal(750))
+                #expect(trip.lodging.count == 1)
+                #expect(trip.transportation.count == 1)
+                #expect(trip.activity.count == 1)
+                #expect(trip.totalActivities == 3)
+                #expect(trip.totalCost == Decimal(750))
+            }
         }
 
         @Test("Organization handles nil relationships gracefully", .tags(.unit, .fast, .parallel, .dataModel, .organization, .validation, .boundary))
@@ -200,22 +203,17 @@ struct FixedModelTests {
             #expect(org.transportation.isEmpty)
             #expect(org.lodging.isEmpty)
             #expect(org.activity.isEmpty)
-            #expect(org.hasTransportation == false)
-            #expect(org.hasLodging == false)
-            #expect(org.hasActivity == false)
         }
     }
 
     @Suite("Business Logic Tests")
     struct BusinessLogicTests {
         @Test("Trip cost calculation precision", .tags(.unit, .fast, .parallel, .dataModel, .trip, .validation, .boundary))
-        func tripCostCalculationPrecision() {
+        @MainActor
+        func tripCostCalculationPrecision() async throws {
+            let database = try makeTestDatabase()
             let trip = Trip(name: "Cost Test")
             let org = Organization(name: "Test Org")
-
-            trip.lodging = []
-            trip.transportation = []
-            trip.activity = []
 
             let lodging = Lodging(
                 name: "Hotel",
@@ -246,13 +244,18 @@ struct FixedModelTests {
             )
 
 
-            lodging.trip = trip
-            transport.trip = trip
-            activity.trip = trip
+            try await DatabaseAccess.withDatabase(database) {
+                try await database.write { db in
+                    try Trip.insert { trip }.execute(db)
+                    try Organization.insert { org }.execute(db)
+                    try Lodging.insert { lodging }.execute(db)
+                    try Transportation.insert { transport }.execute(db)
+                    try Activity.insert { activity }.execute(db)
+                }
 
-
-            let expectedTotal = Decimal(string: "824.74")!
-            #expect(trip.totalCost == expectedTotal)
+                let expectedTotal = Decimal(string: "824.74")!
+                #expect(trip.totalCost == expectedTotal)
+            }
         }
 
         @Test("Activity duration calculation", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation))
@@ -390,18 +393,12 @@ struct FixedModelTests {
             #expect(emptyOrg.name.isEmpty == true)
             #expect(emptyTrip.totalCost == 0)
 
-            // Don't test totalActivities when creating activities that reference the trip
-            // Instead, test with manually controlled relationships:
-            emptyTrip.lodging = []
-            emptyTrip.transportation = []
-            emptyTrip.activity = []
-
             #expect(emptyTrip.totalActivities == 0)
         }
 
         @Test("Extreme decimal values", .tags(.unit, .fast, .parallel, .dataModel, .validation, .boundary))
         func extremeDecimalValues() {
-            let activity = Activity()
+            var activity = Activity()
 
             let testValues = [
                 Decimal(0),
@@ -418,7 +415,7 @@ struct FixedModelTests {
 
         @Test("Invalid timezone handling", .tags(.unit, .fast, .parallel, .dataModel, .validation, .boundary, .errorHandling))
         func invalidTimezoneHandling() {
-            let activity = Activity()
+            var activity = Activity()
             activity.startTZId = "Invalid/Timezone"
             activity.endTZId = "Another/Invalid"
 
@@ -451,7 +448,7 @@ struct FixedModelTests {
             let veryOldDate = Date(timeIntervalSince1970: 0) // 1970
             let farFutureDate = Date(timeIntervalSince1970: 4_102_444_800) // 2100
 
-            let activity = Activity()
+            var activity = Activity()
             activity.start = veryOldDate
             activity.end = farFutureDate
 
@@ -464,83 +461,110 @@ struct FixedModelTests {
     @Suite("Performance Tests")
     struct PerformanceTests {
         @Test("Large dataset creation performance", .tags(.unit, .medium, .serial, .dataModel, .performance, .stress))
-        func largeDatasetCreationPerformance() {
+        @MainActor
+        func largeDatasetCreationPerformance() async throws {
+            let database = try makeTestDatabase()
             let trip = Trip(name: "Performance Test")
             let org = Organization(name: "Performance Org")
 
-            trip.activity = []
-
             let startTime = Date()
 
-            // Create 100 activities
-            for i in 0..<100 {
-                let activity = Activity(
-                    name: "Activity \(i)",
-                    start: Date(),
-                    end: Calendar.current.date(byAdding: .hour, value: 1, to: Date())!,
-                    cost: Decimal(i),
-                    trip: trip,
-                    organization: org
-                )
+            try await DatabaseAccess.withDatabase(database) {
+                try await database.write { db in
+                    try Trip.insert { trip }.execute(db)
+                    try Organization.insert { org }.execute(db)
 
-                activity.trip = trip
+                    // Create 100 activities
+                    for i in 0..<100 {
+                        try Activity.insert {
+                            Activity(
+                                name: "Activity \(i)",
+                                start: Date(),
+                                end: Calendar.current.date(byAdding: .hour, value: 1, to: Date())!,
+                                cost: Decimal(i),
+                                trip: trip,
+                                organization: org
+                            )
+                        }.execute(db)
+                    }
+                }
+
+                let creationTime = Date().timeIntervalSince(startTime)
+                #expect(creationTime < 5.0, "Creating 100 activities took \(creationTime) seconds - should complete within 5 seconds")
+
+                #expect(trip.activity.count == 100)
+                #expect(trip.totalActivities == 100)
+                #expect(trip.totalCost == Decimal(4950)) // Sum of 0+1+2+...+99
             }
-
-            let creationTime = Date().timeIntervalSince(startTime)
-            #expect(creationTime < 5.0, "Creating 100 activities took \(creationTime) seconds - should complete within 5 seconds")
-
-            #expect(trip.activity.count == 100)
-            #expect(trip.totalActivities == 100)
-            #expect(trip.totalCost == Decimal(4950)) // Sum of 0+1+2+...+99
         }
 
         @Test("Cost calculation performance", .tags(.unit, .medium, .serial, .dataModel, .performance, .stress))
-        func costCalculationPerformance() {
+        @MainActor
+        func costCalculationPerformance() async throws {
+            let database = try makeTestDatabase()
             let trip = Trip(name: "Cost Performance Test")
             let org = Organization(name: "Test Org")
 
-            trip.lodging = []
-            trip.transportation = []
-            trip.activity = []
+            try await DatabaseAccess.withDatabase(database) {
+                try await database.write { db in
+                    try Trip.insert { trip }.execute(db)
+                    try Organization.insert { org }.execute(db)
 
-            // Add many activities
-            for i in 0..<50 {
-                trip.lodging.append(Lodging(
-                    name: "Hotel \(i)",
-                    start: Date(),
-                    end: Date(),
-                    cost: Decimal(100 + i),
-                    paid: .none,
-                    trip: trip,
-                    organization: org
-                ))
+                    // Add many activities
+                    for i in 0..<50 {
+                        try Lodging.insert {
+                            Lodging(
+                                name: "Hotel \(i)",
+                                start: Date(),
+                                end: Date(),
+                                cost: Decimal(100 + i),
+                                paid: .none,
+                                trip: trip,
+                                organization: org
+                            )
+                        }.execute(db)
 
-                trip.transportation.append(Transportation(
-                    name: "Transport \(i)",
-                    start: Date(),
-                    end: Date(),
-                    cost: Decimal(200 + i),
-                    trip: trip,
-                    organization: org
-                ))
+                        try Transportation.insert {
+                            Transportation(
+                                name: "Transport \(i)",
+                                start: Date(),
+                                end: Date(),
+                                cost: Decimal(200 + i),
+                                trip: trip,
+                                organization: org
+                            )
+                        }.execute(db)
 
-                trip.activity.append(Activity(
-                    name: "Activity \(i)",
-                    start: Date(),
-                    end: Date(),
-                    cost: Decimal(50 + i),
-                    trip: trip,
-                    organization: org
-                ))
+                        try Activity.insert {
+                            Activity(
+                                name: "Activity \(i)",
+                                start: Date(),
+                                end: Date(),
+                                cost: Decimal(50 + i),
+                                trip: trip,
+                                organization: org
+                            )
+                        }.execute(db)
+                    }
+                }
+
+                let startTime = Date()
+                let totalCost = trip.totalCost
+                let calculationTime = Date().timeIntervalSince(startTime)
+
+                #expect(calculationTime < 0.1, "Cost calculation took \(calculationTime) seconds")
+                #expect(totalCost > 0)
+                #expect(trip.totalActivities == 150) // 50 of each type
             }
-
-            let startTime = Date()
-            let totalCost = trip.totalCost
-            let calculationTime = Date().timeIntervalSince(startTime)
-
-            #expect(calculationTime < 0.1, "Cost calculation took \(calculationTime) seconds")
-            #expect(totalCost > 0)
-            #expect(trip.totalActivities == 150) // 50 of each type
         }
     }
+}
+
+@MainActor
+private func makeTestDatabase() throws -> DatabaseQueue {
+    let database = try DatabaseQueue(path: ":memory:")
+    var migrator = makeMigrator()
+    try migrator.migrate(database)
+    DatabaseAccess.database = database
+    return database
 }

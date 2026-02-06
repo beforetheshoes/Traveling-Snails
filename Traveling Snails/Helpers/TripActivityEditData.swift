@@ -39,3 +39,22 @@ struct TripActivityEditData {
         self.transportationType = activity.transportationType
     }
 }
+
+extension TripActivityEditData: Equatable {
+    static func == (lhs: TripActivityEditData, rhs: TripActivityEditData) -> Bool {
+        lhs.name == rhs.name &&
+        lhs.start == rhs.start &&
+        lhs.end == rhs.end &&
+        lhs.startTZId == rhs.startTZId &&
+        lhs.endTZId == rhs.endTZId &&
+        lhs.cost == rhs.cost &&
+        lhs.paid == rhs.paid &&
+        lhs.confirmationField == rhs.confirmationField &&
+        lhs.notes == rhs.notes &&
+        lhs.organization?.id == rhs.organization?.id &&
+        lhs.customLocationName == rhs.customLocationName &&
+        lhs.customAddress?.id == rhs.customAddress?.id &&
+        lhs.hideLocation == rhs.hideLocation &&
+        lhs.transportationType == rhs.transportationType
+    }
+}

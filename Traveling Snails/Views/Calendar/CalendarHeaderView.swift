@@ -10,7 +10,7 @@ struct CalendarHeaderView: View {
     let trip: Trip
     @Binding var selectedDate: Date
     @Binding var currentWeekOffset: Int
-    @Binding var calendarMode: CalendarViewModel.CalendarMode
+    @Binding var calendarMode: CalendarFeature.CalendarMode
     let activities: [ActivityWrapper]
 
     private var calendar: Calendar { Calendar.current }
@@ -58,7 +58,7 @@ struct CalendarHeaderView: View {
 
             // Mode selector
             Picker("Calendar Mode", selection: $calendarMode) {
-                ForEach(CalendarViewModel.CalendarMode.allCases, id: \.self) { mode in
+                ForEach(CalendarFeature.CalendarMode.allCases, id: \.self) { mode in
                     Label(mode.rawValue, systemImage: mode.icon).tag(mode)
                 }
             }

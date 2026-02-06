@@ -30,6 +30,11 @@ extension Transportation: TripActivityProtocol {
         set { } // No-op
     }
 
+    var addressID: Address.ID? {
+        get { nil }
+        set { } // No-op
+    }
+
     var customAddress: Address? {
         get { nil }
         set { } // No-op
@@ -68,7 +73,7 @@ extension Transportation: TripActivityProtocol {
         TripActivityEditData(from: self)
     }
 
-    func applyEdits(from data: TripActivityEditData) {
+    mutating func applyEdits(from data: TripActivityEditData) {
         #if DEBUG
         Logger.shared.debug("Transportation.applyEdits called - cost field updated")
         #endif

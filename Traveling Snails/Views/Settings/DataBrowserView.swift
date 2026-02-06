@@ -4,21 +4,21 @@
 //
 //
 
-import SwiftData
+import Dependencies
+import SQLiteData
 import SwiftUI
 
-/// Comprehensive data browser and troubleshooting suite for SwiftData
+/// Comprehensive data browser and troubleshooting suite for SQLiteData
 struct DataBrowserView: View {
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
-    @Query private var allTrips: [Trip]
-    @Query private var allTransportation: [Transportation]
-    @Query private var allLodging: [Lodging]
-    @Query private var allActivities: [Activity]
-    @Query private var allOrganizations: [Organization]
-    @Query private var allAddresses: [Address]
-    @Query private var allAttachments: [EmbeddedFileAttachment]
+    @FetchAll private var allTrips: [Trip]
+    @FetchAll private var allTransportation: [Transportation]
+    @FetchAll private var allLodging: [Lodging]
+    @FetchAll private var allActivities: [Activity]
+    @FetchAll private var allOrganizations: [Organization]
+    @FetchAll private var allAddresses: [Address]
+    @FetchAll private var allAttachments: [EmbeddedFileAttachment]
 
     @State private var selectedTab = 0
     @State private var diagnosticResults = DiagnosticResults()
@@ -163,7 +163,7 @@ struct DataBrowserView: View {
                 .badge(diagnosticResults.hasIssues ? diagnosticResults.totalIssues : 0)
 
                 // Tools Tab
-                ToolsTab(modelContext: modelContext) {
+                ToolsTab {
                     Task { await runComprehensiveDiagnostic() }
                 }
                 .tabItem {
@@ -183,8 +183,7 @@ struct DataBrowserView: View {
             .sheet(isPresented: $showingFixOptions) {
                 DataBrowserIssueFixerSheet(
                     results: diagnosticResults,
-                    selectedIssue: selectedIssue,
-                    modelContext: modelContext
+                    selectedIssue: selectedIssue
                 ) {
                         showingFixOptions = false
                         selectedIssue = nil
@@ -231,9 +230,9 @@ struct DataBrowserView: View {
 
                 // Find orphaned addresses
                 diagnostic.orphanedAddresses = allAddresses.filter { address in
-                    (address.organizations?.isEmpty ?? true) &&
-                    (address.activities?.isEmpty ?? true) &&
-                    (address.lodgings?.isEmpty ?? true)
+                    address.organizations.isEmpty &&
+                    address.activities.isEmpty &&
+                    address.lodgings.isEmpty
                 }
 
                 // Find orphaned attachments
@@ -621,9 +620,9 @@ private struct IssueRowView: View {
 struct DataBrowserIssueFixerSheet: View {
     let results: DataBrowserView.DiagnosticResults
     let selectedIssue: DataBrowserView.IssueType?
-    let modelContext: ModelContext
     let onFixed: () -> Void
 
+    @Dependency(\.defaultDatabase) private var database
     @Environment(\.dismiss) private var dismiss
     @State private var isFixing = false
     @State private var fixResults: [String] = []
@@ -676,133 +675,129 @@ struct DataBrowserIssueFixerSheet: View {
         case .blankEntries:
             results.append("Deleting blank entries...")
 
-            for transportation in self.results.blankTransportation {
-                modelContext.delete(transportation)
-                results.append("Deleted blank transportation")
-            }
+            do {
+                let transportationIDs = self.results.blankTransportation.map(\.id)
+                let lodgingIDs = self.results.blankLodging.map(\.id)
+                let activityIDs = self.results.blankActivities.map(\.id)
 
-            for lodging in self.results.blankLodging {
-                modelContext.delete(lodging)
-                results.append("Deleted blank lodging")
-            }
+                try await database.write { db in
+                    if !transportationIDs.isEmpty {
+                        try Transportation.where { $0.id.in(transportationIDs) }.delete().execute(db)
+                    }
+                    if !lodgingIDs.isEmpty {
+                        try Lodging.where { $0.id.in(lodgingIDs) }.delete().execute(db)
+                    }
+                    if !activityIDs.isEmpty {
+                        try Activity.where { $0.id.in(activityIDs) }.delete().execute(db)
+                    }
+                }
 
-            for activity in self.results.blankActivities {
-                modelContext.delete(activity)
-                results.append("Deleted blank activity")
+                results.append("Deleted blank transportation, lodging, and activity entries")
+            } catch {
+                Logger.shared.error("Failed to delete blank entries: \(error.localizedDescription)", category: .database)
+                results.append("❌ \(L(L10n.Database.Operations.cleanupFailed))")
             }
 
         case .orphanedData:
             results.append("Deleting orphaned data...")
 
-            for item in self.results.orphanedTransportation {
-                modelContext.delete(item)
-                results.append("Deleted orphaned transportation: \(item.name)")
-            }
+            do {
+                let transportationIDs = self.results.orphanedTransportation.map(\.id)
+                let lodgingIDs = self.results.orphanedLodging.map(\.id)
+                let activityIDs = self.results.orphanedActivities.map(\.id)
+                let addressIDs = self.results.orphanedAddresses.map(\.id)
+                let attachmentIDs = self.results.orphanedAttachments.map(\.id)
 
-            for item in self.results.orphanedLodging {
-                modelContext.delete(item)
-                results.append("Deleted orphaned lodging: \(item.name)")
-            }
+                try await database.write { db in
+                    if !transportationIDs.isEmpty {
+                        try Transportation.where { $0.id.in(transportationIDs) }.delete().execute(db)
+                    }
+                    if !lodgingIDs.isEmpty {
+                        try Lodging.where { $0.id.in(lodgingIDs) }.delete().execute(db)
+                    }
+                    if !activityIDs.isEmpty {
+                        try Activity.where { $0.id.in(activityIDs) }.delete().execute(db)
+                    }
+                    if !addressIDs.isEmpty {
+                        try Address.where { $0.id.in(addressIDs) }.delete().execute(db)
+                    }
+                    if !attachmentIDs.isEmpty {
+                        try EmbeddedFileAttachment.where { $0.id.in(attachmentIDs) }.delete().execute(db)
+                    }
+                }
 
-            for item in self.results.orphanedActivities {
-                modelContext.delete(item)
-                results.append("Deleted orphaned activity: \(item.name)")
-            }
-
-            for item in self.results.orphanedAddresses {
-                modelContext.delete(item)
-                results.append("Deleted orphaned address")
-            }
-
-            for item in self.results.orphanedAttachments {
-                modelContext.delete(item)
-                results.append("Deleted orphaned attachment: \(item.originalFileName)")
+                results.append("Deleted orphaned transportation, lodging, activities, addresses, and attachments")
+            } catch {
+                Logger.shared.error("Failed to delete orphaned data: \(error.localizedDescription)", category: .database)
+                results.append("❌ \(L(L10n.Database.Operations.cleanupFailed))")
             }
 
         case .duplicateRelationships:
-            results.append("Fixing duplicate relationships...")
-
-            for (trip, transportation) in self.results.duplicateTransportation {
-                let unique = Array(Set(transportation))
-                trip.transportation = unique
-                results.append("Fixed duplicate transportation in trip: \(trip.name)")
-            }
-
-            for (trip, lodging) in self.results.duplicateLodging {
-                let unique = Array(Set(lodging))
-                trip.lodging = unique
-                results.append("Fixed duplicate lodging in trip: \(trip.name)")
-            }
-
-            for (trip, activities) in self.results.duplicateActivities {
-                let unique = Array(Set(activities))
-                trip.activity = unique
-                results.append("Fixed duplicate activities in trip: \(trip.name)")
-            }
+            results.append("Duplicate relationship repair is not supported in SQLiteData")
 
         case .invalidTimezones:
             results.append("Fixing invalid timezones...")
 
             let defaultTZ = TimeZone.current.identifier
 
-            for transportation in self.results.invalidTimezoneTransportation {
-                if TimeZone(identifier: transportation.startTZId) == nil {
-                    transportation.startTZId = defaultTZ
+            do {
+                try await database.write { db in
+                    for transportation in self.results.invalidTimezoneTransportation {
+                        try Transportation.find(transportation.id).update {
+                            $0.startTZId = defaultTZ
+                            $0.endTZId = defaultTZ
+                        }.execute(db)
+                    }
+                    for lodging in self.results.invalidTimezoneLodging {
+                        try Lodging.find(lodging.id).update {
+                            $0.checkInTZId = defaultTZ
+                            $0.checkOutTZId = defaultTZ
+                        }.execute(db)
+                    }
+                    for activity in self.results.invalidTimezoneActivities {
+                        try Activity.find(activity.id).update {
+                            $0.startTZId = defaultTZ
+                            $0.endTZId = defaultTZ
+                        }.execute(db)
+                    }
                 }
-                if TimeZone(identifier: transportation.endTZId) == nil {
-                    transportation.endTZId = defaultTZ
-                }
-                results.append("Fixed timezone for transportation: \(transportation.name)")
-            }
 
-            for lodging in self.results.invalidTimezoneLodging {
-                if TimeZone(identifier: lodging.startTZId) == nil {
-                    lodging.startTZId = defaultTZ
-                }
-                if TimeZone(identifier: lodging.endTZId) == nil {
-                    lodging.endTZId = defaultTZ
-                }
-                results.append("Fixed timezone for lodging: \(lodging.name)")
-            }
-
-            for activity in self.results.invalidTimezoneActivities {
-                if TimeZone(identifier: activity.startTZId) == nil {
-                    activity.startTZId = defaultTZ
-                }
-                if TimeZone(identifier: activity.endTZId) == nil {
-                    activity.endTZId = defaultTZ
-                }
-                results.append("Fixed timezone for activity: \(activity.name)")
+                results.append("Fixed timezones for transportation, lodging, and activities")
+            } catch {
+                Logger.shared.error("Failed to fix timezones: \(error.localizedDescription)", category: .database)
+                results.append("❌ \(L(L10n.Database.Operations.cleanupFailed))")
             }
 
         case .invalidDates:
             results.append("Fixing invalid dates...")
 
-            for transportation in self.results.invalidDateTransportation {
-                transportation.end = transportation.start.addingTimeInterval(3600) // Add 1 hour
-                results.append("Fixed dates for transportation: \(transportation.name)")
-            }
+            do {
+                try await database.write { db in
+                    for transportation in self.results.invalidDateTransportation {
+                        try Transportation.find(transportation.id).update {
+                            $0.end = transportation.start.addingTimeInterval(3600)
+                        }.execute(db)
+                    }
+                    for lodging in self.results.invalidDateLodging {
+                        try Lodging.find(lodging.id).update {
+                            $0.end = lodging.start.addingTimeInterval(24 * 3600)
+                        }.execute(db)
+                    }
+                    for activity in self.results.invalidDateActivities {
+                        try Activity.find(activity.id).update {
+                            $0.end = activity.start.addingTimeInterval(3600)
+                        }.execute(db)
+                    }
+                }
 
-            for lodging in self.results.invalidDateLodging {
-                lodging.end = lodging.start.addingTimeInterval(24 * 3600) // Add 1 day
-                results.append("Fixed dates for lodging: \(lodging.name)")
-            }
-
-            for activity in self.results.invalidDateActivities {
-                activity.end = activity.start.addingTimeInterval(3600) // Add 1 hour
-                results.append("Fixed dates for activity: \(activity.name)")
+                results.append("Fixed invalid dates for transportation, lodging, and activities")
+            } catch {
+                Logger.shared.error("Failed to fix dates: \(error.localizedDescription)", category: .database)
+                results.append("❌ \(L(L10n.Database.Operations.cleanupFailed))")
             }
 
         case .missingOrganizations, .unusedAddresses, .brokenAttachments:
             results.append("This fix is not yet implemented")
-        }
-
-        do {
-            try modelContext.save()
-            results.append("✅ All changes saved successfully")
-        } catch {
-            Logger.shared.error("Failed to save changes in DataBrowserView: \(error.localizedDescription)", category: .database)
-            results.append("❌ \(L(L10n.Save.failed))")
         }
 
         await MainActor.run {

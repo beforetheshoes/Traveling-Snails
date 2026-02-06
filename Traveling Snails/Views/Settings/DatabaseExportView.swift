@@ -4,20 +4,19 @@
 //
 //
 
-import SwiftData
+import SQLiteData
 import SwiftUI
 
 struct DatabaseExportView: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.modelContext) private var modelContext
 
-    @Query private var allTrips: [Trip]
-    @Query private var allTransportation: [Transportation]
-    @Query private var allLodging: [Lodging]
-    @Query private var allActivities: [Activity]
-    @Query private var allOrganizations: [Organization]
-    @Query private var allAddresses: [Address]
-    @Query private var allAttachments: [EmbeddedFileAttachment]
+    @FetchAll private var allTrips: [Trip]
+    @FetchAll private var allTransportation: [Transportation]
+    @FetchAll private var allLodging: [Lodging]
+    @FetchAll private var allActivities: [Activity]
+    @FetchAll private var allOrganizations: [Organization]
+    @FetchAll private var allAddresses: [Address]
+    @FetchAll private var allAttachments: [EmbeddedFileAttachment]
 
     @State private var exportData = ""
     @State private var isGenerating = false

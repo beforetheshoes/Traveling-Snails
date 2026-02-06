@@ -57,6 +57,7 @@ extension Tag {
     @Tag static var organization: Self  // Organization management
     @Tag static var sync: Self          // Data synchronization
     @Tag static var authentication: Self // User authentication
+    @Tag static var database: Self      // Database operations testing
     @Tag static var localization: Self  // Internationalization and localization
     @Tag static var dataImport: Self    // Data import functionality
     @Tag static var dataExport: Self    // Data export functionality

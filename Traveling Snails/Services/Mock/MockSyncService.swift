@@ -6,7 +6,7 @@
 
 import Foundation
 import os.lock
-import SwiftData
+import SQLiteData
 
 /// Mock implementation of SyncService for testing
 /// Provides controllable sync behavior without CloudKit dependency

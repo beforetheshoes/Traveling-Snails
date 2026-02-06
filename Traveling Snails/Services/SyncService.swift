@@ -5,7 +5,6 @@
 //
 
 import Foundation
-import SwiftData
 
 /// Service protocol for data synchronization
 /// Abstracts CloudKit sync operations for testability
@@ -150,13 +149,13 @@ protocol AdvancedSyncService: SyncService {
 
 /// Statistics about sync operations
 struct SyncStatistics: Sendable {
-    let totalSyncsPerformed: Int
-    let successfulSyncs: Int
-    let failedSyncs: Int
-    let averageSyncDuration: TimeInterval
-    let lastSyncDuration: TimeInterval
-    let dataTransferred: Int // bytes
-    let conflictsResolved: Int
+    var totalSyncsPerformed: Int
+    var successfulSyncs: Int
+    var failedSyncs: Int
+    var averageSyncDuration: TimeInterval
+    var lastSyncDuration: TimeInterval
+    var dataTransferred: Int // bytes
+    var conflictsResolved: Int
 
     var successRate: Double {
         guard totalSyncsPerformed > 0 else { return 0.0 }

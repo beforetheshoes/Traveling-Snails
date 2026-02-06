@@ -4,12 +4,11 @@
 //
 //
 
-import SwiftData
+import SQLiteData
 import SwiftUI
 
 struct FileAttachmentSummaryView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var allAttachments: [EmbeddedFileAttachment]
+    @FetchAll private var allAttachments: [EmbeddedFileAttachment]
 
     private var totalSize: Int64 {
         allAttachments.reduce(0) { $0 + $1.fileSize }

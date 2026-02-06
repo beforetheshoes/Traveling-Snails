@@ -5,7 +5,7 @@
 //
 
 import AVFoundation
-import CoreLocation
+@preconcurrency import CoreLocation
 import Foundation
 import os.lock
 import Photos
@@ -118,7 +118,8 @@ final class SystemPermissionService: NSObject, PermissionService, Sendable {
     }
 
     func requestLocationAccess(for usage: LocationUsage) async -> LocationAuthorizationStatus {
-        guard let locationManager = lock.withLock({ locationManager }) else {
+        let hasLocationManager = lock.withLock { locationManager != nil }
+        guard hasLocationManager else {
             return .denied
         }
 
@@ -137,33 +138,36 @@ final class SystemPermissionService: NSObject, PermissionService, Sendable {
         // Request appropriate permission
         return await withCheckedContinuation { continuation in
             // Store continuation for delegate callback
-            lock.withLock { self.locationContinuation = continuation }
-
-            switch usage {
-            case .whenInUse:
-                locationManager.requestWhenInUseAuthorization()
-            case .always:
-                locationManager.requestAlwaysAuthorization()
+            lock.withLock {
+                self.locationContinuation = continuation
+                switch usage {
+                case .whenInUse:
+                    self.locationManager?.requestWhenInUseAuthorization()
+                case .always:
+                    self.locationManager?.requestAlwaysAuthorization()
+                }
             }
         }
     }
 
     func getLocationAuthorizationStatus() -> LocationAuthorizationStatus {
-        guard let locationManager = lock.withLock({ locationManager }) else {
-            return .denied
-        }
+        lock.withLock {
+            guard let locationManager else {
+                return .denied
+            }
 
-        switch locationManager.authorizationStatus {
-        case .notDetermined:
-            return .notDetermined
-        case .restricted, .denied:
-            return .denied
-        case .authorizedWhenInUse:
-            return .authorizedWhenInUse
-        case .authorizedAlways:
-            return .authorizedAlways
-        @unknown default:
-            return .denied
+            switch locationManager.authorizationStatus {
+            case .notDetermined:
+                return .notDetermined
+            case .restricted, .denied:
+                return .denied
+            case .authorizedWhenInUse:
+                return .authorizedWhenInUse
+            case .authorizedAlways:
+                return .authorizedAlways
+            @unknown default:
+                return .denied
+            }
         }
     }
 
@@ -320,7 +324,13 @@ extension SystemPermissionService: AdvancedPermissionService {
     }
 
     func removeObserver(_ observer: PermissionServiceObserver) {
-        lock.withLock { observers.removeAll { $0.observer === observer } }
+        let targetID = ObjectIdentifier(observer as AnyObject)
+        lock.withLock {
+            observers.removeAll {
+                guard let current = $0.observer else { return true }
+                return ObjectIdentifier(current) == targetID
+            }
+        }
     }
 
     func shouldShowPermissionRationale(for permission: PermissionType) -> Bool {

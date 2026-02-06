@@ -34,7 +34,7 @@ struct AdvancedMockServiceTests {
         mockAuth.resetForTesting()
 
         // Test individual trip handling (using Trip objects instead of UUID)
-        let trip = Trip(name: "Test Trip", startDate: Date(), endDate: Date(), isProtected: true)
+        let trip = Trip(name: "Test Trip", isProtected: true, startDate: Date(), endDate: Date())
 
         // Test authentication for trip
         let isAuthenticated = mockAuth.isAuthenticated(for: trip)

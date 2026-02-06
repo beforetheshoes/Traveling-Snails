@@ -4,14 +4,15 @@
 //
 //
 
+import Dependencies
+import SQLiteData
 import SwiftUI
 
 @available(iOS 18.0, *)
 struct CrossDeviceEditFileAttachmentView: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.modelContext) private var modelContext
-
-    @Bindable var attachment: EmbeddedFileAttachment
+    @Dependency(\.defaultDatabase) private var database
+    let attachment: EmbeddedFileAttachment
     @State private var editedDescription: String = ""
     @State private var isSaving = false
     @State private var saveError: String?
@@ -82,8 +83,12 @@ struct CrossDeviceEditFileAttachmentView: View {
         saveError = nil
 
         do {
-            attachment.fileDescription = editedDescription
-            try modelContext.save()
+            var updatedAttachment = attachment
+            updatedAttachment.fileDescription = editedDescription
+            let attachmentToSave = updatedAttachment
+            try await database.write { db in
+                try EmbeddedFileAttachment.upsert { attachmentToSave }.execute(db)
+            }
             dismiss()
         } catch {
             Logger.shared.error("Failed to save file attachment: \(error.localizedDescription)", category: .fileAttachment)

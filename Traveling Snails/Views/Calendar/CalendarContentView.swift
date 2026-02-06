@@ -2,70 +2,86 @@
 //  CalendarContentView.swift
 //  Traveling Snails
 //
-//
 
+import ComposableArchitecture
 import SwiftUI
 
 struct CalendarContentView: View {
-    @Bindable var viewModel: CalendarViewModel
+    @Bindable var store: StoreOf<CalendarFeature>
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         VStack(spacing: 0) {
             // Enhanced header
             CalendarHeaderView(
-                trip: viewModel.trip,
-                selectedDate: $viewModel.selectedDate,
-                currentWeekOffset: $viewModel.currentWeekOffset,
-                calendarMode: $viewModel.calendarMode,
-                activities: viewModel.allActivities
+                trip: store.trip,
+                selectedDate: $store.selectedDate,
+                currentWeekOffset: $store.currentWeekOffset,
+                calendarMode: $store.calendarMode,
+                activities: store.allActivities
             )
 
-            // Calendar content with proper layout constraints
-            GeometryReader { _ in
-                ZStack {
-                    Group {
-                        switch viewModel.calendarMode {
-                        case .day:
-                            DayView(
-                                date: viewModel.currentDisplayDate,
-                                activities: viewModel.activitiesForCurrentPeriod,
-                                onDragStart: viewModel.handleDragStart,
-                                onDragUpdate: viewModel.handleDragUpdate,
-                                onDragEnd: viewModel.handleDragEnd,
-                                onActivityTap: viewModel.handleActivityTap
-                            )
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        case .week:
-                            WeekView(
-                                currentWeek: viewModel.currentWeek,
-                                activities: viewModel.allActivities,
-                                onDayTap: viewModel.handleDayTap,
-                                onLongPress: viewModel.handleLongPress,
-                                onActivityTap: viewModel.handleActivityTap
-                            )
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        case .month:
-                            MonthView(
-                                monthDates: viewModel.currentMonth,
-                                activities: viewModel.allActivities,
-                                currentDisplayDate: viewModel.currentDisplayDate,
-                                onDayTap: viewModel.handleDayTap
-                            )
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                // Calendar content with proper layout constraints
+                GeometryReader { _ in
+                    ZStack {
+                        Group {
+                            switch store.calendarMode {
+                            case .day:
+                                DayView(
+                                    date: store.currentDisplayDate,
+                                    activities: store.activitiesForCurrentPeriod,
+                                    onDragStart: { point, time in
+                                        store.send(.dragStart(point: point, time: time))
+                                    },
+                                    onDragUpdate: { point, time in
+                                        store.send(.dragUpdate(point: point, time: time))
+                                    },
+                                    onDragEnd: { point, time in
+                                        store.send(.dragEnd(point: point, time: time))
+                                    },
+                                    onActivityTap: { activity in
+                                        store.send(.activityTapped(.from(activity)))
+                                    }
+                                )
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            case .week:
+                                WeekView(
+                                    currentWeek: store.currentWeek,
+                                    activities: store.allActivities,
+                                    onDayTap: { date in
+                                        store.send(.dayTapped(date))
+                                    },
+                                    onLongPress: { point, time in
+                                        store.send(.longPress(point: point, time: time))
+                                    },
+                                    onActivityTap: { activity in
+                                        store.send(.activityTapped(.from(activity)))
+                                    }
+                                )
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            case .month:
+                                MonthView(
+                                    monthDates: store.currentMonth,
+                                    activities: store.allActivities,
+                                    currentDisplayDate: store.currentDisplayDate,
+                                    onDayTap: { date in
+                                        store.send(.dayTapped(date))
+                                    }
+                                )
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            }
+                        }
+
+                        // Drag preview overlay positioned correctly
+                        if store.showingDragPreview {
+                            DragPreviewView(frame: store.dragPreviewFrame)
+                                .clipped()
                         }
                     }
-
-                    // Drag preview overlay positioned correctly
-                    if viewModel.showingDragPreview {
-                        DragPreviewView(frame: viewModel.dragPreviewFrame)
-                            .clipped()
-                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
         }
-        .navigationTitle(viewModel.trip.name)
+        .navigationTitle(store.trip.name)
         .navigationBarTitleDisplayMode(.inline)
         .background(Color(.systemBackground))
         .toolbar {
@@ -73,43 +89,43 @@ struct CalendarContentView: View {
                 Button("Done") { dismiss() }
             }
 
-            ToolbarItem(placement: .navigationBarTrailing) {
-                CalendarToolbarMenu(viewModel: viewModel)
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    CalendarToolbarMenu(store: store)
+                }
             }
-        }
-        .sheet(isPresented: $viewModel.showingActivityCreation) {
-            ActivityCreationSheet(viewModel: viewModel)
-        }
-        .confirmationDialog(
-            "Choose Activity Type",
-            isPresented: $viewModel.showingActivityTypeSelector,
-            titleVisibility: .visible
-        ) {
-            Button("🚗 Transportation") {
-                viewModel.selectActivityType(.transportation)
+            .sheet(isPresented: $store.showingActivityCreation) {
+                ActivityCreationSheet(store: store)
             }
-            Button("🏨 Lodging") {
-                viewModel.selectActivityType(.lodging)
+            .confirmationDialog(
+                "Choose Activity Type",
+                isPresented: $store.showingActivityTypeSelector,
+                titleVisibility: .visible
+            ) {
+                Button("🚗 Transportation") {
+                    store.send(.selectActivityType(.transportation))
+                }
+                Button("🏨 Lodging") {
+                    store.send(.selectActivityType(.lodging))
+                }
+                Button("🎟️ Activity") {
+                    store.send(.selectActivityType(.activity))
+                }
+                Button("Cancel", role: .cancel) {
+                    store.send(.cancelActivityCreation)
+                }
+            } message: {
+                if let startTime = store.pendingActivityData?.startTime {
+                    Text("Create activity for \(startTime.formatted(date: .abbreviated, time: .shortened))")
+                } else {
+                    Text("What type of activity would you like to add?")
+                }
             }
-            Button("🎟️ Activity") {
-                viewModel.selectActivityType(.activity)
-            }
-            Button("Cancel", role: .cancel) {
-                viewModel.cancelActivityCreation()
-            }
-        } message: {
-            if let startTime = viewModel.pendingActivityData?.startTime {
-                Text("Create activity for \(startTime.formatted(date: .abbreviated, time: .shortened))")
-            } else {
-                Text("What type of activity would you like to add?")
-            }
-        }
-        .sheet(isPresented: $viewModel.showingDayDetail) {
+        .sheet(isPresented: $store.showingDayDetail) {
             NavigationStack {
                 DayDetailView(
-                    date: viewModel.selectedDate,
-                    activities: viewModel.selectedDayActivities,
-                    trip: viewModel.trip
+                    date: store.selectedDate,
+                    activities: store.selectedDayActivities,
+                    trip: store.trip
                 )
             }
         }
@@ -120,12 +136,12 @@ struct CalendarContentView: View {
 // MARK: - Calendar Toolbar Menu
 
 struct CalendarToolbarMenu: View {
-    @Bindable var viewModel: CalendarViewModel
+    let store: StoreOf<CalendarFeature>
 
     var body: some View {
         Menu {
             Button {
-                viewModel.createQuickActivity()
+                store.send(.quickAddTapped)
             } label: {
                 Label("Add Activity", systemImage: "plus.circle.fill")
             }
@@ -152,44 +168,44 @@ struct CalendarToolbarMenu: View {
 // MARK: - Activity Creation Sheet
 
 struct ActivityCreationSheet: View {
-    @Bindable var viewModel: CalendarViewModel
+    let store: StoreOf<CalendarFeature>
 
     var body: some View {
         NavigationStack {
             Group {
-                switch viewModel.selectedActivityType {
+                switch store.selectedActivityType {
                 case .transportation:
-                    if let data = viewModel.pendingActivityData {
+                    if let data = store.pendingActivityData {
                         PrefilledAddActivityView<Transportation>(
-                            trip: viewModel.trip,
+                            trip: store.trip,
                             activityType: Transportation.self,
                             startTime: data.startTime,
                             endTime: data.endTime ?? Calendar.current.date(byAdding: .hour, value: 2, to: data.startTime) ?? data.startTime
                         )
                     } else {
-                        UniversalAddTripActivityRootView.forTransportation(trip: viewModel.trip)
+                        UniversalAddTripActivityRootView.forTransportation(trip: store.trip)
                     }
                 case .lodging:
-                    if let data = viewModel.pendingActivityData {
+                    if let data = store.pendingActivityData {
                         PrefilledAddActivityView<Lodging>(
-                            trip: viewModel.trip,
+                            trip: store.trip,
                             activityType: Lodging.self,
                             startTime: data.startTime,
                             endTime: data.endTime ?? Calendar.current.date(byAdding: .day, value: 1, to: data.startTime) ?? data.startTime
                         )
                     } else {
-                        UniversalAddTripActivityRootView.forLodging(trip: viewModel.trip)
+                        UniversalAddTripActivityRootView.forLodging(trip: store.trip)
                     }
                 case .activity:
-                    if let data = viewModel.pendingActivityData {
+                    if let data = store.pendingActivityData {
                         PrefilledAddActivityView<Activity>(
-                            trip: viewModel.trip,
+                            trip: store.trip,
                             activityType: Activity.self,
                             startTime: data.startTime,
                             endTime: data.endTime ?? Calendar.current.date(byAdding: .hour, value: 2, to: data.startTime) ?? data.startTime
                         )
                     } else {
-                        UniversalAddTripActivityRootView.forActivity(trip: viewModel.trip)
+                        UniversalAddTripActivityRootView.forActivity(trip: store.trip)
                     }
                 }
             }

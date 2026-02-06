@@ -2,30 +2,25 @@
 //  Address.swift
 //  Traveling Snails
 //
-//
 
 import Foundation
 import MapKit
-import SwiftData
-import SwiftUI
+import SQLiteData
 
-@Model
-class Address: Identifiable {
-    var id = UUID()
-    var street: String = ""
-    var city: String = ""
-    var state: String = ""
-    var country: String = ""
-    var postalCode: String = ""
-    var latitude: Double = 0.0
-    var longitude: Double = 0.0
-    var formattedAddress: String = ""
-
-    var activities: [Activity]? = []
-    var lodgings: [Lodging]? = []
-    var organizations: [Organization]? = []
+@Table
+nonisolated struct Address: Hashable, Identifiable {
+    let id: UUID
+    var street: String
+    var city: String
+    var state: String
+    var country: String
+    var postalCode: String
+    var latitude: Double
+    var longitude: Double
+    var formattedAddress: String
 
     init(
+        id: UUID = UUID(),
         street: String = "",
         city: String = "",
         state: String = "",
@@ -35,6 +30,7 @@ class Address: Identifiable {
         longitude: Double = 0.0,
         formattedAddress: String = ""
     ) {
+        self.id = id
         self.street = street
         self.city = city
         self.state = state
@@ -45,8 +41,7 @@ class Address: Identifiable {
         self.formattedAddress = formattedAddress
     }
 
-    // Convenience initializer from MKPlacemark
-    convenience init(from placemark: MKPlacemark) {
+    init(from placemark: MKPlacemark) {
         let street = [placemark.subThoroughfare, placemark.thoroughfare]
             .compactMap { $0 }.joined(separator: " ")
 

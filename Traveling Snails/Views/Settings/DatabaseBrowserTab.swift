@@ -4,19 +4,18 @@
 //
 //
 
-import SwiftData
+import SQLiteData
 import SwiftUI
 
 // MARK: - Database Browser Tab
 struct DatabaseBrowserTab: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var trips: [Trip]
-    @Query private var transportation: [Transportation]
-    @Query private var lodging: [Lodging]
-    @Query private var activities: [Activity]
-    @Query private var organizations: [Organization]
-    @Query private var addresses: [Address]
-    @Query private var attachments: [EmbeddedFileAttachment]
+    @FetchAll private var trips: [Trip]
+    @FetchAll private var transportation: [Transportation]
+    @FetchAll private var lodging: [Lodging]
+    @FetchAll private var activities: [Activity]
+    @FetchAll private var organizations: [Organization]
+    @FetchAll private var addresses: [Address]
+    @FetchAll private var attachments: [EmbeddedFileAttachment]
 
     @State private var selectedSection = 0
     @State private var searchText = ""
@@ -497,9 +496,9 @@ struct AddressRowView: View {
 
                 Spacer()
 
-                let usageCount = (address.organizations?.count ?? 0) +
-                (address.activities?.count ?? 0) +
-                (address.lodgings?.count ?? 0)
+                let usageCount = address.organizations.count +
+                    address.activities.count +
+                    address.lodgings.count
                 Text("Used by \(usageCount) items")
                     .font(.caption)
                     .foregroundColor(.secondary)

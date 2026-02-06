@@ -6,7 +6,7 @@
 
 import CloudKit
 import Foundation
-import SwiftData
+import SQLiteData
 
 /// Manager for CloudKit sharing operations
 /// Handles creation, management, and deletion of CKShare records

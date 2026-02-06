@@ -4,12 +4,13 @@
 //
 //
 
-import SwiftData
+import Dependencies
+import SQLiteData
 import SwiftUI
 
 struct AddTrip: View {
     @Environment(\.presentationMode) var presentationMode
-    @Environment(\.modelContext) var modelContext
+    @Dependency(\.defaultDatabase) private var database
 
     @State var name: String = ""
     @State var notes: String = ""
@@ -18,18 +19,26 @@ struct AddTrip: View {
     @State var hasStartDate: Bool = false
     @State var hasEndDate: Bool = false
 
-    func saveTrip() {
-        let trip = Trip(
-            name: name,
-            notes: notes,
-            startDate: hasStartDate ? startDate : nil,
-            endDate: hasEndDate ? endDate : nil
-        )
-        modelContext.insert(trip)
-
+    func saveTrip() async {
         do {
-            try modelContext.save()
-            presentationMode.wrappedValue.dismiss()
+            var trip = Trip(
+                name: name,
+                notes: notes
+            )
+            if hasStartDate {
+                trip.setStartDate(startDate)
+            }
+            if hasEndDate {
+                trip.setEndDate(endDate)
+            }
+            let tripToSave = trip
+
+            try await database.write { db in
+                try Trip.upsert { tripToSave }.execute(db)
+            }
+            await MainActor.run {
+                presentationMode.wrappedValue.dismiss()
+            }
         } catch {
             // Handle save error - for now just print, could add error state
             Logger.shared.error("Failed to save trip: \(error.localizedDescription)", category: .database)
@@ -74,7 +83,9 @@ struct AddTrip: View {
                         .foregroundColor(.secondary)
                 }
 
-                Button(action: saveTrip) {
+                Button(action: {
+                    Task { await saveTrip() }
+                }) {
                     Text("Add Trip")
                         .frame(maxWidth: .infinity)
                 }

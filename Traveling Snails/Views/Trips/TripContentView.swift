@@ -1,4 +1,4 @@
-import SwiftData
+import SQLiteData
 import SwiftUI
 
 struct TripContentView: View {

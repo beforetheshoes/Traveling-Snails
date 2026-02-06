@@ -4,6 +4,8 @@
 //
 //
 
+import Dependencies
+import SQLiteData
 import SwiftUI
 
 struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
@@ -12,8 +14,8 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
     let startTime: Date
     let endTime: Date
 
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Dependency(\.defaultDatabase) private var database
 
     @State private var editData: TripActivityEditData
     @State private var showingOrganizationPicker = false
@@ -308,7 +310,7 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
         }
         .onAppear {
             if editData.organization == nil {
-                editData.organization = Organization.createNoneOrganization(in: modelContext)
+                editData.organization = ensureNoneOrganization()
             }
         }
         .disabled(isSaving)
@@ -350,9 +352,7 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
             trip: trip,
             organization: organization
         )
-
-        modelContext.insert(lodging)
-        saveToContext()
+        saveLodgingToDatabase(lodging)
     }
 
     private func saveTransportation(organization: Organization) {
@@ -370,9 +370,7 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
             trip: trip,
             organization: organization
         )
-
-        modelContext.insert(transportation)
-        saveToContext()
+        saveTransportationToDatabase(transportation)
     }
 
     private func saveActivity(organization: Organization) {
@@ -389,18 +387,61 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
             trip: trip,
             organization: organization
         )
-
-        modelContext.insert(activity)
-        saveToContext()
+        saveActivityToDatabase(activity)
     }
 
-    private func saveToContext() {
+    private func saveActivityToDatabase(_ activity: Activity) {
         do {
-            try modelContext.save()
+            try database.write { db in
+                try Activity.upsert { activity }.execute(db)
+            }
             dismiss()
         } catch {
             Logger.shared.error("Failed to save activity: \(error.localizedDescription)", category: .database)
             isSaving = false
+        }
+    }
+
+    private func saveLodgingToDatabase(_ lodging: Lodging) {
+        do {
+            try database.write { db in
+                try Lodging.upsert { lodging }.execute(db)
+            }
+            dismiss()
+        } catch {
+            Logger.shared.error("Failed to save activity: \(error.localizedDescription)", category: .database)
+            isSaving = false
+        }
+    }
+
+    private func saveTransportationToDatabase(_ transportation: Transportation) {
+        do {
+            try database.write { db in
+                try Transportation.upsert { transportation }.execute(db)
+            }
+            dismiss()
+        } catch {
+            Logger.shared.error("Failed to save activity: \(error.localizedDescription)", category: .database)
+            isSaving = false
+        }
+    }
+
+    private func ensureNoneOrganization() -> Organization {
+        do {
+            if let existing = try database.read({ db in
+                try Organization.where { $0.name.eq("None") }.fetchOne(db)
+            }) {
+                return existing
+            }
+
+            let noneOrg = Organization(name: "None")
+            try database.write { db in
+                try Organization.insert { noneOrg }.execute(db)
+            }
+            return noneOrg
+        } catch {
+            Logger.shared.error("Failed to ensure None organization: \(error.localizedDescription)", category: .database)
+            return Organization(name: "None")
         }
     }
 }

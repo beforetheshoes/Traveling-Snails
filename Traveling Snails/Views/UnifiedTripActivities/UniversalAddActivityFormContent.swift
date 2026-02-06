@@ -2,12 +2,12 @@
 //  UniversalAddActivityFormContent.swift
 //  Traveling Snails
 //
-//
 
+import ComposableArchitecture
 import SwiftUI
 
 struct UniversalAddActivityFormContent: View {
-    @Bindable var viewModel: UniversalActivityFormViewModel
+    @Bindable var store: StoreOf<UniversalActivityFormFeature>
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -24,10 +24,19 @@ struct UniversalAddActivityFormContent: View {
             }
             .padding(.horizontal, 16)
         }
-        .sheet(isPresented: $viewModel.showingOrganizationPicker) {
+        .sheet(isPresented: $store.showingOrganizationPicker) {
             OrganizationPicker(
-                selectedOrganization: $viewModel.editData.organization
+                selectedOrganization: $store.editData.organization
             )
+        }
+        .onAppear {
+            store.send(.onAppear)
+        }
+        .onChange(of: store.shouldDismiss) { _, shouldDismiss in
+            if shouldDismiss {
+                dismiss()
+                store.send(.dismissHandled)
+            }
         }
     }
 
@@ -35,9 +44,9 @@ struct UniversalAddActivityFormContent: View {
 
     private var headerSection: some View {
         ActivityHeaderView(
-            icon: viewModel.currentIcon,
-            color: colorFromString(viewModel.color),
-            title: viewModel.activityType.displayName
+            icon: store.currentIcon,
+            color: colorFromString(store.color),
+            title: store.activityType.displayName
         )
     }
 
@@ -45,21 +54,21 @@ struct UniversalAddActivityFormContent: View {
         ActivitySectionCard(
             headerIcon: "info.circle.fill",
             headerTitle: "Basic Information",
-            headerColor: colorFromString(viewModel.color)
+            headerColor: colorFromString(store.color)
         ) {
             VStack(spacing: 16) {
                 ActivityFormField(
                     label: "Name",
-                    text: $viewModel.editData.name,
-                    placeholder: "\(viewModel.activityType.displayName) Name"
+                    text: $store.editData.name,
+                    placeholder: "\(store.activityType.displayName) Name"
                 )
-                if viewModel.hasTypeSelector {
+                if store.hasTypeSelector {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Transportation Type")
                             .font(.caption)
                             .foregroundColor(.secondary)
 
-                        Picker("Transportation Type", selection: $viewModel.editData.transportationType) {
+                        Picker("Transportation Type", selection: $store.editData.transportationType) {
                             ForEach(TransportationType.allCases, id: \.self) { type in
                                 Label(type.displayName, systemImage: type.systemImage)
                                     .tag(type as TransportationType?)
@@ -75,21 +84,21 @@ struct UniversalAddActivityFormContent: View {
     private var organizationSection: some View {
         ActivitySectionCard(
             headerIcon: "mappin.circle.fill",
-            headerTitle: viewModel.supportsCustomLocation ? "Location" : "Organization",
-            headerColor: colorFromString(viewModel.color)
+            headerTitle: store.supportsCustomLocation ? "Location" : "Organization",
+            headerColor: colorFromString(store.color)
         ) {
             VStack(spacing: 16) {
                 ActivityFormButton(
                     label: "Organization",
-                    value: viewModel.editData.organization?.name ?? "Select Organization"
-                ) { viewModel.showingOrganizationPicker = true }
+                    value: store.editData.organization?.name ?? "Select Organization"
+                ) { store.showingOrganizationPicker = true }
 
-                if viewModel.supportsCustomLocation {
-                    if viewModel.editData.organization?.isNone == true {
+                if store.supportsCustomLocation {
+                    if store.editData.organization?.isNone == true {
                         VStack(spacing: 16) {
                             ActivityFormField(
                                 label: "Custom Location Name",
-                                text: $viewModel.editData.customLocationName,
+                                text: $store.editData.customLocationName,
                                 placeholder: "Enter location name"
                             )
 
@@ -99,15 +108,15 @@ struct UniversalAddActivityFormContent: View {
                                     .foregroundColor(.secondary)
 
                                 AddressAutocompleteView(
-                                    selectedAddress: $viewModel.editData.customAddress,
+                                    selectedAddress: $store.editData.customAddress,
                                     placeholder: "Enter address"
                                 )
                             }
                         }
                     }
 
-                    Toggle("Hide location in views", isOn: $viewModel.editData.hideLocation)
-                        .toggleStyle(SwitchToggleStyle(tint: colorFromString(viewModel.color)))
+                    Toggle("Hide location in views", isOn: $store.editData.hideLocation)
+                        .toggleStyle(SwitchToggleStyle(tint: colorFromString(store.color)))
                 }
             }
         }
@@ -115,33 +124,33 @@ struct UniversalAddActivityFormContent: View {
 
     private var scheduleSection: some View {
         ActivitySectionCard(
-            headerIcon: viewModel.activityType == .lodging ? "calendar.badge.plus" :
-                        viewModel.activityType == .transportation ? viewModel.currentIcon : "clock.fill",
+            headerIcon: store.activityType == .lodging ? "calendar.badge.plus" :
+                        store.activityType == .transportation ? store.currentIcon : "clock.fill",
             headerTitle: "Schedule",
-            headerColor: colorFromString(viewModel.color)
+            headerColor: colorFromString(store.color)
         ) {
-            if viewModel.activityType == .transportation {
+            if store.activityType == .transportation {
                 TransportationDateTimeSection(
-                    trip: viewModel.trip,
-                    startDate: $viewModel.editData.start,
-                    endDate: $viewModel.editData.end,
-                    startTimeZoneId: $viewModel.editData.startTZId,
-                    endTimeZoneId: $viewModel.editData.endTZId,
-                    address: viewModel.locationAddress
+                    trip: store.trip,
+                    startDate: $store.editData.start,
+                    endDate: $store.editData.end,
+                    startTimeZoneId: $store.editData.startTZId,
+                    endTimeZoneId: $store.editData.endTZId,
+                    address: store.locationAddress
                 )
             } else {
                 SingleLocationDateTimeSection(
-                    startLabel: viewModel.startLabel,
-                    endLabel: viewModel.endLabel,
-                    activityType: ActivityWrapper.ActivityType(rawValue: viewModel.activityType.rawValue) ?? .activity,
-                    trip: viewModel.trip,
-                    startDate: $viewModel.editData.start,
-                    endDate: $viewModel.editData.end,
-                    timeZoneId: $viewModel.editData.startTZId,
-                    address: viewModel.locationAddress
+                    startLabel: store.startLabel,
+                    endLabel: store.endLabel,
+                    activityType: ActivityWrapper.ActivityType(rawValue: store.activityType.rawValue) ?? .activity,
+                    trip: store.trip,
+                    startDate: $store.editData.start,
+                    endDate: $store.editData.end,
+                    timeZoneId: $store.editData.startTZId,
+                    address: store.locationAddress
                 )
-                .onChange(of: viewModel.editData.startTZId) { _, newValue in
-                    viewModel.editData.endTZId = newValue
+                .onChange(of: store.editData.startTZId) { _, newValue in
+                    store.editData.endTZId = newValue
                 }
             }
         }
@@ -151,7 +160,7 @@ struct UniversalAddActivityFormContent: View {
         ActivitySectionCard(
             headerIcon: "dollarsign.circle.fill",
             headerTitle: "Cost & Payment",
-            headerColor: colorFromString(viewModel.color)
+            headerColor: colorFromString(store.color)
         ) {
             VStack(spacing: 16) {
                 VStack(alignment: .leading, spacing: 8) {
@@ -159,7 +168,7 @@ struct UniversalAddActivityFormContent: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
 
-                    CurrencyTextField(value: $viewModel.editData.cost, color: colorFromString(viewModel.color))
+                    CurrencyTextField(value: $store.editData.cost, color: colorFromString(store.color))
                 }
 
                 VStack(alignment: .leading, spacing: 8) {
@@ -167,7 +176,7 @@ struct UniversalAddActivityFormContent: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
 
-                    Picker("", selection: $viewModel.editData.paid) {
+                    Picker("", selection: $store.editData.paid) {
                         ForEach(PaidStatus.allCases, id: \.self) { status in
                             Text(status.displayName).tag(status)
                         }
@@ -182,18 +191,18 @@ struct UniversalAddActivityFormContent: View {
         ActivitySectionCard(
             headerIcon: "note.text",
             headerTitle: "Additional Details",
-            headerColor: colorFromString(viewModel.color)
+            headerColor: colorFromString(store.color)
         ) {
             VStack(spacing: 16) {
                 ActivityFormField(
-                    label: viewModel.confirmationLabel,
-                    text: $viewModel.editData.confirmationField,
-                    placeholder: "Enter \(viewModel.confirmationLabel.lowercased()) number"
+                    label: store.confirmationLabel,
+                    text: $store.editData.confirmationField,
+                    placeholder: "Enter \(store.confirmationLabel.lowercased()) number"
                 )
 
                 ActivityFormField(
                     label: "Notes",
-                    text: $viewModel.editData.notes,
+                    text: $store.editData.notes,
                     placeholder: "Add any additional notes",
                     axis: .vertical
                 )
@@ -205,19 +214,19 @@ struct UniversalAddActivityFormContent: View {
         ActivitySectionCard(
             headerIcon: "paperclip",
             headerTitle: "File Attachments",
-            headerColor: colorFromString(viewModel.color)
+            headerColor: colorFromString(store.color)
         ) {
             VStack(spacing: 12) {
-                if !viewModel.attachments.isEmpty {
+                if !store.attachments.isEmpty {
                     HStack {
                         Spacer()
-                        Text("(\(viewModel.attachments.count))")
+                        Text("(\(store.attachments.count))")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
                 }
 
-                if viewModel.attachments.isEmpty {
+                if store.attachments.isEmpty {
                     VStack(spacing: 8) {
                         Image(systemName: "doc.badge.plus")
                             .font(.title2)
@@ -229,10 +238,10 @@ struct UniversalAddActivityFormContent: View {
                     }
                     .padding(.vertical, 16)
                 } else {
-                    ForEach(viewModel.attachments) { attachment in
+                    ForEach(store.attachments) { attachment in
                         HStack {
                             Image(systemName: "doc.fill")
-                                .foregroundColor(colorFromString(viewModel.color))
+                                .foregroundColor(colorFromString(store.color))
 
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(attachment.fileName)
@@ -249,7 +258,7 @@ struct UniversalAddActivityFormContent: View {
                             Spacer()
 
                             Button {
-                                viewModel.removeAttachment(attachment)
+                                store.send(.removeAttachment(attachment))
                             } label: {
                                 Image(systemName: "trash")
                                     .foregroundColor(.red)
@@ -265,14 +274,14 @@ struct UniversalAddActivityFormContent: View {
 
                 UnifiedFilePicker.allFiles(
                     onSelected: { attachment in
-                        viewModel.addAttachment(attachment)
+                        store.send(.addAttachment(attachment))
                     },
                     onError: { error in
-                        viewModel.handleAttachmentError(error)
+                        store.send(.attachmentError(error))
                     }
                 )
                 .buttonStyle(.bordered)
-                .tint(colorFromString(viewModel.color))
+                .tint(colorFromString(store.color))
             }
             .frame(maxWidth: .infinity)
         }
@@ -281,20 +290,13 @@ struct UniversalAddActivityFormContent: View {
 
     private var submitButton: some View {
         ActivitySubmitButton(
-            title: "Save \(viewModel.activityType.displayName)",
-            isValid: viewModel.isFormValid,
-            isSaving: viewModel.isSaving,
-            color: colorFromString(viewModel.color),
-            saveError: viewModel.saveError
+            title: "Save \(store.activityType.displayName)",
+            isValid: store.isFormValid,
+            isSaving: store.isSaving,
+            color: colorFromString(store.color),
+            saveError: store.saveError
         ) {
-                Task { @MainActor in
-                    do {
-                        try await viewModel.save()
-                        dismiss()
-                    } catch {
-                        // Error is stored in viewModel.saveError
-                    }
-                }
+            store.send(.saveTapped)
         }
     }
 

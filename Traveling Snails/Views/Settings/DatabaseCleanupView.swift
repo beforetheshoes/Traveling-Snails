@@ -4,16 +4,17 @@
 //
 //
 
-import SwiftData
+import Dependencies
+import SQLiteData
 import SwiftUI
 
 struct DatabaseCleanupView: View {
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Dependency(\.defaultDatabase) private var database
 
-    @Query private var trips: [Trip]
-    @Query private var organizations: [Organization]
-    @Query private var addresses: [Address]
+    @FetchAll private var trips: [Trip]
+    @FetchAll private var organizations: [Organization]
+    @FetchAll private var addresses: [Address]
 
     @State private var showingDeleteConfirmation = false
     @State private var showingTestDataConfirmation = false
@@ -128,7 +129,6 @@ struct DatabaseCleanupView: View {
                     }
 
                     if isExactTestMatch || isPatternMatch {
-                        modelContext.delete(trip)
                         deletedTrips += 1
                     }
                 }
@@ -143,12 +143,37 @@ struct DatabaseCleanupView: View {
                 for org in organizations {
                     let orgName = org.name.lowercased()
                     if testOrgPatterns.contains(where: { orgName.contains($0.lowercased()) }) && !org.isNone {
-                        modelContext.delete(org)
                         deletedOrganizations += 1
                     }
                 }
 
-                try modelContext.save()
+                let tripIDsToDelete = trips.filter { trip in
+                    let tripName = trip.name.lowercased()
+                    let exactTestNames = ["unprotected trip", "protected trip"]
+                    let isExactTestMatch = exactTestNames.contains(tripName)
+                    let isPatternMatch = testTripPatterns.contains { pattern in
+                        if pattern.contains("\\d+") {
+                            return tripName.range(of: pattern, options: .regularExpression) != nil
+                        } else {
+                            return tripName.contains(pattern.lowercased())
+                        }
+                    }
+                    return isExactTestMatch || isPatternMatch
+                }.map(\.id)
+
+                let orgIDsToDelete = organizations.filter { org in
+                    let orgName = org.name.lowercased()
+                    return testOrgPatterns.contains(where: { orgName.contains($0.lowercased()) }) && !org.isNone
+                }.map(\.id)
+
+                try await database.write { db in
+                    if !tripIDsToDelete.isEmpty {
+                        try Trip.where { $0.id.in(tripIDsToDelete) }.delete().execute(db)
+                    }
+                    if !orgIDsToDelete.isEmpty {
+                        try Organization.where { $0.id.in(orgIDsToDelete) }.delete().execute(db)
+                    }
+                }
 
                 await MainActor.run {
                     deleteResult = "Removed \(deletedTrips) test trips and \(deletedOrganizations) test organizations"
@@ -174,24 +199,18 @@ struct DatabaseCleanupView: View {
                 let orgCount = organizations.count
                 let addressCount = addresses.count
 
-                // Delete all trips (cascading deletes will handle related data)
-                for trip in trips {
-                    modelContext.delete(trip)
-                }
+                let tripIDs = trips.map(\.id)
+                let addressIDs = addresses.map(\.id)
 
-                // Delete all organizations except "None"
-                for org in organizations {
-                    if !org.isNone {
-                        modelContext.delete(org)
+                try await database.write { db in
+                    if !tripIDs.isEmpty {
+                        try Trip.where { $0.id.in(tripIDs) }.delete().execute(db)
+                    }
+                    try Organization.where { $0.name.neq("None") }.delete().execute(db)
+                    if !addressIDs.isEmpty {
+                        try Address.where { $0.id.in(addressIDs) }.delete().execute(db)
                     }
                 }
-
-                // Delete all addresses
-                for address in addresses {
-                    modelContext.delete(address)
-                }
-
-                try modelContext.save()
 
                 await MainActor.run {
                     deleteResult = "Reset complete: Removed \(tripCount) trips, \(orgCount) organizations, \(addressCount) addresses"
@@ -210,5 +229,4 @@ struct DatabaseCleanupView: View {
 
 #Preview {
     DatabaseCleanupView()
-        .modelContainer(for: [Trip.self, Organization.self, Address.self])
 }

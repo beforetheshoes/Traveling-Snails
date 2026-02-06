@@ -4,12 +4,13 @@
 //
 //
 
-import SwiftData
+import Dependencies
+import SQLiteData
 import SwiftUI
 
 struct ToolsTab: View {
-    let modelContext: ModelContext
     let onDataChanged: () -> Void
+    @Dependency(\.defaultDatabase) private var database
 
     @State private var showingResetConfirmation = false
     @State private var showingCompactConfirmation = false
@@ -172,23 +173,25 @@ struct ToolsTab: View {
             operationStatus = "Creating test data..."
         }
 
-        // Create some test data
-        let testTrip = Trip(name: "Test Trip \(Date().timeIntervalSince1970)")
-        modelContext.insert(testTrip)
+        do {
+            let testTrip = Trip(name: "Test Trip \(Date().timeIntervalSince1970)")
+            let testOrg = Organization(name: "Test Organization")
+            let testTransportation = Transportation(
+                name: "Test Flight",
+                start: Date(),
+                end: Date().addingTimeInterval(3600),
+                trip: testTrip,
+                organization: testOrg
+            )
 
-        let testOrg = Organization(name: "Test Organization")
-        modelContext.insert(testOrg)
-
-        let testTransportation = Transportation(
-            name: "Test Flight",
-            start: Date(),
-            end: Date().addingTimeInterval(3600),
-            trip: testTrip,
-            organization: testOrg
-        )
-        modelContext.insert(testTransportation)
-
-        try? modelContext.save()
+            try await database.write { db in
+                try Trip.upsert { testTrip }.execute(db)
+                try Organization.upsert { testOrg }.execute(db)
+                try Transportation.upsert { testTransportation }.execute(db)
+            }
+        } catch {
+            Logger.shared.error("Failed to create test data: \(error.localizedDescription)", category: .database)
+        }
 
         await MainActor.run {
             operationStatus = "Test data created successfully"
@@ -203,35 +206,29 @@ struct ToolsTab: View {
             operationStatus = "Resetting all data..."
         }
 
-        // Implement actual data deletion using the same pattern as DatabaseCleanupView
         do {
-            // Fetch data counts before deletion
-            let trips = try modelContext.fetch(FetchDescriptor<Trip>())
-            let organizations = try modelContext.fetch(FetchDescriptor<Organization>())
-            let addresses = try modelContext.fetch(FetchDescriptor<Address>())
-
-            let tripCount = trips.count
-            let orgCount = organizations.count
-            let addressCount = addresses.count
-
-            // Delete all trips (cascading deletes will handle related data)
-            for trip in trips {
-                modelContext.delete(trip)
+            let (tripIDs, orgIDs, addressIDs) = try await database.read { db in
+                let trips = try Trip.fetchAll(db)
+                let organizations = try Organization.fetchAll(db)
+                let addresses = try Address.fetchAll(db)
+                return (trips.map(\.id), organizations.map(\.id), addresses.map(\.id))
             }
 
-            // Delete all organizations except "None"
-            for org in organizations {
-                if !org.isNone {
-                    modelContext.delete(org)
+            let tripCount = tripIDs.count
+            let orgCount = orgIDs.count
+            let addressCount = addressIDs.count
+
+            try await database.write { db in
+                if !tripIDs.isEmpty {
+                    try Trip.where { $0.id.in(tripIDs) }.delete().execute(db)
+                }
+                if !orgIDs.isEmpty {
+                    try Organization.where { $0.name.neq("None") }.delete().execute(db)
+                }
+                if !addressIDs.isEmpty {
+                    try Address.where { $0.id.in(addressIDs) }.delete().execute(db)
                 }
             }
-
-            // Delete all addresses
-            for address in addresses {
-                modelContext.delete(address)
-            }
-
-            try modelContext.save()
 
             await MainActor.run {
                 operationStatus = "Reset complete: Removed \(tripCount) trips, \(orgCount) organizations, \(addressCount) addresses"

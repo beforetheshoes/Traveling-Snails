@@ -2,67 +2,58 @@
 //  Transportation.swift
 //  Traveling Snails
 //
-//
 
-import SwiftData
-import SwiftUI
+import Foundation
+import SQLiteData
 
-@Model
-class Transportation: Identifiable {
-    var id = UUID()
-    var name: String = ""
-    var type = TransportationType.plane
-    var start = Date()
-    var startTZId: String = ""
-    var end = Date()
-    var endTZId: String = ""
-    var cost: Decimal = 0
-    var paid = PaidStatus.none
-    var confirmation: String = ""
-    var notes: String = ""
+@Table
+nonisolated struct Transportation: Hashable, Identifiable {
+    let id: UUID
+    var name: String
+    var type: TransportationType
+    var start: Date
+    var startTZId: String
+    var end: Date
+    var endTZId: String
+    @Column(as: DecimalStringRepresentation.self)
+    var cost: Decimal
+    var paid: PaidStatus
+    var confirmation: String
+    var notes: String
 
-    var trip: Trip?
-    var organization: Organization?
-
-    // CLOUDKIT REQUIRED: Optional file attachments with SAFE accessor
-    @Relationship(deleteRule: .cascade, inverse: \EmbeddedFileAttachment.transportation)
-    private var _fileAttachments: [EmbeddedFileAttachment]?
-
-    // SAFE ACCESSOR: Never return nil
-    var fileAttachments: [EmbeddedFileAttachment] {
-        get { _fileAttachments ?? [] }
-        set { _fileAttachments = newValue.isEmpty ? nil : newValue }
-    }
+    var tripID: Trip.ID?
+    var organizationID: Organization.ID?
 
     init(
+        id: UUID = UUID(),
         name: String = "",
-        type: TransportationType = TransportationType.plane,
+        type: TransportationType = .plane,
         start: Date = Date(),
-        startTZ: TimeZone? = nil,
+        startTZId: String = TimeZone.current.identifier,
         end: Date = Date(),
-        endTZ: TimeZone? = nil,
+        endTZId: String = TimeZone.current.identifier,
         cost: Decimal = 0,
-        paid: PaidStatus = PaidStatus.none,
+        paid: PaidStatus = .none,
         confirmation: String = "",
         notes: String = "",
-        trip: Trip? = nil,
-        organization: Organization? = nil
+        tripID: Trip.ID? = nil,
+        organizationID: Organization.ID? = nil
     ) {
+        self.id = id
         self.name = name
         self.type = type
         self.start = start
-        self.startTZId = startTZ?.identifier ?? TimeZone.current.identifier
+        self.startTZId = startTZId
         self.end = end
-        self.endTZId = endTZ?.identifier ?? TimeZone.current.identifier
+        self.endTZId = endTZId
         self.cost = cost
         self.paid = paid
         self.confirmation = confirmation
         self.notes = notes
-        self.trip = trip
-        self.organization = organization
+        self.tripID = tripID
+        self.organizationID = organizationID
     }
 
-    // MARK: - Computed Properties
     var startTZ: TimeZone { TimeZone(identifier: startTZId) ?? TimeZone.current }
     var endTZ: TimeZone { TimeZone(identifier: endTZId) ?? TimeZone.current }
 
@@ -97,13 +88,9 @@ class Transportation: Identifiable {
         formatter.timeZone = endTZ
         return formatter.string(from: end)
     }
-
-    // File attachment support
-    var hasAttachments: Bool { !fileAttachments.isEmpty }
-    var attachmentCount: Int { fileAttachments.count }
 }
 
-enum TransportationType: String, CaseIterable, Codable {
+enum TransportationType: String, CaseIterable, Codable, QueryBindable {
     case train
     case plane
     case boat

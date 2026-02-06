@@ -4,12 +4,11 @@
 //
 //
 
-import SwiftData
+import SQLiteData
 import SwiftUI
 
 struct FileAttachmentSearchView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var allAttachments: [EmbeddedFileAttachment]
+    @FetchAll private var allAttachments: [EmbeddedFileAttachment]
 
     @State private var searchText = ""
     @State private var selectedFileType: FileType = .all

@@ -5,7 +5,8 @@
 //
 
 import CloudKit
-import SwiftData
+import ComposableArchitecture
+import SQLiteData
 import SwiftUI
 
 /// Modern app structure using pure dependency injection - no backward compatibility
@@ -15,95 +16,60 @@ struct ModernTraveling_SnailsApp: App {
     @State private var hasShownSplashOnce = false
     @Environment(\.scenePhase) private var scenePhase
 
-    let modelContainer: ModelContainer
-    private let serviceContainer: ServiceContainer
     private let modernSyncManager: ModernSyncManager
     private let modernAppSettings: ModernAppSettings
     private let modernBiometricAuthManager: ModernBiometricAuthManager
+    @State private var syncEngineDelegate: AppSyncEngineDelegate
+    private let appStore: StoreOf<AppFeature>
 
     init() {
         do {
-            let schema = Schema([
-                Trip.self,
-                Lodging.self,
-                Organization.self,
-                Transportation.self,
-                Activity.self,
-                Address.self,
-                EmbeddedFileAttachment.self,
-            ])
+            let syncEngineDelegate = AppSyncEngineDelegate()
+            self._syncEngineDelegate = State(initialValue: syncEngineDelegate)
 
-            // Check if running in test environment to avoid CloudKit issues
-            #if DEBUG
-            let hasXCTestCase = NSClassFromString("XCTestCase") != nil
-            let hasXCTestConfig = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
-            // Force clear the isRunningTests flag if we're in a DEBUG build from Xcode
-            UserDefaults.standard.set(false, forKey: "isRunningTests")
-            let hasUserDefaultFlag = UserDefaults.standard.bool(forKey: "isRunningTests")
-            // Debug: Check which UserDefaults domain we're actually using
-            let bundleId = Bundle.main.bundleIdentifier ?? "unknown"
-            Logger.shared.debug("Debug: Bundle ID = \(bundleId)")
-            // Only consider it a test environment if we have test config OR user default flag
-            // XCTestCase may be loaded in DEBUG builds from Xcode, so we ignore it unless other conditions are met
-            let isInTests = hasXCTestConfig || hasUserDefaultFlag
-
-            Logger.shared.debug("Modern App Debug: XCTestCase=\(hasXCTestCase), XCTestConfig=\(hasXCTestConfig), UserDefault=\(hasUserDefaultFlag), isInTests=\(isInTests)")
-
-            let modelConfiguration: ModelConfiguration
-            if isInTests {
-                Logger.shared.info("Modern App: Test environment detected, disabling CloudKit")
-                modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true, cloudKitDatabase: .none)
-            } else {
-                Logger.shared.info("Modern App: Production environment, enabling CloudKit")
-                modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false, cloudKitDatabase: .automatic)
-            }
-            #else
-            let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false, cloudKitDatabase: .automatic)
-            #endif
-
-            modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
-
-            // Initialize ServiceContainer and register all services
-            serviceContainer = ServiceContainer()
-
-            // Register production services
+            // Initialize production services directly
             let authService = ProductionAuthenticationService()
-            serviceContainer.register(authService, as: AuthenticationService.self)
-
             let cloudService = iCloudStorageService()
-            serviceContainer.register(cloudService, as: CloudStorageService.self)
-
             let photoService = SystemPhotoLibraryService()
-            serviceContainer.register(photoService, as: PhotoLibraryService.self)
-
             let permissionService = SystemPermissionService()
-            serviceContainer.register(permissionService, as: PermissionService.self)
+            let syncService = SQLiteDataSyncService()
 
-            // Register sync service with model container
-            let syncService = CloudKitSyncService(modelContainer: modelContainer)
-            serviceContainer.register(syncService, as: SyncService.self)
+            _ = photoService
+            _ = permissionService
 
-            // Create modern managers from service container
-            modernSyncManager = ModernSyncManager.from(container: serviceContainer)
-            modernAppSettings = ModernAppSettings.from(container: serviceContainer)
-            modernBiometricAuthManager = ModernBiometricAuthManager.from(container: serviceContainer)
+            // Create modern managers from concrete services
+            modernSyncManager = ModernSyncManager(
+                syncService: syncService,
+                cloudStorageService: cloudService
+            )
+            modernAppSettings = ModernAppSettings(
+                cloudStorageService: cloudService
+            )
+            modernBiometricAuthManager = ModernBiometricAuthManager(
+                authService: authService
+            )
 
             Logger.shared.info("Modern App: All services initialized successfully", category: .app)
+            try prepareDependencies {
+                try $0.bootstrapDatabase(syncEngineDelegate: syncEngineDelegate)
+            }
+
+            appStore = Store(initialState: AppFeature.State()) {
+                AppFeature()
+            }
         } catch {
-            Logger.shared.critical("Could not create ModelContainer: \(error)", category: .app)
-            fatalError("Could not create ModelContainer")
+            Logger.shared.critical("Could not initialize database: \(error)", category: .app)
+            fatalError("Could not initialize database")
         }
     }
 
     var body: some Scene {
         WindowGroup {
             ZStack {
-                ContentView()
+                AppView(store: appStore)
                     .environment(modernAppSettings)
                     .environment(modernSyncManager)
                     .environment(modernBiometricAuthManager)
-                    .environment(NavigationRouter.shared)
-                    .serviceContainer(serviceContainer)
                     .opacity(showSplash ? 0 : 1)
 
                 if showSplash {
@@ -128,7 +94,6 @@ struct ModernTraveling_SnailsApp: App {
                     // Use modern biometric auth manager
                     modernBiometricAuthManager.resetSession()
                 case .active:
-                    // REMOVED: Custom sync triggers - let SwiftData+CloudKit handle automatically
                     break
                 case .inactive:
                     break
@@ -137,6 +102,5 @@ struct ModernTraveling_SnailsApp: App {
                 }
             }
         }
-        .modelContainer(modelContainer)
     }
 }

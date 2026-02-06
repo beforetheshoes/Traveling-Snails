@@ -1,12 +1,11 @@
 import SwiftUI
 import CloudKit
-import SwiftData
+import SQLiteData
 
 /// Comprehensive view for managing CloudKit trip sharing
 struct TripSharingView: View {
     let trip: Trip
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.modelContext) private var modelContext
     
     @State private var sharingService: CKSyncEngineSharingService?
     @State private var sharingInfo: TripSharingInfo?
@@ -224,20 +223,19 @@ struct TripSharingView: View {
         if !info.participants.isEmpty {
             Section("Participants") {
                 ForEach(Array(info.participants.enumerated()), id: \.offset) { index, participant in
+                    let displayName = index == 0 ? "You" : participantDisplayName(participant)
                     HStack {
                         Image(systemName: index == 0 ? "person.crop.circle.fill" : "person.circle")
                             .foregroundColor(index == 0 ? .blue : .secondary)
-                        
+
                         VStack(alignment: .leading) {
-                            Text(index == 0 ? "You" : (participant.isEmpty ? "Unknown User" : participant))
+                            Text(displayName)
                                 .font(.subheadline)
                                 .fontWeight(index == 0 ? .medium : .regular)
-                            
-                            if index < info.permissions.count {
-                                Text(permissionDescription(info.permissions[index]))
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
+
+                            Text(permissionDescription(participant.permission))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
                         }
                         
                         Spacer()
@@ -289,24 +287,15 @@ struct TripSharingView: View {
     // MARK: - Helper Methods
     
     private func initializeSharingService() async {
-        do {
-            let container = try ModelContainer(for: Trip.self, Activity.self, Transportation.self, Lodging.self, Organization.self, EmbeddedFileAttachment.self)
-            await MainActor.run {
-                sharingService = CKSyncEngineSharingService(modelContainer: container)
-                isLoadingSharingInfo = true
-            }
-            
-            let info = await sharingService?.getSharingInfo(for: trip)
-            await MainActor.run {
-                sharingInfo = info
-                isLoadingSharingInfo = false
-            }
-        } catch {
-            await MainActor.run {
-                errorMessage = "Failed to initialize sharing: \(error.localizedDescription)"
-                showingError = true
-                isLoadingSharingInfo = false
-            }
+        await MainActor.run {
+            sharingService = CKSyncEngineSharingService()
+            isLoadingSharingInfo = true
+        }
+
+        let info = await sharingService?.getSharingInfo(for: trip)
+        await MainActor.run {
+            sharingInfo = info
+            isLoadingSharingInfo = false
         }
     }
     
@@ -325,16 +314,16 @@ struct TripSharingView: View {
         }
         
         do {
-            let share = try await sharingService.createShare(for: trip)
-            
+            _ = try await sharingService.createShare(for: trip)
+
             // Update sharing info
             let info = await sharingService.getSharingInfo(for: trip)
-            
+
             await MainActor.run {
                 sharingInfo = info
-                shareURL = share.url ?? info.shareURL
+                shareURL = info.shareURL
                 isCreatingShare = false
-                
+
                 if shareURL != nil {
                     showingShareSheet = true
                 }
@@ -395,16 +384,23 @@ struct TripSharingView: View {
             isLoadingSharingInfo = false
         }
     }
+
+    private func participantDisplayName(_ participant: CKShare.Participant) -> String {
+        guard let components = participant.userIdentity.nameComponents else {
+            return "Unknown User"
+        }
+        let formatter = PersonNameComponentsFormatter()
+        let name = formatter.string(from: components)
+        return name.isEmpty ? "Unknown User" : name
+    }
     
-    private func permissionDescription(_ permission: TripSharingPermission) -> String {
+    private func permissionDescription(_ permission: CKShare.ParticipantPermission) -> String {
         switch permission {
-        case .read:
-            return "Can view"
         case .readOnly:
-            return "Read only"
+            return "Can view"
         case .readWrite:
             return "Can edit"
-        case .readWriteDelete:
+        default:
             return "Full access"
         }
     }
@@ -431,5 +427,4 @@ struct TripShareSheet: UIViewControllerRepresentable {
     NavigationStack {
         TripSharingView(trip: Trip(name: "Sample Trip"))
     }
-    .modelContainer(for: [Trip.self, Activity.self, Lodging.self, Transportation.self], inMemory: true)
 }

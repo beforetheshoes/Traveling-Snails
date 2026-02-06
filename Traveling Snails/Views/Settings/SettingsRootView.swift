@@ -4,29 +4,16 @@
 //
 //
 
-import SwiftData
+import ComposableArchitecture
 import SwiftUI
 
 /// Root view for settings - coordinates ViewModel and handles dependencies
 struct SettingsRootView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Environment(\.serviceContainer) private var serviceContainer
-
-    @State private var viewModel: SettingsViewModel?
+    let store: StoreOf<SettingsFeature>
 
     var body: some View {
         NavigationStack {
-            Group {
-                if let viewModel = viewModel {
-                    SettingsContentView(viewModel: viewModel)
-                } else {
-                    ProgressView("Loading Settings...")
-                        .onAppear {
-                            let authService = ProductionAuthenticationService()
-                            viewModel = SettingsViewModel(modelContext: modelContext, authService: authService)
-                        }
-                }
-            }
+            SettingsContentView(store: store)
         }
     }
 }

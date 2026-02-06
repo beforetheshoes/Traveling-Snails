@@ -4,11 +4,13 @@
 //
 //
 
+import Dependencies
+import SQLiteData
 import SwiftUI
 
 /// Unified file attachment list view with enhanced UI components and error handling
 struct EmbeddedFileAttachmentListView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Dependency(\.defaultDatabase) private var database
 
     let attachments: [EmbeddedFileAttachment]
     let onAttachmentAdded: (EmbeddedFileAttachment) -> Void
@@ -71,7 +73,9 @@ struct EmbeddedFileAttachmentListView: View {
                         Logger.shared.info("Edit attachment: \(attachment.displayName)", category: .fileAttachment)
                     },
                     onDelete: {
-                        handleAttachmentRemoved(attachment)
+                        Task {
+                            await handleAttachmentRemoved(attachment)
+                        }
                     }
                 )
             }
@@ -115,7 +119,7 @@ struct EmbeddedFileAttachmentListView: View {
         )
     }
 
-    private func handleAttachmentRemoved(_ attachment: EmbeddedFileAttachment) {
+    private func handleAttachmentRemoved(_ attachment: EmbeddedFileAttachment) async {
         Logger.shared.info("Removing attachment: \(attachment.displayName)", category: .fileAttachment)
 
         isProcessing = true
@@ -123,25 +127,20 @@ struct EmbeddedFileAttachmentListView: View {
         // Remove from callback first
         onAttachmentRemoved(attachment)
 
-        // Delete from database
-        modelContext.delete(attachment)
-
-        // Save context
-        modelContext.safeSave(context: "Removing file attachment").handleResult(
-            context: "File attachment removal",
-            onSuccess: {
-                isProcessing = false
-                NotificationCenter.default.post(
-                    name: .fileAttachmentRemoved,
-                    object: attachment
-                )
-            },
-            onFailure: { error in
-                isProcessing = false
-                Logger.shared.error("Failed to remove attachment: \(error.localizedDescription)", category: .fileAttachment)
-                handleError(L(L10n.Delete.attachmentFailed))
+        do {
+            try await database.write { db in
+                try EmbeddedFileAttachment.find(attachment.id).delete().execute(db)
             }
-        )
+            isProcessing = false
+            NotificationCenter.default.post(
+                name: .fileAttachmentRemoved,
+                object: attachment
+            )
+        } catch {
+            isProcessing = false
+            Logger.shared.error("Failed to remove attachment: \(error.localizedDescription)", category: .fileAttachment)
+            handleError(L(L10n.Delete.attachmentFailed))
+        }
     }
 
     private func handleError(_ message: String) {

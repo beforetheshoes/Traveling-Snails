@@ -4,7 +4,7 @@
 //
 //
 
-import SwiftData
+import SQLiteData
 import SwiftUI
 
 // MARK: - Form Field Protocol
@@ -597,7 +597,6 @@ extension UnifiedEditForm {
     /// Create a form for editing a trip
     static func tripForm(
         trip: Trip,
-        modelContext: ModelContext,
         onSaved: @escaping () -> Void = {}
     ) -> UnifiedEditForm {
         @State var name = trip.name
@@ -659,36 +658,40 @@ extension UnifiedEditForm {
             configuration: config,
             fields: fields,
             onSave: {
-                trip.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
-                trip.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard let database = DatabaseAccess.database else {
+                    throw AppError.databaseLoadFailed("Database not available")
+                }
+
+                var updatedTrip = trip
+                updatedTrip.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+                updatedTrip.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
 
                 if hasStartDate {
-                    trip.startDate = startDate
-                    trip.hasStartDate = true
+                    updatedTrip.startDate = startDate
+                    updatedTrip.hasStartDate = true
                 } else {
-                    trip.hasStartDate = false
+                    updatedTrip.hasStartDate = false
                 }
 
                 if hasEndDate {
-                    trip.endDate = endDate
-                    trip.hasEndDate = true
+                    updatedTrip.endDate = endDate
+                    updatedTrip.hasEndDate = true
                 } else {
-                    trip.hasEndDate = false
+                    updatedTrip.hasEndDate = false
                 }
+                let tripToSave = updatedTrip
 
-                switch modelContext.safeSave(context: "Saving trip") {
-                case .success:
-                    onSaved()
-                case .failure(let error):
-                    throw error
+                try await database.write { db in
+                    try Trip.upsert { tripToSave }.execute(db)
                 }
+                onSaved()
             },
             onDelete: {
-                switch modelContext.safeDelete(trip, context: "Deleting trip") {
-                case .success:
-                    break
-                case .failure(let error):
-                    throw error
+                guard let database = DatabaseAccess.database else {
+                    throw AppError.databaseLoadFailed("Database not available")
+                }
+                try await database.write { db in
+                    try Trip.find(trip.id).delete().execute(db)
                 }
             }
         )
@@ -697,7 +700,6 @@ extension UnifiedEditForm {
     /// Create a form for editing an organization
     static func organizationForm(
         organization: Organization,
-        modelContext: ModelContext,
         onSaved: @escaping () -> Void = {}
     ) -> UnifiedEditForm {
         @State var name = organization.name
@@ -782,18 +784,22 @@ extension UnifiedEditForm {
             configuration: config,
             fields: fields,
             onSave: {
-                organization.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
-                organization.phone = phone.trimmingCharacters(in: .whitespacesAndNewlines)
-                organization.email = email.trimmingCharacters(in: .whitespacesAndNewlines)
-                organization.website = website.trimmingCharacters(in: .whitespacesAndNewlines)
-                organization.logoURL = logoURL.trimmingCharacters(in: .whitespacesAndNewlines)
-
-                switch modelContext.safeSave(context: "Saving organization") {
-                case .success:
-                    onSaved()
-                case .failure(let error):
-                    throw error
+                guard let database = DatabaseAccess.database else {
+                    throw AppError.databaseLoadFailed("Database not available")
                 }
+
+                var updatedOrganization = organization
+                updatedOrganization.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+                updatedOrganization.phone = phone.trimmingCharacters(in: .whitespacesAndNewlines)
+                updatedOrganization.email = email.trimmingCharacters(in: .whitespacesAndNewlines)
+                updatedOrganization.website = website.trimmingCharacters(in: .whitespacesAndNewlines)
+                updatedOrganization.logoURL = logoURL.trimmingCharacters(in: .whitespacesAndNewlines)
+                let organizationToSave = updatedOrganization
+
+                try await database.write { db in
+                    try Organization.upsert { organizationToSave }.execute(db)
+                }
+                onSaved()
             },
             onDelete: {
                 // Check if organization is in use
@@ -810,11 +816,11 @@ extension UnifiedEditForm {
                     throw AppError.organizationInUse(organization.name, totalUsage)
                 }
 
-                switch modelContext.safeDelete(organization, context: "Deleting organization") {
-                case .success:
-                    break
-                case .failure(let error):
-                    throw error
+                guard let database = DatabaseAccess.database else {
+                    throw AppError.databaseLoadFailed("Database not available")
+                }
+                try await database.write { db in
+                    try Organization.find(organization.id).delete().execute(db)
                 }
             }
         )
@@ -823,7 +829,6 @@ extension UnifiedEditForm {
     /// Create a form for editing transportation
     static func transportationForm(
         transportation: Transportation,
-        modelContext: ModelContext,
         onSaved: @escaping () -> Void = {}
     ) -> UnifiedEditForm {
         @State var name = transportation.name
@@ -902,28 +907,32 @@ extension UnifiedEditForm {
             configuration: config,
             fields: fields,
             onSave: {
-                transportation.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
-                transportation.type = type
-                transportation.start = start
-                transportation.end = end
-                transportation.cost = cost
-                transportation.paid = paid
-                transportation.confirmation = confirmation.trimmingCharacters(in: .whitespacesAndNewlines)
-                transportation.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
-
-                switch modelContext.safeSave(context: "Saving transportation") {
-                case .success:
-                    onSaved()
-                case .failure(let error):
-                    throw error
+                guard let database = DatabaseAccess.database else {
+                    throw AppError.databaseLoadFailed("Database not available")
                 }
+
+                var updatedTransportation = transportation
+                updatedTransportation.name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+                updatedTransportation.type = type
+                updatedTransportation.start = start
+                updatedTransportation.end = end
+                updatedTransportation.cost = cost
+                updatedTransportation.paid = paid
+                updatedTransportation.confirmation = confirmation.trimmingCharacters(in: .whitespacesAndNewlines)
+                updatedTransportation.notes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
+                let transportationToSave = updatedTransportation
+
+                try await database.write { db in
+                    try Transportation.upsert { transportationToSave }.execute(db)
+                }
+                onSaved()
             },
             onDelete: {
-                switch modelContext.safeDelete(transportation, context: "Deleting transportation") {
-                case .success:
-                    break
-                case .failure(let error):
-                    throw error
+                guard let database = DatabaseAccess.database else {
+                    throw AppError.databaseLoadFailed("Database not available")
+                }
+                try await database.write { db in
+                    try Transportation.find(transportation.id).delete().execute(db)
                 }
             }
         )

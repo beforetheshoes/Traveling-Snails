@@ -2,51 +2,53 @@
 //  EmbeddedFileAttachment.swift
 //  Traveling Snails
 //
-//
 
 import Foundation
-import SwiftData
-import UniformTypeIdentifiers
+import SQLiteData
 
-@Model
-class EmbeddedFileAttachment: Identifiable {
-    var id = UUID()
-    var fileName: String = ""
-    var originalFileName: String = ""
-    var fileSize: Int64 = 0
-    var mimeType: String = ""
-    var fileExtension: String = ""
-    var createdDate = Date()
-    var fileDescription: String = ""
+@Table
+nonisolated struct EmbeddedFileAttachment: Hashable, Identifiable {
+    let id: UUID
+    var fileName: String
+    var originalFileName: String
+    var fileSize: Int64
+    var mimeType: String
+    var fileExtension: String
+    var createdDate: Date
+    var fileDescription: String
+    var fileData: Data?
 
-    // Store the actual file data in the database for cross-device sync
-    @Attribute(.externalStorage) var fileData: Data?
-
-    // Relationships
-    var activity: Activity?
-    var lodging: Lodging?
-    var transportation: Transportation?
+    var activityID: Activity.ID?
+    var lodgingID: Lodging.ID?
+    var transportationID: Transportation.ID?
 
     init(
+        id: UUID = UUID(),
         fileName: String = "",
         originalFileName: String = "",
         fileSize: Int64 = 0,
         mimeType: String = "",
         fileExtension: String = "",
         fileDescription: String = "",
-        fileData: Data? = nil
+        fileData: Data? = nil,
+        createdDate: Date = Date(),
+        activityID: Activity.ID? = nil,
+        lodgingID: Lodging.ID? = nil,
+        transportationID: Transportation.ID? = nil
     ) {
+        self.id = id
         self.fileName = fileName
         self.originalFileName = originalFileName
         self.fileSize = fileSize
         self.mimeType = mimeType
         self.fileExtension = fileExtension
         self.fileDescription = fileDescription
-        self.createdDate = Date()
         self.fileData = fileData
+        self.createdDate = createdDate
+        self.activityID = activityID
+        self.lodgingID = lodgingID
+        self.transportationID = transportationID
     }
-
-    // MARK: - Computed Properties
 
     var formattedFileSize: String {
         ByteCountFormatter.string(fromByteCount: fileSize, countStyle: .file)
@@ -80,7 +82,6 @@ class EmbeddedFileAttachment: Identifiable {
         fileDescription.isEmpty ? originalFileName : fileDescription
     }
 
-    // Create a temporary file URL for QuickLook
     var temporaryFileURL: URL? {
         guard let data = fileData else { return nil }
 

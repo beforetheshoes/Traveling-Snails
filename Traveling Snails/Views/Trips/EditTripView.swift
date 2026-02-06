@@ -4,23 +4,20 @@
 //
 //
 
-import SwiftData
+import Dependencies
+import SQLiteData
 import SwiftUI
 
 
 struct EditTripView: View {
-    @Bindable var trip: Trip
+    let trip: Trip
     @Environment(\.dismiss)
     private var dismiss
-    @Environment(\.modelContext)
-    private var modelContext
-    @Environment(\.navigationRouter)
-    private var navigationRouter
+    @Dependency(\.defaultDatabase)
+    private var database
     @Environment(ModernSyncManager.self)
     private var syncManager
 
-    // Background context manager for save operations
-    @State private var backgroundContextManager: BackgroundModelContextManager?
 
     // Local state for editing
     @State private var name: String = ""
@@ -259,7 +256,7 @@ struct EditTripView: View {
     @ViewBuilder
     private func deleteConfirmationActions() -> some View {
         Button("Delete", role: .destructive) {
-            deleteTrip()
+            Task { await deleteTrip() }
         }
         Button("Cancel", role: .cancel) {}
     }
@@ -287,9 +284,6 @@ struct EditTripView: View {
         // Configure operation queue to prevent concurrent saves
         saveOperationQueue.maxConcurrentOperationCount = 1
         saveOperationQueue.qualityOfService = .userInitiated
-
-        // Initialize background context manager for save operations
-        backgroundContextManager = BackgroundModelContextManager(container: modelContext.container)
 
         // Monitor network status
         updateNetworkStatus()
@@ -352,103 +346,36 @@ struct EditTripView: View {
             return .failure(.missingRequiredField("Trip name"))
         }
 
-        // Ensure background context manager is available
-        guard let backgroundManager = backgroundContextManager else {
-            // Fallback to main context save if background manager is not available
-            #if DEBUG
-            Logger.secure(category: .app).warning("EditTripView: Background context manager not available, using main context")
-            #endif
-            return await performMainContextSave()
-        }
-
         // Capture values for background operation
-        let tripId = trip.id
         let newName = name
         let newNotes = notes
         let newStartDate = hasStartDate ? startDate : nil
         let newEndDate = hasEndDate ? endDate : nil
 
-        // Perform save operation in background context
-        let saveResult = await backgroundManager.saveTripInBackground(tripId: tripId) { backgroundTrip in
-            // Update trip properties in background context
-            backgroundTrip.name = newName
-            backgroundTrip.notes = newNotes
+        do {
+            var updatedTrip = trip
+            updatedTrip.name = newName
+            updatedTrip.notes = newNotes
 
             if let startDate = newStartDate {
-                backgroundTrip.setStartDate(startDate)
+                updatedTrip.setStartDate(startDate)
             } else {
-                backgroundTrip.clearStartDate()
+                updatedTrip.clearStartDate()
             }
 
             if let endDate = newEndDate {
-                backgroundTrip.setEndDate(endDate)
+                updatedTrip.setEndDate(endDate)
             } else {
-                backgroundTrip.clearEndDate()
+                updatedTrip.clearEndDate()
             }
-        }
+            let tripToSave = updatedTrip
 
-        switch saveResult {
-        case .success:
-            #if DEBUG
-            Logger.secure(category: .app).debug("EditTripView: Trip saved successfully using background context")
-            #endif
-
-            // Update local trip object on main thread to reflect changes
-            await MainActor.run {
-                trip.name = newName
-                trip.notes = newNotes
-                if let startDate = newStartDate {
-                    trip.setStartDate(startDate)
-                } else {
-                    trip.clearStartDate()
-                }
-                if let endDate = newEndDate {
-                    trip.setEndDate(endDate)
-                } else {
-                    trip.clearEndDate()
-                }
+            try await database.write { db in
+                try Trip.upsert { tripToSave }.execute(db)
             }
 
-            // Trigger sync if network is available
-            if syncManager.networkStatus == .online {
-                syncManager.triggerSync()
-            }
-
-            return .success(())
-        case .failure(let error):
             #if DEBUG
-            Logger.secure(category: .app).error("EditTripView: Background save failed: \(error, privacy: .private)")
-            #endif
-            return .failure(error)
-        }
-    }
-
-    /// Fallback method for saving using main context
-    @MainActor
-    private func performMainContextSave() async -> AppResult<Void> {
-        // Update trip properties
-        trip.name = name
-        trip.notes = notes
-
-        if hasStartDate {
-            trip.setStartDate(startDate)
-        } else {
-            trip.clearStartDate()
-        }
-
-        if hasEndDate {
-            trip.setEndDate(endDate)
-        } else {
-            trip.clearEndDate()
-        }
-
-        // Attempt to save with error handling
-        let saveResult = modelContext.safeSave(context: "Trip save operation (main context fallback)")
-
-        switch saveResult {
-        case .success:
-            #if DEBUG
-            Logger.secure(category: .app).debug("EditTripView: Trip saved successfully using main context fallback")
+            Logger.secure(category: .app).debug("EditTripView: Trip saved successfully")
             #endif
 
             // Trigger sync if network is available
@@ -457,11 +384,11 @@ struct EditTripView: View {
             }
 
             return .success(())
-        case .failure(let error):
+        } catch {
             #if DEBUG
-            Logger.secure(category: .app).error("EditTripView: Main context save failed: \(error, privacy: .private)")
+            Logger.secure(category: .app).error("EditTripView: Save failed: \(error.localizedDescription, privacy: .private)")
             #endif
-            return .failure(error)
+            return .failure(.databaseSaveFailed(error.localizedDescription))
         }
     }
 
@@ -618,7 +545,8 @@ struct EditTripView: View {
         )
     }
 
-    func deleteTrip() {
+    @MainActor
+    func deleteTrip() async {
         #if DEBUG
         Logger.secure(category: .dataImport).debug("EditTripView: Starting trip deletion for ID: \(trip.id, privacy: .public)")
         #endif
@@ -626,11 +554,10 @@ struct EditTripView: View {
         // Store trip ID for logging
         let tripId = trip.id
 
-        // CRITICAL: Delete and save FIRST to ensure CloudKit sync happens
-        modelContext.delete(trip)
-
         do {
-            try modelContext.save()
+            try await database.write { db in
+                try Trip.find(tripId).delete().execute(db)
+            }
             #if DEBUG
             Logger.secure(category: .dataImport).debug("EditTripView: Trip (ID: \(tripId, privacy: .public)) deleted and saved successfully")
             #endif
@@ -655,8 +582,6 @@ struct EditTripView: View {
                 #endif
             }
 
-            // ONLY AFTER successful save: trigger navigation (immediate)
-            navigationRouter.navigate(.navigateToTripList)
             dismiss()
         } catch {
             Logger.secure(category: .dataImport).error("EditTripView: Failed to save after trip deletion: \(error.localizedDescription, privacy: .public)")

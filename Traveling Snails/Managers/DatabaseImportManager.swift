@@ -5,13 +5,13 @@
 //
 
 import Foundation
-import SwiftData
+import SQLiteData
 
 /// Timeout utility for async operations in DatabaseImportManager
 extension DatabaseImportManager {
-    private func withTimeout<T>(
+    private func withTimeout<T: Sendable>(
         seconds: TimeInterval,
-        operation: @escaping () throws -> T
+        operation: @escaping @Sendable () throws -> T
     ) async throws -> T {
         try await withThrowingTaskGroup(of: T.self) { group in
             group.addTask {
@@ -29,9 +29,9 @@ extension DatabaseImportManager {
         }
     }
 
-    private func withAsyncTimeout<T>(
+    private func withAsyncTimeout<T: Sendable>(
         seconds: TimeInterval,
-        operation: @escaping () async -> T
+        operation: @escaping @Sendable () async -> T
     ) async throws -> T {
         try await withThrowingTaskGroup(of: T.self) { group in
             group.addTask {
@@ -68,8 +68,9 @@ enum ImportError: Error, LocalizedError {
     }
 }
 
+@MainActor
 @Observable
-class DatabaseImportManager {
+final class DatabaseImportManager: @unchecked Sendable {
     var importProgress: Double = 0.0
     var importStatus: String = ""
     var isImporting: Bool = false
@@ -80,6 +81,8 @@ class DatabaseImportManager {
     private var importedTrips: [String: Trip] = [:]
     private var importedOrganizations: [String: Organization] = [:]
     private var importedAddresses: [String: Address] = [:]
+
+    nonisolated init() {}
 
     struct ImportResult {
         let tripsImported: Int
@@ -93,11 +96,11 @@ class DatabaseImportManager {
         let errors: [String]
     }
 
-    func importDatabase(from url: URL, into modelContext: ModelContext) async -> ImportResult {
+    func importDatabase(from url: URL, into database: DatabaseWriter) async -> ImportResult {
         // Add overall timeout to prevent hanging
         do {
             return try await withAsyncTimeout(seconds: 120.0) {
-                await self.performImport(from: url, into: modelContext)
+                await self.performImport(from: url, into: database)
             }
         } catch {
             await MainActor.run {
@@ -113,7 +116,7 @@ class DatabaseImportManager {
         }
     }
 
-    private func performImport(from url: URL, into modelContext: ModelContext) async -> ImportResult {
+    private func performImport(from url: URL, into database: DatabaseWriter) async -> ImportResult {
         await MainActor.run {
             isImporting = true
             importProgress = 0.0
@@ -259,7 +262,7 @@ class DatabaseImportManager {
                 importProgress = 0.22
             }
 
-            _ = Organization.createNoneOrganization(in: modelContext)
+            _ = try? await ensureNoneOrganization(in: database)
 
             // Step 1: Import organizations first (needed for relationships)
             if let organizationsData = json["organizations"] as? [[String: Any]] {
@@ -272,7 +275,7 @@ class DatabaseImportManager {
                 var mergedCount = 0
 
                 for (index, orgData) in organizationsData.enumerated() {
-                    let importResult = await importOrganization(orgData, into: modelContext)
+                    let importResult = await importOrganization(orgData, into: database)
                     if let _ = importResult.organization {
                         if importResult.wasMerged {
                             mergedCount += 1
@@ -307,7 +310,7 @@ class DatabaseImportManager {
                 }
 
                 for (index, tripData) in tripsData.enumerated() {
-                    if (await importTrip(tripData, into: modelContext)) != nil {
+                    if (await importTrip(tripData, into: database)) != nil {
                         result = ImportResult(
                             tripsImported: result.tripsImported + 1,
                             organizationsImported: result.organizationsImported,
@@ -344,7 +347,7 @@ class DatabaseImportManager {
                             for transportData in allTransportation {
                                 if let transportId = transportData["id"] as? String,
                                    transportationIds.contains(transportId) {
-                                    if (await importTransportation(transportData, for: trip, into: modelContext)) != nil {
+                                    if (await importTransportation(transportData, for: trip, into: database)) != nil {
                                         transportationCount += 1
                                     }
                                 }
@@ -383,7 +386,7 @@ class DatabaseImportManager {
                             for lodgingData in allLodging {
                                 if let lodgingId = lodgingData["id"] as? String,
                                    lodgingIds.contains(lodgingId) {
-                                    if (await importLodging(lodgingData, for: trip, into: modelContext)) != nil {
+                                    if (await importLodging(lodgingData, for: trip, into: database)) != nil {
                                         lodgingCount += 1
                                     }
                                 }
@@ -422,7 +425,7 @@ class DatabaseImportManager {
                             for activityData in allActivities {
                                 if let activityId = activityData["id"] as? String,
                                    activityIds.contains(activityId) {
-                                    if (await importActivity(activityData, for: trip, into: modelContext)) != nil {
+                                    if (await importActivity(activityData, for: trip, into: database)) != nil {
                                         activitiesCount += 1
                                     }
                                 }
@@ -452,7 +455,7 @@ class DatabaseImportManager {
                 }
 
                 for (index, attachmentData) in attachmentsData.enumerated() {
-                    if (await importAttachment(attachmentData, into: modelContext)) != nil {
+                    if (await importAttachment(attachmentData, into: database)) != nil {
                         result = ImportResult(
                             tripsImported: result.tripsImported,
                             organizationsImported: result.organizationsImported,
@@ -478,7 +481,7 @@ class DatabaseImportManager {
                 importProgress = 0.95
             }
 
-            _ = Organization.cleanupDuplicateNoneOrganizations(in: modelContext)
+            _ = try? await ensureNoneOrganization(in: database)
 
             // Save all changes
             await MainActor.run {
@@ -486,7 +489,6 @@ class DatabaseImportManager {
                 importProgress = 0.98
             }
 
-            try modelContext.save()
 
             await MainActor.run {
                 importProgress = 1.0
@@ -553,21 +555,17 @@ class DatabaseImportManager {
         return allActivities.isEmpty ? nil : allActivities
     }
 
-    private func importOrganization(_ data: [String: Any], into modelContext: ModelContext) async -> (organization: Organization?, wasMerged: Bool) {
+    private func importOrganization(_ data: [String: Any], into database: DatabaseWriter) async -> (organization: Organization?, wasMerged: Bool) {
         guard let name = data["name"] as? String,
               let orgId = data["id"] as? String else {
             return (nil, false)
         }
 
         // Check if organization already exists by name
-        let descriptor = FetchDescriptor<Organization>(
-            predicate: #Predicate<Organization> { $0.name == name }
-        )
-
         do {
-            let existingOrgs = try modelContext.fetch(descriptor)
-
-            if let existingOrg = existingOrgs.first {
+            if var existingOrg = try await database.read({ db in
+                try Organization.where { $0.name.eq(name) }.fetchOne(db)
+            }) {
                 // Merge data into existing organization
                 existingOrg.phone = data["phone"] as? String ?? existingOrg.phone
                 existingOrg.email = data["email"] as? String ?? existingOrg.email
@@ -577,22 +575,26 @@ class DatabaseImportManager {
 
                 // Import address if present and merge
                 if let addressData = data["address"] as? [String: Any], !addressData.isEmpty {
-                    if existingOrg.address == nil {
-                        existingOrg.address = importAddress(addressData)
+                    let address = importAddress(addressData)
+                    try await database.write { db in
+                        try Address.upsert { address }.execute(db)
                     }
+                    existingOrg.addressID = address.id
                 }
 
-                // Store for relationship building
-                importedOrganizations[orgId] = existingOrg
-
-                return (existingOrg, true)
+                let existingOrgToSave = existingOrg
+                try await database.write { db in
+                    try Organization.upsert { existingOrgToSave }.execute(db)
+                }
+                importedOrganizations[orgId] = existingOrgToSave
+                return (existingOrgToSave, true)
             }
         } catch {
             Logger.shared.error("Error checking for existing organization: \(error)")
         }
 
         // Create new organization
-        let org = Organization(
+        var org = Organization(
             name: name,
             phone: data["phone"] as? String ?? "",
             email: data["email"] as? String ?? "",
@@ -603,15 +605,22 @@ class DatabaseImportManager {
 
         // Import address if present
         if let addressData = data["address"] as? [String: Any] {
-            org.address = importAddress(addressData)
+            let address = importAddress(addressData)
+            try? await database.write { db in
+                try Address.upsert { address }.execute(db)
+            }
+            org.addressID = address.id
         }
 
-        modelContext.insert(org)
+        let orgToSave = org
+        try? await database.write { db in
+            try Organization.upsert { orgToSave }.execute(db)
+        }
 
         // Store for relationship building
-        importedOrganizations[orgId] = org
+        importedOrganizations[orgId] = orgToSave
 
-        return (org, false)
+        return (orgToSave, false)
     }
 
     private func importAddress(_ data: [String: Any]) -> Address {
@@ -633,11 +642,11 @@ class DatabaseImportManager {
         return address
     }
 
-    private func importTrip(_ data: [String: Any], into modelContext: ModelContext) async -> Trip? {
+    private func importTrip(_ data: [String: Any], into database: DatabaseWriter) async -> Trip? {
         guard let name = data["name"] as? String,
               let tripId = data["id"] as? String else { return nil }
 
-        let trip = Trip(
+        var trip = Trip(
             name: name,
             notes: data["notes"] as? String ?? ""
         )
@@ -660,21 +669,24 @@ class DatabaseImportManager {
             trip.isProtected = isProtected
         }
 
-        modelContext.insert(trip)
+        let tripToSave = trip
+        try? await database.write { db in
+            try Trip.upsert { tripToSave }.execute(db)
+        }
 
         // Store for relationship building
-        importedTrips[tripId] = trip
+        importedTrips[tripId] = tripToSave
 
-        return trip
+        return tripToSave
     }
 
-    private func importTransportation(_ data: [String: Any], for trip: Trip, into modelContext: ModelContext) async -> Transportation? {
+    private func importTransportation(_ data: [String: Any], for trip: Trip, into database: DatabaseWriter) async -> Transportation? {
         guard let name = data["name"] as? String else { return nil }
 
         let typeString = data["type"] as? String ?? "plane"
         let type = TransportationType(rawValue: typeString) ?? .plane
 
-        let transportation = Transportation(
+        var transportation = Transportation(
             name: name,
             type: type,
             start: parseDate(data["start"] as? String) ?? Date(),
@@ -689,21 +701,24 @@ class DatabaseImportManager {
         // Link to organization if available
         if let orgId = data["organizationId"] as? String,
            let organization = importedOrganizations[orgId] {
-            transportation.organization = organization
+            transportation.organizationID = organization.id
         }
 
         // Set timezones
         transportation.startTZId = data["startTZId"] as? String ?? TimeZone.current.identifier
         transportation.endTZId = data["endTZId"] as? String ?? TimeZone.current.identifier
 
-        modelContext.insert(transportation)
-        return transportation
+        let transportationToSave = transportation
+        try? await database.write { db in
+            try Transportation.upsert { transportationToSave }.execute(db)
+        }
+        return transportationToSave
     }
 
-    private func importLodging(_ data: [String: Any], for trip: Trip, into modelContext: ModelContext) async -> Lodging? {
+    private func importLodging(_ data: [String: Any], for trip: Trip, into database: DatabaseWriter) async -> Lodging? {
         guard let name = data["name"] as? String else { return nil }
 
-        let lodging = Lodging(
+        var lodging = Lodging(
             name: name,
             start: parseDate(data["start"] as? String) ?? Date(),
             end: parseDate(data["end"] as? String) ?? Date(),
@@ -717,21 +732,24 @@ class DatabaseImportManager {
         // Link to organization if available
         if let orgId = data["organizationId"] as? String,
            let organization = importedOrganizations[orgId] {
-            lodging.organization = organization
+            lodging.organizationID = organization.id
         }
 
         // Set timezones
         lodging.checkInTZId = data["startTZId"] as? String ?? TimeZone.current.identifier
         lodging.checkOutTZId = data["endTZId"] as? String ?? TimeZone.current.identifier
 
-        modelContext.insert(lodging)
-        return lodging
+        let lodgingToSave = lodging
+        try? await database.write { db in
+            try Lodging.upsert { lodgingToSave }.execute(db)
+        }
+        return lodgingToSave
     }
 
-    private func importActivity(_ data: [String: Any], for trip: Trip, into modelContext: ModelContext) async -> Activity? {
+    private func importActivity(_ data: [String: Any], for trip: Trip, into database: DatabaseWriter) async -> Activity? {
         guard let name = data["name"] as? String else { return nil }
 
-        let activity = Activity(
+        var activity = Activity(
             name: name,
             start: parseDate(data["start"] as? String) ?? Date(),
             end: parseDate(data["end"] as? String) ?? Date(),
@@ -745,15 +763,18 @@ class DatabaseImportManager {
         // Link to organization if available
         if let orgId = data["organizationId"] as? String,
            let organization = importedOrganizations[orgId] {
-            activity.organization = organization
+            activity.organizationID = organization.id
         }
 
         // Set timezones
         activity.startTZId = data["startTZId"] as? String ?? TimeZone.current.identifier
         activity.endTZId = data["endTZId"] as? String ?? TimeZone.current.identifier
 
-        modelContext.insert(activity)
-        return activity
+        let activityToSave = activity
+        try? await database.write { db in
+            try Activity.upsert { activityToSave }.execute(db)
+        }
+        return activityToSave
     }
 
     private func parseDate(_ dateString: String?) -> Date? {
@@ -761,11 +782,11 @@ class DatabaseImportManager {
         return ISO8601DateFormatter().date(from: dateString)
     }
 
-    private func importAttachment(_ data: [String: Any], into modelContext: ModelContext) async -> EmbeddedFileAttachment? {
+    private func importAttachment(_ data: [String: Any], into database: DatabaseWriter) async -> EmbeddedFileAttachment? {
         guard let fileName = data["fileName"] as? String,
               let originalFileName = data["originalFileName"] as? String else { return nil }
 
-        let attachment = EmbeddedFileAttachment(
+        var attachment = EmbeddedFileAttachment(
             fileName: fileName,
             originalFileName: originalFileName,
             fileSize: data["fileSize"] as? Int64 ?? 0,
@@ -793,25 +814,41 @@ class DatabaseImportManager {
             case "activity":
                 // Find the imported activity by ID
                 if let activity = importedTrips.values.flatMap({ $0.activity }).first(where: { $0.id.uuidString == parentId }) {
-                    attachment.activity = activity
+                    attachment.activityID = activity.id
                 }
             case "lodging":
                 // Find the imported lodging by ID
                 if let lodging = importedTrips.values.flatMap({ $0.lodging }).first(where: { $0.id.uuidString == parentId }) {
-                    attachment.lodging = lodging
+                    attachment.lodgingID = lodging.id
                 }
             case "transportation":
                 // Find the imported transportation by ID
                 if let transportation = importedTrips.values.flatMap({ $0.transportation }).first(where: { $0.id.uuidString == parentId }) {
-                    attachment.transportation = transportation
+                    attachment.transportationID = transportation.id
                 }
             default:
                 Logger.shared.warning("Unknown attachment parent type: \(parentType)")
             }
         }
 
-        modelContext.insert(attachment)
-        return attachment
+        let attachmentToSave = attachment
+        try? await database.write { db in
+            try EmbeddedFileAttachment.upsert { attachmentToSave }.execute(db)
+        }
+        return attachmentToSave
+    }
+
+    private func ensureNoneOrganization(in database: DatabaseWriter) async throws -> Organization {
+        if let existing = try await database.read({ db in
+            try Organization.where { $0.name.eq("None") }.fetchOne(db)
+        }) {
+            return existing
+        }
+        let noneOrg = Organization(name: "None")
+        try await database.write { db in
+            try Organization.insert { noneOrg }.execute(db)
+        }
+        return noneOrg
     }
 
     // MARK: - Error Handling Helpers

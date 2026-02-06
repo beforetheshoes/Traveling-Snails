@@ -4,11 +4,13 @@
 //
 //
 
+import Dependencies
+import SQLiteData
 import SwiftUI
 
 struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Dependency(\.defaultDatabase) private var database
     let activity: T
 
     @State private var isEditing = false
@@ -101,7 +103,11 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
                     attachments: $attachments,
                     isEditing: isEditing,
                     color: activity.color,
-                    onAttachmentAdded: addAttachmentToActivity,
+                    onAttachmentAdded: { attachment in
+                        Task {
+                            await addAttachmentToActivity(attachment)
+                        }
+                    },
                     onAttachmentRemoved: removeAttachmentFromActivity
                 )
 
@@ -118,7 +124,9 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 Button(isEditing ? "Save" : "Edit") {
                     if isEditing {
-                        saveChanges()
+                        Task {
+                            await saveChanges()
+                        }
                     } else {
                         startEditing()
                     }
@@ -158,7 +166,9 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
             titleVisibility: .visible
         ) {
             Button("Delete", role: .destructive) {
-                deleteActivity()
+                Task {
+                    await deleteActivity()
+                }
             }
         }
         .onAppear {
@@ -214,16 +224,13 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
         }
     }
 
-    private func saveChanges() {
+    private func saveChanges() async {
         #if DEBUG
         Logger.shared.debug("Activity edit data updated", category: .ui)
         #endif
 
-        // Update the activity with the edit data
-        updateActivityFromEditData()
-
         do {
-            try modelContext.save()
+            try await persistActivityChanges()
             Logger.shared.info("Changes saved successfully")
 
             withAnimation {
@@ -234,24 +241,93 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
         }
     }
 
-    private func updateActivityFromEditData() {
+    private func persistActivityChanges() async throws {
         switch activity.activityType {
         case .activity:
-            if let activityItem = activity as? Activity {
-                updateActivity(activityItem)
+            guard var activityItem = activity as? Activity else { return }
+            updateActivity(&activityItem)
+            let activityToSave = activityItem
+            let attachmentsToSave = attachments
+            try await database.write { db in
+                try Activity.upsert { activityToSave }.execute(db)
+                try EmbeddedFileAttachment.where { $0.activityID.eq(activityToSave.id) }.delete().execute(db)
+                try EmbeddedFileAttachment.insert {
+                    for attachment in attachmentsToSave {
+                        EmbeddedFileAttachment.Draft(
+                            id: attachment.id,
+                            fileName: attachment.fileName,
+                            originalFileName: attachment.originalFileName,
+                            fileSize: attachment.fileSize,
+                            mimeType: attachment.mimeType,
+                            fileExtension: attachment.fileExtension,
+                            createdDate: attachment.createdDate,
+                            fileDescription: attachment.fileDescription,
+                            fileData: attachment.fileData,
+                            activityID: activityToSave.id,
+                            lodgingID: nil,
+                            transportationID: nil
+                        )
+                    }
+                }.execute(db)
             }
         case .lodging:
-            if let lodging = activity as? Lodging {
-                updateLodging(lodging)
+            guard var lodging = activity as? Lodging else { return }
+            updateLodging(&lodging)
+            let lodgingToSave = lodging
+            let attachmentsToSave = attachments
+            try await database.write { db in
+                try Lodging.upsert { lodgingToSave }.execute(db)
+                try EmbeddedFileAttachment.where { $0.lodgingID.eq(lodgingToSave.id) }.delete().execute(db)
+                try EmbeddedFileAttachment.insert {
+                    for attachment in attachmentsToSave {
+                        EmbeddedFileAttachment.Draft(
+                            id: attachment.id,
+                            fileName: attachment.fileName,
+                            originalFileName: attachment.originalFileName,
+                            fileSize: attachment.fileSize,
+                            mimeType: attachment.mimeType,
+                            fileExtension: attachment.fileExtension,
+                            createdDate: attachment.createdDate,
+                            fileDescription: attachment.fileDescription,
+                            fileData: attachment.fileData,
+                            activityID: nil,
+                            lodgingID: lodgingToSave.id,
+                            transportationID: nil
+                        )
+                    }
+                }.execute(db)
             }
         case .transportation:
-            if let transportation = activity as? Transportation {
-                updateTransportation(transportation)
+            guard var transportation = activity as? Transportation else { return }
+            updateTransportation(&transportation)
+            let transportationToSave = transportation
+            let attachmentsToSave = attachments
+            try await database.write { db in
+                try Transportation.upsert { transportationToSave }.execute(db)
+                try EmbeddedFileAttachment.where { $0.transportationID.eq(transportationToSave.id) }.delete().execute(db)
+                try EmbeddedFileAttachment.insert {
+                    for attachment in attachmentsToSave {
+                        EmbeddedFileAttachment.Draft(
+                            id: attachment.id,
+                            fileName: attachment.fileName,
+                            originalFileName: attachment.originalFileName,
+                            fileSize: attachment.fileSize,
+                            mimeType: attachment.mimeType,
+                            fileExtension: attachment.fileExtension,
+                            createdDate: attachment.createdDate,
+                            fileDescription: attachment.fileDescription,
+                            fileData: attachment.fileData,
+                            activityID: nil,
+                            lodgingID: nil,
+                            transportationID: transportationToSave.id
+                        )
+                    }
+                }.execute(db)
             }
         }
     }
 
-    private func updateActivity(_ activityItem: Activity) {
+    private func updateActivity(_ activityItem: inout Activity) {
         activityItem.name = editData.name
         activityItem.start = editData.start
         activityItem.end = editData.end
@@ -261,14 +337,13 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
         activityItem.paid = editData.paid
         activityItem.reservation = editData.confirmationField
         activityItem.notes = editData.notes
-        activityItem.organization = editData.organization
+        activityItem.organizationID = editData.organization?.id
         activityItem.customLocationName = editData.customLocationName
-        activityItem.customAddresss = editData.customAddress
+        activityItem.addressID = editData.customAddress?.id
         activityItem.hideLocation = editData.hideLocation
-        activityItem.fileAttachments = attachments
     }
 
-    private func updateLodging(_ lodging: Lodging) {
+    private func updateLodging(_ lodging: inout Lodging) {
         lodging.name = editData.name
         lodging.start = editData.start
         lodging.end = editData.end
@@ -278,14 +353,13 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
         lodging.paid = editData.paid
         lodging.reservation = editData.confirmationField
         lodging.notes = editData.notes
-        lodging.organization = editData.organization
+        lodging.organizationID = editData.organization?.id
         lodging.customLocationName = editData.customLocationName
-        lodging.customAddresss = editData.customAddress
+        lodging.addressID = editData.customAddress?.id
         lodging.hideLocation = editData.hideLocation
-        lodging.fileAttachments = attachments
     }
 
-    private func updateTransportation(_ transportation: Transportation) {
+    private func updateTransportation(_ transportation: inout Transportation) {
         transportation.name = editData.name
         transportation.start = editData.start
         transportation.end = editData.end
@@ -295,30 +369,46 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
         transportation.paid = editData.paid
         transportation.confirmation = editData.confirmationField
         transportation.notes = editData.notes
-        transportation.organization = editData.organization
+        transportation.organizationID = editData.organization?.id
         transportation.type = editData.transportationType ?? .plane
-        transportation.fileAttachments = attachments
     }
 
-    private func deleteActivity() {
+    private func deleteActivity() async {
         // Type-safe deletion based on activity type
+        let deleteTarget: (ActivityType, UUID)?
         switch activity.activityType {
         case .activity:
-            if let activityItem = activity as? Activity {
-                modelContext.delete(activityItem)
+            if let id = (activity as? Activity)?.id {
+                deleteTarget = (.activity, id)
+            } else {
+                deleteTarget = nil
             }
         case .lodging:
-            if let lodging = activity as? Lodging {
-                modelContext.delete(lodging)
+            if let id = (activity as? Lodging)?.id {
+                deleteTarget = (.lodging, id)
+            } else {
+                deleteTarget = nil
             }
         case .transportation:
-            if let transportation = activity as? Transportation {
-                modelContext.delete(transportation)
+            if let id = (activity as? Transportation)?.id {
+                deleteTarget = (.transportation, id)
+            } else {
+                deleteTarget = nil
             }
         }
+        guard let deleteTarget else { return }
 
         do {
-            try modelContext.save()
+            try await database.write { db in
+                switch deleteTarget.0 {
+                case .activity:
+                    try Activity.find(deleteTarget.1).delete().execute(db)
+                case .lodging:
+                    try Lodging.find(deleteTarget.1).delete().execute(db)
+                case .transportation:
+                    try Transportation.find(deleteTarget.1).delete().execute(db)
+                }
+            }
             dismiss()
         } catch {
             Logger.shared.error("Failed to delete activity", category: .database)
@@ -343,29 +433,37 @@ struct UnifiedTripActivityDetailView<T: TripActivityProtocol>: View {
         attachments = activity.fileAttachments
     }
 
-    private func addAttachmentToActivity(_ attachment: EmbeddedFileAttachment) {
-        switch activity.activityType {
-        case .activity:
-            if let activityItem = activity as? Activity {
-                attachment.activity = activityItem
-                activityItem.fileAttachments.append(attachment)
-            }
-        case .lodging:
-            if let lodging = activity as? Lodging {
-                attachment.lodging = lodging
-                lodging.fileAttachments.append(attachment)
-            }
-        case .transportation:
-            if let transportation = activity as? Transportation {
-                attachment.transportation = transportation
-                transportation.fileAttachments.append(attachment)
-            }
-        }
-
-        attachments.append(attachment)
-
+    private func addAttachmentToActivity(_ attachment: EmbeddedFileAttachment) async {
         do {
-            try modelContext.save()
+            var updated = attachment
+            let activityType = activity.activityType
+            switch activityType {
+            case .activity:
+                if let activityItem = activity as? Activity {
+                    updated.activityID = activityItem.id
+                    updated.lodgingID = nil
+                    updated.transportationID = nil
+                }
+            case .lodging:
+                if let lodging = activity as? Lodging {
+                    updated.activityID = nil
+                    updated.lodgingID = lodging.id
+                    updated.transportationID = nil
+                }
+            case .transportation:
+                if let transportation = activity as? Transportation {
+                    updated.activityID = nil
+                    updated.lodgingID = nil
+                    updated.transportationID = transportation.id
+                }
+            }
+            let attachmentToSave = updated
+
+            try await database.write { db in
+                try EmbeddedFileAttachment.upsert { attachmentToSave }.execute(db)
+            }
+
+            refreshAttachments()
         } catch {
             Logger.shared.error("Failed to save attachment relationship in UnifiedTripActivityDetailView: \(error.localizedDescription)", category: .database)
         }

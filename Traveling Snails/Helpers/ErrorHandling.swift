@@ -4,7 +4,7 @@
 //
 //
 
-import SwiftData
+import SQLiteData
 import SwiftUI
 
 // MARK: - Application Errors
@@ -412,35 +412,6 @@ extension NotificationCenter {
             object: error,
             userInfo: context.map { ["context": $0] }
         )
-    }
-}
-
-// MARK: - Safe Operation Wrappers
-
-extension ModelContext {
-    /// Safely save the context with proper error handling
-    func safeSave(context: String? = nil) -> AppResult<Void> {
-        do {
-            try save()
-            Logger.shared.logDatabase("Context saved", details: context, success: true)
-            return .success(())
-        } catch {
-            let appError = AppError.databaseSaveFailed(error.localizedDescription)
-            Logger.shared.logDatabase("Context save failed", details: "\(context ?? "Unknown"): \(error)", success: false)
-            return .failure(appError)
-        }
-    }
-
-    /// Safely delete an object with proper error handling
-    func safeDelete<T: PersistentModel>(_ object: T, context: String? = nil) -> AppResult<Void> {
-        delete(object)
-        return safeSave(context: context ?? "Deleting \(type(of: object))")
-    }
-
-    /// Safely insert an object with proper error handling
-    func safeInsert<T: PersistentModel>(_ object: T, context: String? = nil) -> AppResult<Void> {
-        insert(object)
-        return safeSave(context: context ?? "Inserting \(type(of: object))")
     }
 }
 

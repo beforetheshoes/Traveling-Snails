@@ -14,7 +14,11 @@ struct RemoveProtectionConfirmationTests {
     @Test("IsolatedTripDetailView should show confirmation dialog with warning message", .tags(.ui, .medium, .parallel, .swiftui, .trip, .authentication, .validation, .userInterface, .mainActor))
     func testIsolatedTripDetailViewConfirmationDialog() {
         let trip = Trip(name: "Test Trip", isProtected: true)
-        _ = IsolatedTripDetailView(trip: trip)
+        _ = IsolatedTripDetailView(
+            trip: trip,
+            path: .constant([]),
+            resetToken: 0
+        )
 
         // This test will verify that IsolatedTripDetailView has the proper confirmation dialog
         // with the detailed warning message about consequences

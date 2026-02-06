@@ -6,7 +6,7 @@
 
 import Foundation
 import Observation
-import SwiftData
+import SQLiteData
 
 /// Modern SyncManager using dependency injection
 /// Replaces the singleton-based SyncManager for better testability and eliminates infinite recursion
@@ -161,10 +161,9 @@ class ModernSyncManager {
 
 extension ModernSyncManager {
     /// Create a SyncManager with production services
-    /// - Parameter modelContainer: The model container for CloudKit sync
     /// - Returns: Configured manager with production services
-    static func production(modelContainer: ModelContainer) -> ModernSyncManager {
-        let syncService = CloudKitSyncService(modelContainer: modelContainer)
+    static func production() -> ModernSyncManager {
+        let syncService = CloudKitSyncService()
         let cloudStorageService = iCloudStorageService()
         return ModernSyncManager(syncService: syncService, cloudStorageService: cloudStorageService)
     }

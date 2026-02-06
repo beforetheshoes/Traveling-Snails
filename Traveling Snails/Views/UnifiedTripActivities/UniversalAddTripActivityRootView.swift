@@ -2,44 +2,33 @@
 //  UniversalAddTripActivityRootView.swift
 //  Traveling Snails
 //
-//
 
-import SwiftData
+import ComposableArchitecture
+import SQLiteData
 import SwiftUI
 
 struct UniversalAddTripActivityRootView: View {
-    let trip: Trip
-    let activityType: ActivityType
-    @Environment(\.modelContext) private var modelContext
+    let store: StoreOf<UniversalActivityFormFeature>
     @Environment(\.dismiss) private var dismiss
 
-    // FIX: Create view model once using @State instead of recreating on every view update
-    @State private var viewModel: UniversalActivityFormViewModel?
+    init(trip: Trip, activityType: ActivityType) {
+        self.store = Store(initialState: UniversalActivityFormFeature.State(trip: trip, activityType: activityType)) {
+            UniversalActivityFormFeature()
+        }
+    }
 
     var body: some View {
         NavigationStack {
-            if let viewModel = viewModel {
-                UniversalAddActivityFormContent(viewModel: viewModel)
-                    .navigationTitle("Add \(activityType.displayName)")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("Cancel") {
-                                dismiss()
-                            }
+            UniversalAddActivityFormContent(store: store)
+                .navigationTitle("Add \(store.state.activityType.displayName)")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") {
+                            dismiss()
                         }
                     }
-            } else {
-                ProgressView("Loading...")
-                    .onAppear {
-                        // Create view model only once
-                        viewModel = UniversalActivityFormViewModel(
-                            trip: trip,
-                            activityType: activityType,
-                            modelContext: modelContext
-                        )
-                    }
-            }
+                }
         }
     }
 }
@@ -65,5 +54,4 @@ extension UniversalAddTripActivityRootView {
         trip: Trip(name: "Test Trip"),
         activityType: .activity
     )
-    .modelContainer(for: [Trip.self, Activity.self, Organization.self], inMemory: true)
 }

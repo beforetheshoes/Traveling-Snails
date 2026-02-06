@@ -4,7 +4,6 @@
 //
 //
 
-import SwiftData
 import SwiftUI
 
 // MARK: - Generic Detail View System

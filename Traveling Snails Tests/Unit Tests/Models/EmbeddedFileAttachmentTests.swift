@@ -5,6 +5,7 @@
 //
 
 import Foundation
+import SQLiteData
 import Testing
 import UniformTypeIdentifiers
 
@@ -53,7 +54,7 @@ struct EmbeddedFileAttachmentTests {
 
         @Test("File size formatting", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .validation))
         func fileSizeFormatting() {
-            let attachment = EmbeddedFileAttachment()
+            var attachment = EmbeddedFileAttachment()
 
             attachment.fileSize = 1024
             #expect(attachment.formattedFileSize == "1 KB")
@@ -245,10 +246,12 @@ struct EmbeddedFileAttachmentTests {
     @Suite("File Attachment Relationship Tests")
     struct FileAttachmentRelationshipTests {
         @Test("Activity file attachment relationship", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .activity, .validation))
-        func activityFileAttachmentRelationship() {
+        @MainActor
+        func activityFileAttachmentRelationship() async throws {
+            let database = try makeTestDatabase()
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")
-            let activity = Activity(
+            var activity = Activity(
                 name: "Test Activity",
                 start: Date(),
                 end: Date(),
@@ -256,26 +259,36 @@ struct EmbeddedFileAttachmentTests {
                 organization: org
             )
 
-            let attachment = EmbeddedFileAttachment(
+            var attachment = EmbeddedFileAttachment(
                 fileName: "activity_doc.pdf",
                 originalFileName: "Activity Document.pdf"
             )
 
-            // Set up relationship
-            attachment.activity = activity
-            activity.fileAttachments.append(attachment)
+            try await DatabaseAccess.withDatabase(database) {
+                try await database.write { db in
+                    try Trip.insert { trip }.execute(db)
+                    try Organization.insert { org }.execute(db)
+                    try Activity.insert { activity }.execute(db)
+                }
 
-            #expect(attachment.activity?.name == "Test Activity")
-            #expect(activity.fileAttachments.count == 1)
-            #expect(activity.hasAttachments == true)
-            #expect(activity.attachmentCount == 1)
+                // Set up relationship
+                attachment.activity = activity
+                activity.fileAttachments = [attachment]
+
+                #expect(attachment.activity?.name == "Test Activity")
+                #expect(activity.fileAttachments.count == 1)
+                #expect(activity.hasAttachments == true)
+                #expect(activity.attachmentCount == 1)
+            }
         }
 
         @Test("Lodging file attachment relationship", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .activity, .validation))
-        func lodgingFileAttachmentRelationship() {
+        @MainActor
+        func lodgingFileAttachmentRelationship() async throws {
+            let database = try makeTestDatabase()
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Hotel")
-            let lodging = Lodging(
+            var lodging = Lodging(
                 name: "Test Hotel",
                 start: Date(),
                 end: Date(),
@@ -285,26 +298,36 @@ struct EmbeddedFileAttachmentTests {
                 organization: org
             )
 
-            let attachment = EmbeddedFileAttachment(
+            var attachment = EmbeddedFileAttachment(
                 fileName: "reservation.pdf",
                 originalFileName: "Hotel Reservation.pdf"
             )
 
-            // Set up relationship
-            attachment.lodging = lodging
-            lodging.fileAttachments.append(attachment)
+            try await DatabaseAccess.withDatabase(database) {
+                try await database.write { db in
+                    try Trip.insert { trip }.execute(db)
+                    try Organization.insert { org }.execute(db)
+                    try Lodging.insert { lodging }.execute(db)
+                }
 
-            #expect(attachment.lodging?.name == "Test Hotel")
-            #expect(lodging.fileAttachments.count == 1)
-            #expect(lodging.hasAttachments == true)
-            #expect(lodging.attachmentCount == 1)
+                // Set up relationship
+                attachment.lodging = lodging
+                lodging.fileAttachments = [attachment]
+
+                #expect(attachment.lodging?.name == "Test Hotel")
+                #expect(lodging.fileAttachments.count == 1)
+                #expect(lodging.hasAttachments == true)
+                #expect(lodging.attachmentCount == 1)
+            }
         }
 
         @Test("Transportation file attachment relationship", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .activity, .validation))
-        func transportationFileAttachmentRelationship() {
+        @MainActor
+        func transportationFileAttachmentRelationship() async throws {
+            let database = try makeTestDatabase()
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Airline")
-            let transportation = Transportation(
+            var transportation = Transportation(
                 name: "Test Flight",
                 start: Date(),
                 end: Date(),
@@ -312,26 +335,36 @@ struct EmbeddedFileAttachmentTests {
                 organization: org
             )
 
-            let attachment = EmbeddedFileAttachment(
+            var attachment = EmbeddedFileAttachment(
                 fileName: "ticket.pdf",
                 originalFileName: "Flight Ticket.pdf"
             )
 
-            // Set up relationship
-            attachment.transportation = transportation
-            transportation.fileAttachments.append(attachment)
+            try await DatabaseAccess.withDatabase(database) {
+                try await database.write { db in
+                    try Trip.insert { trip }.execute(db)
+                    try Organization.insert { org }.execute(db)
+                    try Transportation.insert { transportation }.execute(db)
+                }
 
-            #expect(attachment.transportation?.name == "Test Flight")
-            #expect(transportation.fileAttachments.count == 1)
-            #expect(transportation.hasAttachments == true)
-            #expect(transportation.attachmentCount == 1)
+                // Set up relationship
+                attachment.transportation = transportation
+                transportation.fileAttachments = [attachment]
+
+                #expect(attachment.transportation?.name == "Test Flight")
+                #expect(transportation.fileAttachments.count == 1)
+                #expect(transportation.hasAttachments == true)
+                #expect(transportation.attachmentCount == 1)
+            }
         }
 
         @Test("Multiple attachments per activity", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .activity, .validation))
-        func multipleAttachmentsPerActivity() {
+        @MainActor
+        func multipleAttachmentsPerActivity() async throws {
+            let database = try makeTestDatabase()
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")
-            let activity = Activity(
+            var activity = Activity(
                 name: "Test Activity",
                 start: Date(),
                 end: Date(),
@@ -343,13 +376,18 @@ struct EmbeddedFileAttachmentTests {
             let attachment2 = EmbeddedFileAttachment(fileName: "doc2.jpg")
             let attachment3 = EmbeddedFileAttachment(fileName: "doc3.txt")
 
-            activity.fileAttachments.append(contentsOf: [attachment1, attachment2, attachment3])
-            attachment1.activity = activity
-            attachment2.activity = activity
-            attachment3.activity = activity
+            try await DatabaseAccess.withDatabase(database) {
+                try await database.write { db in
+                    try Trip.insert { trip }.execute(db)
+                    try Organization.insert { org }.execute(db)
+                    try Activity.insert { activity }.execute(db)
+                }
 
-            #expect(activity.attachmentCount == 3)
-            #expect(activity.hasAttachments == true)
+                activity.fileAttachments = [attachment1, attachment2, attachment3]
+
+                #expect(activity.attachmentCount == 3)
+                #expect(activity.hasAttachments == true)
+            }
         }
 
         @Test("Attachment without relationship", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .validation, .boundary))
@@ -534,4 +572,13 @@ struct EmbeddedFileAttachmentTests {
             }
         }
     }
+}
+
+@MainActor
+private func makeTestDatabase() throws -> DatabaseQueue {
+    let database = try DatabaseQueue(path: ":memory:")
+    var migrator = makeMigrator()
+    try migrator.migrate(database)
+    DatabaseAccess.database = database
+    return database
 }

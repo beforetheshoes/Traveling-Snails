@@ -1,4 +1,0 @@
-
-
-*** If you believe this error represents a bug, please attach the result bundle at /Users/ryan/Developer/Swift/Traveling Snails/chunk3-test-results.xcresult
-

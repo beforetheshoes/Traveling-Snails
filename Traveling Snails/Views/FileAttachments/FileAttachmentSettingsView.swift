@@ -4,12 +4,13 @@
 //
 //
 
-import SwiftData
+import Dependencies
+import SQLiteData
 import SwiftUI
 
 struct FileAttachmentSettingsView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var allAttachments: [EmbeddedFileAttachment]
+    @Dependency(\.defaultDatabase) private var database
+    @FetchAll private var allAttachments: [EmbeddedFileAttachment]
 
     @State private var showingClearConfirmation = false
     @State private var showingCleanupConfirmation = false
@@ -179,11 +180,15 @@ struct FileAttachmentSettingsView: View {
         try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
 
         do {
-            for attachment in orphanedAttachments {
-                modelContext.delete(attachment)
+            let ids = orphanedAttachments.map(\.id)
+            if !ids.isEmpty {
+                try await database.write { db in
+                    try EmbeddedFileAttachment
+                        .where { $0.id.in(ids) }
+                        .delete()
+                        .execute(db)
+                }
             }
-
-            try modelContext.save()
             orphanedAttachments = []
 
             successMessage = "Successfully cleaned up \(orphanedCount) orphaned file\(orphanedCount == 1 ? "" : "s")."
@@ -208,11 +213,15 @@ struct FileAttachmentSettingsView: View {
         try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
 
         do {
-            for attachment in allAttachments {
-                modelContext.delete(attachment)
+            let ids = allAttachments.map(\.id)
+            if !ids.isEmpty {
+                try await database.write { db in
+                    try EmbeddedFileAttachment
+                        .where { $0.id.in(ids) }
+                        .delete()
+                        .execute(db)
+                }
             }
-
-            try modelContext.save()
 
             successMessage = "Successfully cleared all \(totalCount) attachment\(totalCount == 1 ? "" : "s")."
             showingSuccessAlert = true

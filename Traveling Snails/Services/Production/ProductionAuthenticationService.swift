@@ -228,10 +228,21 @@ final class ProductionAuthenticationService: AuthenticationService, Sendable {
 
     func toggleProtection(for trip: Trip) {
         Logger.shared.debug("ProductionAuthenticationService.toggleProtection(\(trip.name))")
-        trip.isProtected.toggle()
+        var updatedTrip = trip
+        updatedTrip.isProtected.toggle()
+
+        if let database = DatabaseAccess.database {
+            do {
+                try database.write { db in
+                    try Trip.upsert { updatedTrip }.execute(db)
+                }
+            } catch {
+                Logger.shared.error("Failed to update trip protection: \(error.localizedDescription)", category: .authentication)
+            }
+        }
 
         // If removing protection, also remove from authenticated trips
-        if !trip.isProtected {
+        if !updatedTrip.isProtected {
             let tripId = trip.id
             _ = lock.withLock { authenticatedTripIDs.remove(tripId) }
         }

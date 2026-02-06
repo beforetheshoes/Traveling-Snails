@@ -2,116 +2,68 @@
 //  UnifiedNavigationView.swift
 //  Traveling Snails
 //
-//
 
 import Foundation
-import SwiftData
+import SQLiteData
 import SwiftUI
-// import OSLog
-
-// MARK: - Navigation Item Protocol
-
-protocol NavigationItem: Identifiable, Hashable {
-    var id: UUID { get }
-    var displayName: String { get }
-    var displaySubtitle: String? { get }
-    var displayIcon: String { get }
-    var displayColor: Color { get }
-    var displayBadgeCount: Int? { get }
-}
-
-// MARK: - Navigation Configuration
-
-struct NavigationConfiguration<Item: NavigationItem> {
-    let title: String
-    let emptyStateTitle: String
-    let emptyStateIcon: String
-    let emptyStateDescription: String
-    let addButtonTitle: String
-    let addButtonIcon: String
-    let searchPlaceholder: String
-    let allowsSearch: Bool
-    let allowsSelection: Bool
-
-    init(
-        title: String,
-        emptyStateTitle: String = "No Items",
-        emptyStateIcon: String = "tray",
-        emptyStateDescription: String = "No items found",
-        addButtonTitle: String = "Add Item",
-        addButtonIcon: String = "plus",
-        searchPlaceholder: String = "Search...",
-        allowsSearch: Bool = true,
-        allowsSelection: Bool = true
-    ) {
-        self.title = title
-        self.emptyStateTitle = emptyStateTitle
-        self.emptyStateIcon = emptyStateIcon
-        self.emptyStateDescription = emptyStateDescription
-        self.addButtonTitle = addButtonTitle
-        self.addButtonIcon = addButtonIcon
-        self.searchPlaceholder = searchPlaceholder
-        self.allowsSearch = allowsSearch
-        self.allowsSelection = allowsSelection
-    }
-}
 
 // MARK: - Unified Navigation View
 
 struct UnifiedNavigationView<Item: NavigationItem, DetailView: View>: View {
-    // Environment
-    @Environment(\.navigationRouter) private var navigationRouter
+    private struct CompactRoute: Identifiable, Hashable {
+        let id: UUID
+    }
 
     // Data
     let items: [Item]
     let configuration: NavigationConfiguration<Item>
-
-    // Navigation
-    @State private var selectedItem: Item?
-    @State private var navigationPath = NavigationPath()
-    @Binding var selectedTab: Int
-    @Binding var selectedTrip: Trip?
-    let tabIndex: Int
+    @Binding var selectedItemID: UUID?
 
     // UI State
     @State private var searchText = ""
     @State private var showingAddView = false
+    @State private var compactRoute: CompactRoute?
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+
+    private var usesCompactNavigation: Bool {
+        #if os(iOS)
+        true
+        #else
+        false
+        #endif
+    }
 
     // Content builders
     let detailViewBuilder: (Item) -> DetailView
     let addViewBuilder: () -> AnyView
-    let rowContentBuilder: ((Item) -> AnyView)?
+    let rowContentBuilder: ((Item, Bool) -> AnyView)?
 
     // Search filtering
     let searchFilter: ((Item, String) -> Bool)?
 
     // Actions
-    let onItemSelected: ((Item) -> Void)?
+    let onItemSelection: (Item, Bool) -> Void
     let onAddItem: (() -> Void)?
 
     init(
         items: [Item],
         configuration: NavigationConfiguration<Item>,
-        selectedTab: Binding<Int>,
-        selectedTrip: Binding<Trip?>,
-        tabIndex: Int,
+        selectedItemID: Binding<UUID?>,
         detailViewBuilder: @escaping (Item) -> DetailView,
         addViewBuilder: @escaping () -> AnyView,
-        rowContentBuilder: ((Item) -> AnyView)? = nil,
+        rowContentBuilder: ((Item, Bool) -> AnyView)? = nil,
         searchFilter: ((Item, String) -> Bool)? = nil,
-        onItemSelected: ((Item) -> Void)? = nil,
+        onItemSelection: @escaping (Item, Bool) -> Void,
         onAddItem: (() -> Void)? = nil
     ) {
         self.items = items
         self.configuration = configuration
-        self._selectedTab = selectedTab
-        self._selectedTrip = selectedTrip
-        self.tabIndex = tabIndex
+        self._selectedItemID = selectedItemID
         self.detailViewBuilder = detailViewBuilder
         self.addViewBuilder = addViewBuilder
         self.rowContentBuilder = rowContentBuilder
         self.searchFilter = searchFilter
-        self.onItemSelected = onItemSelected
+        self.onItemSelection = onItemSelection
         self.onAddItem = onAddItem
     }
 
@@ -122,126 +74,124 @@ struct UnifiedNavigationView<Item: NavigationItem, DetailView: View>: View {
             return items.filter { customFilter($0, searchText) }
         }
 
-        // Default search implementation
         return items.filter { item in
-            item.displayName.localizedCaseInsensitiveContains(searchText) ||
-            (item.displaySubtitle?.localizedCaseInsensitiveContains(searchText) ?? false)
+            item.displayName.localizedStandardContains(searchText) ||
+            (item.displaySubtitle?.localizedStandardContains(searchText) ?? false)
         }
+    }
+
+    private var selectedItem: Item? {
+        guard let selectedItemID else { return nil }
+        return items.first(where: { $0.id == selectedItemID })
     }
 
     var body: some View {
-        NavigationSplitView {
-            VStack(spacing: 0) {
-                // Search bar
-                if configuration.allowsSearch {
-                    UnifiedSearchBar.general(
-                        text: $searchText,
-                        placeholder: configuration.searchPlaceholder
-                    )
-                    .padding(.top, 8)
-                    .accessibilityIdentifier("SearchBar")
-                    .accessibilityLabel(configuration.searchPlaceholder)
-                    .accessibilityHint("Type to search \(configuration.title.lowercased())")
-                }
-
-                // Content
-                if filteredItems.isEmpty {
-                    emptyStateView
-                } else {
-                    itemsList
-                }
-            }
-            .navigationTitle(configuration.title)
-            .accessibilityIdentifier("NavigationView_\(configuration.title.replacingOccurrences(of: " ", with: ""))")
-            .navigationDestination(for: Item.self) { item in
-                detailViewBuilder(item)
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        Logger.shared.info("Add button tapped", category: .navigation)
-                        if let onAddItem = onAddItem {
-                            onAddItem()
-                        } else {
-                            showingAddView = true
+        Group {
+            if usesCompactNavigation {
+                NavigationStack {
+                    listContent
+                        .navigationDestination(item: $compactRoute) { route in
+                            if let item = items.first(where: { $0.id == route.id }) {
+                                detailViewBuilder(item)
+                            } else if let id = selectedItemID,
+                               let item = items.first(where: { $0.id == id }) {
+                                detailViewBuilder(item)
+                            } else {
+                                ContentUnavailableView(
+                                    NSLocalizedString("navigation.detail.selectItem.title", value: "Select an Item", comment: "Title when no item is selected"),
+                                    systemImage: "sidebar.left",
+                                    description: Text(NSLocalizedString("navigation.detail.selectItem.description", value: "Choose an item from the list to view details", comment: "Description when no item is selected"))
+                                )
+                            }
                         }
-                    } label: {
-                        Label(configuration.addButtonTitle, systemImage: configuration.addButtonIcon)
+                }
+                .onAppear {
+                    guard compactRoute == nil, let selectedItemID else { return }
+                    compactRoute = CompactRoute(id: selectedItemID)
+                    #if DEBUG
+                    Logger.shared.debug("Compact nav onAppear seeded route: \(selectedItemID)", category: .navigation)
+                    #endif
+                }
+                .onChange(of: selectedItemID) { _, newID in
+                    guard let newID else {
+                        #if DEBUG
+                        Logger.shared.debug("Compact nav clearing route because selectedItemID became nil", category: .navigation)
+                        #endif
+                        compactRoute = nil
+                        return
                     }
-                    .accessibilityIdentifier("AddButton_\(configuration.title.replacingOccurrences(of: " ", with: ""))")
-                    .accessibilityLabel(configuration.addButtonTitle)
-                    .accessibilityHint("Double tap to add a new \(configuration.title.dropLast().lowercased())")
+                    if compactRoute?.id != newID {
+                        #if DEBUG
+                        Logger.shared.debug("Compact nav syncing route to selectedItemID: \(newID)", category: .navigation)
+                        #endif
+                        compactRoute = CompactRoute(id: newID)
+                    }
                 }
-            }
-            .sheet(isPresented: $showingAddView) {
-                addViewBuilder()
-            }
-        } detail: {
-            if let selectedItem = selectedItem {
-                detailViewBuilder(selectedItem)
+                .onChange(of: compactRoute) { _, newRoute in
+                    #if DEBUG
+                    Logger.shared.debug("Compact nav route changed: \(newRoute?.id.uuidString ?? "nil")", category: .navigation)
+                    #endif
+                }
             } else {
-                ContentUnavailableView(
-                    NSLocalizedString("navigation.detail.selectItem.title", value: "Select an Item", comment: "Title when no item is selected"),
-                    systemImage: "sidebar.left",
-                    description: Text(NSLocalizedString("navigation.detail.selectItem.description", value: "Choose an item from the list to view details", comment: "Description when no item is selected"))
+                NavigationSplitView {
+                    listContent
+                } detail: {
+                    if let selectedItem {
+                        detailViewBuilder(selectedItem)
+                    } else {
+                        ContentUnavailableView(
+                            NSLocalizedString("navigation.detail.selectItem.title", value: "Select an Item", comment: "Title when no item is selected"),
+                            systemImage: "sidebar.left",
+                            description: Text(NSLocalizedString("navigation.detail.selectItem.description", value: "Choose an item from the list to view details", comment: "Description when no item is selected"))
+                        )
+                    }
+                }
+            }
+        }
+        .id(usesCompactNavigation ? "compact-nav" : "split-nav")
+    }
+
+    @ViewBuilder
+    private var listContent: some View {
+        VStack(spacing: 0) {
+            if configuration.allowsSearch {
+                UnifiedSearchBar.general(
+                    text: $searchText,
+                    placeholder: configuration.searchPlaceholder
                 )
+                .padding(.top, 8)
+                .accessibilityIdentifier("SearchBar")
+                .accessibilityLabel(configuration.searchPlaceholder)
+                .accessibilityHint("Type to search \(configuration.title.lowercased())")
+            }
+
+            if filteredItems.isEmpty {
+                emptyStateView
+            } else {
+                itemsList
             }
         }
-        .onChange(of: selectedTab) { _, newTab in
-            if newTab != tabIndex {
-                selectedItem = nil
-                navigationPath = NavigationPath()
-                Logger.shared.debug("Tab changed to \(newTab), clearing selection", category: .navigation)
-            } else if newTab == tabIndex, let trip = selectedTrip {
-                // Restore trip selection when returning to this tab
-                if let tripItem = items.first(where: { $0.id == trip.id }) {
-                    selectedItem = tripItem
-                    Logger.shared.info("Restoring trip selection on tab return: \(trip.name)", category: .navigation)
+        .navigationTitle(configuration.title)
+        .accessibilityIdentifier("NavigationView_\(configuration.title.replacingOccurrences(of: " ", with: ""))")
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Button {
+                    if let onAddItem {
+                        onAddItem()
+                    } else {
+                        showingAddView = true
+                    }
+                } label: {
+                    Label(configuration.addButtonTitle, systemImage: configuration.addButtonIcon)
                 }
+                .accessibilityIdentifier("AddButton_\(configuration.title.replacingOccurrences(of: " ", with: ""))")
+                .accessibilityLabel(configuration.addButtonTitle)
             }
         }
-        .onChange(of: selectedTrip) { _, newTrip in
-            if selectedTab == tabIndex, let trip = newTrip {
-                // Navigate to trip when selected from another tab
-                if let tripItem = items.first(where: { $0.id == trip.id }) {
-                    selectedItem = tripItem
-                    Logger.shared.info("Navigating to trip: \(trip.name)", category: .navigation)
-                }
-            }
-        }
-        .onAppear {
-            // iPad fix: Ensure trip selection is restored when view appears
-            if selectedTab == tabIndex, let trip = selectedTrip, selectedItem == nil {
-                if let tripItem = items.first(where: { $0.id == trip.id }) {
-                    selectedItem = tripItem
-                    Logger.shared.info("iPad restoration: Restoring trip selection on view appear: \(trip.name)", category: .navigation)
-                }
-            }
-        }
-        .onChange(of: navigationRouter.shouldClearNavigationPath) { _, shouldClear in
-            handleNavigationPathClear(shouldClear: shouldClear)
+        .sheet(isPresented: $showingAddView) {
+            addViewBuilder()
         }
     }
-
-    /// Handle environment-based navigation path clearing
-    /// This method coordinates navigation state clearing between the environment router
-    /// and local navigation state in a type-safe manner
-    private func handleNavigationPathClear(shouldClear: Bool) {
-        guard shouldClear else { return }
-
-        Logger.shared.debug("Environment-based navigation clear - clearing selectedItem and navigationPath", category: .navigation)
-        Logger.shared.debug("Current selectedItem: \(selectedItem?.displayName ?? "nil")", category: .navigation)
-
-        // Clear local navigation state
-        selectedItem = nil
-        navigationPath = NavigationPath()
-
-        // Acknowledge that we've handled the navigation clear request
-        navigationRouter.acknowledgeNavigationPathClear()
-
-        Logger.shared.debug("Cleared selectedItem and navigationPath for environment-based navigation", category: .navigation)
-    }
-
     @ViewBuilder
     private var emptyStateView: some View {
         ContentUnavailableView(
@@ -251,86 +201,48 @@ struct UnifiedNavigationView<Item: NavigationItem, DetailView: View>: View {
         )
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .accessibilityIdentifier("EmptyStateView_\(configuration.title.replacingOccurrences(of: " ", with: ""))")
-        .accessibilityLabel(configuration.emptyStateTitle)
-        .accessibilityValue(configuration.emptyStateDescription)
-        .accessibilityHint("Add a new \(configuration.title.dropLast().lowercased()) to get started")
     }
 
     @ViewBuilder
     private var itemsList: some View {
-        List(
-            filteredItems,
-            selection: configuration.allowsSelection ? $selectedItem : .constant(nil)
-        ) { item in
-            itemRowContent(for: item)
-                .modifier(ItemRowModifier(item: item))
-                .onTapGesture {
-                    handleItemTap(item)
+        List(filteredItems) { item in
+            let isSelected = selectedItemID == item.id
+            let isActiveInCompact = compactRoute?.id == item.id
+
+            Button {
+                let isReselect = usesCompactNavigation ? isActiveInCompact : isSelected
+                #if DEBUG
+                Logger.shared.debug("Row tap \(item.id), isReselect: \(isReselect)", category: .navigation)
+                #endif
+                onItemSelection(item, isReselect)
+                if usesCompactNavigation {
+                    compactRoute = CompactRoute(id: item.id)
                 }
+            } label: {
+                itemRowContent(for: item, isSelected: isSelected)
+                    .modifier(ItemRowModifier(item: item))
+            }
+            .buttonStyle(.plain)
         }
-        .listStyle(.plain) // Use plain style to avoid extra background styling
+        .listStyle(.plain)
         .scrollContentBackground(.visible)
         .accessibilityIdentifier("\(configuration.title.replacingOccurrences(of: " ", with: ""))ListView")
         .accessibilityLabel("\(configuration.title) list")
-        .accessibilityHint("Swipe up or down to navigate through \(configuration.title.lowercased())")
     }
 
-    // MARK: - Helper Methods
-
     @ViewBuilder
-    private func itemRowContent(for item: Item) -> some View {
-        // Remove the conflicting NavigationLink + onTapGesture pattern
-        // Use a single gesture handling approach
+    private func itemRowContent(for item: Item, isSelected: Bool) -> some View {
         Group {
             if let customRow = rowContentBuilder {
-                customRow(item)
+                customRow(item, isSelected)
             } else {
                 EnhancedItemRowView(
                     item: item,
-                    isSelected: selectedItem?.id == item.id || selectedTrip?.id == item.id
+                    isSelected: isSelected
                 )
             }
         }
-        .contentShape(Rectangle()) // Ensure entire row area is tappable
-    }
-
-    private func handleItemTap(_ item: Item) {
-        Logger.shared.debug("Item tapped: \(item.displayName)", category: .navigation)
-        selectedItem = item
-        onItemSelected?(item)
-
-        // Update selectedTrip if this is a trip
-        if let trip = item as? Trip {
-            selectedTrip = trip
-            // Use environment-based navigation instead of notifications
-            navigationRouter.selectTrip(trip.id)
-            Logger.shared.debug("Environment-based trip selection for trip: \(trip.name)", category: .navigation)
-        }
-    }
-
-    // MARK: - Accessibility Helper Methods
-
-    private func buildAccessibilityLabel(for item: Item) -> String {
-        var components: [String] = [item.displayName]
-
-        if let subtitle = item.displaySubtitle {
-            components.append(subtitle)
-        }
-
-        if let badgeCount = item.displayBadgeCount, badgeCount > 0 {
-            components.append("\(badgeCount) items")
-        }
-
-        return components.joined(separator: ", ")
-    }
-
-    private func buildAccessibilityHint(for item: Item) -> String {
-        "Double tap to view \(item.displayName) details"
-    }
-
-    private func buildAccessibilityValue(for item: Item) -> String? {
-        guard let badgeCount = item.displayBadgeCount, badgeCount > 0 else { return nil }
-        return "\(badgeCount) items"
+        .contentShape(Rectangle())
     }
 }
 
@@ -344,7 +256,6 @@ struct EnhancedItemRowView<Item: NavigationItem>: View {
 
     var body: some View {
         HStack(spacing: 16) {
-            // Icon with background
             ZStack {
                 Circle()
                     .fill(item.displayColor.opacity(isSelected ? 0.3 : 0.15))
@@ -359,7 +270,6 @@ struct EnhancedItemRowView<Item: NavigationItem>: View {
                     .font(.system(size: 20, weight: isSelected ? .semibold : .medium))
             }
 
-            // Content
             VStack(alignment: .leading, spacing: 4) {
                 Text(item.displayName)
                     .font(.headline)
@@ -376,9 +286,7 @@ struct EnhancedItemRowView<Item: NavigationItem>: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            // Badge and chevron
             HStack(spacing: 8) {
-                // Biometric protection indicator
                 if let trip = item as? Trip,
                    authManager.isEnabled && authManager.isProtected(trip) {
                     Image(systemName: "lock.fill")
@@ -402,9 +310,9 @@ struct EnhancedItemRowView<Item: NavigationItem>: View {
                     .foregroundStyle(.tertiary)
             }
         }
-        .padding(.horizontal, 16) // Add back horizontal padding inside the rounded rectangle
-        .padding(.vertical, 8) // Slightly increase internal vertical padding
-        .frame(maxWidth: .infinity) // Make it full width
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity)
         .background(
             RoundedRectangle(cornerRadius: 12)
                 .fill(isSelected ? item.displayColor.opacity(0.1) : Color(.systemBackground))
@@ -429,6 +337,7 @@ extension Trip: NavigationItem, Hashable {
     static func == (lhs: Trip, rhs: Trip) -> Bool {
         lhs.id == rhs.id
     }
+
     var displayName: String { name.isEmpty ? NSLocalizedString("trip.untitled", value: "Untitled Trip", comment: "Default trip name") : name }
 
     var displaySubtitle: String? {
@@ -465,6 +374,7 @@ extension Organization: NavigationItem, Hashable {
     static func == (lhs: Organization, rhs: Organization) -> Bool {
         lhs.id == rhs.id
     }
+
     var displayName: String { name.isEmpty ? NSLocalizedString("organization.unnamed", value: "Unnamed Organization", comment: "Default organization name") : name }
 
     var displaySubtitle: String? {
@@ -506,32 +416,13 @@ extension Organization: NavigationItem, Hashable {
 
 // MARK: - Convenience Initializers
 
-// Wrapper view to ensure stable identity
-struct TripDetailWrapper: View {
-    let trip: Trip
-
-    // Cache the trip ID to avoid SwiftData reactivity
-    private let tripID: UUID
-    private let tripName: String
-
-    init(trip: Trip) {
-        self.trip = trip
-        self.tripID = trip.id
-        self.tripName = trip.name
-    }
-
-    var body: some View {
-        IsolatedTripDetailView(trip: trip)
-    }
-}
-
 extension UnifiedNavigationView where Item == Trip, DetailView == AnyView {
     static func trips(
         trips: [Trip],
-        selectedTab: Binding<Int>,
-        selectedTrip: Binding<Trip?>,
-        tabIndex: Int,
-        onTripSelected: ((Trip) -> Void)? = nil
+        selectedTripID: Binding<Trip.ID?>,
+        tripPath: Binding<[TripRoute]>,
+        tripResetToken: Int,
+        onTripSelection: @escaping (Trip, Bool) -> Void
     ) -> UnifiedNavigationView<Trip, AnyView> {
         let config = NavigationConfiguration<Trip>(
             title: NSLocalizedString("navigation.trips.title", value: "Trips", comment: "Trips navigation title"),
@@ -546,16 +437,25 @@ extension UnifiedNavigationView where Item == Trip, DetailView == AnyView {
         return UnifiedNavigationView(
             items: trips,
             configuration: config,
-            selectedTab: selectedTab,
-            selectedTrip: selectedTrip,
-            tabIndex: tabIndex,
+            selectedItemID: Binding(
+                get: { selectedTripID.wrappedValue },
+                set: { selectedTripID.wrappedValue = $0 }
+            ),
             detailViewBuilder: { trip in
-                AnyView(TripDetailWrapper(trip: trip))
+                AnyView(
+                    IsolatedTripDetailView(
+                        trip: trip,
+                        path: tripPath,
+                        resetToken: tripResetToken
+                    )
+                )
             },
             addViewBuilder: {
                 AnyView(AddTrip())
             },
-            onItemSelected: onTripSelected
+            onItemSelection: { item, isReselect in
+                onTripSelection(item, isReselect)
+            }
         )
     }
 }
@@ -563,10 +463,9 @@ extension UnifiedNavigationView where Item == Trip, DetailView == AnyView {
 extension UnifiedNavigationView where Item == Organization, DetailView == AnyView {
     static func organizations(
         organizations: [Organization],
-        selectedTab: Binding<Int>,
-        selectedTrip: Binding<Trip?>,
-        tabIndex: Int,
-        onOrganizationSelected: ((Organization) -> Void)? = nil
+        selectedOrganizationID: Binding<Organization.ID?>,
+        onOrganizationSelected: @escaping (Organization) -> Void,
+        onOpenTrip: @escaping (Trip.ID) -> Void
     ) -> UnifiedNavigationView<Organization, AnyView> {
         let config = NavigationConfiguration<Organization>(
             title: NSLocalizedString("navigation.organizations.title", value: "Organizations", comment: "Organizations navigation title"),
@@ -581,22 +480,24 @@ extension UnifiedNavigationView where Item == Organization, DetailView == AnyVie
         return UnifiedNavigationView(
             items: organizations,
             configuration: config,
-            selectedTab: selectedTab,
-            selectedTrip: selectedTrip,
-            tabIndex: tabIndex,
+            selectedItemID: Binding(
+                get: { selectedOrganizationID.wrappedValue },
+                set: { selectedOrganizationID.wrappedValue = $0 }
+            ),
             detailViewBuilder: { organization in
-                AnyView(OrganizationDetailView(
-                    selectedTab: selectedTab,
-                    selectedTrip: selectedTrip,
-                    organization: organization
-                ))
+                AnyView(
+                    OrganizationDetailView(
+                        organization: organization,
+                        onOpenTrip: onOpenTrip
+                    )
+                )
             },
             addViewBuilder: {
-                AnyView(AddOrganizationForm { _ in
-                    // Organization added, dismiss handled by the form itself
-                })
+                AnyView(AddOrganizationForm { _ in })
             },
-            onItemSelected: onOrganizationSelected
+            onItemSelection: { item, _ in
+                onOrganizationSelected(item)
+            }
         )
     }
 }
@@ -613,9 +514,9 @@ struct ItemRowModifier<Item: NavigationItem>: ViewModifier {
             .accessibilityHint(buildAccessibilityHint(for: item))
             .accessibilityValue(buildAccessibilityValue(for: item) ?? "")
             .accessibilityAddTraits(.isButton)
-            .listRowSeparator(.hidden) // Hide separators since we have our own styling
-            .listRowBackground(Color.clear) // Remove the gray background
-            .listRowInsets(EdgeInsets(top: 6, leading: 8, bottom: 6, trailing: 8)) // Reduce list insets to give more room for the rounded rectangle
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets(top: 6, leading: 8, bottom: 6, trailing: 8))
     }
 
     private func buildAccessibilityLabel(for item: Item) -> String {

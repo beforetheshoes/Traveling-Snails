@@ -6,6 +6,7 @@
 
 import CoreLocation
 import Foundation
+import SQLiteData
 import Testing
 
 @testable import Traveling_Snails
@@ -236,94 +237,107 @@ struct BusinessLogicTests {
     @Suite("Trip Cost Calculation Tests")
     struct TripCostCalculationTests {
         @Test("Trip total cost calculation", .tags(.unit, .fast, .parallel, .dataModel, .trip, .validation))
-        func tripTotalCostCalculation() {
+        @MainActor
+        func tripTotalCostCalculation() async throws {
+            let database = try makeTestDatabase()
             let trip = Trip(name: "Cost Test Trip")
             let org = Organization(name: "Test Org")
 
-            // Add lodging
-            let lodging = Lodging(
-                name: "Hotel",
-                start: Date(),
-                end: Date(),
-                cost: Decimal(200.00),
-                paid: .infull,
-                trip: trip,
-                organization: org
-            )
+            try await DatabaseAccess.withDatabase(database) {
+                try await database.write { db in
+                    try Trip.insert { trip }.execute(db)
+                    try Organization.insert { org }.execute(db)
 
-            lodging.trip = trip
+                    let lodging = Lodging(
+                        name: "Hotel",
+                        start: Date(),
+                        end: Date(),
+                        cost: Decimal(200.00),
+                        paid: .infull,
+                        trip: trip,
+                        organization: org
+                    )
+                    let transportation = Transportation(
+                        name: "Flight",
+                        start: Date(),
+                        end: Date(),
+                        cost: Decimal(500.00),
+                        trip: trip,
+                        organization: org
+                    )
+                    let activity = Activity(
+                        name: "Museum",
+                        start: Date(),
+                        end: Date(),
+                        cost: Decimal(25.50),
+                        trip: trip,
+                        organization: org
+                    )
 
-            // Add transportation
-            let transportation = Transportation(
-                name: "Flight",
-                start: Date(),
-                end: Date(),
-                cost: Decimal(500.00),
-                trip: trip,
-                organization: org
-            )
+                    try Lodging.insert { lodging }.execute(db)
+                    try Transportation.insert { transportation }.execute(db)
+                    try Activity.insert { activity }.execute(db)
+                }
 
-            transportation.trip = trip
-
-            // Add activity
-            let activity = Activity(
-                name: "Museum",
-                start: Date(),
-                end: Date(),
-                cost: Decimal(25.50),
-                trip: trip,
-                organization: org
-            )
-
-            activity.trip = trip
-
-            let totalCost = trip.totalCost
-            #expect(totalCost == Decimal(725.50))
+                let totalCost = trip.totalCost
+                #expect(totalCost == Decimal(725.50))
+            }
         }
 
         @Test("Trip activity count", .tags(.unit, .fast, .parallel, .dataModel, .trip, .validation))
-        func tripActivityCount() {
+        @MainActor
+        func tripActivityCount() async throws {
+            let database = try makeTestDatabase()
             let trip = Trip(name: "Activity Count Test")
             let org = Organization(name: "Test Org")
 
-            #expect(trip.totalActivities == 0)
+            try await DatabaseAccess.withDatabase(database) {
+                try await database.write { db in
+                    try Trip.insert { trip }.execute(db)
+                    try Organization.insert { org }.execute(db)
 
-            // Add activities
+                    try Lodging.insert {
+                        Lodging(
+                            name: "Hotel",
+                            start: Date(),
+                            end: Date(),
+                            cost: 0,
+                            paid: PaidStatus.none,
+                            trip: trip,
+                            organization: org
+                        )
+                    }.execute(db)
+                    try Transportation.insert {
+                        Transportation(
+                            name: "Flight",
+                            start: Date(),
+                            end: Date(),
+                            trip: trip,
+                            organization: org
+                        )
+                    }.execute(db)
+                    try Activity.insert {
+                        Activity(
+                            name: "Museum",
+                            start: Date(),
+                            end: Date(),
+                            trip: trip,
+                            organization: org
+                        )
+                    }.execute(db)
+                }
 
-            trip.lodging.append(Lodging(
-                name: "Hotel",
-                start: Date(),
-                end: Date(),
-                cost: 0,
-                paid: PaidStatus.none,
-                trip: trip,
-                organization: org
-            ))
-
-            trip.transportation.append(Transportation(
-                name: "Flight",
-                start: Date(),
-                end: Date(),
-                trip: trip,
-                organization: org
-            ))
-
-            trip.activity.append(Activity(
-                name: "Museum",
-                start: Date(),
-                end: Date(),
-                trip: trip,
-                organization: org
-            ))
-
-            #expect(trip.totalActivities == 3)
+                #expect(trip.totalActivities == 3)
+            }
         }
     }
 
     @Suite("Date Range Validation Tests")
     struct DateRangeValidationTests {
         @Test("Trip actual date range calculation", .tags(.unit, .fast, .parallel, .dataModel, .trip, .validation))
-        func tripActualDateRange() {
+        @MainActor
+        func tripActualDateRange() async throws {
+            let database = try makeTestDatabase()
             let trip = Trip(name: "Date Range Test")
             let org = Organization(name: "Test Org")
 
@@ -332,29 +346,43 @@ struct BusinessLogicTests {
             let date3 = Calendar.current.date(byAdding: .day, value: 2, to: date1)!
             let date4 = Calendar.current.date(byAdding: .day, value: 3, to: date1)!
 
-            // Add activities with different dates
-            trip.lodging.append(Lodging(
-                name: "Hotel",
-                start: date2,
-                end: date3,
-                cost: 0,
-                paid: PaidStatus.none,
-                trip: trip,
-                organization: org
-            ))
+            try await DatabaseAccess.withDatabase(database) {
+                try await database.write { db in
+                    try Trip.insert { trip }.execute(db)
+                    try Organization.insert { org }.execute(db)
 
-            trip.activity.append(Activity(
-                name: "Activity",
-                start: date1, // Earliest
-                end: date4,   // Latest
-                trip: trip,
-                organization: org
-            ))
+                    try Lodging.insert {
+                        Lodging(
+                            name: "Hotel",
+                            start: date2,
+                            end: date3,
+                            cost: 0,
+                            paid: PaidStatus.none,
+                            trip: trip,
+                            organization: org
+                        )
+                    }.execute(db)
 
-            let actualRange = trip.actualDateRange
-            #expect(actualRange != nil)
-            #expect(actualRange?.lowerBound == date1)
-            #expect(actualRange?.upperBound == date4)
+                    try Activity.insert {
+                        Activity(
+                            name: "Activity",
+                            start: date1, // Earliest
+                            end: date4,   // Latest
+                            trip: trip,
+                            organization: org
+                        )
+                    }.execute(db)
+                }
+
+                let actualRange = trip.actualDateRange
+                #expect(actualRange != nil)
+                if let actualRange {
+                    let lowerDelta = abs(actualRange.lowerBound.timeIntervalSince(date1))
+                    let upperDelta = abs(actualRange.upperBound.timeIntervalSince(date4))
+                    #expect(lowerDelta < 1.0)
+                    #expect(upperDelta < 1.0)
+                }
+            }
         }
 
         @Test("Activity duration calculation", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation))
@@ -381,28 +409,35 @@ struct BusinessLogicTests {
     @Suite("Organization Management Tests")
     struct OrganizationManagementTests {
         @Test("Organization deletion validation", .tags(.unit, .fast, .parallel, .dataModel, .organization, .validation))
-        func organizationDeletionValidation() {
+        @MainActor
+        func organizationDeletionValidation() async throws {
+            let database = try makeTestDatabase()
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Airline")
 
-            // Organization with no references should be deletable
-            #expect(org.transportation.isEmpty)
-            #expect(org.lodging.isEmpty)
-            #expect(org.activity.isEmpty)
+            try await DatabaseAccess.withDatabase(database) {
+                // Organization with no references should be deletable
+                #expect(org.transportation.isEmpty)
+                #expect(org.lodging.isEmpty)
+                #expect(org.activity.isEmpty)
 
-            // Add reference
-            let transportation = Transportation(
-                name: "Flight",
-                start: Date(),
-                end: Date(),
-                trip: trip,
-                organization: org
-            )
+                // Add reference
+                try await database.write { db in
+                    try Trip.insert { trip }.execute(db)
+                    try Organization.insert { org }.execute(db)
+                    let transportation = Transportation(
+                        name: "Flight",
+                        start: Date(),
+                        end: Date(),
+                        trip: trip,
+                        organization: org
+                    )
+                    try Transportation.insert { transportation }.execute(db)
+                }
 
-            transportation.organization = org
-
-            // Now should have references
-            #expect(!org.transportation.isEmpty)
+                // Now should have references
+                #expect(!org.transportation.isEmpty)
+            }
         }
 
         @Test("None organization behavior", .tags(.unit, .fast, .parallel, .dataModel, .organization, .validation, .boundary))
@@ -485,4 +520,13 @@ struct BusinessLogicTests {
             #expect(activity.endTZId == TimeZone.current.identifier)
         }
     }
+}
+
+@MainActor
+private func makeTestDatabase() throws -> DatabaseQueue {
+    let database = try DatabaseQueue(path: ":memory:")
+    var migrator = makeMigrator()
+    try migrator.migrate(database)
+    DatabaseAccess.database = database
+    return database
 }

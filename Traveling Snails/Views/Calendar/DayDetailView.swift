@@ -12,7 +12,6 @@ struct DayDetailView: View {
     let trip: Trip
 
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.modelContext) private var modelContext
     @State private var showingActivityCreation = false
 
     private var sortedActivities: [ActivityWrapper] {

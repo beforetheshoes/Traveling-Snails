@@ -1,4 +1,5 @@
 import Foundation
+import SQLiteData
 import SwiftUI
 import Testing
 
@@ -93,62 +94,83 @@ struct ProtocolExtensionTests {
         }
 
         @Test("Activity location handling", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation))
-        func activityLocationHandling() {
+        @MainActor
+        func activityLocationHandling() async throws {
+            let database = try makeTestDatabase()
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Venue")
             let noneOrg = Organization(name: "None")
-
-            let activity = Activity(
-                name: "Test Activity",
-                start: Date(),
-                end: Date(),
-                trip: trip,
-                organization: org
-            )
-
-            // Test with organization - check if org actually has an address
-            #expect(activity.displayLocation == "Test Venue")
-            // hasLocation will be true if organization has a non-empty address
-            let hasOrgAddress = !(org.address?.isEmpty ?? true)
-            #expect(activity.hasLocation == hasOrgAddress)
-
-            // Test with None organization and custom location
-            activity.organization = noneOrg
-            activity.customLocationName = "Custom Venue"
-            #expect(activity.displayLocation == "Custom Venue")
-
-            // Test with custom address
             let customAddress = Address(street: "123 Main St", city: "Test City")
-            activity.customAddresss = customAddress
-            activity.customLocationName = ""
-            #expect(activity.displayLocation == "123 Main St, Test City")
-            #expect(activity.hasLocation == true)
+
+            try await DatabaseAccess.withDatabase(database) {
+                try await database.write { db in
+                    try Trip.insert { trip }.execute(db)
+                    try Organization.insert { org }.execute(db)
+                    try Organization.insert { noneOrg }.execute(db)
+                    try Address.insert { customAddress }.execute(db)
+                }
+
+                var activity = Activity(
+                    name: "Test Activity",
+                    start: Date(),
+                    end: Date(),
+                    trip: trip,
+                    organization: org
+                )
+
+                // Test with organization - check if org actually has an address
+                #expect(activity.displayLocation == "Test Venue")
+                // hasLocation will be true if organization has a non-empty address
+                let hasOrgAddress = !(org.address?.isEmpty ?? true)
+                #expect(activity.hasLocation == hasOrgAddress)
+
+                // Test with None organization and custom location
+                activity.organization = noneOrg
+                activity.customLocationName = "Custom Venue"
+                #expect(activity.displayLocation == "Custom Venue")
+
+                // Test with custom address
+                activity.customAddress = customAddress
+                activity.customLocationName = ""
+                #expect(activity.displayLocation == "123 Main St, Test City")
+                #expect(activity.hasLocation == true)
+            }
         }
 
         @Test("Transportation location handling", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation))
-        func transportationLocationHandling() {
+        @MainActor
+        func transportationLocationHandling() async throws {
+            let database = try makeTestDatabase()
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Airline")
             let noneOrg = Organization(name: "None")
 
-            let transportation = Transportation(
-                name: "Test Flight",
-                start: Date(),
-                end: Date(),
-                trip: trip,
-                organization: org
-            )
+            try await DatabaseAccess.withDatabase(database) {
+                try await database.write { db in
+                    try Trip.insert { trip }.execute(db)
+                    try Organization.insert { org }.execute(db)
+                    try Organization.insert { noneOrg }.execute(db)
+                }
 
-            // Test with organization
-            #expect(transportation.displayLocation == "Test Airline")
-            // Check if organization actually has an address - organizations start with empty addresses
-            let hasAddress = !(org.address?.isEmpty ?? true)
-            #expect(transportation.hasLocation == hasAddress)
+                var transportation = Transportation(
+                    name: "Test Flight",
+                    start: Date(),
+                    end: Date(),
+                    trip: trip,
+                    organization: org
+                )
 
-            // Test with None organization
-            transportation.organization = noneOrg
-            #expect(transportation.displayLocation == "No organization specified")
-            #expect(transportation.hasLocation == false)
+                // Test with organization
+                #expect(transportation.displayLocation == "Test Airline")
+                // Check if organization actually has an address - organizations start with empty addresses
+                let hasAddress = !(org.address?.isEmpty ?? true)
+                #expect(transportation.hasLocation == hasAddress)
+
+                // Test with None organization
+                transportation.organization = noneOrg
+                #expect(transportation.displayLocation == "No organization specified")
+                #expect(transportation.hasLocation == false)
+            }
         }
     }
 
@@ -209,36 +231,45 @@ struct ProtocolExtensionTests {
     @Suite("TripActivityEditData Tests")
     struct TripActivityEditDataTests {
         @Test("TripActivityEditData initialization from Activity", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation, .viewModel))
-        func editDataFromActivity() {
+        @MainActor
+        func editDataFromActivity() async throws {
+            let database = try makeTestDatabase()
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")
             let startDate = Date()
             let endDate = Calendar.current.date(byAdding: .hour, value: 2, to: startDate)!
 
-            let activity = Activity(
-                name: "Test Activity",
-                start: startDate,
-                end: endDate,
-                cost: Decimal(50.00),
-                paid: .deposit,
-                reservation: "RES123",
-                notes: "Test notes",
-                trip: trip,
-                organization: org,
-                customLocationName: "Custom Location"
-            )
+            try await DatabaseAccess.withDatabase(database) {
+                try await database.write { db in
+                    try Trip.insert { trip }.execute(db)
+                    try Organization.insert { org }.execute(db)
+                }
 
-            let editData = TripActivityEditData(from: activity)
+                let activity = Activity(
+                    name: "Test Activity",
+                    start: startDate,
+                    end: endDate,
+                    cost: Decimal(50.00),
+                    paid: .deposit,
+                    reservation: "RES123",
+                    notes: "Test notes",
+                    trip: trip,
+                    organization: org,
+                    customLocationName: "Custom Location"
+                )
 
-            #expect(editData.name == "Test Activity")
-            #expect(editData.start == startDate)
-            #expect(editData.end == endDate)
-            #expect(editData.cost == Decimal(50.00))
-            #expect(editData.paid == .deposit)
-            #expect(editData.confirmationField == "RES123")
-            #expect(editData.notes == "Test notes")
-            #expect(editData.customLocationName == "Custom Location")
-            #expect(editData.organization?.name == "Test Org")
+                let editData = TripActivityEditData(from: activity)
+
+                #expect(editData.name == "Test Activity")
+                #expect(editData.start == startDate)
+                #expect(editData.end == endDate)
+                #expect(editData.cost == Decimal(50.00))
+                #expect(editData.paid == .deposit)
+                #expect(editData.confirmationField == "RES123")
+                #expect(editData.notes == "Test notes")
+                #expect(editData.customLocationName == "Custom Location")
+                #expect(editData.organization?.name == "Test Org")
+            }
         }
 
         @Test("TripActivityEditData initialization from Transportation", .tags(.unit, .fast, .parallel, .dataModel, .activity, .validation, .viewModel))
@@ -343,4 +374,13 @@ struct ProtocolExtensionTests {
             #expect(set.count == 1) // Should be deduplicated
         }
     }
+}
+
+@MainActor
+private func makeTestDatabase() throws -> DatabaseQueue {
+    let database = try DatabaseQueue(path: ":memory:")
+    var migrator = makeMigrator()
+    try migrator.migrate(database)
+    DatabaseAccess.database = database
+    return database
 }

@@ -9,23 +9,9 @@ import Foundation
 /// Centralized notification names to prevent scattered definitions across the codebase
 /// This provides type-safe access to notification names and prevents typos/inconsistencies
 /// 
-/// Note: Some notifications are marked as deprecated as the app migrates to modern 
-/// environment-based patterns (@Observable, NavigationRouter, etc.)
+/// Note: navigation events are now modeled with TCA state/actions and no longer
+/// use NotificationCenter contracts.
 extension Notification.Name {
-    // MARK: - Navigation Notifications (Legacy - Migrating to Environment-Based)
-
-    /// DEPRECATED: Use NavigationRouter.selectTrip() instead
-    /// Legacy notification for trip selection from list
-    static let tripSelectedFromList = Notification.Name("tripSelectedFromList")
-
-    /// Still used by some views during migration to environment-based navigation
-    /// Notification to clear current trip selection
-    static let clearTripSelection = Notification.Name("clearTripSelection")
-
-    /// Still used by some views during migration to environment-based navigation
-    /// Notification to navigate to a specific trip
-    static let navigateToTrip = Notification.Name("navigateToTrip")
-
     // MARK: - Sync Operation Notifications
 
     /// Posted when sync operation starts

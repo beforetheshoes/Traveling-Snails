@@ -4,6 +4,7 @@
 //
 //
 
+import Dependencies
 import Photos
 import PhotosUI
 import SwiftUI
@@ -11,7 +12,7 @@ import UniformTypeIdentifiers
 
 /// Unified file picker that handles both photos and documents with proper cleanup
 struct UnifiedFilePicker: View {
-    @Environment(\.modelContext) private var modelContext
+    @Dependency(\.defaultDatabase) private var database
 
     // Configuration
     let allowsPhotos: Bool
@@ -247,10 +248,10 @@ struct UnifiedFilePicker: View {
             throw FilePickerError.failedToCreateAttachment
         }
 
-        modelContext.insert(attachment)
-
         do {
-            try modelContext.save()
+            try await database.write { db in
+                try EmbeddedFileAttachment.upsert { attachment }.execute(db)
+            }
             await MainActor.run {
                 onFileSelected(attachment)
             }
@@ -258,7 +259,6 @@ struct UnifiedFilePicker: View {
             Logger.shared.debug("File attachment saved successfully", category: .filePicker)
             #endif
         } catch {
-            modelContext.delete(attachment)
             throw FilePickerError.failedToSaveToDatabase(error)
         }
     }

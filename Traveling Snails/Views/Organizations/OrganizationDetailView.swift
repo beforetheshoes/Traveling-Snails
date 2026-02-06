@@ -4,14 +4,14 @@
 //
 //
 
+import Dependencies
 import SwiftUI
 
 struct OrganizationDetailView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Dependency(\.defaultDatabase) private var database
     @Environment(\.dismiss) private var dismiss
-    @Binding var selectedTab: Int
-    @Binding var selectedTrip: Trip?
     let organization: Organization
+    let onOpenTrip: (Trip.ID) -> Void
 
     @State private var isEditing = false
     @State private var editedName: String = ""
@@ -110,8 +110,7 @@ struct OrganizationDetailView: View {
                     Section(header: Text("Related Trips")) {
                         ForEach(relatedTrips.sorted { $0.name < $1.name }) { trip in
                             Button {
-                                selectedTrip = trip
-                                selectedTab = 0  // Switch to Trips tab
+                                onOpenTrip(trip.id)
                                 dismiss()
                             } label: {
                                 VStack(alignment: .leading) {
@@ -234,29 +233,36 @@ struct OrganizationDetailView: View {
             return
         }
 
-        organization.name = editedName
-        organization.phone = editedPhone
-        organization.email = editedEmail
-        organization.website = editedWebsite
-        organization.logoURL = editedLogoURL
-
-        if let newAddress = editedAddress {
-            // Ensure organization has an address object to update
-            if organization.address == nil {
-                organization.address = Address()
-            }
-            organization.address?.street = newAddress.street
-            organization.address?.city = newAddress.city
-            organization.address?.state = newAddress.state
-            organization.address?.country = newAddress.country
-            organization.address?.postalCode = newAddress.postalCode
-            organization.address?.latitude = newAddress.latitude
-            organization.address?.longitude = newAddress.longitude
-            organization.address?.formattedAddress = newAddress.formattedAddress
-        }
-
         do {
-            try modelContext.save()
+            var updatedOrganization = organization
+            updatedOrganization.name = editedName
+            updatedOrganization.phone = editedPhone
+            updatedOrganization.email = editedEmail
+            updatedOrganization.website = editedWebsite
+            updatedOrganization.logoURL = editedLogoURL
+
+            try database.write { db in
+                if let newAddress = editedAddress, !newAddress.isEmpty {
+                    let addressID = updatedOrganization.addressID ?? newAddress.id
+                    let normalizedAddress = Address(
+                        id: addressID,
+                        street: newAddress.street,
+                        city: newAddress.city,
+                        state: newAddress.state,
+                        country: newAddress.country,
+                        postalCode: newAddress.postalCode,
+                        latitude: newAddress.latitude,
+                        longitude: newAddress.longitude,
+                        formattedAddress: newAddress.formattedAddress
+                    )
+                    try Address.upsert { normalizedAddress }.execute(db)
+                    updatedOrganization.addressID = normalizedAddress.id
+                } else {
+                    updatedOrganization.addressID = nil
+                }
+
+                try Organization.upsert { updatedOrganization }.execute(db)
+            }
             isEditing = false
 
             // REMOVED: Custom sync triggers - let SwiftData+CloudKit handle automatically
@@ -275,9 +281,10 @@ struct OrganizationDetailView: View {
         }
 
         if canDeleteOrganization {
-            modelContext.delete(organization)
             do {
-                try modelContext.save()
+                try database.write { db in
+                    try Organization.find(organization.id).delete().execute(db)
+                }
                 dismiss()
 
                 // REMOVED: Custom sync triggers - let SwiftData+CloudKit handle automatically
@@ -438,10 +445,8 @@ private struct ContactInfoSection: View {
 #Preview {
     NavigationStack {
         OrganizationDetailView(
-            selectedTab: .constant(1),
-            selectedTrip: .constant(nil),
-            organization: Organization(name: "Test Organization")
+            organization: Organization(name: "Test Organization"),
+            onOpenTrip: { _ in }
         )
     }
-    .modelContainer(for: Organization.self, inMemory: true)
 }

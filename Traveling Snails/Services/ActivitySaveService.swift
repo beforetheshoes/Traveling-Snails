@@ -5,7 +5,7 @@
 //
 
 import Foundation
-import SwiftData
+import SQLiteData
 
 // MARK: - Type-Erased Save Protocol
 
@@ -14,7 +14,7 @@ protocol ActivitySaver: Sendable {
         editData: TripActivityEditData,
         attachments: [EmbeddedFileAttachment],
         trip: Trip,
-        in modelContext: ModelContext
+        in database: DatabaseWriter
     ) throws
 
     func createTemplate(in trip: Trip) -> any TripActivityProtocol
@@ -67,16 +67,16 @@ struct ActivitySaverImpl: ActivitySaver {
         editData: TripActivityEditData,
         attachments: [EmbeddedFileAttachment],
         trip: Trip,
-        in modelContext: ModelContext
+        in database: DatabaseWriter
     ) throws {
         guard let organization = editData.organization else {
             throw ActivitySaveError.missingOrganization
         }
 
-        let noneOrg = Organization.ensureUniqueNoneOrganization(in: modelContext)
+        let noneOrg = try ensureNoneOrganization(in: database)
         let finalOrg = organization.name == "None" ? noneOrg : organization
 
-        let activity = Activity(
+        var activity = Activity(
             name: editData.name,
             start: editData.start,
             startTZ: TimeZone(identifier: editData.startTZId),
@@ -86,26 +86,42 @@ struct ActivitySaverImpl: ActivitySaver {
             paid: editData.paid,
             reservation: editData.confirmationField,
             notes: editData.notes,
+            trip: trip,
+            organization: finalOrg,
             customLocationName: editData.customLocationName,
             customAddress: editData.customAddress,
             hideLocation: editData.hideLocation
         )
 
-        modelContext.insert(activity)
+        try database.write { db in
+            if let customAddress = editData.customAddress, !customAddress.isEmpty {
+                try Address.upsert { customAddress }.execute(db)
+                activity.addressID = customAddress.id
+            }
 
-        if let customAddress = editData.customAddress {
-            modelContext.insert(customAddress)
+            activity.tripID = trip.id
+            activity.organizationID = finalOrg.id
+            try Activity.upsert { activity }.execute(db)
+
+            try EmbeddedFileAttachment.insert {
+                for attachment in attachments {
+                    EmbeddedFileAttachment.Draft(
+                        id: attachment.id,
+                        fileName: attachment.fileName,
+                        originalFileName: attachment.originalFileName,
+                        fileSize: attachment.fileSize,
+                        mimeType: attachment.mimeType,
+                        fileExtension: attachment.fileExtension,
+                        createdDate: attachment.createdDate,
+                        fileDescription: attachment.fileDescription,
+                        fileData: attachment.fileData,
+                        activityID: activity.id,
+                        lodgingID: nil,
+                        transportationID: nil
+                    )
+                }
+            }.execute(db)
         }
-
-        activity.trip = trip
-        activity.organization = finalOrg
-
-        for attachment in attachments {
-            modelContext.insert(attachment)
-            attachment.activity = activity
-        }
-
-        try modelContext.save()
 
         // REMOVED: Custom sync triggers - let SwiftData+CloudKit handle automatically
     }
@@ -140,16 +156,16 @@ struct LodgingSaverImpl: ActivitySaver {
         editData: TripActivityEditData,
         attachments: [EmbeddedFileAttachment],
         trip: Trip,
-        in modelContext: ModelContext
+        in database: DatabaseWriter
     ) throws {
         guard let organization = editData.organization else {
             throw ActivitySaveError.missingOrganization
         }
 
-        let noneOrg = Organization.ensureUniqueNoneOrganization(in: modelContext)
+        let noneOrg = try ensureNoneOrganization(in: database)
         let finalOrg = organization.name == "None" ? noneOrg : organization
 
-        let lodging = Lodging(
+        var lodging = Lodging(
             name: editData.name,
             start: editData.start,
             checkInTZ: TimeZone(identifier: editData.startTZId),
@@ -159,26 +175,42 @@ struct LodgingSaverImpl: ActivitySaver {
             paid: editData.paid,
             reservation: editData.confirmationField,
             notes: editData.notes,
+            trip: trip,
+            organization: finalOrg,
             customLocationName: editData.customLocationName,
             customAddress: editData.customAddress,
             hideLocation: editData.hideLocation
         )
 
-        modelContext.insert(lodging)
+        try database.write { db in
+            if let customAddress = editData.customAddress, !customAddress.isEmpty {
+                try Address.upsert { customAddress }.execute(db)
+                lodging.addressID = customAddress.id
+            }
 
-        if let customAddress = editData.customAddress {
-            modelContext.insert(customAddress)
+            lodging.tripID = trip.id
+            lodging.organizationID = finalOrg.id
+            try Lodging.upsert { lodging }.execute(db)
+
+            try EmbeddedFileAttachment.insert {
+                for attachment in attachments {
+                    EmbeddedFileAttachment.Draft(
+                        id: attachment.id,
+                        fileName: attachment.fileName,
+                        originalFileName: attachment.originalFileName,
+                        fileSize: attachment.fileSize,
+                        mimeType: attachment.mimeType,
+                        fileExtension: attachment.fileExtension,
+                        createdDate: attachment.createdDate,
+                        fileDescription: attachment.fileDescription,
+                        fileData: attachment.fileData,
+                        activityID: nil,
+                        lodgingID: lodging.id,
+                        transportationID: nil
+                    )
+                }
+            }.execute(db)
         }
-
-        lodging.trip = trip
-        lodging.organization = finalOrg
-
-        for attachment in attachments {
-            modelContext.insert(attachment)
-            attachment.lodging = lodging
-        }
-
-        try modelContext.save()
 
         // REMOVED: Custom sync triggers - let SwiftData+CloudKit handle automatically
     }
@@ -211,16 +243,16 @@ struct TransportationSaverImpl: ActivitySaver {
         editData: TripActivityEditData,
         attachments: [EmbeddedFileAttachment],
         trip: Trip,
-        in modelContext: ModelContext
+        in database: DatabaseWriter
     ) throws {
         guard let organization = editData.organization else {
             throw ActivitySaveError.missingOrganization
         }
 
-        let noneOrg = Organization.ensureUniqueNoneOrganization(in: modelContext)
+        let noneOrg = try ensureNoneOrganization(in: database)
         let finalOrg = organization.name == "None" ? noneOrg : organization
 
-        let transportation = Transportation(
+        var transportation = Transportation(
             name: editData.name,
             type: editData.transportationType ?? .plane,
             start: editData.start,
@@ -230,23 +262,51 @@ struct TransportationSaverImpl: ActivitySaver {
             cost: editData.cost,
             paid: editData.paid,
             confirmation: editData.confirmationField,
-            notes: editData.notes
+            notes: editData.notes,
+            trip: trip,
+            organization: finalOrg
         )
 
-        modelContext.insert(transportation)
+        try database.write { db in
+            transportation.tripID = trip.id
+            transportation.organizationID = finalOrg.id
+            try Transportation.upsert { transportation }.execute(db)
 
-        transportation.trip = trip
-        transportation.organization = finalOrg
-
-        for attachment in attachments {
-            modelContext.insert(attachment)
-            attachment.transportation = transportation
+            try EmbeddedFileAttachment.insert {
+                for attachment in attachments {
+                    EmbeddedFileAttachment.Draft(
+                        id: attachment.id,
+                        fileName: attachment.fileName,
+                        originalFileName: attachment.originalFileName,
+                        fileSize: attachment.fileSize,
+                        mimeType: attachment.mimeType,
+                        fileExtension: attachment.fileExtension,
+                        createdDate: attachment.createdDate,
+                        fileDescription: attachment.fileDescription,
+                        fileData: attachment.fileData,
+                        activityID: nil,
+                        lodgingID: nil,
+                        transportationID: transportation.id
+                    )
+                }
+            }.execute(db)
         }
-
-        try modelContext.save()
 
         // REMOVED: Custom sync triggers - let SwiftData+CloudKit handle automatically
     }
+}
+
+private func ensureNoneOrganization(in database: DatabaseWriter) throws -> Organization {
+    if let existing = try database.read({ db in
+        try Organization.where { $0.name.eq("None") }.fetchOne(db)
+    }) {
+        return existing
+    }
+    let noneOrg = Organization(name: "None")
+    try database.write { db in
+        try Organization.insert { noneOrg }.execute(db)
+    }
+    return noneOrg
 }
 
 // MARK: - Factory

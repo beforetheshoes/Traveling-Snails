@@ -43,13 +43,13 @@ extension Address: DetailDisplayable {
         ))
 
         // Usage
-        let total = (organizations?.count ?? 0) + (activities?.count ?? 0) + (lodgings?.count ?? 0)
+        let total = organizations.count + activities.count + lodgings.count
         sections.append(DetailSection(
             title: "Usage",
             rows: [
-                DetailRowData(label: "Organizations", value: "\(organizations?.count ?? 0)"),
-                DetailRowData(label: "Activities", value: "\(activities?.count ?? 0)"),
-                DetailRowData(label: "Lodging", value: "\(lodgings?.count ?? 0)"),
+                DetailRowData(label: "Organizations", value: "\(organizations.count)"),
+                DetailRowData(label: "Activities", value: "\(activities.count)"),
+                DetailRowData(label: "Lodging", value: "\(lodgings.count)"),
                 DetailRowData(label: "Total Usage", value: "\(total)"),
             ]
         ))

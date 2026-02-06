@@ -1,12 +1,11 @@
 import SwiftUI
 import CloudKit
-import SwiftData
+import SQLiteData
 
 /// View for handling CloudKit share invitation acceptance
 struct ShareInvitationView: View {
     let shareMetadata: CKShare.Metadata
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.modelContext) private var modelContext
     
     @State private var sharingService: CKSyncEngineSharingService?
     @State private var isAcceptingShare = false
@@ -132,16 +131,8 @@ struct ShareInvitationView: View {
     // MARK: - Helper Methods
     
     private func initializeSharingService() async {
-        do {
-            let container = try ModelContainer(for: Trip.self, Activity.self, Transportation.self, Lodging.self, Organization.self, EmbeddedFileAttachment.self)
-            await MainActor.run {
-                sharingService = CKSyncEngineSharingService(modelContainer: container)
-            }
-        } catch {
-            await MainActor.run {
-                errorMessage = "Failed to initialize sharing: \(error.localizedDescription)"
-                showingError = true
-            }
+        await MainActor.run {
+            sharingService = CKSyncEngineSharingService()
         }
     }
     
@@ -186,5 +177,4 @@ struct ShareInvitationView: View {
     // This preview will show a placeholder
     Text("ShareInvitationView Preview")
         .navigationTitle("Share Invitation")
-        .modelContainer(for: [Trip.self, Activity.self, Lodging.self, Transportation.self], inMemory: true)
 }

@@ -4,22 +4,22 @@
 //
 //
 
+import ComposableArchitecture
 import SwiftUI
 
 /// Root view for trip calendar - coordinates ViewModel and handles dependencies
 struct TripCalendarRootView: View {
-    let trip: Trip
-
-    @State private var viewModel: CalendarViewModel
+    @Bindable var store: StoreOf<CalendarFeature>
 
     init(trip: Trip) {
-        self.trip = trip
-        self._viewModel = State(wrappedValue: CalendarViewModel(trip: trip))
+        self.store = Store(initialState: CalendarFeature.State(trip: trip)) {
+            CalendarFeature()
+        }
     }
 
     var body: some View {
-        NavigationStack(path: $viewModel.navigationPath) {
-            CalendarContentView(viewModel: viewModel)
+        NavigationStack(path: $store.navigationPath) {
+            CalendarContentView(store: store)
                 .navigationDestination(for: DestinationType.self) { destination in
                     switch destination {
                     case .lodging(let lodging):

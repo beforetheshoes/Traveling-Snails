@@ -4,27 +4,28 @@
 //
 //
 
+import ComposableArchitecture
 import SwiftUI
 
 struct SettingsContentView: View {
-    @Bindable var viewModel: SettingsViewModel
+    @Bindable var store: StoreOf<SettingsFeature>
 
     var body: some View {
         List {
             // Appearance Section
-            AppearanceSection(viewModel: viewModel)
+            AppearanceSection()
 
             // Data Management Section
-            DataManagementSection(viewModel: viewModel)
+            DataManagementSection(store: store)
 
             // File Attachments Section
-            FileAttachmentsSection(viewModel: viewModel)
+            FileAttachmentsSection(store: store)
 
             // Security Section
-            SecuritySection(viewModel: viewModel)
+            SecuritySection(store: store)
 
             // About Section
-            AboutSection(viewModel: viewModel)
+            AboutSection(store: store)
 
             #if DEBUG
             // Developer Section
@@ -32,40 +33,45 @@ struct SettingsContentView: View {
             #endif
 
             // Import Result Display
-            if let result = viewModel.importResult {
+            if let result = store.importResult {
                 ImportResultSection(result: result)
             }
         }
         .navigationTitle("Settings")
-        .sheet(isPresented: $viewModel.showingDataBrowser) {
+        .sheet(isPresented: $store.showingDataBrowser) {
             DataBrowserView()
         }
-        .sheet(isPresented: $viewModel.showingExportView) {
+        .sheet(isPresented: $store.showingExportView) {
             DatabaseExportView()
         }
         .fileImporter(
-            isPresented: $viewModel.showingImportPicker,
+            isPresented: $store.showingImportPicker,
             allowedContentTypes: [.json],
             allowsMultipleSelection: false
         ) { result in
-            viewModel.handleImportResult(result)
+            store.send(.importPickerResult(result))
         }
-        .sheet(isPresented: $viewModel.showingFileAttachmentSettings) {
+        .sheet(isPresented: $store.showingFileAttachmentSettings) {
             FileAttachmentSettingsView()
         }
-        .sheet(isPresented: $viewModel.showingImportProgress) {
-            DatabaseImportProgressView(importManager: viewModel.importManager)
+        .sheet(isPresented: $store.showingImportProgress) {
+            DatabaseImportProgressView(importManager: store.importManager)
         }
-        .sheet(isPresented: $viewModel.showingDatabaseCleanup) {
+        .sheet(isPresented: $store.showingDatabaseCleanup) {
             DatabaseCleanupView()
         }
+        .alert("Import Failed", isPresented: $store.showingImportError) {
+            Button("OK") { store.send(.dismissImportError) }
+        } message: {
+            Text(store.importError ?? L(L10n.Settings.Import.failed))
+        }
+        .onAppear { store.send(.onAppear) }
     }
 }
 
 // MARK: - Appearance Section
 
 struct AppearanceSection: View {
-    @Bindable var viewModel: SettingsViewModel
     @Environment(ModernAppSettings.self) private var appSettings
 
     var body: some View {
@@ -104,12 +110,12 @@ struct AppearanceSection: View {
 // MARK: - Data Management Section
 
 struct DataManagementSection: View {
-    @Bindable var viewModel: SettingsViewModel
+    @Bindable var store: StoreOf<SettingsFeature>
 
     var body: some View {
         Section("Data Management") {
             Button {
-                viewModel.openDataBrowser()
+                store.send(.openDataBrowser)
             } label: {
                 SettingsRow(
                     icon: "cylinder.split.1x2",
@@ -121,7 +127,7 @@ struct DataManagementSection: View {
             .foregroundColor(.primary)
 
             Button {
-                viewModel.openExportView()
+                store.send(.openExportView)
             } label: {
                 SettingsRow(
                     icon: "square.and.arrow.up",
@@ -133,7 +139,7 @@ struct DataManagementSection: View {
             .foregroundColor(.primary)
 
             Button {
-                viewModel.openImportPicker()
+                store.send(.openImportPicker)
             } label: {
                 SettingsRow(
                     icon: "square.and.arrow.down",
@@ -145,7 +151,7 @@ struct DataManagementSection: View {
             .foregroundColor(.primary)
 
             Button {
-                viewModel.cleanupNoneOrganizations()
+                store.send(.cleanupNoneOrganizationsTapped)
             } label: {
                 SettingsRow(
                     icon: "building.2.crop.circle.badge.checkmark",
@@ -157,7 +163,7 @@ struct DataManagementSection: View {
             .foregroundColor(.primary)
 
             Button {
-                viewModel.openDatabaseCleanup()
+                store.send(.openDatabaseCleanup)
             } label: {
                 SettingsRow(
                     icon: "trash.circle",
@@ -168,10 +174,10 @@ struct DataManagementSection: View {
             }
             .foregroundColor(.primary)
         }
-        .alert("Organization Cleanup", isPresented: $viewModel.showingOrganizationCleanupAlert) {
+        .alert("Organization Cleanup", isPresented: $store.showingOrganizationCleanupAlert) {
             Button("OK") { }
         } message: {
-            Text(viewModel.organizationCleanupMessage)
+            Text(store.organizationCleanupMessage)
         }
     }
 }
@@ -179,12 +185,12 @@ struct DataManagementSection: View {
 // MARK: - File Attachments Section
 
 struct FileAttachmentsSection: View {
-    @Bindable var viewModel: SettingsViewModel
+    let store: StoreOf<SettingsFeature>
 
     var body: some View {
         Section("File Attachments") {
             Button {
-                viewModel.openFileAttachmentSettings()
+                store.send(.openFileAttachmentSettings)
             } label: {
                 SettingsRow(
                     icon: "paperclip",
@@ -201,8 +207,9 @@ struct FileAttachmentsSection: View {
 // MARK: - Security Section
 
 struct SecuritySection: View {
-    @Bindable var viewModel: SettingsViewModel
+    let store: StoreOf<SettingsFeature>
     @Environment(ModernBiometricAuthManager.self) private var authManager
+    @Environment(ModernAppSettings.self) private var appSettings
 
     var body: some View {
         Section {
@@ -230,20 +237,21 @@ struct SecuritySection: View {
                     Text("Auto-lock timeout")
                     Spacer()
                     Menu {
-                        ForEach(SettingsViewModel.TimeoutOption.allCases, id: \.self) { option in
+                        ForEach(SettingsTimeoutOption.allCases, id: \.self) { option in
                             Button(option.displayName) {
-                                viewModel.setBiometricTimeout(option)
+                                let minutes = Int(option.rawValue / 60)
+                                appSettings.biometricTimeoutMinutes = minutes
                             }
                         }
                     } label: {
-                        Text(viewModel.currentBiometricTimeout.displayName)
+                        Text(SettingsTimeoutOption.from(TimeInterval(appSettings.biometricTimeoutMinutes * 60)).displayName)
                             .foregroundColor(.blue)
                     }
                 }
 
-                if !viewModel.allTripsLocked {
+                if !store.allTripsLocked {
                     Button("Lock All Protected Trips Now") {
-                        viewModel.lockAllProtectedTrips()
+                        store.send(.lockAllProtectedTripsTapped)
                     }
                     .foregroundColor(.red)
                 } else {
@@ -281,7 +289,7 @@ struct SecuritySection: View {
 // MARK: - About Section
 
 struct AboutSection: View {
-    @Bindable var viewModel: SettingsViewModel
+    let store: StoreOf<SettingsFeature>
 
     var body: some View {
         Section("About") {
@@ -294,7 +302,7 @@ struct AboutSection: View {
 
                 Spacer()
 
-                Text(viewModel.appVersion)
+                Text(store.appVersion)
                     .foregroundColor(.secondary)
             }
 
@@ -307,7 +315,7 @@ struct AboutSection: View {
 
                 Spacer()
 
-                Text(viewModel.buildNumber)
+                Text(store.buildNumber)
                     .foregroundColor(.secondary)
             }
         }

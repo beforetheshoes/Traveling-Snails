@@ -78,7 +78,7 @@ final class MockAuthenticationService: AuthenticationService, Sendable {
 
     func authenticateTrip(_ trip: Trip) async -> Bool {
         let tripId = trip.id
-        let tripIsProtected = trip.isProtected
+        let tripIsProtected = isProtected(trip)
 
         // Increment call count for verification
         lock.withLock { _authenticationCallCount += 1 }
@@ -122,7 +122,8 @@ final class MockAuthenticationService: AuthenticationService, Sendable {
 
     func isProtected(_ trip: Trip) -> Bool {
         let enabled = lock.withLock { _mockIsEnabled }
-        return enabled && trip.isProtected
+        let isProtectedOverride = lock.withLock { _protectedTripIDs.contains(trip.id) }
+        return enabled && (trip.isProtected || isProtectedOverride)
     }
 
     func lockTrip(_ trip: Trip) {
@@ -131,12 +132,13 @@ final class MockAuthenticationService: AuthenticationService, Sendable {
     }
 
     func toggleProtection(for trip: Trip) {
-        trip.isProtected.toggle()
-
-        // If removing protection, also remove from authenticated trips
-        if !trip.isProtected {
-            let tripId = trip.id
+        let tripId = trip.id
+        let isCurrentlyProtected = lock.withLock { _protectedTripIDs.contains(tripId) }
+        if isCurrentlyProtected {
+            _ = lock.withLock { _protectedTripIDs.remove(tripId) }
             _ = lock.withLock { _authenticatedTripIDs.remove(tripId) }
+        } else {
+            _ = lock.withLock { _protectedTripIDs.insert(tripId) }
         }
     }
 
