@@ -87,6 +87,7 @@ struct ImprovedQuickLookView: View {
 }
 
 @available(iOS 18.0, *)
+@MainActor
 struct ModernQuickLookContainer: UIViewControllerRepresentable {
     let url: URL
     let onError: (String) -> Void
@@ -94,7 +95,6 @@ struct ModernQuickLookContainer: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> QLPreviewController {
         let controller = QLPreviewController()
         controller.dataSource = context.coordinator
-        controller.delegate = context.coordinator
 
         // Modern iOS 18 configurations
         controller.modalPresentationStyle = .fullScreen
@@ -111,7 +111,7 @@ struct ModernQuickLookContainer: UIViewControllerRepresentable {
         Coordinator(url: url, onError: onError)
     }
 
-    class Coordinator: NSObject, QLPreviewControllerDataSource, QLPreviewControllerDelegate {
+    class Coordinator: NSObject, QLPreviewControllerDataSource {
         let url: URL
         let onError: (String) -> Void
 
@@ -129,12 +129,5 @@ struct ModernQuickLookContainer: UIViewControllerRepresentable {
             url as QLPreviewItem
         }
 
-        func previewController(_ controller: QLPreviewController, editingModeFor previewItem: QLPreviewItem) -> QLPreviewItemEditingMode {
-            .disabled
-        }
-
-        func previewControllerDidDismiss(_ controller: QLPreviewController) {
-            // Handle dismissal
-        }
     }
 }

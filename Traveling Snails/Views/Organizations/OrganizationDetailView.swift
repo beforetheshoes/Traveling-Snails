@@ -4,89 +4,52 @@
 //
 //
 
-import Dependencies
+import ComposableArchitecture
 import SwiftUI
 
 struct OrganizationDetailView: View {
-    @Dependency(\.defaultDatabase) private var database
     @Environment(\.dismiss) private var dismiss
-    let organization: Organization
     let onOpenTrip: (Trip.ID) -> Void
+    @State private var store: StoreOf<OrganizationFeature>
 
-    @State private var isEditing = false
-    @State private var editedName: String = ""
-    @State private var editedPhone: String = ""
-    @State private var editedEmail: String = ""
-    @State private var editedWebsite: String = ""
-    @State private var editedAddress: Address?
-    @State private var editedLogoURL: String = ""
-    @State private var showingSaveError = false
-    @State private var saveErrorMessage = ""
-    @State private var showDeleteConfirmation = false
-
-    var relatedTrips: [Trip] {
-        var trips = Set<Trip>()
-
-
-        trips.formUnion(organization.transportation.compactMap { $0.trip })
-        trips.formUnion(organization.lodging.compactMap { $0.trip })
-        trips.formUnion(organization.activity.compactMap { $0.trip })
-
-        return Array(trips)
-    }
-
-    var canDeleteOrganization: Bool {
-        // Can't delete the sentinel "None" organization
-        if organization.isNone {
-            return false
+    init(
+        organization: Organization,
+        onOpenTrip: @escaping (Trip.ID) -> Void,
+        store: StoreOf<OrganizationFeature>? = nil
+    ) {
+        self.onOpenTrip = onOpenTrip
+        let resolvedStore = store ?? Store(initialState: OrganizationFeature.State(organization: organization)) {
+            OrganizationFeature()
         }
-
-        // Can't delete if it has any references
-        return (organization.transportation.isEmpty) &&
-        (organization.lodging.isEmpty) &&
-        (organization.activity.isEmpty)
-    }
-
-    var deleteButtonTitle: String {
-        if organization.isNone {
-            return "Cannot Delete System Organization"
-        } else if !canDeleteOrganization {
-            return "Cannot Delete - Has References"
-        } else {
-            return "Delete Organization"
-        }
-    }
-
-    var totalActivityCount: Int {
-        (organization.transportation.count) +
-        (organization.lodging.count) +
-        (organization.activity.count)
+        self._store = State(initialValue: resolvedStore)
     }
 
     var body: some View {
+        @Bindable var store = self.store
+
         VStack(alignment: .leading) {
             Spacer()
 
             HStack {
-                CachedAsyncImage(url: organization.logoURL, organizationId: organization.id)
+                CachedAsyncImage(url: store.organization.logoURL, organizationId: store.organization.id)
                     .frame(width: 60, height: 60)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(.rect(cornerRadius: 8))
 
                 VStack(alignment: .leading) {
-                    if isEditing {
-                        TextField("Organization Name", text: $editedName)
+                    if store.isEditing {
+                        TextField("Organization Name", text: $store.editedName)
                             .font(.title2)
                             .fontWeight(.semibold)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .textFieldStyle(.roundedBorder)
                     } else {
-                        Text(organization.name)
+                        Text(store.organization.name)
                             .font(.title2)
                             .fontWeight(.semibold)
                     }
 
-                    Text("\(totalActivityCount) activities")
+                    Text("\(store.totalActivityCount) activities")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
 
                 Spacer()
@@ -97,18 +60,18 @@ struct OrganizationDetailView: View {
 
             List {
                 ContactInfoSection(
-                    isEditing: $isEditing,
-                    editedPhone: $editedPhone,
-                    editedEmail: $editedEmail,
-                    editedWebsite: $editedWebsite,
-                    editedLogoURL: $editedLogoURL,
-                    editedAddress: $editedAddress,
-                    organization: organization
+                    isEditing: $store.isEditing,
+                    editedPhone: $store.editedPhone,
+                    editedEmail: $store.editedEmail,
+                    editedWebsite: $store.editedWebsite,
+                    editedLogoURL: $store.editedLogoURL,
+                    editedAddress: $store.editedAddress,
+                    organization: store.organization
                 )
 
-                if !relatedTrips.isEmpty {
+                if !store.relatedTrips.isEmpty {
                     Section(header: Text("Related Trips")) {
-                        ForEach(relatedTrips.sorted { $0.name < $1.name }) { trip in
+                        ForEach(store.relatedTrips.sorted { $0.name < $1.name }) { trip in
                             Button {
                                 onOpenTrip(trip.id)
                                 dismiss()
@@ -119,193 +82,92 @@ struct OrganizationDetailView: View {
 
                                     Text("\(countActivities(in: trip)) activities")
                                         .font(.caption)
-                                        .foregroundColor(.secondary)
+                                        .foregroundStyle(.secondary)
                                 }
                                 .padding(.vertical, 4)
                             }
-                            .foregroundColor(.primary)
+                            .foregroundStyle(.primary)
                         }
                     }
                 }
 
-                // Delete Button (show when editing and organization can be deleted)
-                if isEditing {
-                    Button(role: canDeleteOrganization ? .destructive : .cancel) {
-                        if canDeleteOrganization {
-                            showDeleteConfirmation = true
-                        }
+                if store.isEditing {
+                    Button(role: store.canDeleteOrganization ? .destructive : .cancel) {
+                        store.send(.deleteTapped)
                     } label: {
-                        Label(deleteButtonTitle, systemImage: "trash")
+                        Label(store.deleteButtonTitle, systemImage: "trash")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(!canDeleteOrganization)
+                    .disabled(!store.canDeleteOrganization)
                     .padding(.horizontal)
                     .padding(.bottom)
                 }
             }
             Spacer()
         }
-        .navigationTitle(isEditing ? "Edit Organization" : "Organization")
+        .navigationTitle(store.isEditing ? "Edit Organization" : "Organization")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                if isEditing {
+                if store.isEditing {
                     HStack {
                         Button("Cancel") {
-                            cancelEditing()
+                            store.send(.cancelEditing)
                         }
 
                         Button("Save") {
-                            saveChanges()
+                            store.send(.saveTapped)
                         }
-                        .disabled(editedName.isEmpty || (organization.isNone && editedName.lowercased() != "none"))
+                        .disabled(store.editedName.isEmpty || (store.organization.isNone && store.editedName.lowercased() != "none"))
                     }
                 } else {
                     Button("Edit") {
-                        startEditing()
+                        store.send(.startEditing)
                     }
                 }
             }
         }
         .confirmationDialog(
             getDeleteConfirmationMessage(),
-            isPresented: $showDeleteConfirmation,
+            isPresented: $store.showDeleteConfirmation,
             titleVisibility: .visible
         ) {
             Button("Delete", role: .destructive) {
-                deleteOrganization()
+                store.send(.deleteConfirmed)
             }
         }
-        .alert("Save Error", isPresented: $showingSaveError) {
-            Button("OK") { }
+        .alert("Save Error", isPresented: $store.showingSaveError) {
+            Button("OK") {
+                store.send(.dismissSaveError)
+            }
         } message: {
-            Text(saveErrorMessage)
+            Text(store.saveErrorMessage)
+        }
+        .onChange(of: store.shouldDismiss) { _, shouldDismiss in
+            guard shouldDismiss else { return }
+            dismiss()
+            store.send(.dismissHandled)
         }
     }
 
     private func getDeleteConfirmationMessage() -> String {
-        if organization.isNone {
+        if store.organization.isNone {
             return "The system 'None' organization cannot be deleted."
-        } else if !canDeleteOrganization {
-            let transportCount = organization.transportation.count
-            let lodgingCount = organization.lodging.count
-            let activityCount = organization.activity.count
-            return "Cannot delete '\(organization.name)'. It has \(transportCount) transportation, \(lodgingCount) lodging, and \(activityCount) activities associated with it."
-        } else {
-            return "Are you sure you want to delete '\(organization.name)'? This action cannot be undone."
         }
-    }
-
-    private func startEditing() {
-        editedName = organization.name
-        editedPhone = organization.phone
-        editedEmail = organization.email
-        editedWebsite = organization.website
-        editedLogoURL = organization.logoURL
-        editedAddress = (organization.address?.isEmpty == false) ? organization.address : nil
-        isEditing = true
-    }
-
-    private func cancelEditing() {
-        isEditing = false
-
-        editedName = ""
-        editedPhone = ""
-        editedEmail = ""
-        editedWebsite = ""
-        editedLogoURL = ""
-        editedAddress = nil
-    }
-
-    private func saveChanges() {
-        // Prevent changing name to "None" for non-sentinel organizations
-        if !organization.isNone && editedName.lowercased() == "none" {
-            saveErrorMessage = "Cannot rename organization to 'None' - this name is reserved for the system."
-            showingSaveError = true
-            return
+        if !store.canDeleteOrganization {
+            let transportCount = store.organization.transportation.count
+            let lodgingCount = store.organization.lodging.count
+            let activityCount = store.organization.activity.count
+            return "Cannot delete '\(store.organization.name)'. It has \(transportCount) transportation, \(lodgingCount) lodging, and \(activityCount) activities associated with it."
         }
-
-        // Prevent changing sentinel organization name to something else
-        if organization.isNone && editedName.lowercased() != "none" {
-            saveErrorMessage = "Cannot rename the system 'None' organization."
-            showingSaveError = true
-            return
-        }
-
-        do {
-            var updatedOrganization = organization
-            updatedOrganization.name = editedName
-            updatedOrganization.phone = editedPhone
-            updatedOrganization.email = editedEmail
-            updatedOrganization.website = editedWebsite
-            updatedOrganization.logoURL = editedLogoURL
-
-            try database.write { db in
-                if let newAddress = editedAddress, !newAddress.isEmpty {
-                    let addressID = updatedOrganization.addressID ?? newAddress.id
-                    let normalizedAddress = Address(
-                        id: addressID,
-                        street: newAddress.street,
-                        city: newAddress.city,
-                        state: newAddress.state,
-                        country: newAddress.country,
-                        postalCode: newAddress.postalCode,
-                        latitude: newAddress.latitude,
-                        longitude: newAddress.longitude,
-                        formattedAddress: newAddress.formattedAddress
-                    )
-                    try Address.upsert { normalizedAddress }.execute(db)
-                    updatedOrganization.addressID = normalizedAddress.id
-                } else {
-                    updatedOrganization.addressID = nil
-                }
-
-                try Organization.upsert { updatedOrganization }.execute(db)
-            }
-            isEditing = false
-
-            // REMOVED: Custom sync triggers - let SwiftData+CloudKit handle automatically
-        } catch {
-            Logger.shared.error("Failed to save organization: \(error.localizedDescription)", category: .database)
-            saveErrorMessage = L(L10n.Save.organizationFailed)
-            showingSaveError = true
-        }
-    }
-
-    private func deleteOrganization() {
-        if organization.isNone {
-            saveErrorMessage = "Cannot delete the system 'None' organization."
-            showingSaveError = true
-            return
-        }
-
-        if canDeleteOrganization {
-            do {
-                try database.write { db in
-                    try Organization.find(organization.id).delete().execute(db)
-                }
-                dismiss()
-
-                // REMOVED: Custom sync triggers - let SwiftData+CloudKit handle automatically
-            } catch {
-                Logger.shared.error("Failed to delete organization: \(error.localizedDescription)", category: .database)
-                saveErrorMessage = L(L10n.Delete.organizationFailed)
-                showingSaveError = true
-            }
-        } else {
-            let transportCount = organization.transportation.count
-            let lodgingCount = organization.lodging.count
-            let activityCount = organization.activity.count
-            saveErrorMessage = "Cannot delete '\(organization.name)'. It's used by \(transportCount) transportation, \(lodgingCount) lodging, and \(activityCount) activity records."
-            showingSaveError = true
-        }
+        return "Are you sure you want to delete '\(store.organization.name)'? This action cannot be undone."
     }
 
     private func countActivities(in trip: Trip) -> Int {
-        let lodgingCount = (trip.lodging).filter { $0.organization?.id == organization.id }.count
-        let transportationCount = (trip.transportation).filter { $0.organization?.id == organization.id }.count
-        let activityCount = (trip.activity).filter { $0.organization?.id == organization.id }.count
+        let lodgingCount = trip.lodging.filter { $0.organization?.id == store.organization.id }.count
+        let transportationCount = trip.transportation.filter { $0.organization?.id == store.organization.id }.count
+        let activityCount = trip.activity.filter { $0.organization?.id == store.organization.id }.count
         return lodgingCount + transportationCount + activityCount
     }
 }
@@ -329,7 +191,7 @@ private struct ContactInfoSection: View {
 
                     TextField("Logo URL", text: $editedLogoURL)
                         .keyboardType(.URL)
-                        .autocapitalization(.none)
+                        .textInputAutocapitalization(.never)
                 }
                 .padding(.vertical, 8)
             }
@@ -343,10 +205,11 @@ private struct ContactInfoSection: View {
                     TextField("Phone", text: $editedPhone)
                         .keyboardType(.phonePad)
                 } else {
-                    if !organization.phone.isEmpty {
-                        SecurePhoneLink(phoneNumber: organization.phone)
+                    if organization.phone.isEmpty {
+                        Text("No phone")
+                            .foregroundStyle(.secondary)
                     } else {
-                        Text("Not provided").foregroundColor(.secondary)
+                        Text(organization.phone)
                     }
                 }
             }
@@ -360,12 +223,13 @@ private struct ContactInfoSection: View {
                 if isEditing {
                     TextField("Email", text: $editedEmail)
                         .keyboardType(.emailAddress)
-                        .autocapitalization(.none)
+                        .textInputAutocapitalization(.never)
                 } else {
-                    if !organization.email.isEmpty {
-                        SecureEmailLink(email: organization.email)
+                    if organization.email.isEmpty {
+                        Text("No email")
+                            .foregroundStyle(.secondary)
                     } else {
-                        Text("Not provided").foregroundColor(.secondary)
+                        Text(organization.email)
                     }
                 }
             }
@@ -379,73 +243,96 @@ private struct ContactInfoSection: View {
                 if isEditing {
                     TextField("Website", text: $editedWebsite)
                         .keyboardType(.URL)
-                        .autocapitalization(.none)
+                        .textInputAutocapitalization(.never)
                 } else {
-                    if !organization.website.isEmpty {
-                        SecureWebsiteLink(website: organization.website)
+                    if organization.website.isEmpty {
+                        Text("No website")
+                            .foregroundStyle(.secondary)
                     } else {
-                        Text("Not provided").foregroundColor(.secondary)
+                        Text(organization.website)
                     }
                 }
             }
             .padding(.vertical, 8)
 
+            AddressSection(
+                isEditing: $isEditing,
+                editedAddress: $editedAddress,
+                organization: organization
+            )
+        }
+    }
+}
+
+private struct AddressSection: View {
+    @Binding var isEditing: Bool
+    @Binding var editedAddress: Address?
+    let organization: Organization
+
+    var body: some View {
+        HStack(alignment: .top) {
+            Image(systemName: "location")
+                .frame(width: 24, height: 24)
+                .padding(.horizontal, 4)
+                .padding(.top, 4)
+
             if isEditing {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(
-                        (organization.address?.formattedAddress == ""
-                         ? "Not provided"
-                         : organization.address?.formattedAddress) ?? ""
-                    )
-                        .foregroundColor(.secondary)
-
-                    HStack {
-                        Image(systemName: "mappin.and.ellipse")
-                            .frame(width: 24, height: 24)
-                            .padding(.horizontal, 4)
-
-                        Text("Address")
-                            .font(.headline)
-                    }
-
                     AddressAutocompleteView(
                         selectedAddress: $editedAddress,
-                        placeholder: "Enter organization address"
+                        placeholder: "Organization address"
                     )
-                    .padding(.vertical, 8)
                 }
-                .padding(.vertical, 8)
+                .frame(maxWidth: .infinity, alignment: .leading)
             } else {
-                HStack(alignment: .top) {
-                    Image(systemName: "mappin.and.ellipse")
-                        .frame(width: 24, height: 24)
-                        .padding(.horizontal, 4)
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        if !(organization.address?.isEmpty ?? true) {
-                            Text(organization.address?.displayAddress ?? "")
-                        } else {
-                            Text("Not provided").foregroundColor(.secondary)
-                        }
-                    }
-                }
-                .padding(.vertical, 8)
-
-                if organization.address != nil && organization.address?.isEmpty == false {
-                    AddressMapView(address: organization.address!)
-                        .frame(height: 200)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                        .listRowInsets(EdgeInsets())
+                if let address = organization.address, !address.isEmpty {
+                    Text(formatAddress(address))
+                        .foregroundStyle(.primary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                } else {
+                    Text("No address")
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
         }
+        .padding(.vertical, 8)
+    }
+
+    private func formatAddress(_ address: Address) -> String {
+        var components: [String] = []
+
+        if !address.street.isEmpty {
+            components.append(address.street)
+        }
+
+        var cityStatePostal: [String] = []
+        if !address.city.isEmpty {
+            cityStatePostal.append(address.city)
+        }
+        if !address.state.isEmpty {
+            cityStatePostal.append(address.state)
+        }
+        if !address.postalCode.isEmpty {
+            cityStatePostal.append(address.postalCode)
+        }
+
+        if !cityStatePostal.isEmpty {
+            components.append(cityStatePostal.joined(separator: ", "))
+        }
+
+        if !address.country.isEmpty {
+            components.append(address.country)
+        }
+
+        return components.joined(separator: "\n")
     }
 }
 
 #Preview {
     NavigationStack {
         OrganizationDetailView(
-            organization: Organization(name: "Test Organization"),
+            organization: .init(name: "Test Org"),
             onOpenTrip: { _ in }
         )
     }

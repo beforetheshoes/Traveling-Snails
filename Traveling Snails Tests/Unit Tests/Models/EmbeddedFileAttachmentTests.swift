@@ -178,6 +178,7 @@ struct EmbeddedFileAttachmentTests {
         }
 
         @Test("File validation with valid attachment", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .validation))
+        @MainActor
         func fileValidationWithValidAttachment() {
             let testData = "Valid test content".data(using: .utf8)!
             let attachment = EmbeddedFileAttachment(
@@ -194,6 +195,7 @@ struct EmbeddedFileAttachmentTests {
         }
 
         @Test("File validation with no data", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .validation, .boundary, .negative))
+        @MainActor
         func fileValidationWithNoData() {
             let attachment = EmbeddedFileAttachment(fileName: "empty.txt")
 
@@ -205,6 +207,7 @@ struct EmbeddedFileAttachmentTests {
         }
 
         @Test("File validation with empty data", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .validation, .boundary, .negative))
+        @MainActor
         func fileValidationWithEmptyData() {
             let attachment = EmbeddedFileAttachment(
                 fileName: "empty.txt",
@@ -251,13 +254,14 @@ struct EmbeddedFileAttachmentTests {
             let database = try makeTestDatabase()
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")
-            var activity = Activity(
+            let persistedActivity = Activity(
                 name: "Test Activity",
                 start: Date(),
                 end: Date(),
                 trip: trip,
                 organization: org
             )
+            var activity = persistedActivity
 
             var attachment = EmbeddedFileAttachment(
                 fileName: "activity_doc.pdf",
@@ -268,7 +272,7 @@ struct EmbeddedFileAttachmentTests {
                 try await database.write { db in
                     try Trip.insert { trip }.execute(db)
                     try Organization.insert { org }.execute(db)
-                    try Activity.insert { activity }.execute(db)
+                    try Activity.insert { persistedActivity }.execute(db)
                 }
 
                 // Set up relationship
@@ -288,7 +292,7 @@ struct EmbeddedFileAttachmentTests {
             let database = try makeTestDatabase()
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Hotel")
-            var lodging = Lodging(
+            let persistedLodging = Lodging(
                 name: "Test Hotel",
                 start: Date(),
                 end: Date(),
@@ -297,6 +301,7 @@ struct EmbeddedFileAttachmentTests {
                 trip: trip,
                 organization: org
             )
+            var lodging = persistedLodging
 
             var attachment = EmbeddedFileAttachment(
                 fileName: "reservation.pdf",
@@ -307,7 +312,7 @@ struct EmbeddedFileAttachmentTests {
                 try await database.write { db in
                     try Trip.insert { trip }.execute(db)
                     try Organization.insert { org }.execute(db)
-                    try Lodging.insert { lodging }.execute(db)
+                    try Lodging.insert { persistedLodging }.execute(db)
                 }
 
                 // Set up relationship
@@ -327,13 +332,14 @@ struct EmbeddedFileAttachmentTests {
             let database = try makeTestDatabase()
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Airline")
-            var transportation = Transportation(
+            let persistedTransportation = Transportation(
                 name: "Test Flight",
                 start: Date(),
                 end: Date(),
                 trip: trip,
                 organization: org
             )
+            var transportation = persistedTransportation
 
             var attachment = EmbeddedFileAttachment(
                 fileName: "ticket.pdf",
@@ -344,7 +350,7 @@ struct EmbeddedFileAttachmentTests {
                 try await database.write { db in
                     try Trip.insert { trip }.execute(db)
                     try Organization.insert { org }.execute(db)
-                    try Transportation.insert { transportation }.execute(db)
+                    try Transportation.insert { persistedTransportation }.execute(db)
                 }
 
                 // Set up relationship
@@ -364,13 +370,14 @@ struct EmbeddedFileAttachmentTests {
             let database = try makeTestDatabase()
             let trip = Trip(name: "Test Trip")
             let org = Organization(name: "Test Org")
-            var activity = Activity(
+            let persistedActivity = Activity(
                 name: "Test Activity",
                 start: Date(),
                 end: Date(),
                 trip: trip,
                 organization: org
             )
+            var activity = persistedActivity
 
             let attachment1 = EmbeddedFileAttachment(fileName: "doc1.pdf")
             let attachment2 = EmbeddedFileAttachment(fileName: "doc2.jpg")
@@ -380,7 +387,7 @@ struct EmbeddedFileAttachmentTests {
                 try await database.write { db in
                     try Trip.insert { trip }.execute(db)
                     try Organization.insert { org }.execute(db)
-                    try Activity.insert { activity }.execute(db)
+                    try Activity.insert { persistedActivity }.execute(db)
                 }
 
                 activity.fileAttachments = [attachment1, attachment2, attachment3]

@@ -4,160 +4,154 @@
 //
 //
 
+import Dependencies
+import ComposableArchitecture
 import SwiftUI
 
 struct SyncDiagnosticView: View {
-    @Environment(ModernSyncManager.self) private var syncManager
-    @State private var showingAdvancedMetrics = false
-    @State private var refreshTrigger = false
+    @Bindable var store: StoreOf<SyncDiagnosticFeature>
 
     var body: some View {
         Form {
-            // Sync Status Section
             Section(header: Text("Sync Status")) {
-                SyncStatusRow(title: "Status", value: syncManager.isSyncing ? "Syncing..." : "Idle")
-                    .foregroundColor(syncManager.isSyncing ? .blue : .primary)
+                SyncStatusRow(title: "Status", value: store.status.isSyncing ? "Syncing..." : "Idle")
+                    .foregroundStyle(store.status.isSyncing ? .blue : .primary)
 
                 SyncStatusRow(title: "Last Sync", value: lastSyncFormatted)
 
                 SyncStatusRow(title: "Network Status", value: networkStatusText)
-                    .foregroundColor(networkStatusColor)
+                    .foregroundStyle(networkStatusColor)
 
-                SyncStatusRow(title: "Pending Changes", value: "\(syncManager.pendingChangesCount)")
+                SyncStatusRow(title: "Pending Changes", value: "\(store.status.pendingChangesCount)")
 
-                if syncManager.syncError != nil {
+                if store.status.hasSyncError {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Error")
                             .font(.headline)
-                            .foregroundColor(.red)
+                            .foregroundStyle(.red)
                         Text(L(L10n.Errors.unknown))
                             .font(.caption)
-                            .foregroundColor(.red)
+                            .foregroundStyle(.red)
                             .multilineTextAlignment(.leading)
                     }
                     .padding(.vertical, 4)
                 }
             }
 
-            // Manual Sync Controls
             Section(header: Text("Manual Controls")) {
-                Button(action: triggerManualSync) {
+                Button {
+                    store.send(.triggerSyncTapped)
+                } label: {
                     HStack {
                         Image(systemName: "arrow.clockwise")
                         Text("Trigger Sync Now")
                     }
                 }
-                .disabled(syncManager.isSyncing || syncManager.networkStatus == .offline)
+                .disabled(store.status.isSyncing || store.status.networkStatus == .offline || store.isRefreshing)
 
-                Button(action: triggerSyncWithRetry) {
+                Button {
+                    store.send(.triggerSyncWithRetryTapped)
+                } label: {
                     HStack {
                         Image(systemName: "arrow.clockwise.circle")
                         Text("Sync with Retry Logic")
                     }
                 }
-                .disabled(syncManager.isSyncing || syncManager.networkStatus == .offline)
+                .disabled(store.status.isSyncing || store.status.networkStatus == .offline || store.isRefreshing)
 
-                Button(action: { refreshTrigger.toggle() }) {
+                Button {
+                    store.send(.refreshTapped)
+                } label: {
                     HStack {
                         Image(systemName: "arrow.clockwise")
-                        Text("Refresh Diagnostics")
+                        Text(store.isRefreshing ? "Refreshing..." : "Refresh Diagnostics")
                     }
                 }
+                .disabled(store.isRefreshing)
             }
 
-            // Advanced Metrics Section
             Section(header: Text("Advanced Metrics")) {
-                Button(action: { showingAdvancedMetrics.toggle() }) {
+                Button {
+                    store.send(.advancedMetricsToggled)
+                } label: {
                     HStack {
                         Text("Advanced Metrics")
                         Spacer()
-                        Image(systemName: showingAdvancedMetrics ? "chevron.down" : "chevron.right")
+                        Image(systemName: store.showingAdvancedMetrics ? "chevron.down" : "chevron.right")
                     }
                 }
 
-                if showingAdvancedMetrics {
-                    AdvancedMetricsView(syncManager: syncManager)
+                if store.showingAdvancedMetrics {
+                    AdvancedMetricsView(
+                        syncProtectedTrips: store.status.syncProtectedTrips,
+                        recordCounts: store.recordCounts,
+                        isLoadingCounts: store.isLoadingRecordCounts
+                    )
                 }
             }
 
-            // Protected Trip Settings
             Section(header: Text("Protected Trip Sync")) {
                 Toggle(isOn: Binding(
-                    get: { syncManager.syncProtectedTrips },
-                    set: { syncManager.syncProtectedTrips = $0 }
+                    get: { store.status.syncProtectedTrips },
+                    set: { newValue in
+                        store.send(.syncProtectedTripsChanged(newValue))
+                    }
                 )) {
                     VStack(alignment: .leading) {
                         Text("Sync Protected Trips")
                             .font(.headline)
                         Text("Include biometrically protected trips in sync operations")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
                 }
             }
 
-            // Diagnostic Actions
             Section(header: Text("Diagnostic Actions")) {
                 Button("Test Offline Scenario") {
-                    syncManager.setNetworkStatus(.offline)
+                    store.send(.testOfflineTapped)
                 }
-                .foregroundColor(.orange)
+                .foregroundStyle(.orange)
 
                 Button("Test Online Scenario") {
-                    syncManager.setNetworkStatus(.online)
+                    store.send(.testOnlineTapped)
                 }
-                .foregroundColor(.green)
+                .foregroundStyle(.green)
 
                 Button("Simulate Network Error") {
-                    Task {
-                        await syncManager.simulateNetworkError()
-                    }
+                    store.send(.simulateNetworkErrorTapped)
                 }
-                .foregroundColor(.red)
+                .foregroundStyle(.red)
             }
         }
         .navigationTitle("Sync Diagnostics")
         .navigationBarTitleDisplayMode(.inline)
-        .id(refreshTrigger) // Forces view refresh when refreshTrigger changes
+        .onAppear {
+            store.send(.onAppear)
+        }
     }
 
-    // MARK: - Computed Properties
-
     private var lastSyncFormatted: String {
-        guard let lastSync = syncManager.lastSyncDate else { return "Never" }
+        guard let lastSync = store.status.lastSyncDate else { return "Never" }
         let formatter = RelativeDateTimeFormatter()
         formatter.dateTimeStyle = .named
         return formatter.localizedString(for: lastSync, relativeTo: Date())
     }
 
     private var networkStatusText: String {
-        switch syncManager.networkStatus {
+        switch store.status.networkStatus {
         case .online: return "Online"
         case .offline: return "Offline"
         }
     }
 
     private var networkStatusColor: Color {
-        switch syncManager.networkStatus {
+        switch store.status.networkStatus {
         case .online: return .green
         case .offline: return .red
         }
     }
-
-    // MARK: - Actions
-
-    private func triggerManualSync() {
-        syncManager.triggerSync()
-    }
-
-    private func triggerSyncWithRetry() {
-        Task {
-            await syncManager.triggerSyncWithRetry()
-        }
-    }
 }
-
-// MARK: - Supporting Views
 
 struct SyncStatusRow: View {
     let title: String
@@ -176,9 +170,9 @@ struct SyncStatusRow: View {
 }
 
 struct AdvancedMetricsView: View {
-    let syncManager: ModernSyncManager
-    @State private var recordCounts: [String: Int] = [:]
-    @State private var isLoadingCounts = false
+    let syncProtectedTrips: Bool
+    let recordCounts: [String: Int]
+    let isLoadingCounts: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -188,7 +182,7 @@ struct AdvancedMetricsView: View {
                         .scaleEffect(0.8)
                     Text("Loading record counts...")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
             } else {
                 ForEach(recordCounts.sorted { $0.key < $1.key }, id: \.key) { entity, count in
@@ -214,9 +208,9 @@ struct AdvancedMetricsView: View {
                     Text("Protected Trip Sync")
                         .font(.caption2)
                     Spacer()
-                    Text(syncManager.syncProtectedTrips ? "Enabled" : "Disabled")
+                    Text(syncProtectedTrips ? "Enabled" : "Disabled")
                         .font(.caption2)
-                        .foregroundColor(syncManager.syncProtectedTrips ? .green : .orange)
+                        .foregroundStyle(syncProtectedTrips ? .green : .orange)
                 }
 
                 HStack {
@@ -225,40 +219,20 @@ struct AdvancedMetricsView: View {
                     Spacer()
                     Text("Max 3")
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
             }
         }
         .padding(.vertical, 4)
-        .onAppear {
-            loadRecordCounts()
-        }
-    }
-
-    private func loadRecordCounts() {
-        isLoadingCounts = true
-        Task {
-            // Simulate loading record counts
-            try? await Task.sleep(for: .milliseconds(500))
-
-            await MainActor.run {
-                recordCounts = [
-                    "Trips": Int.random(in: 5...50),
-                    "Activities": Int.random(in: 10...100),
-                    "Transportation": Int.random(in: 5...30),
-                    "Lodging": Int.random(in: 3...20),
-                    "Organizations": Int.random(in: 8...40),
-                    "Addresses": Int.random(in: 5...25),
-                ]
-                isLoadingCounts = false
-            }
-        }
     }
 }
 
 #Preview {
     NavigationStack {
-        SyncDiagnosticView()
-            .environment(ModernSyncManager.from(container: DefaultServiceContainerFactory.createPreviewContainer()))
+        SyncDiagnosticView(
+            store: Store(initialState: SyncDiagnosticFeature.State()) {
+                SyncDiagnosticFeature()
+            }
+        )
     }
 }

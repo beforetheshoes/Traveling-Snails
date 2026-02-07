@@ -9,9 +9,7 @@ import SwiftUI
 struct AppView: View {
     let store: StoreOf<AppFeature>
 
-    @Environment(ModernAppSettings.self) private var appSettings
-    @Environment(ModernSyncManager.self) private var syncManager
-    @Environment(ModernBiometricAuthManager.self) private var biometricAuthManager
+    @AppStorage("colorScheme") private var colorSchemeRawValue = ColorSchemePreference.system.rawValue
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
@@ -23,7 +21,7 @@ struct AppView: View {
                 mainContent(state: state)
             }
         }
-        .preferredColorScheme(appSettings.colorScheme.colorScheme)
+        .preferredColorScheme(colorSchemePreference.colorScheme)
         .onAppear { store.send(.onAppear) }
         .onChange(of: scenePhase) { _, newPhase in
             store.send(.scenePhaseChanged(newPhase))
@@ -165,5 +163,9 @@ struct AppView: View {
             }
         }
         #endif
+    }
+
+    private var colorSchemePreference: ColorSchemePreference {
+        ColorSchemePreference(rawValue: colorSchemeRawValue) ?? .system
     }
 }

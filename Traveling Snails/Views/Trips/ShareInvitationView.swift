@@ -1,36 +1,41 @@
+import ComposableArchitecture
+@preconcurrency import CloudKit
 import SwiftUI
-import CloudKit
-import SQLiteData
 
 /// View for handling CloudKit share invitation acceptance
 struct ShareInvitationView: View {
-    let shareMetadata: CKShare.Metadata
     @Environment(\.dismiss) private var dismiss
-    
-    @State private var sharingService: CKSyncEngineSharingService?
-    @State private var isAcceptingShare = false
-    @State private var acceptedTrip: Trip?
-    @State private var errorMessage: String?
-    @State private var showingError = false
-    
+    @State private var store: StoreOf<ShareInvitationFeature>
+
+    init(
+        shareMetadata: CKShare.Metadata,
+        store: StoreOf<ShareInvitationFeature>? = nil
+    ) {
+        let resolvedStore = store ?? Store(
+            initialState: ShareInvitationFeature.State(shareMetadata: shareMetadata)
+        ) {
+            ShareInvitationFeature()
+        }
+        self._store = State(initialValue: resolvedStore)
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 24) {
-                // Share invitation header
                 VStack(spacing: 16) {
                     Image(systemName: "person.2.badge.plus")
                         .font(.system(size: 64))
-                        .foregroundColor(.blue)
-                    
+                        .foregroundStyle(.blue)
+
                     Text("Trip Invitation")
                         .font(.largeTitle)
                         .fontWeight(.bold)
-                    
-                    if let shareTitle = shareMetadata.share[CKShare.SystemFieldKey.title] as? String {
+
+                    if let shareTitle = store.shareTitle {
                         Text("You've been invited to collaborate on:")
                             .font(.subheadline)
-                            .foregroundColor(.secondary)
-                        
+                            .foregroundStyle(.secondary)
+
                         Text(shareTitle)
                             .font(.title2)
                             .fontWeight(.semibold)
@@ -38,37 +43,36 @@ struct ShareInvitationView: View {
                     } else {
                         Text("You've been invited to collaborate on a trip")
                             .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
                     }
                 }
                 .padding()
-                
+
                 Spacer()
-                
-                // Share details
+
                 VStack(spacing: 12) {
-                    if let ownerName = shareMetadata.ownerIdentity.nameComponents?.formatted() {
+                    if let ownerName = store.ownerName {
                         HStack {
                             Image(systemName: "person.circle")
-                                .foregroundColor(.blue)
+                                .foregroundStyle(.blue)
                             Text("Shared by: \(ownerName)")
                                 .font(.subheadline)
                             Spacer()
                         }
                     }
-                    
+
                     HStack {
                         Image(systemName: "calendar")
-                            .foregroundColor(.green)
+                            .foregroundStyle(.green)
                         Text("Real-time collaboration")
                             .font(.subheadline)
                         Spacer()
                     }
-                    
+
                     HStack {
                         Image(systemName: "icloud")
-                            .foregroundColor(.blue)
+                            .foregroundStyle(.blue)
                         Text("Syncs across all devices")
                             .font(.subheadline)
                         Spacer()
@@ -76,23 +80,20 @@ struct ShareInvitationView: View {
                 }
                 .padding()
                 .background(Color(.systemGray6))
-                .cornerRadius(12)
+                .clipShape(.rect(cornerRadius: 12))
                 .padding(.horizontal)
-                
+
                 Spacer()
-                
-                // Action buttons
+
                 VStack(spacing: 12) {
                     Button {
-                        Task {
-                            await acceptInvitation()
-                        }
+                        store.send(.acceptTapped)
                     } label: {
                         HStack {
-                            if isAcceptingShare {
+                            if store.isAcceptingShare {
                                 ProgressView()
                                     .scaleEffect(0.8)
-                                    .foregroundColor(.white)
+                                    .foregroundStyle(.white)
                             } else {
                                 Image(systemName: "checkmark")
                             }
@@ -101,8 +102,8 @@ struct ShareInvitationView: View {
                         .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(isAcceptingShare)
-                    
+                    .disabled(store.isAcceptingShare)
+
                     Button {
                         dismiss()
                     } label: {
@@ -110,71 +111,28 @@ struct ShareInvitationView: View {
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.bordered)
-                    .disabled(isAcceptingShare)
+                    .disabled(store.isAcceptingShare)
                 }
                 .padding()
-                
-                if let errorMessage = errorMessage {
+
+                if let errorMessage = store.errorMessage {
                     Text(errorMessage)
-                        .foregroundColor(.red)
+                        .foregroundStyle(.red)
                         .font(.caption)
                         .padding()
                 }
             }
             .navigationBarHidden(true)
-            .task {
-                await initializeSharingService()
-            }
         }
-    }
-    
-    // MARK: - Helper Methods
-    
-    private func initializeSharingService() async {
-        await MainActor.run {
-            sharingService = CKSyncEngineSharingService()
-        }
-    }
-    
-    private func acceptInvitation() async {
-        guard let sharingService = sharingService else {
-            await MainActor.run {
-                errorMessage = "Sharing service not available"
-                showingError = true
-            }
-            return
-        }
-        
-        await MainActor.run {
-            isAcceptingShare = true
-            errorMessage = nil
-        }
-        
-        do {
-            let trip = try await sharingService.acceptShare(with: shareMetadata)
-            
-            await MainActor.run {
-                acceptedTrip = trip
-                isAcceptingShare = false
-                
-                // Successfully accepted - dismiss view
+        .onChange(of: store.didAccept) { _, accepted in
+            if accepted {
                 dismiss()
-            }
-        } catch {
-            await MainActor.run {
-                errorMessage = "Failed to accept invitation: \(error.localizedDescription)"
-                showingError = true
-                isAcceptingShare = false
             }
         }
     }
 }
 
-// MARK: - Preview
-
 #Preview {
-    // Note: Cannot create mock CKShare.Metadata in preview due to CloudKit restrictions
-    // This preview will show a placeholder
     Text("ShareInvitationView Preview")
         .navigationTitle("Share Invitation")
 }

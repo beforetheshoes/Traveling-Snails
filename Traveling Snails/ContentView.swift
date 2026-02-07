@@ -50,7 +50,7 @@ struct TripsNavigationView: View {
 
     var body: some View {
         let state = store.state
-        TripsNavigationContainer(
+        TripsNavigatorView(
             trips: state.trips,
             selectedTripID: $selectedTripID,
             tripPath: $tripPath,
@@ -69,7 +69,7 @@ struct OrganizationsNavigationView: View {
 
     var body: some View {
         let state = store.state
-        UnifiedNavigationView.organizations(
+        EntityNavigationView.organizations(
             organizations: state.organizations,
             selectedOrganizationID: $selectedOrganizationID,
             onOrganizationSelected: onOrganizationSelection,

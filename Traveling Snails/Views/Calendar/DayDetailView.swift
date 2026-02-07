@@ -7,12 +7,18 @@
 import SwiftUI
 
 struct DayDetailView: View {
+    private enum ActiveSheet: Identifiable {
+        case addActivity
+
+        var id: Int { 0 }
+    }
+
     let date: Date
     let activities: [ActivityWrapper]
     let trip: Trip
 
     @Environment(\.dismiss) private var dismiss
-    @State private var showingActivityCreation = false
+    @State private var activeSheet: ActiveSheet?
 
     private var sortedActivities: [ActivityWrapper] {
         activities.sorted { $0.tripActivity.start < $1.tripActivity.start }
@@ -31,18 +37,18 @@ struct DayDetailView: View {
                             Spacer()
 
                             Button {
-                                showingActivityCreation = true
+                                activeSheet = .addActivity
                             } label: {
                                 Image(systemName: "plus.circle.fill")
                                     .font(.title2)
-                                    .foregroundColor(.blue)
+                                    .foregroundStyle(.blue)
                             }
                         }
 
                         HStack {
                             Text("\(activities.count) activities")
                                 .font(.subheadline)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(.secondary)
 
                             Spacer()
 
@@ -53,7 +59,7 @@ struct DayDetailView: View {
 
                                 Text("\(hours)h \(minutes)m total")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundStyle(.secondary)
                             }
                         }
                     }
@@ -83,14 +89,17 @@ struct DayDetailView: View {
                     Button("Done") { dismiss() }
                 }
             }
-            .sheet(isPresented: $showingActivityCreation) {
-                NavigationStack {
-                    PrefilledAddActivityView(
-                        trip: trip,
-                        activityType: Activity.self,
-                        startTime: Calendar.current.startOfDay(for: date),
-                        endTime: Calendar.current.date(byAdding: .hour, value: 1, to: Calendar.current.startOfDay(for: date)) ?? date
-                    )
+            .sheet(item: $activeSheet) { sheet in
+                switch sheet {
+                case .addActivity:
+                    NavigationStack {
+                        PrefilledAddActivityView(
+                            trip: trip,
+                            activityType: Activity.self,
+                            startTime: Calendar.current.startOfDay(for: date),
+                            endTime: Calendar.current.date(byAdding: .hour, value: 1, to: Calendar.current.startOfDay(for: date)) ?? date
+                        )
+                    }
                 }
             }
         }

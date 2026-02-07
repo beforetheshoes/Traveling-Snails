@@ -10,7 +10,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 @Observable
-class EmbeddedFileAttachmentManager {
+class EmbeddedFileAttachmentManager: @unchecked Sendable {
     static let shared = EmbeddedFileAttachmentManager()
 
     private init() {}
@@ -105,6 +105,7 @@ class EmbeddedFileAttachmentManager {
         }
     }
 
+    @MainActor
     func validateFileAccess(for attachment: EmbeddedFileAttachment) -> (isValid: Bool, error: String?) {
         guard let data = attachment.fileData else {
             return (false, "No file data stored")

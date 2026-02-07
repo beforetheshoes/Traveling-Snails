@@ -24,8 +24,7 @@ final class CKSyncEngineSharingService {
     }
 
     func removeShare(for trip: Trip) async throws {
-        // SQLiteData does not currently expose explicit delete share API here.
-        // Users can re-share after migration.
+        try await syncEngine.unshare(record: trip)
     }
 
     func acceptShare(with metadata: CKShare.Metadata) async throws -> Trip {

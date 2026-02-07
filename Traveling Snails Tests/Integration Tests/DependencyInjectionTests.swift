@@ -86,15 +86,10 @@ struct DependencyInjectionTests {
         #expect(authManager.allTripsLocked) // Should still be locked after reset
     }
 
-    @Test("ModernAppSettings can be created from container", .tags(.integration, .fast, .parallel, .settings, .utility, .validation))
-    @MainActor
-    func testModernAppSettingsCreation() throws {
-        let container = DefaultServiceContainerFactory.createProductionContainer()
-        let appSettings = ModernAppSettings.from(container: container)
-
-        // Basic functionality test
-        #expect(appSettings.colorScheme == appSettings.colorScheme) // Should have a consistent value
-        #expect(appSettings.biometricTimeoutMinutes >= 0) // Should be non-negative
+    @Test("SettingsClient loads defaults", .tags(.integration, .fast, .parallel, .settings, .utility, .validation))
+    func testSettingsClientDefaults() async {
+        let snapshot = await SettingsClient.liveValue.load()
+        #expect(snapshot.biometricTimeoutMinutes >= 0)
     }
 
     // BackwardCompatibilityAdapter test removed - adapter no longer exists after migration to pure dependency injection

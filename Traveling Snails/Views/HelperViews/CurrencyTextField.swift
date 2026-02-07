@@ -97,9 +97,7 @@ struct CurrencyTextField: UIViewRepresentable {
         func textFieldDidEndEditing(_ textField: UITextField) {
             // Update the binding
             let newValue = Decimal(centValue) / Decimal(100)
-            DispatchQueue.main.async {
-                self.parent.value = newValue
-            }
+            parent.value = newValue
 
             // Remove focus styling
             UIView.animate(withDuration: 0.2) {
@@ -122,9 +120,7 @@ struct CurrencyTextField: UIViewRepresentable {
 
             // Update the binding in real-time as user types
             let newValue = Decimal(centValue) / Decimal(100)
-            DispatchQueue.main.async {
-                self.parent.value = newValue
-            }
+            parent.value = newValue
 
             textField.text = parent.formatCurrency(centValue)
             textField.selectedTextRange = textField.textRange(from: textField.endOfDocument, to: textField.endOfDocument)

@@ -10,12 +10,12 @@ import SwiftUI
 // MARK: - Localization Manager
 
 @Observable
-final class LocalizationManager {
+final class LocalizationManager: @unchecked Sendable {
     static let shared = LocalizationManager()
     
     /// Enable/disable missing translation debug logging
     /// Set to true to log missing translations during development
-    static var isLocalizationDebuggingEnabled: Bool = false
+    nonisolated(unsafe) static var isLocalizationDebuggingEnabled: Bool = false
 
     private(set) var currentLanguage: String
     private var bundle: Bundle

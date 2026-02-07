@@ -46,7 +46,7 @@ struct UserDefaultsConstantsTests {
 
     @Test("Constants maintain backward compatibility with existing usage", .tags(.unit, .fast, .parallel, .validation, .settings, .compatibility, .regression))
     func testBackwardCompatibility() {
-        // Test that the constants match what's currently used in AppSettings.swift
+        // Test that the constants match what's currently used in SettingsClient.swift
         // This ensures we don't break existing functionality
 
         // These are the actual values currently scattered throughout the codebase
@@ -58,21 +58,24 @@ struct UserDefaultsConstantsTests {
     @Test("Constants can be used with UserDefaults", .tags(.unit, .fast, .serial, .validation, .settings, .filesystem))
     func testUserDefaultsIntegration() {
         let testValue = "testValue"
+        let suiteName = "UserDefaultsConstantsTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
 
         // Store the original value to restore later
-        let originalValue = UserDefaults.standard.string(forKey: UserDefaultsConstants.colorScheme)
+        let originalValue = defaults.string(forKey: UserDefaultsConstants.colorScheme)
 
         // Test that our constants work with actual UserDefaults operations
-        UserDefaults.standard.set(testValue, forKey: UserDefaultsConstants.colorScheme)
-        let retrievedValue = UserDefaults.standard.string(forKey: UserDefaultsConstants.colorScheme)
+        defaults.set(testValue, forKey: UserDefaultsConstants.colorScheme)
+        let retrievedValue = defaults.string(forKey: UserDefaultsConstants.colorScheme)
 
         #expect(retrievedValue == testValue)
 
         // Restore original value or remove if there was none
         if let originalValue = originalValue {
-            UserDefaults.standard.set(originalValue, forKey: UserDefaultsConstants.colorScheme)
+            defaults.set(originalValue, forKey: UserDefaultsConstants.colorScheme)
         } else {
-            UserDefaults.standard.removeObject(forKey: UserDefaultsConstants.colorScheme)
+            defaults.removeObject(forKey: UserDefaultsConstants.colorScheme)
         }
     }
 }

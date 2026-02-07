@@ -14,11 +14,7 @@ import SwiftUI
 struct ModernTraveling_SnailsApp: App {
     @State private var showSplash = false
     @State private var hasShownSplashOnce = false
-    @Environment(\.scenePhase) private var scenePhase
 
-    private let modernSyncManager: ModernSyncManager
-    private let modernAppSettings: ModernAppSettings
-    private let modernBiometricAuthManager: ModernBiometricAuthManager
     @State private var syncEngineDelegate: AppSyncEngineDelegate
     private let appStore: StoreOf<AppFeature>
 
@@ -38,16 +34,15 @@ struct ModernTraveling_SnailsApp: App {
             _ = permissionService
 
             // Create modern managers from concrete services
-            modernSyncManager = ModernSyncManager(
+            let modernSyncManager = ModernSyncManager(
                 syncService: syncService,
                 cloudStorageService: cloudService
             )
-            modernAppSettings = ModernAppSettings(
-                cloudStorageService: cloudService
-            )
-            modernBiometricAuthManager = ModernBiometricAuthManager(
+            ModernSyncManager.shared = modernSyncManager
+            let modernBiometricAuthManager = ModernBiometricAuthManager(
                 authService: authService
             )
+            ModernBiometricAuthManager.shared = modernBiometricAuthManager
 
             Logger.shared.info("Modern App: All services initialized successfully", category: .app)
             try prepareDependencies {
@@ -67,17 +62,11 @@ struct ModernTraveling_SnailsApp: App {
         WindowGroup {
             ZStack {
                 AppView(store: appStore)
-                    .environment(modernAppSettings)
-                    .environment(modernSyncManager)
-                    .environment(modernBiometricAuthManager)
                     .opacity(showSplash ? 0 : 1)
 
                 if showSplash {
                     SplashView(isVisible: $showSplash)
                         .transition(.opacity)
-                        .onTapGesture {
-                            showSplash = false
-                        }
                 }
             }
             .onAppear {
@@ -86,19 +75,6 @@ struct ModernTraveling_SnailsApp: App {
                     hasShownSplashOnce = true
                 } else {
                     showSplash = false
-                }
-            }
-            .onChange(of: scenePhase) { _, newPhase in
-                switch newPhase {
-                case .background:
-                    // Use modern biometric auth manager
-                    modernBiometricAuthManager.resetSession()
-                case .active:
-                    break
-                case .inactive:
-                    break
-                @unknown default:
-                    break
                 }
             }
         }

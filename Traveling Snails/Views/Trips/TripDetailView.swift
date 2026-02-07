@@ -1,107 +1,52 @@
-import SQLiteData
 import SwiftUI
 
 struct TripDetailView: View {
-    let trip: Trip
-    @Environment(ModernBiometricAuthManager.self) private var authManager
-    @State private var showingLodgingSheet: Bool = false
-    @State private var showingTransportationSheet: Bool = false
-    @State private var showingActivitySheet: Bool = false
-    @State private var showingEditTripSheet: Bool = false
-    @State private var showingCalendarView: Bool = false
-    @State private var navigationPath = NavigationPath()
-    @State private var viewMode: ViewMode = .list
-    @State private var isAuthenticating: Bool = false
-    @State private var isLocallyAuthenticated: Bool = false
-
-    // FIXED: Use @FetchAll instead of relationship access to ensure UI updates immediately
-    @FetchAll private var lodgingActivities: [Lodging]
-    @FetchAll private var transportationActivities: [Transportation]
-    @FetchAll private var activityActivities: [Activity]
-
-    init(trip: Trip) {
-        self.trip = trip
-
-        // Filter queries by trip ID for proper isolation
-        let tripId = trip.id
-        self._lodgingActivities = FetchAll(
-            Lodging.where { $0.tripID.eq(tripId) }.order { $0.start }
-        )
-        self._transportationActivities = FetchAll(
-            Transportation.where { $0.tripID.eq(tripId) }.order { $0.start }
-        )
-        self._activityActivities = FetchAll(
-            Activity.where { $0.tripID.eq(tripId) }.order { $0.start }
-        )
-    }
-
     enum ViewMode: String, CaseIterable {
-            case list = "List"
-            case calendar = "Calendar"
+        case list = "List"
+        case calendar = "Calendar"
 
-            var icon: String {
-                switch self {
-                case .list: return "list.bullet"
-                case .calendar: return "calendar"
-                }
-            }
-        }
-
-    var allActivities: [ActivityWrapper] {
-        let lodgingWrappers = lodgingActivities.map { ActivityWrapper($0) }
-        let transportationWrappers = transportationActivities.map { ActivityWrapper($0) }
-        let activityWrappers = activityActivities.map { ActivityWrapper($0) }
-
-        return (lodgingWrappers + transportationWrappers + activityWrappers)
-            .sorted { $0.tripActivity.start < $1.tripActivity.start }
-    }
-
-    // Check if we need to show lock screen
-    private var needsLockScreen: Bool {
-        authManager.isProtected(trip) && !isLocallyAuthenticated
-    }
-
-    // Main content view with stable identity to prevent flickering
-    @ViewBuilder
-    private var contentView: some View {
-        if needsLockScreen {
-            BiometricLockView(trip: trip, isAuthenticating: $isAuthenticating) {
-                // Callback when authentication succeeds
-                isLocallyAuthenticated = true
-            }
-        } else {
-            TripContentView(trip: trip,
-                          activities: allActivities,
-                          viewMode: $viewMode,
-                          navigationPath: $navigationPath,
-                          showingLodgingSheet: $showingLodgingSheet,
-                          showingTransportationSheet: $showingTransportationSheet,
-                          showingActivitySheet: $showingActivitySheet,
-                          showingEditTripSheet: $showingEditTripSheet,
-                          showingCalendarView: $showingCalendarView) {
-                // Callback when trip is locked
-                isLocallyAuthenticated = false
+        var icon: String {
+            switch self {
+            case .list: return "list.bullet"
+            case .calendar: return "calendar"
             }
         }
     }
+
+    let trip: Trip
+
+    @State private var path: [TripRoute] = []
+    @State private var resetToken = 0
 
     var body: some View {
-        NavigationStack(path: $navigationPath) {
-            contentView
-            .onAppear {
-                // Initialize local authentication state based on manager state
-                isLocallyAuthenticated = authManager.isAuthenticated(for: trip)
-            }
-            .navigationDestination(for: DestinationType.self) { destination in
-                switch destination {
-                case .lodging(let lodging):
-                    UnifiedTripActivityDetailView<Lodging>(activity: lodging)
-                case .transportation(let transportation):
-                    UnifiedTripActivityDetailView<Transportation>(activity: transportation)
-                case .activity(let activity):
-                    UnifiedTripActivityDetailView<Activity>(activity: activity)
+        NavigationStack(path: $path) {
+            IsolatedTripDetailView(
+                trip: trip,
+                path: $path,
+                resetToken: resetToken
+            )
+            .navigationDestination(for: TripRoute.self) { route in
+                if let destination = TripRouteMapper.destination(from: route, in: trip) {
+                    tripDestinationView(destination)
+                } else {
+                    ContentUnavailableView(
+                        "Activity Not Found",
+                        systemImage: "exclamationmark.triangle"
+                    )
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    private func tripDestinationView(_ destination: DestinationType) -> some View {
+        switch destination {
+        case .lodging(let lodging):
+            TripActivityDetailView<Lodging>(activity: lodging)
+        case .transportation(let transportation):
+            TripActivityDetailView<Transportation>(activity: transportation)
+        case .activity(let activity):
+            TripActivityDetailView<Activity>(activity: activity)
         }
     }
 }

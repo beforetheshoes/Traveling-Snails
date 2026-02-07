@@ -7,6 +7,18 @@ import ComposableArchitecture
 import SwiftUI
 
 struct CalendarContentView: View {
+    private enum ActiveSheet: Identifiable {
+        case activityCreation
+        case dayDetail
+
+        var id: Int {
+            switch self {
+            case .activityCreation: 0
+            case .dayDetail: 1
+            }
+        }
+    }
+
     @Bindable var store: StoreOf<CalendarFeature>
     @Environment(\.dismiss) private var dismiss
 
@@ -93,9 +105,6 @@ struct CalendarContentView: View {
                     CalendarToolbarMenu(store: store)
                 }
             }
-            .sheet(isPresented: $store.showingActivityCreation) {
-                ActivityCreationSheet(store: store)
-            }
             .confirmationDialog(
                 "Choose Activity Type",
                 isPresented: $store.showingActivityTypeSelector,
@@ -120,16 +129,35 @@ struct CalendarContentView: View {
                     Text("What type of activity would you like to add?")
                 }
             }
-        .sheet(isPresented: $store.showingDayDetail) {
-            NavigationStack {
-                DayDetailView(
-                    date: store.selectedDate,
-                    activities: store.selectedDayActivities,
-                    trip: store.trip
-                )
+        .sheet(item: activeSheet) { sheet in
+            switch sheet {
+            case .activityCreation:
+                ActivityCreationSheet(store: store)
+            case .dayDetail:
+                NavigationStack {
+                    DayDetailView(
+                        date: store.selectedDate,
+                        activities: store.selectedDayActivities,
+                        trip: store.trip
+                    )
+                }
             }
         }
         // Removed onDisappear cancelActivityCreation() to prevent interference with dialog interactions
+    }
+
+    private var activeSheet: Binding<ActiveSheet?> {
+        Binding(
+            get: {
+                if store.showingActivityCreation { return .activityCreation }
+                if store.showingDayDetail { return .dayDetail }
+                return nil
+            },
+            set: { newValue in
+                $store.showingActivityCreation.wrappedValue = (newValue == .activityCreation)
+                $store.showingDayDetail.wrappedValue = (newValue == .dayDetail)
+            }
+        )
     }
 }
 
@@ -183,7 +211,7 @@ struct ActivityCreationSheet: View {
                             endTime: data.endTime ?? Calendar.current.date(byAdding: .hour, value: 2, to: data.startTime) ?? data.startTime
                         )
                     } else {
-                        UniversalAddTripActivityRootView.forTransportation(trip: store.trip)
+                        AddTripActivityView.forTransportation(trip: store.trip)
                     }
                 case .lodging:
                     if let data = store.pendingActivityData {
@@ -194,7 +222,7 @@ struct ActivityCreationSheet: View {
                             endTime: data.endTime ?? Calendar.current.date(byAdding: .day, value: 1, to: data.startTime) ?? data.startTime
                         )
                     } else {
-                        UniversalAddTripActivityRootView.forLodging(trip: store.trip)
+                        AddTripActivityView.forLodging(trip: store.trip)
                     }
                 case .activity:
                     if let data = store.pendingActivityData {
@@ -205,7 +233,7 @@ struct ActivityCreationSheet: View {
                             endTime: data.endTime ?? Calendar.current.date(byAdding: .hour, value: 2, to: data.startTime) ?? data.startTime
                         )
                     } else {
-                        UniversalAddTripActivityRootView.forActivity(trip: store.trip)
+                        AddTripActivityView.forActivity(trip: store.trip)
                     }
                 }
             }
@@ -228,7 +256,7 @@ struct DragPreviewView: View {
             .overlay(
                 Text("New Activity")
                     .font(.caption)
-                    .foregroundColor(.blue)
+                    .foregroundStyle(.blue)
                     .fontWeight(.medium)
                     .position(x: frame.midX, y: frame.midY)
             )

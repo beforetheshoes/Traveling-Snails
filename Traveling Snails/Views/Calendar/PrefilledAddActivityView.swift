@@ -4,25 +4,32 @@
 //
 //
 
-import Dependencies
+import ComposableArchitecture
 import SQLiteData
 import SwiftUI
 
 struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
+    private enum ActiveSheet: Identifiable {
+        case organizationPicker
+
+        var id: Int { 0 }
+    }
+
     let trip: Trip
     let activityType: T.Type
     let startTime: Date
     let endTime: Date
 
     @Environment(\.dismiss) private var dismiss
-    @Dependency(\.defaultDatabase) private var database
+    @State private var store: StoreOf<PrefilledAddActivityFeature>
 
-    @State private var editData: TripActivityEditData
-    @State private var showingOrganizationPicker = false
-    @State private var attachments: [EmbeddedFileAttachment] = []
-    @State private var isSaving = false
-
-    init(trip: Trip, activityType: T.Type, startTime: Date, endTime: Date) {
+    init(
+        trip: Trip,
+        activityType: T.Type,
+        startTime: Date,
+        endTime: Date,
+        store: StoreOf<PrefilledAddActivityFeature>? = nil
+    ) {
         self.trip = trip
         self.activityType = activityType
         self.startTime = startTime
@@ -30,7 +37,16 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
 
         // Create prefilled edit data based on activity type
         let template = Self.createTemplate(for: activityType, startTime: startTime, endTime: endTime)
-        self._editData = State(initialValue: TripActivityEditData(from: template))
+        let resolvedStore = store ?? Store(
+            initialState: PrefilledAddActivityFeature.State(
+                trip: trip,
+                activityKind: Self.activityKind(for: activityType),
+                editData: TripActivityEditData(from: template)
+            )
+        ) {
+            PrefilledAddActivityFeature()
+        }
+        self._store = State(initialValue: resolvedStore)
     }
 
     private static func createTemplate(for type: T.Type, startTime: Date, endTime: Date) -> T {
@@ -70,14 +86,29 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
         Self.createTemplate(for: activityType, startTime: startTime, endTime: endTime)
     }
 
+    private static func activityKind(for type: T.Type) -> PrefilledAddActivityFeature.ActivityKind {
+        switch type {
+        case is Lodging.Type:
+            return .lodging
+        case is Transportation.Type:
+            return .transportation
+        case is Activity.Type:
+            return .activity
+        default:
+            fatalError("Unknown activity type")
+        }
+    }
+
     var body: some View {
+        @Bindable var store = self.store
+
         ScrollView {
             VStack(spacing: 24) {
                 // Header
                 VStack(spacing: 16) {
                     Image(systemName: template.icon)
                         .font(.system(size: 60))
-                        .foregroundColor(template.color)
+                        .foregroundStyle(template.color)
                         .padding()
                         .background(template.color.opacity(0.1))
                         .clipShape(Circle())
@@ -85,20 +116,20 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
                     Text("New \(template.activityType.rawValue)")
                         .font(.title2)
                         .fontWeight(.semibold)
-                        .foregroundColor(template.color)
+                        .foregroundStyle(template.color)
 
                     VStack(spacing: 4) {
                         Text("\(startTime.formatted(date: .abbreviated, time: .shortened))")
                             .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
 
                         Text("to")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
 
                         Text("\(endTime.formatted(date: .abbreviated, time: .shortened))")
                             .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
                 }
                 .padding(.top)
@@ -108,19 +139,19 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
                     HStack {
                         Image(systemName: "info.circle.fill")
                             .font(.title3)
-                            .foregroundColor(template.color)
+                            .foregroundStyle(template.color)
 
                         Text("Details")
                             .font(.headline)
-                            .foregroundColor(template.color)
+                            .foregroundStyle(template.color)
                     }
 
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Name")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
 
-                        TextField("Enter \(template.activityType.rawValue.lowercased()) name", text: $editData.name)
+                        TextField("Enter \(template.activityType.rawValue.lowercased()) name", text: $store.editData.name)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                     }
 
@@ -129,11 +160,11 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Transportation Type")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(.secondary)
 
                             Picker("Type", selection: Binding(
-                                get: { editData.transportationType ?? .plane },
-                                set: { editData.transportationType = $0 }
+                                get: { store.editData.transportationType ?? .plane },
+                                set: { store.editData.transportationType = $0 }
                             )) {
                                 ForEach(TransportationType.allCases, id: \.self) { type in
                                     Label(type.displayName, systemImage: type.systemImage).tag(type)
@@ -145,94 +176,94 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
                 }
                 .padding()
                 .background(template.color.opacity(0.05))
-                .cornerRadius(12)
+                .clipShape(.rect(cornerRadius: 12))
 
                 // Organization
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {
                         Image(systemName: "building.2.fill")
                             .font(.title3)
-                            .foregroundColor(template.color)
+                            .foregroundStyle(template.color)
 
                         Text("Organization")
                             .font(.headline)
-                            .foregroundColor(template.color)
+                            .foregroundStyle(template.color)
                     }
 
                     Button {
-                        showingOrganizationPicker = true
+                        store.showingOrganizationPicker = true
                     } label: {
                         HStack {
-                            Text(editData.organization?.name ?? "Select organization")
-                                .foregroundColor(editData.organization == nil ? .secondary : .primary)
+                            Text(store.editData.organization?.name ?? "Select organization")
+                                .foregroundStyle(store.editData.organization == nil ? .secondary : .primary)
 
                             Spacer()
 
                             Image(systemName: "chevron.right")
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(.secondary)
                                 .font(.caption)
                         }
                         .padding(.vertical, 12)
                         .padding(.horizontal, 16)
                         .background(Color(.systemGray6))
-                        .cornerRadius(8)
+                        .clipShape(.rect(cornerRadius: 8))
                     }
                     .buttonStyle(.plain)
                 }
                 .padding()
                 .background(template.color.opacity(0.05))
-                .cornerRadius(12)
+                .clipShape(.rect(cornerRadius: 12))
 
                 // Time adjustment (optional)
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {
                         Image(systemName: "clock.fill")
                             .font(.title3)
-                            .foregroundColor(template.color)
+                            .foregroundStyle(template.color)
 
                         Text("Adjust Times (Optional)")
                             .font(.headline)
-                            .foregroundColor(template.color)
+                            .foregroundStyle(template.color)
                     }
 
                     VStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 8) {
                             Text(template.startLabel)
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(.secondary)
 
-                            DatePicker("", selection: $editData.start, displayedComponents: [.date, .hourAndMinute])
+                            DatePicker("", selection: $store.editData.start, displayedComponents: [.date, .hourAndMinute])
                                 .labelsHidden()
                         }
 
                         VStack(alignment: .leading, spacing: 8) {
                             Text(template.endLabel)
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(.secondary)
 
-                            DatePicker("", selection: $editData.end, displayedComponents: [.date, .hourAndMinute])
+                            DatePicker("", selection: $store.editData.end, displayedComponents: [.date, .hourAndMinute])
                                 .labelsHidden()
                         }
                     }
                 }
                 .padding()
                 .background(template.color.opacity(0.05))
-                .cornerRadius(12)
+                .clipShape(.rect(cornerRadius: 12))
 
                 // Cost
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {
                         Image(systemName: "dollarsign.circle.fill")
                             .font(.title3)
-                            .foregroundColor(template.color)
+                            .foregroundStyle(template.color)
 
                         Text("Cost (Optional)")
                             .font(.headline)
-                            .foregroundColor(template.color)
+                            .foregroundStyle(template.color)
                     }
 
                     HStack {
-                        CurrencyTextField(value: $editData.cost)
+                        CurrencyTextField(value: $store.editData.cost)
                             .frame(maxWidth: .infinity)
 
                         Spacer()
@@ -240,41 +271,41 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
                     .padding(.vertical, 12)
                     .padding(.horizontal, 16)
                     .background(Color(.systemGray6))
-                    .cornerRadius(8)
+                    .clipShape(.rect(cornerRadius: 8))
                 }
                 .padding()
                 .background(template.color.opacity(0.05))
-                .cornerRadius(12)
+                .clipShape(.rect(cornerRadius: 12))
 
                 // Notes
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {
                         Image(systemName: "note.text")
                             .font(.title3)
-                            .foregroundColor(template.color)
+                            .foregroundStyle(template.color)
 
                         Text("Notes (Optional)")
                             .font(.headline)
-                            .foregroundColor(template.color)
+                            .foregroundStyle(template.color)
                     }
 
-                    TextField("Add any notes", text: $editData.notes, axis: .vertical)
+                    TextField("Add any notes", text: $store.editData.notes, axis: .vertical)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
                         .lineLimit(3...6)
                 }
                 .padding()
                 .background(template.color.opacity(0.05))
-                .cornerRadius(12)
+                .clipShape(.rect(cornerRadius: 12))
 
                 // Submit Button
                 Button {
                     save()
                 } label: {
                     HStack {
-                        if isSaving {
+                        if store.isSaving {
                             ProgressView()
                                 .scaleEffect(0.8)
-                                .foregroundColor(.white)
+                                .foregroundStyle(.white)
                         } else {
                             Text("Create \(template.activityType.rawValue)")
                         }
@@ -283,10 +314,10 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(isFormValid ? template.color : Color.gray)
-                .foregroundColor(.white)
+                .foregroundStyle(.white)
                 .font(.headline)
-                .cornerRadius(12)
-                .disabled(!isFormValid || isSaving)
+                .clipShape(.rect(cornerRadius: 12))
+                .disabled(!isFormValid || store.isSaving)
                 .padding(.horizontal)
             }
             .padding()
@@ -296,152 +327,48 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
                 Button("Cancel") {
-                    if !isSaving {
+                    if !store.isSaving {
                         dismiss()
                     }
                 }
-                .disabled(isSaving)
+                .disabled(store.isSaving)
             }
         }
-        .sheet(isPresented: $showingOrganizationPicker) {
-            NavigationStack {
-                OrganizationPicker(selectedOrganization: $editData.organization)
+        .sheet(item: organizationSheet) { sheet in
+            switch sheet {
+            case .organizationPicker:
+                NavigationStack {
+                    OrganizationPicker(selectedOrganization: $store.editData.organization)
+                }
             }
         }
         .onAppear {
-            if editData.organization == nil {
-                editData.organization = ensureNoneOrganization()
-            }
+            store.send(.onAppear)
         }
-        .disabled(isSaving)
+        .onChange(of: store.shouldDismiss) { _, shouldDismiss in
+            guard shouldDismiss else { return }
+            dismiss()
+            store.send(.dismissHandled)
+        }
+        .disabled(store.isSaving)
     }
 
     private var isFormValid: Bool {
-        !editData.name.isEmpty && editData.organization != nil
+        !store.editData.name.isEmpty && store.editData.organization != nil
     }
 
     private func save() {
-        guard !isSaving, let organization = editData.organization else { return }
-
-        isSaving = true
-
-        switch activityType {
-        case is Lodging.Type:
-            saveLodging(organization: organization)
-        case is Transportation.Type:
-            saveTransportation(organization: organization)
-        case is Activity.Type:
-            saveActivity(organization: organization)
-        default:
-            isSaving = false
-            return
-        }
+        store.send(.saveTapped)
     }
 
-    private func saveLodging(organization: Organization) {
-        let lodging = Lodging(
-            name: editData.name,
-            start: editData.start,
-            checkInTZ: TimeZone(identifier: editData.startTZId),
-            end: editData.end,
-            checkOutTZ: TimeZone(identifier: editData.endTZId),
-            cost: editData.cost,
-            paid: editData.paid,
-            reservation: editData.confirmationField,
-            notes: editData.notes,
-            trip: trip,
-            organization: organization
+    private var organizationSheet: Binding<ActiveSheet?> {
+        Binding(
+            get: {
+                store.showingOrganizationPicker ? .organizationPicker : nil
+            },
+            set: { newValue in
+                store.showingOrganizationPicker = (newValue != nil)
+            }
         )
-        saveLodgingToDatabase(lodging)
-    }
-
-    private func saveTransportation(organization: Organization) {
-        let transportation = Transportation(
-            name: editData.name,
-            type: editData.transportationType ?? .plane,
-            start: editData.start,
-            startTZ: TimeZone(identifier: editData.startTZId),
-            end: editData.end,
-            endTZ: TimeZone(identifier: editData.endTZId),
-            cost: editData.cost,
-            paid: editData.paid,
-            confirmation: editData.confirmationField,
-            notes: editData.notes,
-            trip: trip,
-            organization: organization
-        )
-        saveTransportationToDatabase(transportation)
-    }
-
-    private func saveActivity(organization: Organization) {
-        let activity = Activity(
-            name: editData.name,
-            start: editData.start,
-            startTZ: TimeZone(identifier: editData.startTZId),
-            end: editData.end,
-            endTZ: TimeZone(identifier: editData.endTZId),
-            cost: editData.cost,
-            paid: editData.paid,
-            reservation: editData.confirmationField,
-            notes: editData.notes,
-            trip: trip,
-            organization: organization
-        )
-        saveActivityToDatabase(activity)
-    }
-
-    private func saveActivityToDatabase(_ activity: Activity) {
-        do {
-            try database.write { db in
-                try Activity.upsert { activity }.execute(db)
-            }
-            dismiss()
-        } catch {
-            Logger.shared.error("Failed to save activity: \(error.localizedDescription)", category: .database)
-            isSaving = false
-        }
-    }
-
-    private func saveLodgingToDatabase(_ lodging: Lodging) {
-        do {
-            try database.write { db in
-                try Lodging.upsert { lodging }.execute(db)
-            }
-            dismiss()
-        } catch {
-            Logger.shared.error("Failed to save activity: \(error.localizedDescription)", category: .database)
-            isSaving = false
-        }
-    }
-
-    private func saveTransportationToDatabase(_ transportation: Transportation) {
-        do {
-            try database.write { db in
-                try Transportation.upsert { transportation }.execute(db)
-            }
-            dismiss()
-        } catch {
-            Logger.shared.error("Failed to save activity: \(error.localizedDescription)", category: .database)
-            isSaving = false
-        }
-    }
-
-    private func ensureNoneOrganization() -> Organization {
-        do {
-            if let existing = try database.read({ db in
-                try Organization.where { $0.name.eq("None") }.fetchOne(db)
-            }) {
-                return existing
-            }
-
-            let noneOrg = Organization(name: "None")
-            try database.write { db in
-                try Organization.insert { noneOrg }.execute(db)
-            }
-            return noneOrg
-        } catch {
-            Logger.shared.error("Failed to ensure None organization: \(error.localizedDescription)", category: .database)
-            return Organization(name: "None")
-        }
     }
 }

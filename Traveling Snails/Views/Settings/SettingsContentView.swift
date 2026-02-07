@@ -5,6 +5,7 @@
 //
 
 import ComposableArchitecture
+import Dependencies
 import SwiftUI
 
 struct SettingsContentView: View {
@@ -13,7 +14,7 @@ struct SettingsContentView: View {
     var body: some View {
         List {
             // Appearance Section
-            AppearanceSection()
+            AppearanceSection(store: store)
 
             // Data Management Section
             DataManagementSection(store: store)
@@ -29,7 +30,7 @@ struct SettingsContentView: View {
 
             #if DEBUG
             // Developer Section
-            DeveloperSection()
+            DeveloperSection(store: store)
             #endif
 
             // Import Result Display
@@ -38,11 +39,47 @@ struct SettingsContentView: View {
             }
         }
         .navigationTitle("Settings")
-        .sheet(isPresented: $store.showingDataBrowser) {
-            DataBrowserView()
-        }
-        .sheet(isPresented: $store.showingExportView) {
-            DatabaseExportView()
+        .sheet(item: Binding(
+            get: { store.activeSheet },
+            set: { store.send(.activeSheetChanged($0)) }
+        )) { activeSheet in
+            switch activeSheet {
+            case .dataBrowser:
+                DataBrowserView(
+                    store: store.scope(
+                        state: \.dataBrowser,
+                        action: \.dataBrowser
+                    )
+                )
+            case .exportView:
+                DatabaseExportView(
+                    store: store.scope(
+                        state: \.databaseExport,
+                        action: \.databaseExport
+                    )
+                )
+            case .fileAttachmentSettings:
+                FileAttachmentSettingsView(
+                    store: store.scope(
+                        state: \.fileAttachmentSettings,
+                        action: \.fileAttachmentSettings
+                    )
+                )
+            case .databaseImportProgress:
+                DatabaseImportProgressView(
+                    store: store.scope(
+                        state: \.databaseImport,
+                        action: \.databaseImport
+                    )
+                )
+            case .databaseCleanup:
+                DatabaseCleanupView(
+                    store: store.scope(
+                        state: \.databaseCleanup,
+                        action: \.databaseCleanup
+                    )
+                )
+            }
         }
         .fileImporter(
             isPresented: $store.showingImportPicker,
@@ -50,15 +87,6 @@ struct SettingsContentView: View {
             allowsMultipleSelection: false
         ) { result in
             store.send(.importPickerResult(result))
-        }
-        .sheet(isPresented: $store.showingFileAttachmentSettings) {
-            FileAttachmentSettingsView()
-        }
-        .sheet(isPresented: $store.showingImportProgress) {
-            DatabaseImportProgressView(importManager: store.importManager)
-        }
-        .sheet(isPresented: $store.showingDatabaseCleanup) {
-            DatabaseCleanupView()
         }
         .alert("Import Failed", isPresented: $store.showingImportError) {
             Button("OK") { store.send(.dismissImportError) }
@@ -72,13 +100,13 @@ struct SettingsContentView: View {
 // MARK: - Appearance Section
 
 struct AppearanceSection: View {
-    @Environment(ModernAppSettings.self) private var appSettings
+    let store: StoreOf<SettingsFeature>
 
     var body: some View {
         Section("Appearance") {
             HStack {
                 Image(systemName: "moon.fill")
-                    .foregroundColor(.blue)
+                    .foregroundStyle(.blue)
                     .frame(width: 24)
 
                 Text("Dark Mode")
@@ -86,8 +114,8 @@ struct AppearanceSection: View {
                 Spacer()
 
                 Picker("Color Scheme", selection: Binding(
-                    get: { appSettings.colorScheme },
-                    set: { appSettings.colorScheme = $0 }
+                    get: { store.colorSchemePreference },
+                    set: { store.send(.colorSchemeChanged($0)) }
                 )) {
                     Text("System").tag(ColorSchemePreference.system)
                     Text("Light").tag(ColorSchemePreference.light)
@@ -96,13 +124,6 @@ struct AppearanceSection: View {
                 .pickerStyle(.segmented)
                 .frame(width: 180)
             }
-
-            #if DEBUG
-            Button("🧪 Test iCloud Sync") {
-                AppSettings.shared.forceSyncTest()
-            }
-            .foregroundColor(.orange)
-            #endif
         }
     }
 }
@@ -124,7 +145,7 @@ struct DataManagementSection: View {
                     subtitle: "Browse and manage your travel data"
                 )
             }
-            .foregroundColor(.primary)
+            .foregroundStyle(.primary)
 
             Button {
                 store.send(.openExportView)
@@ -136,7 +157,7 @@ struct DataManagementSection: View {
                     subtitle: "Create a backup of your data"
                 )
             }
-            .foregroundColor(.primary)
+            .foregroundStyle(.primary)
 
             Button {
                 store.send(.openImportPicker)
@@ -148,7 +169,7 @@ struct DataManagementSection: View {
                     subtitle: "Restore from a backup file"
                 )
             }
-            .foregroundColor(.primary)
+            .foregroundStyle(.primary)
 
             Button {
                 store.send(.cleanupNoneOrganizationsTapped)
@@ -160,7 +181,7 @@ struct DataManagementSection: View {
                     subtitle: "Clean up duplicate 'None' organizations"
                 )
             }
-            .foregroundColor(.primary)
+            .foregroundStyle(.primary)
 
             Button {
                 store.send(.openDatabaseCleanup)
@@ -172,7 +193,7 @@ struct DataManagementSection: View {
                     subtitle: "Remove test data and reset database"
                 )
             }
-            .foregroundColor(.primary)
+            .foregroundStyle(.primary)
         }
         .alert("Organization Cleanup", isPresented: $store.showingOrganizationCleanupAlert) {
             Button("OK") { }
@@ -199,7 +220,7 @@ struct FileAttachmentsSection: View {
                     subtitle: "Manage file attachments and storage"
                 )
             }
-            .foregroundColor(.primary)
+            .foregroundStyle(.primary)
         }
     }
 }
@@ -208,29 +229,27 @@ struct FileAttachmentsSection: View {
 
 struct SecuritySection: View {
     let store: StoreOf<SettingsFeature>
-    @Environment(ModernBiometricAuthManager.self) private var authManager
-    @Environment(ModernAppSettings.self) private var appSettings
 
     var body: some View {
         Section {
-            if authManager.canUseBiometrics() {
+            if store.canUseBiometrics {
                 HStack {
-                    Image(systemName: authManager.biometricType == .faceID ? "faceid" : "touchid")
-                        .foregroundColor(.green)
+                    Image(systemName: store.isFaceID ? "faceid" : "touchid")
+                        .foregroundStyle(.green)
                         .frame(width: 24)
 
                     VStack(alignment: .leading) {
-                        Text("\(authManager.biometricType == .faceID ? "Face ID" : "Touch ID") Available")
+                        Text("\(store.isFaceID ? "Face ID" : "Touch ID") Available")
                             .font(.headline)
                         Text("You can protect individual trips with biometric authentication")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
 
                     Spacer()
 
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
+                        .foregroundStyle(.green)
                 }
 
                 HStack {
@@ -240,12 +259,12 @@ struct SecuritySection: View {
                         ForEach(SettingsTimeoutOption.allCases, id: \.self) { option in
                             Button(option.displayName) {
                                 let minutes = Int(option.rawValue / 60)
-                                appSettings.biometricTimeoutMinutes = minutes
+                                store.send(.biometricTimeoutChanged(minutes))
                             }
                         }
                     } label: {
-                        Text(SettingsTimeoutOption.from(TimeInterval(appSettings.biometricTimeoutMinutes * 60)).displayName)
-                            .foregroundColor(.blue)
+                        Text(SettingsTimeoutOption.from(TimeInterval(store.biometricTimeoutMinutes * 60)).displayName)
+                            .foregroundStyle(.blue)
                     }
                 }
 
@@ -253,15 +272,15 @@ struct SecuritySection: View {
                     Button("Lock All Protected Trips Now") {
                         store.send(.lockAllProtectedTripsTapped)
                     }
-                    .foregroundColor(.red)
+                    .foregroundStyle(.red)
                 } else {
                     Text("All Protected Trips Are Locked")
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
             } else {
                 HStack {
                     Image(systemName: "faceid")
-                        .foregroundColor(.gray)
+                        .foregroundStyle(.gray)
                         .frame(width: 24)
 
                     VStack(alignment: .leading) {
@@ -269,13 +288,13 @@ struct SecuritySection: View {
                             .font(.headline)
                         Text("This device doesn't support biometric authentication")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
 
                     Spacer()
 
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundColor(.orange)
+                        .foregroundStyle(.orange)
                 }
             }
         } header: {
@@ -295,7 +314,7 @@ struct AboutSection: View {
         Section("About") {
             HStack {
                 Image(systemName: "info.circle")
-                    .foregroundColor(.blue)
+                    .foregroundStyle(.blue)
                     .frame(width: 24)
 
                 Text("Version")
@@ -303,12 +322,12 @@ struct AboutSection: View {
                 Spacer()
 
                 Text(store.appVersion)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
 
             HStack {
                 Image(systemName: "number")
-                    .foregroundColor(.blue)
+                    .foregroundStyle(.blue)
                     .frame(width: 24)
 
                 Text("Build")
@@ -316,7 +335,7 @@ struct AboutSection: View {
                 Spacer()
 
                 Text(store.buildNumber)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
         }
     }
@@ -344,10 +363,17 @@ struct ImportResultSection: View {
 
 #if DEBUG
 struct DeveloperSection: View {
+    let store: StoreOf<SettingsFeature>
+
     var body: some View {
         Section("Developer") {
             NavigationLink {
-                SyncDiagnosticView()
+                SyncDiagnosticView(
+                    store: store.scope(
+                        state: \.syncDiagnostic,
+                        action: \.syncDiagnostic
+                    )
+                )
             } label: {
                 SettingsRow(
                     icon: "ladybug",
@@ -356,7 +382,7 @@ struct DeveloperSection: View {
                     subtitle: "Debug and diagnose CloudKit sync issues"
                 )
             }
-            .foregroundColor(.primary)
+            .foregroundStyle(.primary)
         }
     }
 }
@@ -373,21 +399,21 @@ struct SettingsRow: View {
     var body: some View {
         HStack {
             Image(systemName: icon)
-                .foregroundColor(iconColor)
+                .foregroundStyle(iconColor)
                 .frame(width: 24)
 
             VStack(alignment: .leading) {
                 Text(title)
                 Text(subtitle)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
 
             Spacer()
 
             Image(systemName: "chevron.right")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
         }
     }
 }

@@ -4,12 +4,23 @@ struct BiometricLockView: View {
     let trip: Trip
     @Binding var isAuthenticating: Bool
     let onAuthenticationSuccess: () -> Void
-    @Environment(ModernBiometricAuthManager.self) private var authManager
+    private let biometricTypeProvider: () async -> BiometricType
+    private let authenticateTrip: (Trip) async -> Bool
+    @State private var isFaceID = false
+    @State private var authenticationRequestID: UUID?
 
-    init(trip: Trip, isAuthenticating: Binding<Bool>, onAuthenticationSuccess: @escaping () -> Void = {}) {
+    init(
+        trip: Trip,
+        isAuthenticating: Binding<Bool>,
+        onAuthenticationSuccess: @escaping () -> Void = {},
+        biometricTypeProvider: @escaping () async -> BiometricType = BiometricLockView.defaultBiometricType,
+        authenticateTrip: @escaping (Trip) async -> Bool = BiometricLockView.defaultAuthenticateTrip
+    ) {
         self.trip = trip
         self._isAuthenticating = isAuthenticating
         self.onAuthenticationSuccess = onAuthenticationSuccess
+        self.biometricTypeProvider = biometricTypeProvider
+        self.authenticateTrip = authenticateTrip
         #if DEBUG
         Logger.secure(category: .app).debug("BiometricLockView.init() for trip")
         #endif
@@ -19,10 +30,9 @@ struct BiometricLockView: View {
         VStack(spacing: 24) {
             Spacer()
 
-            // Biometric icon
-            Image(systemName: authManager.biometricType == .faceID ? "faceid" : "touchid")
+            Image(systemName: isFaceID ? "faceid" : "touchid")
                 .font(.system(size: 60))
-                .foregroundColor(.blue)
+                .foregroundStyle(.blue)
 
             VStack(spacing: 8) {
                 Text("This trip is protected")
@@ -31,23 +41,22 @@ struct BiometricLockView: View {
 
                 Text("Authenticate to view trip details")
                     .font(.body)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
 
-            // Authentication button
             Button {
-                authenticateUser()
+                requestAuthentication()
             } label: {
                 HStack {
                     if isAuthenticating {
                         ProgressView()
                             .scaleEffect(0.8)
                     } else {
-                        Image(systemName: authManager.biometricType == .faceID ? "faceid" : "touchid")
+                        Image(systemName: isFaceID ? "faceid" : "touchid")
                     }
 
-                    Text("Authenticate with \(authManager.biometricType == .faceID ? "Face ID" : "Touch ID")")
+                    Text("Authenticate with \(isFaceID ? "Face ID" : "Touch ID")")
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
@@ -60,9 +69,16 @@ struct BiometricLockView: View {
         }
         .navigationTitle(trip.name)
         .navigationBarTitleDisplayMode(.inline)
+        .task {
+            let biometricType = await biometricTypeProvider()
+            isFaceID = biometricType == .faceID
+        }
+        .task(id: authenticationRequestID) {
+            await handleAuthenticationRequest()
+        }
     }
 
-    private func authenticateUser() {
+    private func requestAuthentication() {
         #if DEBUG
         Logger.secure(category: .app).debug("BiometricLockView.authenticateUser() - START, isAuthenticating: \(isAuthenticating, privacy: .public)")
         #endif
@@ -78,39 +94,55 @@ struct BiometricLockView: View {
         Logger.secure(category: .app).debug("Setting isAuthenticating = true")
         #endif
         isAuthenticating = true
+        authenticationRequestID = UUID()
+    }
 
-        Task {
-            // Add slight delay for better UX
-            try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+    @MainActor
+    private func handleAuthenticationRequest() async {
+        guard authenticationRequestID != nil else { return }
 
-            #if DEBUG
-            Logger.secure(category: .app).debug("Calling authManager.authenticateTrip()")
-            #endif
-            let success = await authManager.authenticateTrip(trip)
-            #if DEBUG
-            Logger.secure(category: .app).debug("Authentication result: \(success, privacy: .public)")
-            #endif
-
-            await MainActor.run {
-                // Only update isAuthenticating if authentication failed
-                // If successful, the view will automatically switch due to @Observable
-                if !success {
-                    #if DEBUG
-                    Logger.secure(category: .app).debug("Authentication failed, setting isAuthenticating = false")
-                    #endif
-                    isAuthenticating = false
-                } else {
-                    #if DEBUG
-                    Logger.secure(category: .app).debug("Authentication successful, allowing transition")
-                    #endif
-                    isAuthenticating = false
-                    onAuthenticationSuccess()
-                }
-            }
-
-            #if DEBUG
-            Logger.secure(category: .app).debug("BiometricLockView.authenticateUser() - END")
-            #endif
+        // Add slight delay for better UX
+        do {
+            try await Task.sleep(nanoseconds: 100_000_000)
+        } catch {
+            isAuthenticating = false
+            authenticationRequestID = nil
+            return
         }
+
+        #if DEBUG
+        Logger.secure(category: .app).debug("Calling biometricAuthClient.authenticateTrip()")
+        #endif
+        let success = await authenticateTrip(trip)
+        #if DEBUG
+        Logger.secure(category: .app).debug("Authentication result: \(success, privacy: .public)")
+        #endif
+
+        if !success {
+            #if DEBUG
+            Logger.secure(category: .app).debug("Authentication failed, setting isAuthenticating = false")
+            #endif
+            isAuthenticating = false
+        } else {
+            #if DEBUG
+            Logger.secure(category: .app).debug("Authentication successful, allowing transition")
+            #endif
+            isAuthenticating = false
+            onAuthenticationSuccess()
+        }
+
+        authenticationRequestID = nil
+
+        #if DEBUG
+        Logger.secure(category: .app).debug("BiometricLockView.authenticateUser() - END")
+        #endif
+    }
+
+    private static func defaultBiometricType() async -> BiometricType {
+        await BiometricAuthClient.liveValue.biometricType()
+    }
+
+    private static func defaultAuthenticateTrip(_ trip: Trip) async -> Bool {
+        await BiometricAuthClient.liveValue.authenticateTrip(trip)
     }
 }

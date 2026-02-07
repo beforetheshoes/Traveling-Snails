@@ -7,9 +7,16 @@
 import Foundation
 import os.lock
 
+enum MockCloudStorageValue: Sendable {
+    case string(String)
+    case int(Int)
+    case bool(Bool)
+    case double(Double)
+}
+
 /// Mock implementation of CloudStorageService for testing
 /// Provides in-memory key-value storage without iCloud dependency
-final class MockCloudStorageService: CloudStorageService, Sendable {
+final class MockCloudStorageService: CloudStorageService, @unchecked Sendable {
     // MARK: - Thread-Safe Storage
     private let lock = OSAllocatedUnfairLock()
 
@@ -21,7 +28,7 @@ final class MockCloudStorageService: CloudStorageService, Sendable {
     nonisolated(unsafe) private var _synchronizeCallCount: Int = 0
 
     // MARK: - Storage
-    nonisolated(unsafe) private var storage: [String: Any] = [:]
+    nonisolated(unsafe) private var storage: [String: MockCloudStorageValue] = [:]
 
     // MARK: - Initialization
 
@@ -53,35 +60,47 @@ final class MockCloudStorageService: CloudStorageService, Sendable {
     // MARK: - CloudStorageService Implementation
 
     func setString(_ value: String, forKey key: String) {
-        lock.withLock { storage[key] = value }
+        lock.withLock { storage[key] = .string(value) }
     }
 
     func getString(forKey key: String) -> String? {
-        lock.withLock { storage[key] as? String }
+        lock.withLock {
+            guard case let .string(value)? = storage[key] else { return nil }
+            return value
+        }
     }
 
     func setInteger(_ value: Int, forKey key: String) {
-        lock.withLock { storage[key] = value }
+        lock.withLock { storage[key] = .int(value) }
     }
 
     func getInteger(forKey key: String) -> Int {
-        lock.withLock { storage[key] as? Int ?? 0 }
+        lock.withLock {
+            guard case let .int(value)? = storage[key] else { return 0 }
+            return value
+        }
     }
 
     func setBoolean(_ value: Bool, forKey key: String) {
-        lock.withLock { storage[key] = value }
+        lock.withLock { storage[key] = .bool(value) }
     }
 
     func getBoolean(forKey key: String) -> Bool {
-        lock.withLock { storage[key] as? Bool ?? false }
+        lock.withLock {
+            guard case let .bool(value)? = storage[key] else { return false }
+            return value
+        }
     }
 
     func setDouble(_ value: Double, forKey key: String) {
-        lock.withLock { storage[key] = value }
+        lock.withLock { storage[key] = .double(value) }
     }
 
     func getDouble(forKey key: String) -> Double {
-        lock.withLock { storage[key] as? Double ?? 0.0 }
+        lock.withLock {
+            guard case let .double(value)? = storage[key] else { return 0.0 }
+            return value
+        }
     }
 
     func removeValue(forKey key: String) {
@@ -144,7 +163,7 @@ final class MockCloudStorageService: CloudStorageService, Sendable {
     }
 
     /// Get all stored values (for test verification)
-    func getAllValues() -> [String: Any] {
+    func getAllValues() -> [String: MockCloudStorageValue] {
         lock.withLock { storage }
     }
 
@@ -198,20 +217,18 @@ extension MockCloudStorageService {
     }
 
     /// Create a mock with pre-populated data for testing
-    static func withData(_ data: [String: Any]) -> MockCloudStorageService {
+    static func withData(_ data: [String: MockCloudStorageValue]) -> MockCloudStorageService {
         let mock = MockCloudStorageService()
         for (key, value) in data {
             switch value {
-            case let stringValue as String:
+            case let .string(stringValue):
                 mock.setString(stringValue, forKey: key)
-            case let intValue as Int:
+            case let .int(intValue):
                 mock.setInteger(intValue, forKey: key)
-            case let boolValue as Bool:
+            case let .bool(boolValue):
                 mock.setBoolean(boolValue, forKey: key)
-            case let doubleValue as Double:
+            case let .double(doubleValue):
                 mock.setDouble(doubleValue, forKey: key)
-            default:
-                break
             }
         }
         return mock

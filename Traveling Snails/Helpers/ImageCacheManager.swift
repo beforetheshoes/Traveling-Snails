@@ -8,7 +8,7 @@ import Foundation
 import SwiftUI
 
 @Observable
-class ImageCacheManager {
+class ImageCacheManager: @unchecked Sendable {
     static let shared = ImageCacheManager()
 
     private let cacheDirectory: URL

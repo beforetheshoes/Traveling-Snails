@@ -13,6 +13,8 @@ import SQLiteData
 @MainActor
 @Observable
 class ModernSyncManager {
+    static var shared: ModernSyncManager?
+
     // MARK: - Properties
 
     private let syncService: SyncService

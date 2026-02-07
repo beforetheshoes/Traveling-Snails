@@ -8,58 +8,77 @@ import SwiftUI
 
 @available(iOS 18.0, *)
 struct CrossDeviceFileAttachmentRowView: View {
+    private enum ActiveSheet: Identifiable {
+        case quickLook
+        case edit
+
+        var id: Int {
+            switch self {
+            case .quickLook: 0
+            case .edit: 1
+            }
+        }
+    }
+
     let attachment: EmbeddedFileAttachment
     let onEdit: () -> Void
     let onDelete: () -> Void
 
     @State private var showingDeleteConfirmation = false
-    @State private var showingQuickLook = false
-    @State private var showingEditSheet = false
+    @State private var activeSheet: ActiveSheet?
     @State private var thumbnailImage: UIImage?
+    @State private var thumbnailData: Data?
 
     var body: some View {
         HStack(spacing: 12) {
-            // File icon with thumbnail for images
-            fileIcon
+            Button {
+                activeSheet = .quickLook
+            } label: {
+                HStack(spacing: 12) {
+                    // File icon with thumbnail for images
+                    fileIcon
 
-            // File info
-            VStack(alignment: .leading, spacing: 4) {
-                Text(attachment.displayName)
-                    .font(.headline)
-                    .lineLimit(2)
+                    // File info
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(attachment.displayName)
+                            .font(.headline)
+                            .lineLimit(2)
 
-                HStack {
-                    Text(attachment.fileExtension.uppercased())
-                        .font(.caption)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(.secondary.opacity(0.2))
-                        .clipShape(RoundedRectangle(cornerRadius: 4))
+                        HStack {
+                            Text(attachment.fileExtension.uppercased())
+                                .font(.caption)
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 2)
+                                .background(.secondary.opacity(0.2))
+                                .clipShape(.rect(cornerRadius: 4))
 
-                    Text(attachment.formattedFileSize)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                            Text(attachment.formattedFileSize)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
 
-                    Spacer()
+                            Spacer()
 
-                    Text(attachment.createdDate, style: .date)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                            Text(attachment.createdDate, style: .date)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
                 }
             }
+            .buttonStyle(.plain)
 
             Spacer()
 
             // Actions menu
             Menu {
                 Button {
-                    showingQuickLook = true
+                    activeSheet = .quickLook
                 } label: {
                     Label("View", systemImage: "eye")
                 }
 
                 Button {
-                    showingEditSheet = true
+                    activeSheet = .edit
                 } label: {
                     Label("Edit Info", systemImage: "pencil")
                 }
@@ -86,14 +105,13 @@ struct CrossDeviceFileAttachmentRowView: View {
         .padding(.horizontal, 12)
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
         .contentShape(Rectangle())
-        .onTapGesture {
-            showingQuickLook = true
-        }
-        .sheet(isPresented: $showingQuickLook) {
-            CrossDeviceQuickLookView(attachment: attachment)
-        }
-        .sheet(isPresented: $showingEditSheet) {
-            CrossDeviceEditFileAttachmentView(attachment: attachment)
+        .sheet(item: $activeSheet) { sheet in
+            switch sheet {
+            case .quickLook:
+                CrossDeviceQuickLookView(attachment: attachment)
+            case .edit:
+                CrossDeviceEditFileAttachmentView(attachment: attachment)
+            }
         }
         .confirmationDialog(
             "Delete \(attachment.displayName)?",
@@ -107,7 +125,10 @@ struct CrossDeviceFileAttachmentRowView: View {
             Text("This action cannot be undone.")
         }
         .onAppear {
-            loadThumbnail()
+            thumbnailData = attachment.isImage ? attachment.fileData : nil
+        }
+        .task(id: thumbnailData) {
+            thumbnailImage = await decodeThumbnail(from: thumbnailData)
         }
     }
 
@@ -119,27 +140,22 @@ struct CrossDeviceFileAttachmentRowView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: 44, height: 44)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(.rect(cornerRadius: 8))
             } else {
                 Image(systemName: attachment.systemIcon)
                     .font(.title2)
                     .foregroundStyle(.blue)
                     .frame(width: 44, height: 44)
                     .background(.blue.opacity(0.1))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(.rect(cornerRadius: 8))
             }
         }
     }
 
-    private func loadThumbnail() {
-        guard attachment.isImage, let data = attachment.fileData else { return }
-
-        DispatchQueue.global(qos: .userInitiated).async {
-            if let image = UIImage(data: data) {
-                DispatchQueue.main.async {
-                    thumbnailImage = image
-                }
-            }
-        }
+    private func decodeThumbnail(from data: Data?) async -> UIImage? {
+        guard let data else { return nil }
+        return await Task.detached(priority: .userInitiated) {
+            UIImage(data: data)
+        }.value
     }
 }

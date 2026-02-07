@@ -4,6 +4,7 @@
 //
 //
 
+import ComposableArchitecture
 import SQLiteData
 import SwiftUI
 
@@ -17,8 +18,7 @@ struct DatabaseBrowserTab: View {
     @FetchAll private var addresses: [Address]
     @FetchAll private var attachments: [EmbeddedFileAttachment]
 
-    @State private var selectedSection = 0
-    @State private var searchText = ""
+    @Bindable var store: StoreOf<DatabaseBrowserFeature>
     @State private var selectedItem: DatabaseItem?
 
     enum DatabaseItem: Identifiable {
@@ -48,7 +48,7 @@ struct DatabaseBrowserTab: View {
     var body: some View {
         VStack {
             // Section Picker
-            Picker("Section", selection: $selectedSection) {
+            Picker("Section", selection: $store.selectedSection) {
                 ForEach(Array(sections.enumerated()), id: \.offset) { index, section in
                     Text(section).tag(index)
                 }
@@ -57,12 +57,12 @@ struct DatabaseBrowserTab: View {
             .padding(.horizontal)
 
             // Search Bar
-            UnifiedSearchBar(text: $searchText, placeholder: "Search \(sections[selectedSection].lowercased())...")
+            SearchBarView(text: $store.searchText, placeholder: "Search \(sections[store.selectedSection].lowercased())...")
                 .padding(.horizontal)
 
             // Content List
             List {
-                switch selectedSection {
+                switch store.selectedSection {
                 case 0: // Trips
                     ForEach(filteredTrips, id: \.id) { trip in
                         Button {
@@ -70,7 +70,7 @@ struct DatabaseBrowserTab: View {
                         } label: {
                             TripRowView(trip: trip)
                         }
-                        .foregroundColor(.primary)
+                        .foregroundStyle(.primary)
                     }
 
                 case 1: // Transportation
@@ -80,7 +80,7 @@ struct DatabaseBrowserTab: View {
                         } label: {
                             TransportationRowView(transportation: item)
                         }
-                        .foregroundColor(.primary)
+                        .foregroundStyle(.primary)
                     }
 
                 case 2: // Lodging
@@ -90,7 +90,7 @@ struct DatabaseBrowserTab: View {
                         } label: {
                             LodgingRowView(lodging: item)
                         }
-                        .foregroundColor(.primary)
+                        .foregroundStyle(.primary)
                     }
 
                 case 3: // Activities
@@ -100,7 +100,7 @@ struct DatabaseBrowserTab: View {
                         } label: {
                             NewActivityRowView(activity: item)
                         }
-                        .foregroundColor(.primary)
+                        .foregroundStyle(.primary)
                     }
 
                 case 4: // Organizations
@@ -110,7 +110,7 @@ struct DatabaseBrowserTab: View {
                         } label: {
                             NewOrganizationRowView(organization: item)
                         }
-                        .foregroundColor(.primary)
+                        .foregroundStyle(.primary)
                     }
 
                 case 5: // Addresses
@@ -120,7 +120,7 @@ struct DatabaseBrowserTab: View {
                         } label: {
                             AddressRowView(address: item)
                         }
-                        .foregroundColor(.primary)
+                        .foregroundStyle(.primary)
                     }
 
                 case 6: // Attachments
@@ -130,7 +130,7 @@ struct DatabaseBrowserTab: View {
                         } label: {
                             AttachmentRowView(attachment: item)
                         }
-                        .foregroundColor(.primary)
+                        .foregroundStyle(.primary)
                     }
 
                 default:
@@ -147,77 +147,77 @@ struct DatabaseBrowserTab: View {
     // MARK: - Filtered Data
 
     private var filteredTrips: [Trip] {
-        if searchText.isEmpty {
+        if store.searchText.isEmpty {
             return trips.sorted { $0.name < $1.name }
         }
         return trips.filter {
-            $0.name.localizedCaseInsensitiveContains(searchText) ||
-            $0.notes.localizedCaseInsensitiveContains(searchText)
+            $0.name.localizedCaseInsensitiveContains(store.searchText) ||
+            $0.notes.localizedCaseInsensitiveContains(store.searchText)
         }.sorted { $0.name < $1.name }
     }
 
     private var filteredTransportation: [Transportation] {
-        if searchText.isEmpty {
+        if store.searchText.isEmpty {
             return transportation.sorted { $0.name < $1.name }
         }
         return transportation.filter {
-            $0.name.localizedCaseInsensitiveContains(searchText) ||
-            $0.confirmation.localizedCaseInsensitiveContains(searchText) ||
-            $0.notes.localizedCaseInsensitiveContains(searchText)
+            $0.name.localizedCaseInsensitiveContains(store.searchText) ||
+            $0.confirmation.localizedCaseInsensitiveContains(store.searchText) ||
+            $0.notes.localizedCaseInsensitiveContains(store.searchText)
         }.sorted { $0.name < $1.name }
     }
 
     private var filteredLodging: [Lodging] {
-        if searchText.isEmpty {
+        if store.searchText.isEmpty {
             return lodging.sorted { $0.name < $1.name }
         }
         return lodging.filter {
-            $0.name.localizedCaseInsensitiveContains(searchText) ||
-            $0.reservation.localizedCaseInsensitiveContains(searchText) ||
-            $0.notes.localizedCaseInsensitiveContains(searchText)
+            $0.name.localizedCaseInsensitiveContains(store.searchText) ||
+            $0.reservation.localizedCaseInsensitiveContains(store.searchText) ||
+            $0.notes.localizedCaseInsensitiveContains(store.searchText)
         }.sorted { $0.name < $1.name }
     }
 
     private var filteredActivities: [Activity] {
-        if searchText.isEmpty {
+        if store.searchText.isEmpty {
             return activities.sorted { $0.name < $1.name }
         }
         return activities.filter {
-            $0.name.localizedCaseInsensitiveContains(searchText) ||
-            $0.reservation.localizedCaseInsensitiveContains(searchText) ||
-            $0.notes.localizedCaseInsensitiveContains(searchText)
+            $0.name.localizedCaseInsensitiveContains(store.searchText) ||
+            $0.reservation.localizedCaseInsensitiveContains(store.searchText) ||
+            $0.notes.localizedCaseInsensitiveContains(store.searchText)
         }.sorted { $0.name < $1.name }
     }
 
     private var filteredOrganizations: [Organization] {
-        if searchText.isEmpty {
+        if store.searchText.isEmpty {
             return organizations.sorted { $0.name < $1.name }
         }
         return organizations.filter {
-            $0.name.localizedCaseInsensitiveContains(searchText) ||
-            $0.email.localizedCaseInsensitiveContains(searchText) ||
-            $0.website.localizedCaseInsensitiveContains(searchText)
+            $0.name.localizedCaseInsensitiveContains(store.searchText) ||
+            $0.email.localizedCaseInsensitiveContains(store.searchText) ||
+            $0.website.localizedCaseInsensitiveContains(store.searchText)
         }.sorted { $0.name < $1.name }
     }
 
     private var filteredAddresses: [Address] {
-        if searchText.isEmpty {
+        if store.searchText.isEmpty {
             return addresses.sorted { $0.displayAddress < $1.displayAddress }
         }
         return addresses.filter {
-            $0.displayAddress.localizedCaseInsensitiveContains(searchText) ||
-            $0.street.localizedCaseInsensitiveContains(searchText) ||
-            $0.city.localizedCaseInsensitiveContains(searchText)
+            $0.displayAddress.localizedCaseInsensitiveContains(store.searchText) ||
+            $0.street.localizedCaseInsensitiveContains(store.searchText) ||
+            $0.city.localizedCaseInsensitiveContains(store.searchText)
         }.sorted { $0.displayAddress < $1.displayAddress }
     }
 
     private var filteredAttachments: [EmbeddedFileAttachment] {
-        if searchText.isEmpty {
+        if store.searchText.isEmpty {
             return attachments.sorted { $0.originalFileName < $1.originalFileName }
         }
         return attachments.filter {
-            $0.originalFileName.localizedCaseInsensitiveContains(searchText) ||
-            $0.fileDescription.localizedCaseInsensitiveContains(searchText)
+            $0.originalFileName.localizedCaseInsensitiveContains(store.searchText) ||
+            $0.fileDescription.localizedCaseInsensitiveContains(store.searchText)
         }.sorted { $0.originalFileName < $1.originalFileName }
     }
 }
@@ -240,27 +240,27 @@ private struct TripRowView: View {
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(.blue.opacity(0.1))
-                    .cornerRadius(4)
+                    .clipShape(.rect(cornerRadius: 4))
             }
 
             if !trip.notes.isEmpty {
                 Text(trip.notes)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                     .lineLimit(2)
             }
 
             HStack {
                 Text("Created: \(trip.createdDate, style: .date)")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
 
                 Spacer()
 
                 Text(trip.totalCost, format: .currency(code: "USD"))
                     .font(.caption)
                     .fontWeight(.semibold)
-                    .foregroundColor(.green)
+                    .foregroundStyle(.green)
             }
         }
         .padding(.vertical, 2)
@@ -274,7 +274,7 @@ private struct TransportationRowView: View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Image(systemName: transportation.type.systemImage)
-                    .foregroundColor(.blue)
+                    .foregroundStyle(.blue)
 
                 Text(transportation.name.isEmpty ? "Unnamed Transportation" : transportation.name)
                     .font(.headline)
@@ -286,32 +286,32 @@ private struct TransportationRowView: View {
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(.blue.opacity(0.1))
-                    .cornerRadius(4)
+                    .clipShape(.rect(cornerRadius: 4))
             }
 
             HStack {
                 Text(transportation.startFormatted)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
 
                 Image(systemName: "arrow.right")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
 
                 Text(transportation.endFormatted)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
 
                 Spacer()
 
                 if let trip = transportation.trip {
                     Text("Trip: \(trip.name)")
                         .font(.caption)
-                        .foregroundColor(.blue)
+                        .foregroundStyle(.blue)
                 } else {
                     Text("No trip")
                         .font(.caption)
-                        .foregroundColor(.orange)
+                        .foregroundStyle(.orange)
                 }
             }
         }
@@ -326,7 +326,7 @@ private struct LodgingRowView: View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Image(systemName: "bed.double.fill")
-                    .foregroundColor(.indigo)
+                    .foregroundStyle(.indigo)
 
                 Text(lodging.name.isEmpty ? "Unnamed Lodging" : lodging.name)
                     .font(.headline)
@@ -339,24 +339,24 @@ private struct LodgingRowView: View {
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(.indigo.opacity(0.1))
-                    .cornerRadius(4)
+                    .clipShape(.rect(cornerRadius: 4))
             }
 
             HStack {
                 Text("Check-in: \(lodging.startFormatted)")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
 
                 Spacer()
 
                 if let trip = lodging.trip {
                     Text("Trip: \(trip.name)")
                         .font(.caption)
-                        .foregroundColor(.blue)
+                        .foregroundStyle(.blue)
                 } else {
                     Text("No trip")
                         .font(.caption)
-                        .foregroundColor(.orange)
+                        .foregroundStyle(.orange)
                 }
             }
         }
@@ -371,7 +371,7 @@ struct NewActivityRowView: View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Image(systemName: "ticket.fill")
-                    .foregroundColor(.purple)
+                    .foregroundStyle(.purple)
 
                 Text(activity.name.isEmpty ? "Unnamed Activity" : activity.name)
                     .font(.headline)
@@ -386,24 +386,24 @@ struct NewActivityRowView: View {
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(.purple.opacity(0.1))
-                    .cornerRadius(4)
+                    .clipShape(.rect(cornerRadius: 4))
             }
 
             HStack {
                 Text(activity.startFormatted)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
 
                 Spacer()
 
                 if let trip = activity.trip {
                     Text("Trip: \(trip.name)")
                         .font(.caption)
-                        .foregroundColor(.blue)
+                        .foregroundStyle(.blue)
                 } else {
                     Text("No trip")
                         .font(.caption)
-                        .foregroundColor(.orange)
+                        .foregroundStyle(.orange)
                 }
             }
         }
@@ -418,7 +418,7 @@ struct NewOrganizationRowView: View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Image(systemName: "building.2.fill")
-                    .foregroundColor(.red)
+                    .foregroundStyle(.red)
 
                 Text(organization.name.isEmpty ? "Unnamed Organization" : organization.name)
                     .font(.headline)
@@ -431,7 +431,7 @@ struct NewOrganizationRowView: View {
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
                         .background(.gray.opacity(0.1))
-                        .cornerRadius(4)
+                        .clipShape(.rect(cornerRadius: 4))
                 }
             }
 
@@ -439,19 +439,19 @@ struct NewOrganizationRowView: View {
                 if organization.hasPhone {
                     Image(systemName: "phone.fill")
                         .font(.caption)
-                        .foregroundColor(.green)
+                        .foregroundStyle(.green)
                 }
 
                 if organization.hasEmail {
                     Image(systemName: "envelope.fill")
                         .font(.caption)
-                        .foregroundColor(.blue)
+                        .foregroundStyle(.blue)
                 }
 
                 if organization.hasWebsite {
                     Image(systemName: "globe")
                         .font(.caption)
-                        .foregroundColor(.orange)
+                        .foregroundStyle(.orange)
                 }
 
                 Spacer()
@@ -461,7 +461,7 @@ struct NewOrganizationRowView: View {
                                (organization.activity.count)
                 Text("Used by \(totalUsage) activities")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
         }
         .padding(.vertical, 2)
@@ -475,7 +475,7 @@ struct AddressRowView: View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Image(systemName: "mappin.circle.fill")
-                    .foregroundColor(.cyan)
+                    .foregroundStyle(.cyan)
 
                 Text(address.displayAddress.isEmpty ? "Empty Address" : address.displayAddress)
                     .font(.headline)
@@ -487,11 +487,11 @@ struct AddressRowView: View {
                 if let coordinate = address.coordinate {
                     Text("Lat: \(coordinate.latitude, specifier: "%.4f"), Lng: \(coordinate.longitude, specifier: "%.4f")")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 } else {
                     Text("No coordinates")
                         .font(.caption)
-                        .foregroundColor(.orange)
+                        .foregroundStyle(.orange)
                 }
 
                 Spacer()
@@ -501,7 +501,7 @@ struct AddressRowView: View {
                     address.lodgings.count
                 Text("Used by \(usageCount) items")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
         }
         .padding(.vertical, 2)
@@ -515,7 +515,7 @@ struct AttachmentRowView: View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Image(systemName: attachment.systemIcon)
-                    .foregroundColor(.brown)
+                    .foregroundStyle(.brown)
 
                 Text(attachment.displayName.isEmpty ? "Unnamed File" : attachment.displayName)
                     .font(.headline)
@@ -527,40 +527,40 @@ struct AttachmentRowView: View {
                     .padding(.horizontal, 6)
                     .padding(.vertical, 2)
                     .background(.brown.opacity(0.1))
-                    .cornerRadius(4)
+                    .clipShape(.rect(cornerRadius: 4))
             }
 
             HStack {
                 Text(attachment.formattedFileSize)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
 
                 Text("•")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
 
                 Text(attachment.createdDate, style: .date)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
 
                 Spacer()
 
                 if attachment.activity != nil {
                     Text("Activity")
                         .font(.caption)
-                        .foregroundColor(.purple)
+                        .foregroundStyle(.purple)
                 } else if attachment.lodging != nil {
                     Text("Lodging")
                         .font(.caption)
-                        .foregroundColor(.indigo)
+                        .foregroundStyle(.indigo)
                 } else if attachment.transportation != nil {
                     Text("Transportation")
                         .font(.caption)
-                        .foregroundColor(.blue)
+                        .foregroundStyle(.blue)
                 } else {
                     Text("Orphaned")
                         .font(.caption)
-                        .foregroundColor(.orange)
+                        .foregroundStyle(.orange)
                 }
             }
         }
@@ -606,13 +606,13 @@ struct DetailCard<Content: View>: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
                 .font(.headline)
-                .foregroundColor(.blue)
+                .foregroundStyle(.blue)
 
             content
         }
         .padding()
         .background(Color(.systemGray6))
-        .cornerRadius(12)
+        .clipShape(.rect(cornerRadius: 12))
     }
 }
 
@@ -624,7 +624,7 @@ struct DetailRow: View {
         HStack {
             Text(label)
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
 
             Spacer()
 

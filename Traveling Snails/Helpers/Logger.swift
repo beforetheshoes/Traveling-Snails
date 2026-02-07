@@ -24,7 +24,7 @@ import os
 ///    ```
 ///
 /// Pattern 1 is preferred for new code as it aligns with Apple's privacy guidelines.
-final class Logger {
+final class Logger: @unchecked Sendable {
     static let shared = Logger()
 
     private let subsystem = Bundle.main.bundleIdentifier ?? "com.travelingsnails.app"

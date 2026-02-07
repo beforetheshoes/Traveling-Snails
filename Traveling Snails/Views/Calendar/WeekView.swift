@@ -16,6 +16,7 @@ struct WeekView: View {
     private var calendar: Calendar { Calendar.current }
 
     @State private var hasAutoScrolled = false // Track if we've already auto-scrolled to prevent resets
+    @State private var pendingScrollHour: Int?
 
     private var isCompactDevice: Bool {
         #if os(iOS)
@@ -96,7 +97,7 @@ struct WeekView: View {
                                     ForEach(0..<24, id: \.self) { hour in
                                         Text(hourFormatter.string(from: timeForHour(hour)))
                                             .font(.caption2)
-                                            .foregroundColor(.secondary)
+                                            .foregroundStyle(.secondary)
                                             .frame(width: 50, height: 60, alignment: .topTrailing)
                                             .padding(.trailing, 2)
                                             .id("hour-\(hour)")
@@ -122,7 +123,7 @@ struct WeekView: View {
                     }
                     .onAppear {
                         if !hasAutoScrolled {
-                            scrollToOptimalStartTime(proxy: proxy)
+                            pendingScrollHour = calculateOptimalStartHour()
                             hasAutoScrolled = true
                         }
                     }
@@ -130,6 +131,19 @@ struct WeekView: View {
                         hasAutoScrolled = false // Reset auto-scroll flag when week changes
                     }
                     // Removed onChange(of: activities) to prevent unwanted scroll resets during dialog interactions
+                    .task(id: pendingScrollHour) {
+                        guard let startHour = pendingScrollHour else { return }
+                        do {
+                            try await Task.sleep(for: .milliseconds(100))
+                        } catch {
+                            return
+                        }
+                        guard !Task.isCancelled else { return }
+                        withAnimation(.easeInOut(duration: 0.5)) {
+                            proxy.scrollTo("hour-\(startHour)", anchor: .top)
+                        }
+                        pendingScrollHour = nil
+                    }
                 }
                 .background(Color(.systemBackground))
             }
@@ -155,16 +169,6 @@ struct WeekView: View {
 
     private func timeForHour(_ hour: Int) -> Date {
         calendar.date(bySettingHour: hour, minute: 0, second: 0, of: Date()) ?? Date()
-    }
-
-    private func scrollToOptimalStartTime(proxy: ScrollViewProxy) {
-        let startHour = calculateOptimalStartHour()
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            withAnimation(.easeInOut(duration: 0.5)) {
-                proxy.scrollTo("hour-\(startHour)", anchor: .top)
-            }
-        }
     }
 
     private func calculateOptimalStartHour() -> Int {
@@ -235,13 +239,13 @@ struct WeekView: View {
                 // Day name (e.g., "Mon", "Tue")
                 Text(dayFormatter.string(from: date))
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
 
                 // Day number with styling
                 Text("\(calendar.component(.day, from: date))")
                     .font(.headline)
                     .fontWeight(isToday(date) ? .bold : .medium)
-                    .foregroundColor(isToday(date) ? .white : .primary)
+                    .foregroundStyle(isToday(date) ? .white : .primary)
                     .frame(width: 32, height: 32)
                     .background(isToday(date) ? Color.blue : Color.clear)
                     .clipShape(Circle())
@@ -326,7 +330,7 @@ struct WeekDayColumnContent: View {
                             .overlay(
                                 Text(activityPos.activity.tripActivity.name)
                                     .font(.caption2)
-                                    .foregroundColor(.white)
+                                    .foregroundStyle(.white)
                                     .lineLimit(nil)
                                     .padding(.horizontal, 4)
                                     .frame(width: position.width, height: position.height, alignment: .topLeading)

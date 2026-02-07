@@ -11,7 +11,7 @@ import SwiftUI
 /// Uses modern SwiftUI environment patterns for service provision
 /// Thread-safe with proper synchronization
 @Observable
-class ServiceContainer {
+class ServiceContainer: @unchecked Sendable {
     // MARK: - Service Storage
 
     private var services: [String: Any] = [:]

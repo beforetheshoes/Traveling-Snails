@@ -5,18 +5,19 @@
 
 import ComposableArchitecture
 import Foundation
+import SQLiteData
 import Testing
 
 @testable import Traveling_Snails
 
 @Suite("App Navigation Feature Tests")
+@MainActor
 struct AppNavigationFeatureTests {
     @Test("Selecting a trip sets tab and selected trip", .tags(.unit, .fast, .parallel, .navigation))
     func selectingTripSetsState() async {
         let tripID = UUID()
-        let store = TestStore(initialState: AppFeature.State()) {
-            AppFeature()
-        }
+        let database = try! makeNavigationTestDatabase()
+        let store = makeStore(database: database)
 
         await store.send(.navigation(.selectTrip(tripID, source: .tripList))) {
             $0.navigation.selectedTab = .trips
@@ -29,13 +30,11 @@ struct AppNavigationFeatureTests {
     func reselectingTripResetsPathAndToken() async {
         let tripID = UUID()
         let activityID = UUID()
-        var initialState = AppFeature.State()
-        initialState.navigation.selectedTab = .trips
-        initialState.navigation.selectedTripID = tripID
-        initialState.navigation.tripDetailPathByTripID[tripID] = [.activity(activityID)]
-
-        let store = TestStore(initialState: initialState) {
-            AppFeature()
+        let database = try! makeNavigationTestDatabase()
+        let store = makeStore(database: database) { state in
+            state.navigation.selectedTab = .trips
+            state.navigation.selectedTripID = tripID
+            state.navigation.tripDetailPathByTripID[tripID] = [.activity(activityID)]
         }
 
         await store.send(.navigation(.reselectTrip(tripID))) {
@@ -48,13 +47,11 @@ struct AppNavigationFeatureTests {
     func tabSwitchPreservesTripNavigation() async {
         let tripID = UUID()
         let activityID = UUID()
-        var initialState = AppFeature.State()
-        initialState.navigation.selectedTab = .trips
-        initialState.navigation.selectedTripID = tripID
-        initialState.navigation.tripDetailPathByTripID[tripID] = [.activity(activityID)]
-
-        let store = TestStore(initialState: initialState) {
-            AppFeature()
+        let database = try! makeNavigationTestDatabase()
+        let store = makeStore(database: database) { state in
+            state.navigation.selectedTab = .trips
+            state.navigation.selectedTripID = tripID
+            state.navigation.tripDetailPathByTripID[tripID] = [.activity(activityID)]
         }
 
         await store.send(.navigation(.selectTab(.organizations))) {
@@ -74,13 +71,11 @@ struct AppNavigationFeatureTests {
         let existingTrip = UUID()
         let deletedTrip = UUID()
 
-        var initialState = AppFeature.State()
-        initialState.navigation.selectedTripID = deletedTrip
-        initialState.navigation.tripDetailPathByTripID[deletedTrip] = []
-        initialState.navigation.tripDetailPathByTripID[existingTrip] = []
-
-        let store = TestStore(initialState: initialState) {
-            AppFeature()
+        let database = try! makeNavigationTestDatabase()
+        let store = makeStore(database: database) { state in
+            state.navigation.selectedTripID = deletedTrip
+            state.navigation.tripDetailPathByTripID[deletedTrip] = []
+            state.navigation.tripDetailPathByTripID[existingTrip] = []
         }
 
         await store.send(.navigation(.reconcileAvailableTrips([existingTrip]))) {
@@ -93,11 +88,9 @@ struct AppNavigationFeatureTests {
     @Test("Organization initiated trip open selects trip and tab", .tags(.unit, .fast, .parallel, .navigation))
     func organizationInitiatedTripOpen() async {
         let tripID = UUID()
-        var initialState = AppFeature.State()
-        initialState.navigation.selectedTab = .organizations
-
-        let store = TestStore(initialState: initialState) {
-            AppFeature()
+        let database = try! makeNavigationTestDatabase()
+        let store = makeStore(database: database) { state in
+            state.navigation.selectedTab = .organizations
         }
 
         await store.send(.navigation(.selectTrip(tripID, source: .organization))) {
@@ -106,4 +99,30 @@ struct AppNavigationFeatureTests {
             $0.navigation.tripDetailPathByTripID[tripID] = []
         }
     }
+}
+
+private func makeStore(
+    database: DatabaseQueue,
+    configureState: (inout AppFeature.State) -> Void = { _ in }
+) -> TestStore<AppFeature.State, AppFeature.Action> {
+    let initialState = withDependencies {
+        $0.defaultDatabase = database
+    } operation: {
+        var state = AppFeature.State()
+        configureState(&state)
+        return state
+    }
+
+    return TestStore(initialState: initialState) {
+        AppFeature()
+    } withDependencies: {
+        $0.defaultDatabase = database
+    }
+}
+
+private func makeNavigationTestDatabase() throws -> DatabaseQueue {
+    let database = try DatabaseQueue(path: ":memory:")
+    let migrator = makeMigrator()
+    try migrator.migrate(database)
+    return database
 }

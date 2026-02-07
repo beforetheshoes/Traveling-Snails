@@ -105,7 +105,7 @@ struct ActivityAttachmentsSection: View {
     }
 
     private var addAttachmentButton: some View {
-        UnifiedFilePicker.allFiles(
+        AttachmentPickerView.allFiles(
             onSelected: { attachment in
                 addAttachment(attachment)
             },

@@ -6,7 +6,7 @@
 import Foundation
 
 /**
- * Configuration for UnifiedNavigationView appearance and behavior
+ * Configuration for EntityNavigationView appearance and behavior
  *
  * This struct contains all the customizable aspects of the navigation view,
  * including titles, empty states, and UI preferences.

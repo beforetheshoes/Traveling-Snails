@@ -10,7 +10,7 @@ import os.lock
 import SwiftUI
 
 /// Production implementation of AuthenticationService using LocalAuthentication framework
-final class ProductionAuthenticationService: AuthenticationService, Sendable {
+final class ProductionAuthenticationService: AuthenticationService, @unchecked Sendable {
     // MARK: - Properties
 
     /// Thread-safe storage
@@ -21,7 +21,7 @@ final class ProductionAuthenticationService: AuthenticationService, Sendable {
     nonisolated(unsafe) private var authenticatedTripIDs: Set<UUID> = []
 
     /// Notification handlers for state changes
-    nonisolated(unsafe) private var stateChangeHandlers: [(UUID) -> Void] = []
+    nonisolated(unsafe) private var stateChangeHandlers: [@Sendable (UUID) -> Void] = []
 
     // MARK: - AuthenticationService Implementation
 
@@ -264,7 +264,7 @@ final class ProductionAuthenticationService: AuthenticationService, Sendable {
 
     /// Add a state change handler
     /// - Parameter handler: The handler to add
-    func addStateChangeHandler(_ handler: @escaping (UUID) -> Void) {
+    func addStateChangeHandler(_ handler: @escaping @Sendable (UUID) -> Void) {
         lock.withLock { stateChangeHandlers.append(handler) }
     }
 

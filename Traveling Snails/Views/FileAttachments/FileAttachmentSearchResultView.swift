@@ -7,8 +7,13 @@
 import SwiftUI
 
 struct FileAttachmentSearchResultView: View {
+    private enum ActiveSheet: Identifiable {
+        case quickLook
+        var id: Int { 0 }
+    }
+
     let attachment: EmbeddedFileAttachment
-    @State private var showingQuickLook = false
+    @State private var activeSheet: ActiveSheet?
     @State private var thumbnailImage: UIImage?
 
     private var associatedActivity: String {
@@ -24,7 +29,7 @@ struct FileAttachmentSearchResultView: View {
 
     var body: some View {
         Button {
-            showingQuickLook = true
+            activeSheet = .quickLook
         } label: {
             HStack(spacing: 12) {
                 // File thumbnail/icon
@@ -34,14 +39,14 @@ struct FileAttachmentSearchResultView: View {
                             .resizable()
                             .aspectRatio(contentMode: .fill)
                             .frame(width: 50, height: 50)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .clipShape(.rect(cornerRadius: 8))
                     } else {
                         Image(systemName: attachment.systemIcon)
                             .font(.title2)
-                            .foregroundColor(.blue)
+                            .foregroundStyle(.blue)
                             .frame(width: 50, height: 50)
                             .background(Color.blue.opacity(0.1))
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .clipShape(.rect(cornerRadius: 8))
                     }
                 }
 
@@ -49,12 +54,12 @@ struct FileAttachmentSearchResultView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(attachment.displayName)
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundStyle(.primary)
                         .lineLimit(2)
 
                     Text(associatedActivity)
                         .font(.subheadline)
-                        .foregroundColor(.blue)
+                        .foregroundStyle(.blue)
 
                     HStack {
                         Text(attachment.fileExtension.uppercased())
@@ -62,17 +67,17 @@ struct FileAttachmentSearchResultView: View {
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(Color.secondary.opacity(0.2))
-                            .cornerRadius(4)
+                            .clipShape(.rect(cornerRadius: 4))
 
                         Text(attachment.formattedFileSize)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
 
                         Spacer()
 
                         Text(attachment.createdDate, style: .date)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
                 }
 
@@ -80,7 +85,7 @@ struct FileAttachmentSearchResultView: View {
 
                 Image(systemName: "chevron.right")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
             .padding(.vertical, 4)
         }
@@ -88,17 +93,20 @@ struct FileAttachmentSearchResultView: View {
         .onAppear {
             loadThumbnail()
         }
-        .sheet(isPresented: $showingQuickLook) {
-            CrossDeviceQuickLookView(attachment: attachment)
+        .sheet(item: $activeSheet) { sheet in
+            switch sheet {
+            case .quickLook:
+                CrossDeviceQuickLookView(attachment: attachment)
+            }
         }
     }
 
     private func loadThumbnail() {
         guard attachment.isImage, let data = attachment.fileData else { return }
 
-        DispatchQueue.global(qos: .userInitiated).async {
+        Task.detached(priority: .userInitiated) {
             if let image = UIImage(data: data) {
-                DispatchQueue.main.async {
+                await MainActor.run {
                     thumbnailImage = image
                 }
             }

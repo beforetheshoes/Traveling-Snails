@@ -79,6 +79,7 @@ struct AppFeature {
 
     @Dependency(\.continuousClock) var clock
     @Dependency(\.defaultSyncEngine) var syncEngine
+    @Dependency(\.biometricAuthClient) var biometricAuthClient
 
     private enum CancelID {
         case syncIndicator
@@ -123,6 +124,11 @@ struct AppFeature {
                 return .none
 
             case .scenePhaseChanged(let phase):
+                if phase == .background {
+                    return .run { _ in
+                        await biometricAuthClient.resetSession()
+                    }
+                }
                 if phase == .active {
                     return .run { _ in
                         try await syncEngine.sendChanges()

@@ -157,9 +157,9 @@ struct TripEditRecoveryPlan {
 // MARK: - Error Analytics
 
 enum TripEditErrorAnalytics {
-    private static var errorHistory: [TripEditErrorEvent] = []
+    nonisolated(unsafe) private static var errorHistory: [TripEditErrorEvent] = []
     private static let config = AppConfiguration.errorAnalytics
-    private static var lastCleanup = Date()
+    nonisolated(unsafe) private static var lastCleanup = Date()
 
     static func recordError(_ error: AppError, context: String, retryCount: Int) {
         // Perform periodic cleanup before adding new events
@@ -324,12 +324,10 @@ struct TripEditErrorBanner: View {
 
             // Use UIAccessibility to announce the error
             #if canImport(UIKit)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                UIAccessibility.post(
-                    notification: .announcement,
-                    argument: announcement
-                )
-            }
+            UIAccessibility.post(
+                notification: .announcement,
+                argument: announcement
+            )
             #endif
         }
     }

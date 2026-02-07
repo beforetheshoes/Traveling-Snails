@@ -12,7 +12,7 @@ import Photos
 import UIKit
 
 /// Production implementation of PermissionService using system frameworks
-final class SystemPermissionService: NSObject, PermissionService, Sendable {
+final class SystemPermissionService: NSObject, PermissionService, @unchecked Sendable {
     // MARK: - Properties
 
     private let lock = OSAllocatedUnfairLock()
@@ -320,7 +320,8 @@ extension SystemPermissionService: AdvancedPermissionService {
     }
 
     func addObserver(_ observer: PermissionServiceObserver) {
-        lock.withLock { observers.append(WeakPermissionServiceObserver(observer)) }
+        let weakObserver = WeakPermissionServiceObserver(observer)
+        lock.withLock { observers.append(weakObserver) }
     }
 
     func removeObserver(_ observer: PermissionServiceObserver) {
@@ -379,7 +380,7 @@ extension SystemPermissionService: AdvancedPermissionService {
 
 // MARK: - Weak Observer Wrapper
 
-private struct WeakPermissionServiceObserver {
+private struct WeakPermissionServiceObserver: @unchecked Sendable {
     weak var observer: PermissionServiceObserver?
 
     init(_ observer: PermissionServiceObserver) {

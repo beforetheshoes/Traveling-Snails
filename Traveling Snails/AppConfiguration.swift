@@ -301,7 +301,7 @@ enum AppConfiguration {
     // MARK: - Custom Configuration Support
 
     /// Storage for custom configurations (useful for testing)
-    private static var customConfigurations: [String: Any] = [:]
+    nonisolated(unsafe) private static var customConfigurations: [String: Any] = [:]
 
     /// Register a custom configuration
     static func setCustomConfiguration<T>(_ config: T, for key: String) {

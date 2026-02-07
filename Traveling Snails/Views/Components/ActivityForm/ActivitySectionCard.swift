@@ -6,7 +6,7 @@
 
 import SwiftUI
 
-/// Reusable section card component matching the Unified form's beautiful design
+/// Reusable section card component matching the standard form's beautiful design
 struct ActivitySectionCard<Content: View>: View {
     let headerIcon: String
     let headerTitle: String

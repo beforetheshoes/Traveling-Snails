@@ -4,19 +4,35 @@
 //
 //
 
-import Dependencies
-import SQLiteData
+import ComposableArchitecture
 import SwiftUI
 
 struct ToolsTab: View {
-    let onDataChanged: () -> Void
-    @Dependency(\.defaultDatabase) private var database
+    private enum ActiveSheet: Identifiable {
+        case exportOptions
 
-    @State private var showingResetConfirmation = false
-    @State private var showingCompactConfirmation = false
-    @State private var showingExportOptions = false
-    @State private var isPerformingOperation = false
-    @State private var operationStatus = ""
+        var id: Int { 0 }
+    }
+
+    let onDataChanged: () -> Void
+    @State private var store: StoreOf<ToolsFeature>
+    @State private var exportStore: StoreOf<DatabaseExportFeature>
+
+    init(
+        onDataChanged: @escaping () -> Void = {},
+        store: StoreOf<ToolsFeature>? = nil,
+        exportStore: StoreOf<DatabaseExportFeature>? = nil
+    ) {
+        self.onDataChanged = onDataChanged
+        let resolvedStore = store ?? Store(initialState: ToolsFeature.State()) {
+            ToolsFeature()
+        }
+        let resolvedExportStore = exportStore ?? Store(initialState: DatabaseExportFeature.State()) {
+            DatabaseExportFeature()
+        }
+        self._store = State(initialValue: resolvedStore)
+        self._exportStore = State(initialValue: resolvedExportStore)
+    }
 
     var body: some View {
         List {
@@ -26,9 +42,9 @@ struct ToolsTab: View {
                     description: "Optimize database storage and performance",
                     icon: "arrow.down.circle",
                     color: .blue,
-                    isLoading: isPerformingOperation
+                    isLoading: store.isPerformingOperation
                 ) {
-                    showingCompactConfirmation = true
+                    store.send(.compactDatabaseTapped)
                 }
 
                 MaintenanceButton(
@@ -36,9 +52,9 @@ struct ToolsTab: View {
                     description: "Fix broken relationships between objects",
                     icon: "link.circle",
                     color: .orange,
-                    isLoading: isPerformingOperation
+                    isLoading: store.isPerformingOperation
                 ) {
-                    Task { await rebuildRelationships() }
+                    store.send(.rebuildRelationshipsTapped)
                 }
 
                 MaintenanceButton(
@@ -46,9 +62,9 @@ struct ToolsTab: View {
                     description: "Check for data consistency issues",
                     icon: "checkmark.shield",
                     color: .green,
-                    isLoading: isPerformingOperation
+                    isLoading: store.isPerformingOperation
                 ) {
-                    Task { await validateDataIntegrity() }
+                    store.send(.validateDataIntegrityTapped)
                 }
             }
 
@@ -58,9 +74,9 @@ struct ToolsTab: View {
                     description: "Export database structure and statistics",
                     icon: "square.and.arrow.up",
                     color: .purple,
-                    isLoading: isPerformingOperation
+                    isLoading: store.isPerformingOperation
                 ) {
-                    showingExportOptions = true
+                    store.send(.exportOptionsTapped)
                 }
 
                 MaintenanceButton(
@@ -68,9 +84,9 @@ struct ToolsTab: View {
                     description: "Add sample data for testing purposes",
                     icon: "plus.circle.fill",
                     color: .cyan,
-                    isLoading: isPerformingOperation
+                    isLoading: store.isPerformingOperation
                 ) {
-                    Task { await createTestData() }
+                    store.send(.createTestDataTapped)
                 }
             }
 
@@ -80,168 +96,70 @@ struct ToolsTab: View {
                     description: "⚠️ Delete all data and start fresh",
                     icon: "trash.fill",
                     color: .red,
-                    isLoading: isPerformingOperation
+                    isLoading: store.isPerformingOperation
                 ) {
-                    showingResetConfirmation = true
+                    store.send(.resetAllDataTapped)
                 }
             }
 
-            if !operationStatus.isEmpty {
+            if !store.operationStatus.isEmpty {
                 Section("Operation Status") {
-                    Text(operationStatus)
+                    Text(store.operationStatus)
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
             }
         }
         .confirmationDialog(
             "Reset All Data",
-            isPresented: $showingResetConfirmation,
+            isPresented: Binding(
+                get: { store.showingResetConfirmation },
+                set: { store.send(.resetDialogChanged($0)) }
+            ),
             titleVisibility: .visible
         ) {
             Button("Reset Everything", role: .destructive) {
-                Task { await resetAllData() }
+                store.send(.confirmReset)
             }
         } message: {
             Text("This will permanently delete ALL data including trips, activities, organizations, and attachments. This action cannot be undone.")
         }
         .confirmationDialog(
             "Compact Database",
-            isPresented: $showingCompactConfirmation,
+            isPresented: Binding(
+                get: { store.showingCompactConfirmation },
+                set: { store.send(.compactDialogChanged($0)) }
+            ),
             titleVisibility: .visible
         ) {
             Button("Compact") {
-                Task { await compactDatabase() }
+                store.send(.confirmCompact)
             }
         } message: {
             Text("This will optimize the database storage. The operation may take a few moments.")
         }
-        .sheet(isPresented: $showingExportOptions) {
-            DatabaseExportView()
-        }
-    }
-
-    private func rebuildRelationships() async {
-        await MainActor.run {
-            isPerformingOperation = true
-            operationStatus = "Rebuilding relationships..."
-        }
-
-        // Simulate relationship rebuilding
-        try? await Task.sleep(nanoseconds: 2_000_000_000)
-
-        await MainActor.run {
-            operationStatus = "Relationships rebuilt successfully"
-            isPerformingOperation = false
-            onDataChanged()
-        }
-    }
-
-    private func validateDataIntegrity() async {
-        await MainActor.run {
-            isPerformingOperation = true
-            operationStatus = "Validating data integrity..."
-        }
-
-        // Simulate validation
-        try? await Task.sleep(nanoseconds: 1_500_000_000)
-
-        await MainActor.run {
-            operationStatus = "Data integrity check completed"
-            isPerformingOperation = false
-        }
-    }
-
-    private func compactDatabase() async {
-        await MainActor.run {
-            isPerformingOperation = true
-            operationStatus = "Compacting database..."
-        }
-
-        // Simulate compaction
-        try? await Task.sleep(nanoseconds: 3_000_000_000)
-
-        await MainActor.run {
-            operationStatus = "Database compacted successfully"
-            isPerformingOperation = false
-        }
-    }
-
-    private func createTestData() async {
-        await MainActor.run {
-            isPerformingOperation = true
-            operationStatus = "Creating test data..."
-        }
-
-        do {
-            let testTrip = Trip(name: "Test Trip \(Date().timeIntervalSince1970)")
-            let testOrg = Organization(name: "Test Organization")
-            let testTransportation = Transportation(
-                name: "Test Flight",
-                start: Date(),
-                end: Date().addingTimeInterval(3600),
-                trip: testTrip,
-                organization: testOrg
-            )
-
-            try await database.write { db in
-                try Trip.upsert { testTrip }.execute(db)
-                try Organization.upsert { testOrg }.execute(db)
-                try Transportation.upsert { testTransportation }.execute(db)
+        .sheet(item: exportSheet) { sheet in
+            switch sheet {
+            case .exportOptions:
+                DatabaseExportView(store: exportStore)
             }
-        } catch {
-            Logger.shared.error("Failed to create test data: \(error.localizedDescription)", category: .database)
         }
-
-        await MainActor.run {
-            operationStatus = "Test data created successfully"
-            isPerformingOperation = false
-            onDataChanged()
-        }
-    }
-
-    private func resetAllData() async {
-        await MainActor.run {
-            isPerformingOperation = true
-            operationStatus = "Resetting all data..."
-        }
-
-        do {
-            let (tripIDs, orgIDs, addressIDs) = try await database.read { db in
-                let trips = try Trip.fetchAll(db)
-                let organizations = try Organization.fetchAll(db)
-                let addresses = try Address.fetchAll(db)
-                return (trips.map(\.id), organizations.map(\.id), addresses.map(\.id))
-            }
-
-            let tripCount = tripIDs.count
-            let orgCount = orgIDs.count
-            let addressCount = addressIDs.count
-
-            try await database.write { db in
-                if !tripIDs.isEmpty {
-                    try Trip.where { $0.id.in(tripIDs) }.delete().execute(db)
-                }
-                if !orgIDs.isEmpty {
-                    try Organization.where { $0.name.neq("None") }.delete().execute(db)
-                }
-                if !addressIDs.isEmpty {
-                    try Address.where { $0.id.in(addressIDs) }.delete().execute(db)
-                }
-            }
-
-            await MainActor.run {
-                operationStatus = "Reset complete: Removed \(tripCount) trips, \(orgCount) organizations, \(addressCount) addresses"
-                isPerformingOperation = false
+        .onChange(of: store.operationStatus) { _, _ in
+            if !store.isPerformingOperation {
                 onDataChanged()
             }
-        } catch {
-            await MainActor.run {
-                operationStatus = L(L10n.Database.Operations.resetFailed)
-                isPerformingOperation = false
-            }
-            Logger.shared.error("Failed to reset data: \(error.localizedDescription)", category: .database)
         }
+    }
+
+    private var exportSheet: Binding<ActiveSheet?> {
+        Binding(
+            get: {
+                store.showingExportOptions ? .exportOptions : nil
+            },
+            set: { newValue in
+                store.send(.exportSheetChanged(newValue != nil))
+            }
+        )
     }
 }
 
@@ -258,17 +176,17 @@ private struct MaintenanceButton: View {
             HStack(spacing: 12) {
                 Image(systemName: icon)
                     .font(.title2)
-                    .foregroundColor(color)
+                    .foregroundStyle(color)
                     .frame(width: 30)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
                         .font(.headline)
-                        .foregroundColor(.primary)
+                        .foregroundStyle(.primary)
 
                     Text(description)
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                         .lineLimit(2)
                 }
 

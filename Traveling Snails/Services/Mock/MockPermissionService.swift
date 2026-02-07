@@ -215,7 +215,7 @@ final class MockPermissionService: PermissionService, Sendable {
     }
 
     /// Get count of openAppSettings calls
-    func getOpenAppSettingsCallCount() -> Int {
+    func getOpenSettingsClientCallCount() -> Int {
         getRequestCallCount(for: "openAppSettings")
     }
 }

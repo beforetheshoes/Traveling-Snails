@@ -4,13 +4,14 @@
 //
 //
 
-import Dependencies
+import ComposableArchitecture
 import SQLiteData
 import SwiftUI
 
 /// Comprehensive data browser and troubleshooting suite for SQLiteData
 struct DataBrowserView: View {
     @Environment(\.dismiss) private var dismiss
+    @Bindable var store: StoreOf<DataBrowserFeature>
 
     @FetchAll private var allTrips: [Trip]
     @FetchAll private var allTransportation: [Transportation]
@@ -20,152 +21,63 @@ struct DataBrowserView: View {
     @FetchAll private var allAddresses: [Address]
     @FetchAll private var allAttachments: [EmbeddedFileAttachment]
 
-    @State private var selectedTab = 0
-    @State private var diagnosticResults = DiagnosticResults()
-    @State private var isRunning = false
-    @State private var showingFixOptions = false
-    @State private var selectedIssue: IssueType?
+    typealias IssueType = DataBrowserFeature.IssueType
+    typealias DiagnosticResults = DataBrowserFeature.DiagnosticResults
 
-    enum IssueType: String, CaseIterable {
-        case blankEntries = "Blank Entries"
-        case orphanedData = "Orphaned Data"
-        case duplicateRelationships = "Duplicate Relationships"
-        case invalidTimezones = "Invalid Timezones"
-        case invalidDates = "Invalid Dates"
-        case missingOrganizations = "Missing Organizations"
-        case unusedAddresses = "Unused Addresses"
-        case brokenAttachments = "Broken Attachments"
-
-        var icon: String {
-            switch self {
-            case .blankEntries: return "doc.text"
-            case .orphanedData: return "link.badge.plus"
-            case .duplicateRelationships: return "arrow.triangle.2.circlepath"
-            case .invalidTimezones: return "clock.badge.exclamationmark"
-            case .invalidDates: return "calendar.badge.exclamationmark"
-            case .missingOrganizations: return "building.2.crop.circle.badge.plus"
-            case .unusedAddresses: return "mappin.slash"
-            case .brokenAttachments: return "paperclip.badge.ellipsis"
-            }
-        }
-
-        var color: Color {
-            switch self {
-            case .blankEntries, .orphanedData: return .red
-            case .duplicateRelationships, .invalidTimezones, .invalidDates: return .orange
-            case .missingOrganizations, .unusedAddresses, .brokenAttachments: return .yellow
-            }
-        }
-    }
-
-    struct DiagnosticResults {
-        // Data counts
-        var totalTrips: Int = 0
-        var totalTransportation: Int = 0
-        var totalLodging: Int = 0
-        var totalActivities: Int = 0
-        var totalOrganizations: Int = 0
-        var totalAddresses: Int = 0
-        var totalAttachments: Int = 0
-
-        // Issues
-        var blankTransportation: [Transportation] = []
-        var blankLodging: [Lodging] = []
-        var blankActivities: [Activity] = []
-
-        var orphanedTransportation: [Transportation] = []
-        var orphanedLodging: [Lodging] = []
-        var orphanedActivities: [Activity] = []
-        var orphanedAddresses: [Address] = []
-        var orphanedAttachments: [EmbeddedFileAttachment] = []
-
-        var duplicateTransportation: [(Trip, [Transportation])] = []
-        var duplicateLodging: [(Trip, [Lodging])] = []
-        var duplicateActivities: [(Trip, [Activity])] = []
-
-        var invalidTimezoneTransportation: [Transportation] = []
-        var invalidTimezoneLodging: [Lodging] = []
-        var invalidTimezoneActivities: [Activity] = []
-
-        var invalidDateTransportation: [Transportation] = []
-        var invalidDateLodging: [Lodging] = []
-        var invalidDateActivities: [Activity] = []
-
-        var activitiesWithoutOrganizations: [String] = []
-        var brokenAttachments: [EmbeddedFileAttachment] = []
-
-        var lastRunDate: Date?
-
-        var totalIssues: Int {
-            blankTransportation.count + blankLodging.count + blankActivities.count +
-            orphanedTransportation.count + orphanedLodging.count + orphanedActivities.count +
-            orphanedAddresses.count + orphanedAttachments.count +
-            duplicateTransportation.count + duplicateLodging.count + duplicateActivities.count +
-            invalidTimezoneTransportation.count + invalidTimezoneLodging.count + invalidTimezoneActivities.count +
-            invalidDateTransportation.count + invalidDateLodging.count + invalidDateActivities.count +
-            activitiesWithoutOrganizations.count + brokenAttachments.count
-        }
-
-        var hasIssues: Bool { totalIssues > 0 }
-
-        func issueCount(for type: IssueType) -> Int {
-            switch type {
-            case .blankEntries:
-                return blankTransportation.count + blankLodging.count + blankActivities.count
-            case .orphanedData:
-                return orphanedTransportation.count + orphanedLodging.count + orphanedActivities.count + orphanedAddresses.count + orphanedAttachments.count
-            case .duplicateRelationships:
-                return duplicateTransportation.count + duplicateLodging.count + duplicateActivities.count
-            case .invalidTimezones:
-                return invalidTimezoneTransportation.count + invalidTimezoneLodging.count + invalidTimezoneActivities.count
-            case .invalidDates:
-                return invalidDateTransportation.count + invalidDateLodging.count + invalidDateActivities.count
-            case .missingOrganizations:
-                return activitiesWithoutOrganizations.count
-            case .unusedAddresses:
-                return orphanedAddresses.count
-            case .brokenAttachments:
-                return brokenAttachments.count
-            }
-        }
+    private var snapshot: DataBrowserFeature.DataSnapshot {
+        .init(
+            trips: allTrips,
+            transportation: allTransportation,
+            lodging: allLodging,
+            activities: allActivities,
+            organizations: allOrganizations,
+            addresses: allAddresses,
+            attachments: allAttachments
+        )
     }
 
     var body: some View {
         NavigationStack {
-            TabView(selection: $selectedTab) {
+            TabView(selection: Binding(
+                get: { store.selectedTab },
+                set: { store.send(.selectedTabChanged($0)) }
+            )) {
                 // Overview Tab
                 DataBrowserOverviewTab(
-                    results: diagnosticResults,
-                    isRunning: isRunning,
-                    onRunDiagnostic: runComprehensiveDiagnostic
-                ) { showingFixOptions = true }
+                    results: store.diagnosticResults,
+                    isRunning: store.isRunning,
+                    onRunDiagnostic: { store.send(.runDiagnostic(snapshot)) },
+                    onShowFixes: { store.send(.fixOptionsChanged(true)) }
+                )
                 .tabItem {
                     Label("Overview", systemImage: "chart.pie")
                 }
                 .tag(0)
 
                 // Database Browser Tab
-                DatabaseBrowserTab()
+                DatabaseBrowserTab(
+                    store: store.scope(state: \.databaseBrowser, action: \.databaseBrowser)
+                )
                 .tabItem {
                     Label("Browse", systemImage: "folder")
                 }
                 .tag(1)
 
                 // Issues Tab
-                DataBrowserIssuesTab(results: diagnosticResults) { issue in
-                    selectedIssue = issue
-                    showingFixOptions = true
+                DataBrowserIssuesTab(results: store.diagnosticResults) { issue in
+                    store.send(.issueSelected(issue))
                 }
                 .tabItem {
                     Label("Issues", systemImage: "exclamationmark.triangle")
                 }
                 .tag(2)
-                .badge(diagnosticResults.hasIssues ? diagnosticResults.totalIssues : 0)
+                .badge(store.diagnosticResults.hasIssues ? store.diagnosticResults.totalIssues : 0)
 
                 // Tools Tab
-                ToolsTab {
-                    Task { await runComprehensiveDiagnostic() }
-                }
+                ToolsTab(
+                    onDataChanged: { store.send(.runDiagnostic(snapshot)) },
+                    store: store.scope(state: \.tools, action: \.tools)
+                )
                 .tabItem {
                     Label("Tools", systemImage: "wrench.and.screwdriver")
                 }
@@ -180,134 +92,25 @@ struct DataBrowserView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showingFixOptions) {
-                DataBrowserIssueFixerSheet(
-                    results: diagnosticResults,
-                    selectedIssue: selectedIssue
-                ) {
-                        showingFixOptions = false
-                        selectedIssue = nil
-                        Task { await runComprehensiveDiagnostic() }
+            .sheet(item: Binding(
+                get: { store.issueFixer },
+                set: { issueFixer in
+                    if issueFixer == nil {
+                        store.send(.issueFixerDismissed)
+                    }
+                }
+            )) {
+                _ in
+                if let issueFixerStore = store.scope(state: \.issueFixer, action: \.issueFixer) {
+                    DataBrowserIssueFixerSheet(onFixed: {
+                        store.send(.fixOptionsChanged(false))
+                        store.send(.runDiagnostic(snapshot))
+                    }, store: issueFixerStore)
                 }
             }
         }
         .onAppear {
-            Task { await runComprehensiveDiagnostic() }
-        }
-    }
-
-    private func runComprehensiveDiagnostic() async {
-        await MainActor.run { isRunning = true }
-
-        let results = await withCheckedContinuation { continuation in
-            Task {
-                var diagnostic = DiagnosticResults()
-
-                // Count totals
-                diagnostic.totalTrips = allTrips.count
-                diagnostic.totalTransportation = allTransportation.count
-                diagnostic.totalLodging = allLodging.count
-                diagnostic.totalActivities = allActivities.count
-                diagnostic.totalOrganizations = allOrganizations.count
-                diagnostic.totalAddresses = allAddresses.count
-                diagnostic.totalAttachments = allAttachments.count
-
-                // Find blank entries
-                diagnostic.blankTransportation = allTransportation.filter {
-                    $0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                }
-                diagnostic.blankLodging = allLodging.filter {
-                    $0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                }
-                diagnostic.blankActivities = allActivities.filter {
-                    $0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                }
-
-                // Find orphaned entries
-                diagnostic.orphanedTransportation = allTransportation.filter { $0.trip == nil }
-                diagnostic.orphanedLodging = allLodging.filter { $0.trip == nil }
-                diagnostic.orphanedActivities = allActivities.filter { $0.trip == nil }
-
-                // Find orphaned addresses
-                diagnostic.orphanedAddresses = allAddresses.filter { address in
-                    address.organizations.isEmpty &&
-                    address.activities.isEmpty &&
-                    address.lodgings.isEmpty
-                }
-
-                // Find orphaned attachments
-                diagnostic.orphanedAttachments = allAttachments.filter { attachment in
-                    attachment.activity == nil &&
-                    attachment.lodging == nil &&
-                    attachment.transportation == nil
-                }
-
-                // Check for duplicate relationships
-                for trip in allTrips {
-                    let transportationUniqueIds = Set(trip.transportation.map { $0.id })
-                    if transportationUniqueIds.count != trip.transportation.count {
-                        diagnostic.duplicateTransportation.append((trip, trip.transportation))
-                    }
-
-                    let lodgingUniqueIds = Set(trip.lodging.map { $0.id })
-                    if lodgingUniqueIds.count != trip.lodging.count {
-                        diagnostic.duplicateLodging.append((trip, trip.lodging))
-                    }
-
-                    let activityUniqueIds = Set(trip.activity.map { $0.id })
-                    if activityUniqueIds.count != trip.activity.count {
-                        diagnostic.duplicateActivities.append((trip, trip.activity))
-                    }
-                }
-
-                // Check for invalid timezones
-                diagnostic.invalidTimezoneTransportation = allTransportation.filter {
-                    TimeZone(identifier: $0.startTZId) == nil || TimeZone(identifier: $0.endTZId) == nil
-                }
-                diagnostic.invalidTimezoneLodging = allLodging.filter {
-                    TimeZone(identifier: $0.startTZId) == nil || TimeZone(identifier: $0.endTZId) == nil
-                }
-                diagnostic.invalidTimezoneActivities = allActivities.filter {
-                    TimeZone(identifier: $0.startTZId) == nil || TimeZone(identifier: $0.endTZId) == nil
-                }
-
-                // Check for invalid dates
-                diagnostic.invalidDateTransportation = allTransportation.filter { $0.start >= $0.end }
-                diagnostic.invalidDateLodging = allLodging.filter { $0.start >= $0.end }
-                diagnostic.invalidDateActivities = allActivities.filter { $0.start >= $0.end }
-
-                // Check for activities without organizations
-                var activitiesWithoutOrgs: [String] = []
-                for transportation in allTransportation {
-                    if transportation.organization == nil {
-                        activitiesWithoutOrgs.append("Transportation: \(transportation.name)")
-                    }
-                }
-                for lodging in allLodging {
-                    if lodging.organization == nil {
-                        activitiesWithoutOrgs.append("Lodging: \(lodging.name)")
-                    }
-                }
-                for activity in allActivities {
-                    if activity.organization == nil {
-                        activitiesWithoutOrgs.append("Activity: \(activity.name)")
-                    }
-                }
-                diagnostic.activitiesWithoutOrganizations = activitiesWithoutOrgs
-
-                // Check for broken attachments
-                diagnostic.brokenAttachments = allAttachments.filter {
-                    $0.fileData == nil || $0.fileData?.isEmpty == true
-                }
-
-                diagnostic.lastRunDate = Date()
-                continuation.resume(returning: diagnostic)
-            }
-        }
-
-        await MainActor.run {
-            diagnosticResults = results
-            isRunning = false
+            store.send(.runDiagnostic(snapshot))
         }
     }
 }
@@ -316,7 +119,7 @@ struct DataBrowserView: View {
 private struct DataBrowserOverviewTab: View {
     let results: DataBrowserView.DiagnosticResults
     let isRunning: Bool
-    let onRunDiagnostic: () async -> Void
+    let onRunDiagnostic: () -> Void
     let onShowFixes: () -> Void
 
     var body: some View {
@@ -329,18 +132,18 @@ private struct DataBrowserOverviewTab: View {
 
             Section("Diagnostic Actions") {
                 Button {
-                    Task { await onRunDiagnostic() }
+                    onRunDiagnostic()
                 } label: {
                     HStack {
                         Image(systemName: isRunning ? "clock" : "stethoscope")
-                            .foregroundColor(.blue)
+                            .foregroundStyle(.blue)
 
                         VStack(alignment: .leading) {
                             Text("Run Full Diagnostic")
                             if let lastRun = results.lastRunDate {
                                 Text("Last run: \(lastRun, style: .relative) ago")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundStyle(.secondary)
                             }
                         }
 
@@ -360,13 +163,13 @@ private struct DataBrowserOverviewTab: View {
                     } label: {
                         HStack {
                             Image(systemName: "wrench.and.screwdriver")
-                                .foregroundColor(.orange)
+                                .foregroundStyle(.orange)
 
                             VStack(alignment: .leading) {
                                 Text("Fix Issues")
                                 Text("\(results.totalIssues) issues found")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundStyle(.secondary)
                             }
                         }
                     }
@@ -380,7 +183,7 @@ private struct DataBrowserOverviewTab: View {
                         if count > 0 {
                             HStack {
                                 Image(systemName: issueType.icon)
-                                    .foregroundColor(issueType.color)
+                                    .foregroundStyle(issueType.color)
 
                                 Text(issueType.rawValue)
 
@@ -388,7 +191,7 @@ private struct DataBrowserOverviewTab: View {
 
                                 Text("\(count)")
                                     .font(.headline)
-                                    .foregroundColor(issueType.color)
+                                    .foregroundStyle(issueType.color)
                             }
                         }
                     }
@@ -436,7 +239,7 @@ private struct DatabaseStatCard: View {
         VStack(spacing: 8) {
             Image(systemName: icon)
                 .font(.title2)
-                .foregroundColor(color)
+                .foregroundStyle(color)
 
             Text("\(count)")
                 .font(.title2)
@@ -444,13 +247,13 @@ private struct DatabaseStatCard: View {
 
             Text(title)
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
         .padding()
         .background(color.opacity(0.1))
-        .cornerRadius(12)
+        .clipShape(.rect(cornerRadius: 12))
     }
 }
 
@@ -468,7 +271,7 @@ private struct DataBrowserIssuesTab: View {
                     VStack(spacing: 16) {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.system(size: 60))
-                            .foregroundColor(.green)
+                            .foregroundStyle(.green)
 
                         Text("No Issues Found")
                             .font(.title2)
@@ -476,7 +279,7 @@ private struct DataBrowserIssuesTab: View {
 
                         Text("Your database is in good shape! All relationships are properly connected and no orphaned data was found.")
                             .font(.body)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
                     }
                     .frame(maxWidth: .infinity)
@@ -586,7 +389,7 @@ private struct IssueRowView: View {
         HStack(spacing: 12) {
             Image(systemName: type.icon)
                 .font(.title2)
-                .foregroundColor(type.color)
+                .foregroundStyle(type.color)
                 .frame(width: 30)
 
             VStack(alignment: .leading, spacing: 4) {
@@ -599,53 +402,60 @@ private struct IssueRowView: View {
                     Text("\(count)")
                         .font(.title3)
                         .fontWeight(.bold)
-                        .foregroundColor(type.color)
+                        .foregroundStyle(type.color)
                 }
 
                 Text(description)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                     .lineLimit(2)
             }
 
             Image(systemName: "chevron.right")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
         }
         .padding(.vertical, 4)
     }
 }
 
-// MARK: - Issue Fixer Sheet
-struct DataBrowserIssueFixerSheet: View {
-    let results: DataBrowserView.DiagnosticResults
-    let selectedIssue: DataBrowserView.IssueType?
+private struct DataBrowserIssueFixerSheet: View {
     let onFixed: () -> Void
 
-    @Dependency(\.defaultDatabase) private var database
+    @Bindable var store: StoreOf<DataBrowserIssueFixerFeature>
     @Environment(\.dismiss) private var dismiss
-    @State private var isFixing = false
-    @State private var fixResults: [String] = []
+
+    init(
+        onFixed: @escaping () -> Void,
+        store: StoreOf<DataBrowserIssueFixerFeature>
+    ) {
+        self.onFixed = onFixed
+        self.store = store
+    }
 
     var body: some View {
         NavigationStack {
             VStack {
-                if let issue = selectedIssue {
+                if let issue = store.selectedIssue {
                     IssueFixerContent(
                         issue: issue,
-                        results: results,
-                        isFixing: isFixing,
-                        fixResults: fixResults
-                    ) { await fixIssue(issue) }
+                        results: store.results,
+                        isFixing: store.isFixing,
+                        fixResults: store.fixResults
+                    ) {
+                        store.send(.fixIssueTapped(issue))
+                    }
                 } else {
                     AllIssuesFixerContent(
-                        results: results,
-                        isFixing: isFixing,
-                        fixResults: fixResults
-                    ) { await fixAllIssues() }
+                        results: store.results,
+                        isFixing: store.isFixing,
+                        fixResults: store.fixResults
+                    ) {
+                        store.send(.fixAllTapped)
+                    }
                 }
             }
-            .navigationTitle(selectedIssue?.rawValue ?? "Fix All Issues")
+            .navigationTitle(store.selectedIssue?.rawValue ?? "Fix All Issues")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -657,171 +467,9 @@ struct DataBrowserIssueFixerSheet: View {
                         onFixed()
                         dismiss()
                     }
-                    .disabled(isFixing)
+                    .disabled(store.isFixing)
                 }
             }
-        }
-    }
-
-    private func fixIssue(_ issue: DataBrowserView.IssueType) async {
-        await MainActor.run {
-            isFixing = true
-            fixResults = []
-        }
-
-        var results: [String] = []
-
-        switch issue {
-        case .blankEntries:
-            results.append("Deleting blank entries...")
-
-            do {
-                let transportationIDs = self.results.blankTransportation.map(\.id)
-                let lodgingIDs = self.results.blankLodging.map(\.id)
-                let activityIDs = self.results.blankActivities.map(\.id)
-
-                try await database.write { db in
-                    if !transportationIDs.isEmpty {
-                        try Transportation.where { $0.id.in(transportationIDs) }.delete().execute(db)
-                    }
-                    if !lodgingIDs.isEmpty {
-                        try Lodging.where { $0.id.in(lodgingIDs) }.delete().execute(db)
-                    }
-                    if !activityIDs.isEmpty {
-                        try Activity.where { $0.id.in(activityIDs) }.delete().execute(db)
-                    }
-                }
-
-                results.append("Deleted blank transportation, lodging, and activity entries")
-            } catch {
-                Logger.shared.error("Failed to delete blank entries: \(error.localizedDescription)", category: .database)
-                results.append("❌ \(L(L10n.Database.Operations.cleanupFailed))")
-            }
-
-        case .orphanedData:
-            results.append("Deleting orphaned data...")
-
-            do {
-                let transportationIDs = self.results.orphanedTransportation.map(\.id)
-                let lodgingIDs = self.results.orphanedLodging.map(\.id)
-                let activityIDs = self.results.orphanedActivities.map(\.id)
-                let addressIDs = self.results.orphanedAddresses.map(\.id)
-                let attachmentIDs = self.results.orphanedAttachments.map(\.id)
-
-                try await database.write { db in
-                    if !transportationIDs.isEmpty {
-                        try Transportation.where { $0.id.in(transportationIDs) }.delete().execute(db)
-                    }
-                    if !lodgingIDs.isEmpty {
-                        try Lodging.where { $0.id.in(lodgingIDs) }.delete().execute(db)
-                    }
-                    if !activityIDs.isEmpty {
-                        try Activity.where { $0.id.in(activityIDs) }.delete().execute(db)
-                    }
-                    if !addressIDs.isEmpty {
-                        try Address.where { $0.id.in(addressIDs) }.delete().execute(db)
-                    }
-                    if !attachmentIDs.isEmpty {
-                        try EmbeddedFileAttachment.where { $0.id.in(attachmentIDs) }.delete().execute(db)
-                    }
-                }
-
-                results.append("Deleted orphaned transportation, lodging, activities, addresses, and attachments")
-            } catch {
-                Logger.shared.error("Failed to delete orphaned data: \(error.localizedDescription)", category: .database)
-                results.append("❌ \(L(L10n.Database.Operations.cleanupFailed))")
-            }
-
-        case .duplicateRelationships:
-            results.append("Duplicate relationship repair is not supported in SQLiteData")
-
-        case .invalidTimezones:
-            results.append("Fixing invalid timezones...")
-
-            let defaultTZ = TimeZone.current.identifier
-
-            do {
-                try await database.write { db in
-                    for transportation in self.results.invalidTimezoneTransportation {
-                        try Transportation.find(transportation.id).update {
-                            $0.startTZId = defaultTZ
-                            $0.endTZId = defaultTZ
-                        }.execute(db)
-                    }
-                    for lodging in self.results.invalidTimezoneLodging {
-                        try Lodging.find(lodging.id).update {
-                            $0.checkInTZId = defaultTZ
-                            $0.checkOutTZId = defaultTZ
-                        }.execute(db)
-                    }
-                    for activity in self.results.invalidTimezoneActivities {
-                        try Activity.find(activity.id).update {
-                            $0.startTZId = defaultTZ
-                            $0.endTZId = defaultTZ
-                        }.execute(db)
-                    }
-                }
-
-                results.append("Fixed timezones for transportation, lodging, and activities")
-            } catch {
-                Logger.shared.error("Failed to fix timezones: \(error.localizedDescription)", category: .database)
-                results.append("❌ \(L(L10n.Database.Operations.cleanupFailed))")
-            }
-
-        case .invalidDates:
-            results.append("Fixing invalid dates...")
-
-            do {
-                try await database.write { db in
-                    for transportation in self.results.invalidDateTransportation {
-                        try Transportation.find(transportation.id).update {
-                            $0.end = transportation.start.addingTimeInterval(3600)
-                        }.execute(db)
-                    }
-                    for lodging in self.results.invalidDateLodging {
-                        try Lodging.find(lodging.id).update {
-                            $0.end = lodging.start.addingTimeInterval(24 * 3600)
-                        }.execute(db)
-                    }
-                    for activity in self.results.invalidDateActivities {
-                        try Activity.find(activity.id).update {
-                            $0.end = activity.start.addingTimeInterval(3600)
-                        }.execute(db)
-                    }
-                }
-
-                results.append("Fixed invalid dates for transportation, lodging, and activities")
-            } catch {
-                Logger.shared.error("Failed to fix dates: \(error.localizedDescription)", category: .database)
-                results.append("❌ \(L(L10n.Database.Operations.cleanupFailed))")
-            }
-
-        case .missingOrganizations, .unusedAddresses, .brokenAttachments:
-            results.append("This fix is not yet implemented")
-        }
-
-        await MainActor.run {
-            fixResults = results
-            isFixing = false
-        }
-    }
-
-    private func fixAllIssues() async {
-        await MainActor.run {
-            isFixing = true
-            fixResults = ["Starting to fix all issues..."]
-        }
-
-        // Fix each issue type
-        for issueType in DataBrowserView.IssueType.allCases {
-            if results.issueCount(for: issueType) > 0 {
-                await fixIssue(issueType)
-            }
-        }
-
-        await MainActor.run {
-            fixResults.append("✅ All issues have been processed")
-            isFixing = false
         }
     }
 }
@@ -831,7 +479,7 @@ private struct IssueFixerContent: View {
     let results: DataBrowserView.DiagnosticResults
     let isFixing: Bool
     let fixResults: [String]
-    let onFix: () async -> Void
+    let onFix: () -> Void
 
     var body: some View {
         VStack(spacing: 20) {
@@ -839,7 +487,7 @@ private struct IssueFixerContent: View {
             VStack(spacing: 12) {
                 Image(systemName: issue.icon)
                     .font(.system(size: 60))
-                    .foregroundColor(issue.color)
+                    .foregroundStyle(issue.color)
 
                 Text(issue.rawValue)
                     .font(.title2)
@@ -847,20 +495,18 @@ private struct IssueFixerContent: View {
 
                 Text("\(results.issueCount(for: issue)) issues found")
                     .font(.headline)
-                    .foregroundColor(issue.color)
+                    .foregroundStyle(issue.color)
             }
 
             // Fix button
             if !isFixing && fixResults.isEmpty {
-                Button {
-                    Task { await onFix() }
-                } label: {
+                Button(action: onFix) {
                     Text("Fix \(issue.rawValue)")
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(issue.color)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
+                        .foregroundStyle(.white)
+                        .clipShape(.rect(cornerRadius: 12))
                 }
                 .padding(.horizontal)
             }
@@ -877,14 +523,14 @@ private struct IssueFixerContent: View {
                         ForEach(fixResults, id: \.self) { result in
                             Text(result)
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(.secondary)
                         }
                     }
                     .padding()
                 }
                 .frame(maxHeight: 200)
                 .background(Color(.systemGray6))
-                .cornerRadius(12)
+                .clipShape(.rect(cornerRadius: 12))
                 .padding(.horizontal)
             }
 
@@ -898,7 +544,7 @@ private struct AllIssuesFixerContent: View {
     let results: DataBrowserView.DiagnosticResults
     let isFixing: Bool
     let fixResults: [String]
-    let onFixAll: () async -> Void
+    let onFixAll: () -> Void
     @State private var showingDetails = false
 
     var body: some View {
@@ -906,7 +552,7 @@ private struct AllIssuesFixerContent: View {
             VStack(spacing: 12) {
                 Image(systemName: "wrench.and.screwdriver.fill")
                     .font(.system(size: 60))
-                    .foregroundColor(.orange)
+                    .foregroundStyle(.orange)
 
                 Text("Fix All Issues")
                     .font(.title2)
@@ -914,7 +560,7 @@ private struct AllIssuesFixerContent: View {
 
                 Text("\(results.totalIssues) total issues found")
                     .font(.headline)
-                    .foregroundColor(.orange)
+                    .foregroundStyle(.orange)
             }
 
             if !isFixing && fixResults.isEmpty {
@@ -929,8 +575,8 @@ private struct AllIssuesFixerContent: View {
                         .frame(maxWidth: .infinity)
                         .padding()
                         .background(Color(.systemGray5))
-                        .foregroundColor(.primary)
-                        .cornerRadius(12)
+                        .foregroundStyle(.primary)
+                        .clipShape(.rect(cornerRadius: 12))
                     }
 
                     if showingDetails {
@@ -942,27 +588,27 @@ private struct AllIssuesFixerContent: View {
                                         VStack(alignment: .leading, spacing: 8) {
                                             HStack {
                                                 Image(systemName: issueType.icon)
-                                                    .foregroundColor(issueType.color)
+                                                    .foregroundStyle(issueType.color)
                                                 Text(issueType.rawValue)
                                                     .font(.headline)
                                                 Spacer()
                                                 Text("\(count)")
                                                     .font(.headline)
-                                                    .foregroundColor(issueType.color)
+                                                    .foregroundStyle(issueType.color)
                                             }
 
                                             VStack(alignment: .leading, spacing: 4) {
                                                 ForEach(getDetailedItems(for: issueType), id: \.self) { item in
                                                     Text("• \(item)")
                                                         .font(.caption)
-                                                        .foregroundColor(.secondary)
+                                                        .foregroundStyle(.secondary)
                                                         .padding(.leading, 24)
                                                 }
                                             }
                                         }
                                         .padding()
                                         .background(issueType.color.opacity(0.1))
-                                        .cornerRadius(8)
+                                        .clipShape(.rect(cornerRadius: 8))
                                     }
                                 }
                             }
@@ -970,18 +616,16 @@ private struct AllIssuesFixerContent: View {
                         }
                         .frame(maxHeight: 250)
                         .background(Color(.systemGray6))
-                        .cornerRadius(12)
+                        .clipShape(.rect(cornerRadius: 12))
                     }
 
-                    Button {
-                        Task { await onFixAll() }
-                    } label: {
+                    Button(action: onFixAll) {
                         Text("Fix All Issues")
                             .frame(maxWidth: .infinity)
                             .padding()
                             .background(.orange)
-                            .foregroundColor(.white)
-                            .cornerRadius(12)
+                            .foregroundStyle(.white)
+                            .clipShape(.rect(cornerRadius: 12))
                     }
                 }
                 .padding(.horizontal)
@@ -998,14 +642,14 @@ private struct AllIssuesFixerContent: View {
                         ForEach(fixResults, id: \.self) { result in
                             Text(result)
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(.secondary)
                         }
                     }
                     .padding()
                 }
                 .frame(maxHeight: 300)
                 .background(Color(.systemGray6))
-                .cornerRadius(12)
+                .clipShape(.rect(cornerRadius: 12))
                 .padding(.horizontal)
             }
 
@@ -1087,50 +731,45 @@ private struct IssueRowWithDetailsView: View {
     var body: some View {
         VStack(spacing: 0) {
             // Main issue header
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Image(systemName: type.icon)
-                            .foregroundColor(type.color)
-                            .font(.headline)
+            Button(action: onToggleExpanded) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Image(systemName: type.icon)
+                                .foregroundStyle(type.color)
+                                .font(.headline)
 
-                        Text(type.rawValue)
-                            .font(.headline)
-                            .fontWeight(.semibold)
+                            Text(type.rawValue)
+                                .font(.headline)
+                                .fontWeight(.semibold)
 
-                        Spacer()
+                            Spacer()
 
-                        Text("\(count)")
-                            .font(.headline)
-                            .fontWeight(.bold)
-                            .foregroundColor(type.color)
+                            Text("\(count)")
+                                .font(.headline)
+                                .fontWeight(.bold)
+                                .foregroundStyle(type.color)
+                        }
+
+                        Text(description)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.leading)
                     }
 
-                    Text(description)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.leading)
-                }
+                    Spacer()
 
-                Spacer()
-
-                // Toggle details button
-                Button(action: onToggleExpanded) {
                     HStack(spacing: 4) {
                         Text(isExpanded ? "Hide" : "Show")
                             .font(.caption)
                         Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                             .font(.caption)
                     }
-                    .foregroundColor(.blue)
+                    .foregroundStyle(.blue)
                 }
-                .buttonStyle(PlainButtonStyle())
             }
+            .buttonStyle(.plain)
             .padding(.vertical, 8)
-            .contentShape(Rectangle())
-            .onTapGesture {
-                onToggleExpanded()
-            }
 
             // Fix button
             HStack {
@@ -1142,8 +781,8 @@ private struct IssueRowWithDetailsView: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
                 .background(type.color.opacity(0.2))
-                .foregroundColor(type.color)
-                .cornerRadius(8)
+                .foregroundStyle(type.color)
+                .clipShape(.rect(cornerRadius: 8))
             }
             .padding(.top, 4)
         }
@@ -1162,14 +801,14 @@ private struct IssueDetailsList: View {
                 Text("Affected Items:")
                     .font(.caption)
                     .fontWeight(.semibold)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                     .padding(.leading, 24)
 
                 VStack(alignment: .leading, spacing: 3) {
                     ForEach(detailedItems, id: \.self) { item in
                         Text("• \(item)")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                             .padding(.leading, 32)
                             .multilineTextAlignment(.leading)
                     }
@@ -1178,7 +817,7 @@ private struct IssueDetailsList: View {
             .padding(.vertical, 8)
             .padding(.horizontal, 12)
             .background(issueType.color.opacity(0.05))
-            .cornerRadius(8)
+            .clipShape(.rect(cornerRadius: 8))
         }
     }
 

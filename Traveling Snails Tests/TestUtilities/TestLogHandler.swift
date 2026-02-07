@@ -17,7 +17,7 @@ import Testing
 /// let violations = logHandler.containsSensitiveData(logs)
 /// #expect(violations.isEmpty, "No sensitive data should be logged")
 /// ```
-public class TestLogHandler {
+public final class TestLogHandler: @unchecked Sendable {
     private var capturedLogs: [String] = []
     private let queue = DispatchQueue(label: "test.log.handler")
 

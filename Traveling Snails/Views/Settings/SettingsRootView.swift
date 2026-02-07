@@ -41,12 +41,12 @@ struct ImportResultSummary: View {
             if result.organizationsMerged > 0 {
                 HStack {
                     Image(systemName: "arrow.triangle.merge")
-                        .foregroundColor(.orange)
+                        .foregroundStyle(.orange)
                         .font(.caption)
 
                     Text("\(result.organizationsMerged) organizations merged")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
 
                     Spacer()
                 }
@@ -56,12 +56,12 @@ struct ImportResultSummary: View {
             if !result.errors.isEmpty {
                 HStack {
                     Image(systemName: "exclamationmark.triangle")
-                        .foregroundColor(.red)
+                        .foregroundStyle(.red)
                         .font(.caption)
 
                     Text("\(result.errors.count) errors occurred")
                         .font(.caption)
-                        .foregroundColor(.red)
+                        .foregroundStyle(.red)
 
                     Spacer()
                 }
@@ -81,11 +81,11 @@ struct ResultItem: View {
             Text("\(count)")
                 .font(.headline)
                 .fontWeight(.bold)
-                .foregroundColor(color)
+                .foregroundStyle(color)
 
             Text(label)
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
 
             Spacer()
         }

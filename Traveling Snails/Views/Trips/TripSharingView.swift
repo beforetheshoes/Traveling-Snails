@@ -1,38 +1,40 @@
+import ComposableArchitecture
 import SwiftUI
-import CloudKit
 import SQLiteData
 
 /// Comprehensive view for managing CloudKit trip sharing
 struct TripSharingView: View {
-    let trip: Trip
     @Environment(\.dismiss) private var dismiss
-    
-    @State private var sharingService: CKSyncEngineSharingService?
-    @State private var sharingInfo: TripSharingInfo?
-    @State private var isLoadingSharingInfo = false
-    @State private var isCreatingShare = false
-    @State private var isRemovingShare = false
-    @State private var errorMessage: String?
-    @State private var showingError = false
-    @State private var shareURL: URL?
-    @State private var showingShareSheet = false
-    
+    @State private var store: StoreOf<TripSharingFeature>
+
+    init(
+        trip: Trip,
+        store: StoreOf<TripSharingFeature>? = nil
+    ) {
+        let resolvedStore = store ?? Store(
+            initialState: TripSharingFeature.State(trip: trip)
+        ) {
+            TripSharingFeature()
+        }
+        self._store = State(initialValue: resolvedStore)
+    }
+
     var body: some View {
         NavigationStack {
             List {
-                if let sharingInfo = sharingInfo {
+                if let sharingInfo = store.sharingInfo {
                     if sharingInfo.isShared {
                         sharedTripSection(sharingInfo)
                     } else {
                         notSharedSection
                     }
-                } else if isLoadingSharingInfo {
+                } else if store.isLoadingSharingInfo {
                     loadingSection
                 } else {
                     notSharedSection
                 }
-                
-                if let errorMessage = errorMessage {
+
+                if let errorMessage = store.errorMessage {
                     errorSection(errorMessage)
                 }
             }
@@ -46,45 +48,40 @@ struct TripSharingView: View {
                 }
             }
             .task {
-                await initializeSharingService()
+                store.send(.onAppear)
             }
-            .sheet(isPresented: $showingShareSheet) {
-                if let shareURL = shareURL {
-                    TripShareSheet(activityItems: [shareURL])
-                } else {
-                    // Fallback to text sharing when no URL is available
-                    let shareText = "Check out my trip: \(trip.name)"
-                    TripShareSheet(activityItems: [shareText])
-                }
+            .sheet(item: Binding(
+                get: { store.activeShareSheet },
+                set: { _ in store.send(.shareSheetDismissed) }
+            )) { payload in
+                TripShareSheet(
+                    activityItems: payload.url.map { [$0] } ?? payload.activityItems
+                )
             }
         }
     }
-    
-    // MARK: - View Sections
-    
+
     @ViewBuilder
     private var notSharedSection: some View {
         Section {
             VStack(spacing: 16) {
                 Image(systemName: "person.2.badge.plus")
                     .font(.system(size: 48))
-                    .foregroundColor(.secondary)
-                
+                    .foregroundStyle(.secondary)
+
                 Text("Share this trip")
                     .font(.headline)
-                
+
                 Text("Invite others to view and collaborate on this trip. Shared trips sync across all participant devices.")
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                
+
                 Button {
-                    Task {
-                        await createShare()
-                    }
+                    store.send(.createShareTapped)
                 } label: {
                     HStack {
-                        if isCreatingShare {
+                        if store.isCreatingShare {
                             ProgressView()
                                 .scaleEffect(0.8)
                         } else {
@@ -94,51 +91,48 @@ struct TripSharingView: View {
                     }
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(isCreatingShare || trip.isProtected)
+                .disabled(store.isCreatingShare || store.trip.isProtected)
             }
             .padding()
         } header: {
             Text("Trip Sharing")
         } footer: {
-            if trip.isProtected {
+            if store.trip.isProtected {
                 Text("Protected trips cannot be shared. Remove protection to enable sharing.")
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
         }
     }
-    
+
     @ViewBuilder
-    private func sharedTripSection(_ info: TripSharingInfo) -> some View {
+    private func sharedTripSection(_ info: TripSharingSnapshot) -> some View {
         Section {
-            // Share status
             Label {
                 VStack(alignment: .leading, spacing: 4) {
-                    let inviteeCount = max(0, info.participants.count - 1) // Exclude owner
+                    let inviteeCount = max(0, info.participants.filter { !$0.isOwner }.count)
                     if inviteeCount == 0 {
                         Text("Share link created")
                             .font(.headline)
                         Text("Ready to invite others")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     } else {
                         Text("Trip is shared")
                             .font(.headline)
                         Text("\(inviteeCount) invitee\(inviteeCount == 1 ? "" : "s")")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
                 }
             } icon: {
-                let inviteeCount = max(0, info.participants.count - 1)
+                let inviteeCount = max(0, info.participants.filter { !$0.isOwner }.count)
                 Image(systemName: inviteeCount == 0 ? "link.circle.fill" : "checkmark.circle.fill")
-                    .foregroundColor(inviteeCount == 0 ? .orange : .green)
+                    .foregroundStyle(inviteeCount == 0 ? .orange : .green)
             }
-            
-            // Share actions
+
             if let shareURL = info.shareURL {
                 Button {
-                    self.shareURL = shareURL
-                    showingShareSheet = true
+                    store.send(.shareURLTapped(shareURL))
                 } label: {
                     Label("Share Link", systemImage: "square.and.arrow.up")
                 }
@@ -146,67 +140,45 @@ struct TripSharingView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
                         Image(systemName: "link")
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                         Text("Share link not available")
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                         Spacer()
                         Button("Retry") {
-                            Task {
-                                await refreshSharingInfo()
-                            }
+                            store.send(.refreshTapped)
                         }
                         .font(.caption)
                     }
-                    
+
                     Text("Share link unavailable. CloudKit sharing requires a physical device and may not work in development builds.")
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                         .italic()
-                    
+
                     Button {
-                        // Clear URL to trigger text-based sharing
-                        self.shareURL = nil
-                        showingShareSheet = true
+                        store.send(.shareTextTapped)
                     } label: {
                         Label("Share Trip Details", systemImage: "square.and.arrow.up")
                     }
-                    .foregroundColor(.blue)
+                    .foregroundStyle(.blue)
                     .font(.caption)
-                    
-                    #if DEBUG
-                    if let shareInfo = sharingInfo, shareInfo.isShared {
-                        Button {
-                            // Copy share ID for development testing
-                            if let recordName = trip.shareID?.recordName {
-                                UIPasteboard.general.string = recordName
-                            }
-                        } label: {
-                            Label("Copy Share ID (Dev)", systemImage: "doc.on.clipboard")
-                        }
-                        .foregroundColor(.orange)
-                        .font(.caption2)
-                    }
-                    #endif
                 }
             }
-            
-            // Add invitees button
+
             if info.shareURL != nil {
                 Button {
                     // Future: Open invite interface
                 } label: {
                     Label("Invite Others", systemImage: "person.badge.plus")
                 }
-                .foregroundColor(.blue)
+                .foregroundStyle(.blue)
             }
-            
+
             Button(role: .destructive) {
-                Task {
-                    await removeShare()
-                }
+                store.send(.removeShareTapped)
             } label: {
                 HStack {
-                    if isRemovingShare {
+                    if store.isRemovingShare {
                         ProgressView()
                             .scaleEffect(0.8)
                     } else {
@@ -215,46 +187,45 @@ struct TripSharingView: View {
                     Text("Stop Sharing")
                 }
             }
-            .disabled(isRemovingShare)
+            .disabled(store.isRemovingShare)
         } header: {
             Text("Share Status")
         }
-        
+
         if !info.participants.isEmpty {
             Section("Participants") {
-                ForEach(Array(info.participants.enumerated()), id: \.offset) { index, participant in
-                    let displayName = index == 0 ? "You" : participantDisplayName(participant)
+                ForEach(info.participants) { participant in
                     HStack {
-                        Image(systemName: index == 0 ? "person.crop.circle.fill" : "person.circle")
-                            .foregroundColor(index == 0 ? .blue : .secondary)
+                        Image(systemName: participant.isOwner ? "person.crop.circle.fill" : "person.circle")
+                            .foregroundStyle(participant.isOwner ? .blue : .secondary)
 
                         VStack(alignment: .leading) {
-                            Text(displayName)
+                            Text(participant.displayName)
                                 .font(.subheadline)
-                                .fontWeight(index == 0 ? .medium : .regular)
+                                .fontWeight(participant.isOwner ? .medium : .regular)
 
-                            Text(permissionDescription(participant.permission))
+                            Text(participant.permissionDescription)
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(.secondary)
                         }
-                        
+
                         Spacer()
-                        
-                        if index == 0 {
+
+                        if participant.isOwner {
                             Text("Owner")
                                 .font(.caption2)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 2)
                                 .background(Color.blue.opacity(0.2))
-                                .foregroundColor(.blue)
-                                .cornerRadius(4)
+                                .foregroundStyle(.blue)
+                                .clipShape(.rect(cornerRadius: 4))
                         }
                     }
                 }
             }
         }
     }
-    
+
     @ViewBuilder
     private var loadingSection: some View {
         Section {
@@ -262,166 +233,39 @@ struct TripSharingView: View {
                 ProgressView()
                     .scaleEffect(0.8)
                 Text("Loading sharing information...")
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                 Spacer()
             }
             .padding()
         }
     }
-    
+
     @ViewBuilder
     private func errorSection(_ message: String) -> some View {
         Section {
             Label {
                 Text(message)
-                    .foregroundColor(.red)
+                    .foregroundStyle(.red)
             } icon: {
                 Image(systemName: "exclamationmark.triangle")
-                    .foregroundColor(.red)
+                    .foregroundStyle(.red)
             }
         } header: {
             Text("Error")
         }
     }
-    
-    // MARK: - Helper Methods
-    
-    private func initializeSharingService() async {
-        await MainActor.run {
-            sharingService = CKSyncEngineSharingService()
-            isLoadingSharingInfo = true
-        }
-
-        let info = await sharingService?.getSharingInfo(for: trip)
-        await MainActor.run {
-            sharingInfo = info
-            isLoadingSharingInfo = false
-        }
-    }
-    
-    private func createShare() async {
-        guard let sharingService = sharingService else {
-            await MainActor.run {
-                errorMessage = "Sharing service not available"
-                showingError = true
-            }
-            return
-        }
-        
-        await MainActor.run {
-            isCreatingShare = true
-            errorMessage = nil
-        }
-        
-        do {
-            _ = try await sharingService.createShare(for: trip)
-
-            // Update sharing info
-            let info = await sharingService.getSharingInfo(for: trip)
-
-            await MainActor.run {
-                sharingInfo = info
-                shareURL = info.shareURL
-                isCreatingShare = false
-
-                if shareURL != nil {
-                    showingShareSheet = true
-                }
-            }
-        } catch {
-            await MainActor.run {
-                errorMessage = "Failed to create share: \(error.localizedDescription)"
-                showingError = true
-                isCreatingShare = false
-            }
-        }
-    }
-    
-    private func removeShare() async {
-        guard let sharingService = sharingService else {
-            await MainActor.run {
-                errorMessage = "Sharing service not available"
-                showingError = true
-            }
-            return
-        }
-        
-        await MainActor.run {
-            isRemovingShare = true
-            errorMessage = nil
-        }
-        
-        do {
-            try await sharingService.removeShare(for: trip)
-            
-            // Update sharing info
-            let info = await sharingService.getSharingInfo(for: trip)
-            
-            await MainActor.run {
-                sharingInfo = info
-                shareURL = nil
-                isRemovingShare = false
-            }
-        } catch {
-            await MainActor.run {
-                errorMessage = "Failed to remove share: \(error.localizedDescription)"
-                showingError = true
-                isRemovingShare = false
-            }
-        }
-    }
-    
-    private func refreshSharingInfo() async {
-        guard let sharingService = sharingService else { return }
-        
-        await MainActor.run {
-            isLoadingSharingInfo = true
-        }
-        
-        let info = await sharingService.getSharingInfo(for: trip)
-        await MainActor.run {
-            sharingInfo = info
-            isLoadingSharingInfo = false
-        }
-    }
-
-    private func participantDisplayName(_ participant: CKShare.Participant) -> String {
-        guard let components = participant.userIdentity.nameComponents else {
-            return "Unknown User"
-        }
-        let formatter = PersonNameComponentsFormatter()
-        let name = formatter.string(from: components)
-        return name.isEmpty ? "Unknown User" : name
-    }
-    
-    private func permissionDescription(_ permission: CKShare.ParticipantPermission) -> String {
-        switch permission {
-        case .readOnly:
-            return "Can view"
-        case .readWrite:
-            return "Can edit"
-        default:
-            return "Full access"
-        }
-    }
 }
-
-// MARK: - Share Sheet
 
 struct TripShareSheet: UIViewControllerRepresentable {
     let activityItems: [Any]
-    
+
     func makeUIViewController(context: Context) -> UIActivityViewController {
-        let controller = UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
-        return controller
+        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
     }
-    
+
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {
-        // No updates needed
     }
 }
-
-// MARK: - Preview
 
 #Preview {
     NavigationStack {

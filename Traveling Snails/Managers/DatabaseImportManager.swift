@@ -84,7 +84,7 @@ final class DatabaseImportManager: @unchecked Sendable {
 
     nonisolated init() {}
 
-    struct ImportResult {
+    struct ImportResult: Equatable, Sendable {
         let tripsImported: Int
         let organizationsImported: Int
         let addressesImported: Int
@@ -495,9 +495,6 @@ final class DatabaseImportManager: @unchecked Sendable {
                 importStatus = "Import completed successfully!"
                 importSuccess = true
                 isImporting = false
-
-                // Post notification to refresh UI views showing attachments
-                NotificationCenter.default.post(name: .importCompleted, object: nil)
             }
         } catch {
             Logger.shared.error("Import failed: \(error.localizedDescription)", category: .dataImport)

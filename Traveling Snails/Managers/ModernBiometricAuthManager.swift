@@ -13,6 +13,8 @@ import SwiftUI
 @MainActor
 @Observable
 class ModernBiometricAuthManager {
+    static var shared: ModernBiometricAuthManager?
+
     // MARK: - Properties
 
     private let authService: AuthenticationService
