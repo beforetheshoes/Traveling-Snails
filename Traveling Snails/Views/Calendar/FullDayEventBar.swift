@@ -15,13 +15,13 @@ struct FullDayEventBar: View {
 
     private var calendar: Calendar { Calendar.current }
 
-    #if os(iOS)
     private var isCompact: Bool {
+        #if os(iOS)
         UIDevice.current.userInterfaceIdiom == .phone
+        #else
+        false
+        #endif
     }
-    #else
-    private var isCompact: Bool { false }
-    #endif
 
     init(wrapper: ActivityWrapper, weekDates: [Date], onTap: @escaping () -> Void, timeColumnWidth: CGFloat = 50) {
         self.wrapper = wrapper
@@ -82,12 +82,12 @@ struct FullDayEventBar: View {
                     if !isCompact {
                         Text(timeWithTimezone(wrapper.tripActivity.start, timezone: wrapper.tripActivity.startTZ))
                             .font(subtitleFont)
-                            .foregroundColor(.white.opacity(0.9))
+                            .foregroundStyle(.white.opacity(0.9))
                             .fontWeight(.medium)
                     } else {
                         Text(timeWithTimezone(wrapper.tripActivity.start, timezone: wrapper.tripActivity.startTZ))
                             .font(.caption2)
-                            .foregroundColor(.white.opacity(0.9))
+                            .foregroundStyle(.white.opacity(0.9))
                     }
                 }
             } else {
@@ -95,7 +95,7 @@ struct FullDayEventBar: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("←")
                         .font(isCompact ? .caption2 : subtitleFont)
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundStyle(.white.opacity(0.7))
                         .fontWeight(.medium)
                 }
             }
@@ -107,14 +107,14 @@ struct FullDayEventBar: View {
                 Text(wrapper.tripActivity.name)
                     .font(isCompact ? .caption : .callout)
                     .fontWeight(.semibold)
-                    .foregroundColor(.white)
+                    .foregroundStyle(.white)
                     .lineLimit(1)
                     .multilineTextAlignment(.center)
 
                 if !isCompact && eventSpansMultipleDays {
                     Text("\(eventDurationText)")
                         .font(.caption2)
-                        .foregroundColor(.white.opacity(0.8))
+                        .foregroundStyle(.white.opacity(0.8))
                 }
             }
 
@@ -126,12 +126,12 @@ struct FullDayEventBar: View {
                     if !isCompact {
                         Text(timeWithTimezone(wrapper.tripActivity.end, timezone: wrapper.tripActivity.endTZ))
                             .font(subtitleFont)
-                            .foregroundColor(.white.opacity(0.9))
+                            .foregroundStyle(.white.opacity(0.9))
                             .fontWeight(.medium)
                     } else {
                         Text(timeWithTimezone(wrapper.tripActivity.end, timezone: wrapper.tripActivity.endTZ))
                             .font(.caption2)
-                            .foregroundColor(.white.opacity(0.9))
+                            .foregroundStyle(.white.opacity(0.9))
                     }
                 }
             } else {
@@ -139,7 +139,7 @@ struct FullDayEventBar: View {
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("→")
                         .font(isCompact ? .caption2 : subtitleFont)
-                        .foregroundColor(.white.opacity(0.7))
+                        .foregroundStyle(.white.opacity(0.7))
                         .fontWeight(.medium)
                 }
             }

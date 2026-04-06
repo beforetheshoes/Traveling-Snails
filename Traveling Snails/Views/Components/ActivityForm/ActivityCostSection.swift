@@ -49,7 +49,7 @@ struct ActivityCostSection<T: TripActivityProtocol>: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Cost")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
 
                 CurrencyTextField(value: $editData.cost, color: color)
                     .onChange(of: editData.cost) { _, _ in
@@ -63,7 +63,7 @@ struct ActivityCostSection<T: TripActivityProtocol>: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Payment Status")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
 
                 Picker("Payment Status", selection: $editData.paid) {
                     ForEach(PaidStatus.allCases, id: \.self) { status in
@@ -82,7 +82,7 @@ struct ActivityCostSection<T: TripActivityProtocol>: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(costLabel)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
 
                 Text(displayCost, format: .currency(code: "USD"))
                     .font(.title2)
@@ -92,7 +92,7 @@ struct ActivityCostSection<T: TripActivityProtocol>: View {
                 if showPerNightCost {
                     Text(perNightText)
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
             }
 
@@ -101,7 +101,7 @@ struct ActivityCostSection<T: TripActivityProtocol>: View {
             VStack(alignment: .trailing, spacing: 4) {
                 Text("Payment Status")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
 
                 HStack {
                     Text(displayPaidStatus.displayName)
@@ -167,7 +167,9 @@ struct ActivityCostSection<T: TripActivityProtocol>: View {
             endDate = editData.end
         }
 
-        let nights = max(1, Calendar.current.dateComponents([.day], from: startDate, to: endDate).day ?? 1)
+        let startDay = Calendar.current.startOfDay(for: startDate)
+        let endDay = Calendar.current.startOfDay(for: endDate)
+        let nights = max(1, Calendar.current.dateComponents([.day], from: startDay, to: endDay).day ?? 1)
         let perNight = displayCost / Decimal(nights)
 
         let formatter = NumberFormatter()

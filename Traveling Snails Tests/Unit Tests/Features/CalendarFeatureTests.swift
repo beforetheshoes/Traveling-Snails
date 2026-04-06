@@ -10,6 +10,7 @@ import Testing
 @testable import Traveling_Snails
 
 @Suite("CalendarFeature Tests")
+@MainActor
 struct CalendarFeatureTests {
     @Test("Day tap selects date and shows day detail", .tags(.unit, .fast, .parallel, .calendar))
     func dayTapSelectsDate() async {

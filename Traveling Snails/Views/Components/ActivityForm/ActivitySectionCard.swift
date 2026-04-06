@@ -6,7 +6,7 @@
 
 import SwiftUI
 
-/// Reusable section card component matching the Unified form's beautiful design
+/// Reusable section card component matching the standard form's beautiful design
 struct ActivitySectionCard<Content: View>: View {
     let headerIcon: String
     let headerTitle: String
@@ -31,11 +31,11 @@ struct ActivitySectionCard<Content: View>: View {
             HStack {
                 Image(systemName: headerIcon)
                     .font(.title3)
-                    .foregroundColor(headerColor)
+                    .foregroundStyle(headerColor)
 
                 Text(headerTitle)
                     .font(.headline)
-                    .foregroundColor(headerColor)
+                    .foregroundStyle(headerColor)
             }
 
             // Content inside card background
@@ -43,7 +43,7 @@ struct ActivitySectionCard<Content: View>: View {
         }
         .padding(12)
         .background(headerColor.opacity(0.05))
-        .cornerRadius(12)
+        .clipShape(.rect(cornerRadius: 12))
     }
 }
 
@@ -58,7 +58,7 @@ struct ActivitySectionCard<Content: View>: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Name")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
 
                     TextField("Activity Name", text: .constant("Test Activity"))
                         .textFieldStyle(RoundedBorderTextFieldStyle())
@@ -81,7 +81,7 @@ struct ActivitySectionCard<Content: View>: View {
 
                 Text("Payment Status: Paid")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
         }
     }

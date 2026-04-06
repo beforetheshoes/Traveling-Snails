@@ -18,18 +18,18 @@ struct InlineErrorRecoveryView: View {
             // Basic error display
             HStack {
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundColor(.orange)
+                    .foregroundStyle(.orange)
                     .accessibilityLabel(errorAccessibilityLabel)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(errorState.userMessage)
                         .font(.caption)
-                        .foregroundColor(.primary)
+                        .foregroundStyle(.primary)
 
                     if errorState.canRetry {
                         Text("Retry attempt \(errorState.retryCount)")
                             .font(.caption2)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
                 }
 
@@ -39,7 +39,7 @@ struct InlineErrorRecoveryView: View {
                     Button(action: { toggleExpansion() }) {
                         Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                             .font(.caption)
-                            .foregroundColor(.blue)
+                            .foregroundStyle(.blue)
                     }
                     .accessibilityLabel(isExpanded ? "Collapse details" : "Expand details")
                 }
@@ -56,7 +56,7 @@ struct InlineErrorRecoveryView: View {
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(Color.blue.opacity(0.1))
-                        .cornerRadius(4)
+                        .clipShape(.rect(cornerRadius: 4))
                         .accessibilityLabel(action.displayName)
                         .accessibilityHint(accessibilityHint(for: action))
                     }
@@ -70,35 +70,35 @@ struct InlineErrorRecoveryView: View {
                     Text("Technical details:")
                         .font(.caption2)
                         .fontWeight(.semibold)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
 
                     Text(expandedContent)
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                         .padding(.leading, 8)
 
                     if !contextualHelp.isEmpty {
                         Text("Suggested solutions:")
                             .font(.caption2)
                             .fontWeight(.semibold)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                             .padding(.top, 4)
 
                         Text(contextualHelp)
                             .font(.caption2)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                             .padding(.leading, 8)
                     }
                 }
                 .padding(.top, 4)
                 .padding(.horizontal, 8)
                 .background(Color.gray.opacity(0.1))
-                .cornerRadius(4)
+                .clipShape(.rect(cornerRadius: 4))
             }
         }
         .padding(12)
         .background(Color.orange.opacity(0.1))
-        .cornerRadius(8)
+        .clipShape(.rect(cornerRadius: 8))
         .accessibilityElement(children: .contain)
         .accessibilityLabel(accessibilityLabel)
         .accessibilityHint(accessibilityHint)

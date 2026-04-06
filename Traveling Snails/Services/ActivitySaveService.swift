@@ -9,7 +9,7 @@ import SQLiteData
 
 // MARK: - Type-Erased Save Protocol
 
-protocol ActivitySaver: Sendable {
+protocol ActivitySaver {
     func save(
         editData: TripActivityEditData,
         attachments: [EmbeddedFileAttachment],
@@ -30,7 +30,7 @@ protocol ActivitySaver: Sendable {
 
 // MARK: - Activity Type Enum
 
-enum ActivityType: String, CaseIterable, Sendable {
+enum ActivityType: String, CaseIterable {
     case activity = "Activity"
     case lodging = "Lodging"
     case transportation = "Transportation"
@@ -271,6 +271,10 @@ struct TransportationSaverImpl: ActivitySaver {
             transportation.tripID = trip.id
             transportation.organizationID = finalOrg.id
             try Transportation.upsert { transportation }.execute(db)
+
+            // Ensure transportations always have at least one leg (multi-leg support).
+            try TransportationLeg.where { $0.transportationID.eq(transportation.id) }.delete().execute(db)
+            try TransportationLeg.insert { TransportationLeg.makeDefaultLeg(for: transportation) }.execute(db)
 
             try EmbeddedFileAttachment.insert {
                 for attachment in attachments {

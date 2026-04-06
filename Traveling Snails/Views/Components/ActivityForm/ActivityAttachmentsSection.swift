@@ -4,6 +4,7 @@
 //
 //
 
+import ComposableArchitecture
 import SwiftUI
 
 /// Reusable section component for displaying and managing activity file attachments
@@ -62,7 +63,7 @@ struct ActivityAttachmentsSection: View {
     private var emptyAttachmentsMessage: some View {
         Text("No attachments")
             .font(.subheadline)
-            .foregroundColor(.secondary)
+            .foregroundStyle(.secondary)
             .padding(.vertical, 16)
     }
 
@@ -75,7 +76,7 @@ struct ActivityAttachmentsSection: View {
     private func attachmentRow(_ attachment: EmbeddedFileAttachment) -> some View {
         HStack {
             Image(systemName: attachment.fileSystemIcon)
-                .foregroundColor(color)
+                .foregroundStyle(color)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(attachment.displayName)
@@ -84,7 +85,7 @@ struct ActivityAttachmentsSection: View {
 
                 Text(attachment.formattedFileSize)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
 
             Spacer()
@@ -93,19 +94,19 @@ struct ActivityAttachmentsSection: View {
                 removeAttachment(attachment)
             } label: {
                 Image(systemName: "trash")
-                    .foregroundColor(.red)
+                    .foregroundStyle(.red)
                     .frame(minWidth: 24, minHeight: 24)
             }
             .buttonStyle(.plain)
         }
         .padding(.vertical, 8)
         .padding(.horizontal, 8)
-        .background(Color(.systemGray6))
-        .cornerRadius(8)
+        .background(Color.systemGray6)
+        .clipShape(.rect(cornerRadius: 8))
     }
 
     private var addAttachmentButton: some View {
-        UnifiedFilePicker.allFiles(
+        AttachmentPickerView.allFiles(
             onSelected: { attachment in
                 addAttachment(attachment)
             },
@@ -127,6 +128,9 @@ struct ActivityAttachmentsSection: View {
             },
             onAttachmentRemoved: { attachment in
                 removeAttachment(attachment)
+            },
+            store: StoreOf<EmbeddedFileAttachmentListFeature>.init(initialState: EmbeddedFileAttachmentListFeature.State()) {
+                EmbeddedFileAttachmentListFeature()
             }
         )
     }

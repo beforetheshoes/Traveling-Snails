@@ -2,103 +2,81 @@
 //  AddTrip.swift
 //  Traveling Snails
 //
-//
 
-import Dependencies
-import SQLiteData
+import ComposableArchitecture
 import SwiftUI
 
 struct AddTrip: View {
-    @Environment(\.presentationMode) var presentationMode
-    @Dependency(\.defaultDatabase) private var database
+    @Environment(\.dismiss) private var dismiss
+    @State private var store: StoreOf<AddTripFeature>
 
-    @State var name: String = ""
-    @State var notes: String = ""
-    @State var startDate = Date()
-    @State var endDate = Date().addingTimeInterval(7 * 24 * 3600) // Default to 1 week later
-    @State var hasStartDate: Bool = false
-    @State var hasEndDate: Bool = false
-
-    func saveTrip() async {
-        do {
-            var trip = Trip(
-                name: name,
-                notes: notes
-            )
-            if hasStartDate {
-                trip.setStartDate(startDate)
-            }
-            if hasEndDate {
-                trip.setEndDate(endDate)
-            }
-            let tripToSave = trip
-
-            try await database.write { db in
-                try Trip.upsert { tripToSave }.execute(db)
-            }
-            await MainActor.run {
-                presentationMode.wrappedValue.dismiss()
-            }
-        } catch {
-            // Handle save error - for now just print, could add error state
-            Logger.shared.error("Failed to save trip: \(error.localizedDescription)", category: .database)
-        }
+    init(store: StoreOf<AddTripFeature>) {
+        self._store = State(initialValue: store)
     }
 
     var body: some View {
+        @Bindable var store = self.store
+
         NavigationStack {
             Form {
                 Section("Trip Details") {
-                    TextField("Name", text: $name)
-                    TextField("Notes", text: $notes, axis: .vertical)
+                    TextField("Name", text: $store.name)
+                    TextField("Notes", text: $store.notes, axis: .vertical)
                 }
 
                 Section("Trip Dates (Optional)") {
-                    Toggle("Set start date", isOn: $hasStartDate)
+                    Toggle("Set start date", isOn: $store.hasStartDate)
 
-                    if hasStartDate {
-                        DatePicker("Start Date", selection: $startDate, displayedComponents: .date)
-                            .onChange(of: startDate) { _, newValue in
-                                // Ensure end date is after start date if both are set
-                                if hasEndDate && endDate <= newValue {
-                                    endDate = Calendar.current.date(byAdding: .day, value: 1, to: newValue) ?? newValue
-                                }
+                    if store.hasStartDate {
+                        DatePicker("Start Date", selection: $store.startDate, displayedComponents: .date)
+                            .onChange(of: store.startDate) { _, newValue in
+                                store.send(.startDateChanged(newValue))
                             }
                     }
 
-                    Toggle("Set end date", isOn: $hasEndDate)
+                    Toggle("Set end date", isOn: $store.hasEndDate)
 
-                    if hasEndDate {
-                        DatePicker("End Date", selection: $endDate, displayedComponents: .date)
-                            .onChange(of: endDate) { _, newValue in
-                                // Ensure start date is before end date if both are set
-                                if hasStartDate && startDate >= newValue {
-                                    startDate = Calendar.current.date(byAdding: .day, value: -1, to: newValue) ?? newValue
-                                }
+                    if store.hasEndDate {
+                        DatePicker("End Date", selection: $store.endDate, displayedComponents: .date)
+                            .onChange(of: store.endDate) { _, newValue in
+                                store.send(.endDateChanged(newValue))
                             }
                     }
 
                     Text("Setting trip dates will limit date picker ranges when adding activities. You can always change these later.")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
 
-                Button(action: {
-                    Task { await saveTrip() }
-                }) {
+                Button {
+                    store.send(.saveTapped)
+                } label: {
                     Text("Add Trip")
                         .frame(maxWidth: .infinity)
                 }
-                .disabled(name.isEmpty)
+                .disabled(store.isSaveDisabled)
             }
-            .navigationBarTitle("New Trip", displayMode: .inline)
+            .navigationTitle("New Trip")
+            .inlineNavigationBarTitle()
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .platformLeading) {
                     Button("Cancel") {
-                        presentationMode.wrappedValue.dismiss()
+                        dismiss()
                     }
                 }
             }
+        }
+        .onChange(of: store.shouldDismiss) { _, shouldDismiss in
+            guard shouldDismiss else { return }
+            dismiss()
+            store.send(.dismissHandled)
+        }
+        .alert("Unable to Save", isPresented: .constant(store.errorMessage != nil)) {
+            Button("OK") {
+                store.send(.dismissError)
+            }
+        } message: {
+            Text(store.errorMessage ?? "")
         }
     }
 }

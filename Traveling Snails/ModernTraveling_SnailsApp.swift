@@ -6,19 +6,92 @@
 
 import CloudKit
 import ComposableArchitecture
+import Dependencies
 import SQLiteData
 import SwiftUI
 
-/// Modern app structure using pure dependency injection - no backward compatibility
+#if os(iOS)
+/// App delegate — configures the scene delegate for CloudKit share acceptance
+class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(
+        _ application: UIApplication,
+        configurationForConnecting connectingSceneSession: UISceneSession,
+        options: UIScene.ConnectionOptions
+    ) -> UISceneConfiguration {
+        let configuration = UISceneConfiguration(
+            name: "Default Configuration",
+            sessionRole: connectingSceneSession.role
+        )
+        configuration.delegateClass = SceneDelegate.self
+        return configuration
+    }
+}
+
+/// Scene delegate — handles CloudKit share acceptance in both scenarios:
+/// 1. App is already running when share link is tapped
+/// 2. App is cold-launched via share link
+class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+    @Dependency(\.defaultSyncEngine) var syncEngine
+
+    func windowScene(
+        _ windowScene: UIWindowScene,
+        userDidAcceptCloudKitShareWith cloudKitShareMetadata: CKShare.Metadata
+    ) {
+        Task {
+            do {
+                try await syncEngine.acceptShare(metadata: cloudKitShareMetadata)
+                Logger.shared.info("Accepted CloudKit share (app running)", category: .sync)
+            } catch {
+                Logger.shared.error("Failed to accept CloudKit share: \(error.localizedDescription)", category: .sync)
+            }
+        }
+    }
+
+    func scene(
+        _ scene: UIScene,
+        willConnectTo session: UISceneSession,
+        options connectionOptions: UIScene.ConnectionOptions
+    ) {
+        guard let cloudKitShareMetadata = connectionOptions.cloudKitShareMetadata else { return }
+        Task {
+            do {
+                try await syncEngine.acceptShare(metadata: cloudKitShareMetadata)
+                Logger.shared.info("Accepted CloudKit share (cold launch)", category: .sync)
+            } catch {
+                Logger.shared.error("Failed to accept CloudKit share on launch: \(error.localizedDescription)", category: .sync)
+            }
+        }
+    }
+}
+#elseif os(macOS)
+/// App delegate for macOS — handles CloudKit share acceptance
+class AppDelegate: NSObject, NSApplicationDelegate {
+    @Dependency(\.defaultSyncEngine) var syncEngine
+
+    func application(_ application: NSApplication, userDidAcceptCloudKitShareWith cloudKitShareMetadata: CKShare.Metadata) {
+        Task {
+            do {
+                try await syncEngine.acceptShare(metadata: cloudKitShareMetadata)
+                Logger.shared.info("Accepted CloudKit share (macOS)", category: .sync)
+            } catch {
+                Logger.shared.error("Failed to accept CloudKit share: \(error.localizedDescription)", category: .sync)
+            }
+        }
+    }
+}
+#endif
+
+/// Modern app structure using pure dependency injection
 @main
 struct ModernTraveling_SnailsApp: App {
+    #if os(iOS)
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    #elseif os(macOS)
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    #endif
     @State private var showSplash = false
     @State private var hasShownSplashOnce = false
-    @Environment(\.scenePhase) private var scenePhase
 
-    private let modernSyncManager: ModernSyncManager
-    private let modernAppSettings: ModernAppSettings
-    private let modernBiometricAuthManager: ModernBiometricAuthManager
     @State private var syncEngineDelegate: AppSyncEngineDelegate
     private let appStore: StoreOf<AppFeature>
 
@@ -27,39 +100,17 @@ struct ModernTraveling_SnailsApp: App {
             let syncEngineDelegate = AppSyncEngineDelegate()
             self._syncEngineDelegate = State(initialValue: syncEngineDelegate)
 
-            // Initialize production services directly
-            let authService = ProductionAuthenticationService()
-            let cloudService = iCloudStorageService()
-            let photoService = SystemPhotoLibraryService()
-            let permissionService = SystemPermissionService()
-            let syncService = SQLiteDataSyncService()
-
-            _ = photoService
-            _ = permissionService
-
-            // Create modern managers from concrete services
-            modernSyncManager = ModernSyncManager(
-                syncService: syncService,
-                cloudStorageService: cloudService
-            )
-            modernAppSettings = ModernAppSettings(
-                cloudStorageService: cloudService
-            )
-            modernBiometricAuthManager = ModernBiometricAuthManager(
-                authService: authService
-            )
-
-            Logger.shared.info("Modern App: All services initialized successfully", category: .app)
+            Logger.shared.info("Modern App: Initializing database", category: .app)
             try prepareDependencies {
                 try $0.bootstrapDatabase(syncEngineDelegate: syncEngineDelegate)
             }
 
-            appStore = Store(initialState: AppFeature.State()) {
+            appStore = StoreOf<AppFeature>.init(initialState: AppFeature.State()) {
                 AppFeature()
             }
         } catch {
             Logger.shared.critical("Could not initialize database: \(error)", category: .app)
-            fatalError("Could not initialize database")
+            fatalError("Could not initialize database: \(error)")
         }
     }
 
@@ -67,38 +118,18 @@ struct ModernTraveling_SnailsApp: App {
         WindowGroup {
             ZStack {
                 AppView(store: appStore)
-                    .environment(modernAppSettings)
-                    .environment(modernSyncManager)
-                    .environment(modernBiometricAuthManager)
                     .opacity(showSplash ? 0 : 1)
 
                 if showSplash {
                     SplashView(isVisible: $showSplash)
                         .transition(.opacity)
-                        .onTapGesture {
-                            showSplash = false
-                        }
                 }
             }
             .onAppear {
-                // Only show splash on first launch
                 if !hasShownSplashOnce {
                     hasShownSplashOnce = true
                 } else {
                     showSplash = false
-                }
-            }
-            .onChange(of: scenePhase) { _, newPhase in
-                switch newPhase {
-                case .background:
-                    // Use modern biometric auth manager
-                    modernBiometricAuthManager.resetSession()
-                case .active:
-                    break
-                case .inactive:
-                    break
-                @unknown default:
-                    break
                 }
             }
         }

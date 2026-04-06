@@ -42,7 +42,7 @@ struct SingleLocationDateTimeSection: View {
         VStack(alignment: .leading, spacing: 16) {
 //            Text("\(sectionIcon) Schedule")
 //                .font(.headline)
-//                .foregroundColor(sectionColor)
+//                .foregroundStyle(sectionColor)
 
             VStack(spacing: 16) {
                 // Start Date/Time - FIX: Add timezone environment
@@ -68,6 +68,6 @@ struct SingleLocationDateTimeSection: View {
         }
         .padding()
         .background(sectionColor.opacity(0.05))
-        .cornerRadius(12)
+        .clipShape(.rect(cornerRadius: 12))
     }
 }

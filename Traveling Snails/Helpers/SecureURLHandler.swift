@@ -5,7 +5,11 @@
 //
 
 import SwiftUI
+#if os(iOS)
 import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 
 struct SecureURLHandler {
     enum URLSecurityLevel {
@@ -59,11 +63,16 @@ struct SecureURLHandler {
 
     // MARK: - URL Opening
 
+    @MainActor
     static func openURLDirectly(_ urlString: String) {
-        guard let url = URL(string: urlString),
-              UIApplication.shared.canOpenURL(url) else { return }
+        guard let url = URL(string: urlString) else { return }
 
+        #if os(iOS)
+        guard UIApplication.shared.canOpenURL(url) else { return }
         UIApplication.shared.open(url)
+        #elseif os(macOS)
+        NSWorkspace.shared.open(url)
+        #endif
     }
 
     // MARK: - Secure URL Handling with User Confirmation
@@ -175,7 +184,9 @@ extension SecureURLHandler {
                 action: action,
                 onSafe: {
                     if action == .open {
-                        openURLDirectly(urlString)
+                        Task { @MainActor in
+                            openURLDirectly(urlString)
+                        }
                     }
                 },
                 onSuspicious: { continueAction in

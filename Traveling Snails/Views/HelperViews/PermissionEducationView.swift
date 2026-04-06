@@ -17,7 +17,7 @@ struct PermissionEducationView: View {
             // Icon
             Image(systemName: permissionType.iconName)
                 .font(.system(size: 48))
-                .foregroundColor(.blue)
+                .foregroundStyle(.blue)
 
             // Title
             Text(permissionType.title)
@@ -28,7 +28,7 @@ struct PermissionEducationView: View {
             // Description
             Text(permissionType.description)
                 .font(.body)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
 
             // Buttons
@@ -45,7 +45,7 @@ struct PermissionEducationView: View {
             }
         }
         .padding()
-        .background(Color(.systemBackground))
+        .background(Color.systemBackground)
         .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(radius: 10)
     }

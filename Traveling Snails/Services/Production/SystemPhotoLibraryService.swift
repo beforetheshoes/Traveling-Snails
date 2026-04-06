@@ -6,11 +6,13 @@
 
 import Foundation
 import Photos
+#if os(iOS)
 import UIKit
+#endif
 
 /// Production implementation of PhotoLibraryService using PHPhotoLibrary
 /// PHPhotoLibrary is thread-safe, so this service is naturally Sendable
-final class SystemPhotoLibraryService: PhotoLibraryService, Sendable {
+final class SystemPhotoLibraryService: PhotoLibraryService, @unchecked Swift.Sendable {
     // MARK: - Properties
 
     private let photoLibrary: PHPhotoLibrary
@@ -47,6 +49,7 @@ final class SystemPhotoLibraryService: PhotoLibraryService, Sendable {
         }
     }
 
+    #if os(iOS)
     func presentLimitedLibraryPicker(from viewController: UIViewController?) {
         guard #available(iOS 14.0, *) else {
             Logger.shared.warning("Limited library picker is only available on iOS 14+")
@@ -60,6 +63,11 @@ final class SystemPhotoLibraryService: PhotoLibraryService, Sendable {
 
         photoLibrary.presentLimitedLibraryPicker(from: viewController)
     }
+    #else
+    func presentLimitedLibraryPicker(from viewController: Any?) {
+        Logger.shared.warning("Limited library picker is only available on iOS")
+    }
+    #endif
 
     var preventsAutomaticLimitedAccessAlert: Bool {
         get {

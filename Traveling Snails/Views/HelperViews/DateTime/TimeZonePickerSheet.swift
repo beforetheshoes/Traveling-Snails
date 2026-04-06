@@ -21,8 +21,8 @@ struct TimeZonePickerSheet: View {
             return commonTimeZones
         }
         return commonTimeZones.filter { timeZone in
-            timeZone.identifier.localizedCaseInsensitiveContains(searchText) ||
-            TimeZoneHelper.formatTimeZone(timeZone).localizedCaseInsensitiveContains(searchText)
+            timeZone.identifier.localizedStandardContains(searchText) ||
+            TimeZoneHelper.formatTimeZone(timeZone).localizedStandardContains(searchText)
         }
     }
 
@@ -35,8 +35,8 @@ struct TimeZonePickerSheet: View {
         var filtered: [String: [TimeZone]] = [:]
         for (region, timeZones) in grouped {
             let matchingTimeZones = timeZones.filter { timeZone in
-                timeZone.identifier.localizedCaseInsensitiveContains(searchText) ||
-                TimeZoneHelper.formatTimeZone(timeZone).localizedCaseInsensitiveContains(searchText)
+                timeZone.identifier.localizedStandardContains(searchText) ||
+                TimeZoneHelper.formatTimeZone(timeZone).localizedStandardContains(searchText)
             }
             if !matchingTimeZones.isEmpty {
                 filtered[region] = matchingTimeZones
@@ -51,7 +51,7 @@ struct TimeZonePickerSheet: View {
                 // Search bar
                 HStack {
                     Image(systemName: "magnifyingglass")
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
 
                     TextField("Search timezones...", text: $searchText)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
@@ -85,9 +85,9 @@ struct TimeZonePickerSheet: View {
                 }
             }
             .navigationTitle("Select Timezone")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationBarTitle()
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .platformTrailing) {
                     Button("Done") {
                         dismiss()
                     }
@@ -106,18 +106,18 @@ struct TimeZonePickerSheet: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(TimeZoneHelper.formatTimeZone(timeZone))
                         .font(.body)
-                        .foregroundColor(.primary)
+                        .foregroundStyle(.primary)
 
                     Text(timeZone.identifier)
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
 
                 Spacer()
 
                 if timeZone.identifier == selectedTimeZoneId {
                     Image(systemName: "checkmark")
-                        .foregroundColor(.blue)
+                        .foregroundStyle(.blue)
                 }
             }
         }

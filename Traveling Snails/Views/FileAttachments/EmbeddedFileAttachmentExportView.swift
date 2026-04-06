@@ -7,9 +7,13 @@
 import SwiftUI
 
 struct EmbeddedFileAttachmentExportView: View {
+    private struct ShareSheetPayload: Identifiable {
+        let id = UUID()
+        let items: [Any]
+    }
+
     let attachments: [EmbeddedFileAttachment]
-    @State private var showingShareSheet = false
-    @State private var shareItems: [Any] = []
+    @State private var activeSheet: ShareSheetPayload?
 
     var body: some View {
         VStack(spacing: 16) {
@@ -31,13 +35,13 @@ struct EmbeddedFileAttachmentExportView: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding()
                             .background(Color.blue.opacity(0.1))
-                            .cornerRadius(8)
+                            .clipShape(.rect(cornerRadius: 8))
                     }
                     .buttonStyle(.plain)
 
                     Text("Individual Files")
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                         .padding(.top)
 
                     LazyVStack(spacing: 8) {
@@ -47,7 +51,7 @@ struct EmbeddedFileAttachmentExportView: View {
                             } label: {
                                 HStack {
                                     Image(systemName: attachment.systemIcon)
-                                        .foregroundColor(.blue)
+                                        .foregroundStyle(.blue)
                                         .frame(width: 24)
 
                                     VStack(alignment: .leading, spacing: 2) {
@@ -55,19 +59,19 @@ struct EmbeddedFileAttachmentExportView: View {
                                             .font(.subheadline)
                                         Text(attachment.formattedFileSize)
                                             .font(.caption)
-                                            .foregroundColor(.secondary)
+                                            .foregroundStyle(.secondary)
                                     }
 
                                     Spacer()
 
                                     Image(systemName: "square.and.arrow.up")
                                         .font(.caption)
-                                        .foregroundColor(.secondary)
+                                        .foregroundStyle(.secondary)
                                 }
                                 .padding(.vertical, 8)
                                 .padding(.horizontal, 12)
-                                .background(Color(.systemGray6))
-                                .cornerRadius(8)
+                                .background(Color.systemGray6)
+                                .clipShape(.rect(cornerRadius: 8))
                             }
                             .buttonStyle(.plain)
                         }
@@ -76,8 +80,8 @@ struct EmbeddedFileAttachmentExportView: View {
             }
         }
         .padding()
-        .sheet(isPresented: $showingShareSheet) {
-            ShareSheet(items: shareItems)
+        .sheet(item: $activeSheet) { payload in
+            ShareSheet(items: payload.items)
         }
     }
 
@@ -91,18 +95,17 @@ struct EmbeddedFileAttachmentExportView: View {
         }
 
         if !items.isEmpty {
-            shareItems = items
-            showingShareSheet = true
+            activeSheet = ShareSheetPayload(items: items)
         }
     }
 
     private func exportAttachment(_ attachment: EmbeddedFileAttachment) {
         guard let data = attachment.fileData else { return }
-        shareItems = [data]
-        showingShareSheet = true
+        activeSheet = ShareSheetPayload(items: [data])
     }
 }
 
+#if os(iOS)
 // Keep the existing ShareSheet since it still works
 struct ShareSheet: UIViewControllerRepresentable {
     let items: [Any]
@@ -114,3 +117,13 @@ struct ShareSheet: UIViewControllerRepresentable {
 
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
+#elseif os(macOS)
+struct ShareSheet: View {
+    let items: [Any]
+
+    var body: some View {
+        Text("Use File > Share to share items on macOS")
+            .padding()
+    }
+}
+#endif

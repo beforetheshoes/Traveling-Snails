@@ -7,14 +7,20 @@
 import SwiftUI
 
 struct SingleTimeZonePicker: View {
+    private enum ActiveSheet: Identifiable {
+        case picker
+        var id: Int { 0 }
+    }
+
     @Binding var selectedTimeZoneId: String
     let address: Address?
 
-    @State private var showingSheet = false
+    @State private var activeSheet: ActiveSheet?
     @State private var detectedTimeZone: TimeZone?
     @State private var isDetectingTimeZone = false
     @State private var hasDetectedFromAddress = false
     @State private var hasUserMadeManualSelection = false
+    @State private var detectionRequestID: UUID?
 
     var selectedTimeZone: TimeZone {
         TimeZone(identifier: selectedTimeZoneId) ?? TimeZone.current
@@ -25,7 +31,7 @@ struct SingleTimeZonePicker: View {
             HStack {
                 Text("Timezone")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
 
                 Spacer()
 
@@ -50,37 +56,40 @@ struct SingleTimeZonePicker: View {
                             hasDetectedFromAddress = true
                         }
                         .font(.caption)
-                        .foregroundColor(.blue)
+                        .foregroundStyle(.blue)
                     }
                 }
 
                 Spacer()
 
                 Button("Change") {
-                    showingSheet = true
+                    activeSheet = .picker
                 }
                 .font(.caption)
-                .foregroundColor(.blue)
+                .foregroundStyle(.blue)
             }
             .padding(.vertical, 8)
             .padding(.horizontal, 12)
-            .background(Color(.systemGray6))
-            .cornerRadius(8)
+            .background(Color.systemGray6)
+            .clipShape(.rect(cornerRadius: 8))
         }
-        .sheet(isPresented: $showingSheet) {
-            NavigationStack {
-                TimeZonePickerSheet(selectedTimeZoneId: $selectedTimeZoneId)
-                    .navigationTitle("Select Timezone")
+        .sheet(item: $activeSheet) { sheet in
+            switch sheet {
+            case .picker:
+                NavigationStack {
+                    TimeZonePickerSheet(selectedTimeZoneId: $selectedTimeZoneId)
+                        .navigationTitle("Select Timezone")
+                }
             }
         }
         .onAppear {
             if !hasUserMadeManualSelection {
-                detectTimeZoneFromAddress()
+                requestTimeZoneDetection()
             }
         }
         .onChange(of: address) { _, _ in
             if !hasUserMadeManualSelection {
-                detectTimeZoneFromAddress()
+                requestTimeZoneDetection()
             }
         }
         .onChange(of: selectedTimeZoneId) { oldValue, newValue in
@@ -88,28 +97,32 @@ struct SingleTimeZonePicker: View {
                 hasUserMadeManualSelection = true
             }
         }
+        .task(id: detectionRequestID) {
+            await detectTimeZoneFromAddress()
+        }
     }
 
-    private func detectTimeZoneFromAddress() {
+    private func requestTimeZoneDetection() {
+        detectionRequestID = UUID()
+    }
+
+    @MainActor
+    private func detectTimeZoneFromAddress() async {
         guard let address = address, !hasDetectedFromAddress, !hasUserMadeManualSelection else { return }
 
         isDetectingTimeZone = true
 
-        Task {
-            let timeZone = await TimeZoneHelper.getTimeZone(from: address)
+        let timeZone = await TimeZoneHelper.getTimeZone(from: address)
 
-            await MainActor.run {
-                isDetectingTimeZone = false
-                detectedTimeZone = timeZone
+        isDetectingTimeZone = false
+        detectedTimeZone = timeZone
 
-                // Auto-apply detected timezone only if user hasn't manually selected one
-                if let detectedTZ = timeZone,
-                   selectedTimeZoneId == TimeZone.current.identifier,
-                   !hasUserMadeManualSelection {
-                    selectedTimeZoneId = detectedTZ.identifier
-                    hasDetectedFromAddress = true
-                }
-            }
+        // Auto-apply detected timezone only if user hasn't manually selected one
+        if let detectedTZ = timeZone,
+           selectedTimeZoneId == TimeZone.current.identifier,
+           !hasUserMadeManualSelection {
+            selectedTimeZoneId = detectedTZ.identifier
+            hasDetectedFromAddress = true
         }
     }
 }

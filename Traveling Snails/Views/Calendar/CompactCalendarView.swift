@@ -5,6 +5,7 @@
 //
 
 import Foundation
+import ComposableArchitecture
 import SwiftUI
 
 struct CompactCalendarView: View {
@@ -20,12 +21,12 @@ struct CompactCalendarView: View {
     private var visibleDaysCount: Int {
         #if os(iOS)
         if UIDevice.current.userInterfaceIdiom == .phone {
-            return 3 // Show 3 days on phone for better readability
+            return 3
         } else {
-            return 7 // iPad shows all 7
+            return 7
         }
         #else
-        return 7 // Mac/other platforms
+        return 7
         #endif
     }
 
@@ -62,7 +63,7 @@ struct CompactCalendarView: View {
                 } label: {
                     Image(systemName: "chevron.left")
                         .font(.title2)
-                        .foregroundColor(.blue)
+                        .foregroundStyle(.blue)
                 }
 
                 Spacer()
@@ -78,7 +79,7 @@ struct CompactCalendarView: View {
                 } label: {
                     Image(systemName: "chevron.right")
                         .font(.title2)
-                        .foregroundColor(.blue)
+                        .foregroundStyle(.blue)
                 }
             }
             .padding(.horizontal)
@@ -109,16 +110,20 @@ struct CompactCalendarView: View {
                 .frame(maxWidth: .infinity)
                 .padding()
                 .background(Color.blue.opacity(0.1))
-                .foregroundColor(.blue)
-                .cornerRadius(8)
+                .foregroundStyle(.blue)
+                .clipShape(.rect(cornerRadius: 8))
             }
             .padding()
         }
         .onAppear {
             // Initialize calendar to proper starting position if needed
         }
-        .fullScreenCover(isPresented: $showingFullCalendar) {
-            TripCalendarRootView(trip: trip)
+        .sheet(isPresented: $showingFullCalendar) {
+            TripCalendarRootView(
+                store: StoreOf<CalendarFeature>.init(initialState: CalendarFeature.State(trip: trip)) {
+                    CalendarFeature()
+                }
+            )
         }
     }
 
@@ -130,7 +135,7 @@ struct CompactCalendarView: View {
 
             Text(headerSubtitleText)
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -237,15 +242,15 @@ struct CompactCalendarView: View {
                                 Text(wrapper.tripActivity.name)
                                     .font(.caption2)
                                     .fontWeight(.medium)
-                                    .foregroundColor(.white)
+                                    .foregroundStyle(.white)
                                     .lineLimit(1)
                                 HStack(spacing: 4) {
                                     Text(timeWithTimezone(wrapper.tripActivity.start, timezone: wrapper.tripActivity.startTZ))
                                         .font(.caption2)
-                                        .foregroundColor(.white.opacity(0.8))
+                                        .foregroundStyle(.white.opacity(0.8))
                                     Text("→")
                                         .font(.caption2)
-                                        .foregroundColor(.white.opacity(0.6))
+                                        .foregroundStyle(.white.opacity(0.6))
                                 }
                             }
                         } else if isEventEnd(wrapper, date) {
@@ -253,22 +258,22 @@ struct CompactCalendarView: View {
                                 Text(wrapper.tripActivity.name)
                                     .font(.caption2)
                                     .fontWeight(.medium)
-                                    .foregroundColor(.white)
+                                    .foregroundStyle(.white)
                                     .lineLimit(1)
                                 Text(timeWithTimezone(wrapper.tripActivity.end, timezone: wrapper.tripActivity.endTZ))
                                     .font(.caption2)
-                                    .foregroundColor(.white.opacity(0.8))
+                                    .foregroundStyle(.white.opacity(0.8))
                             }
                         } else if eventSpansDate(wrapper, date) {
                             VStack(alignment: .leading, spacing: 1) {
                                 Text(wrapper.tripActivity.name)
                                     .font(.caption2)
                                     .fontWeight(.medium)
-                                    .foregroundColor(.white)
+                                    .foregroundStyle(.white)
                                     .lineLimit(1)
                                 Text("All Day")
                                     .font(.caption2)
-                                    .foregroundColor(.white.opacity(0.8))
+                                    .foregroundStyle(.white.opacity(0.8))
                             }
                         }
                         Spacer()

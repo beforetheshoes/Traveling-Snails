@@ -4,60 +4,59 @@
 //
 //
 
+import ComposableArchitecture
 import SwiftUI
 
 struct DatabaseImportProgressView: View {
-    let importManager: DatabaseImportManager
-    @Environment(\.dismiss) private var dismiss
-    @State private var importResult: DatabaseImportManager.ImportResult?
+    @Bindable var store: StoreOf<DatabaseImportFeature>
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 30) {
-                if importManager.isImporting {
+                if store.isImporting {
                     VStack(spacing: 20) {
                         Image(systemName: "square.and.arrow.down.on.square")
                             .font(.system(size: 60))
-                            .foregroundColor(.blue)
+                            .foregroundStyle(.blue)
 
                         Text("Importing Data")
                             .font(.title2)
                             .fontWeight(.semibold)
 
                         VStack(spacing: 12) {
-                            ProgressView(value: importManager.importProgress)
+                            ProgressView(value: store.importProgress)
                                 .progressViewStyle(LinearProgressViewStyle())
                                 .scaleEffect(1.2)
 
-                            Text(importManager.importStatus)
+                            Text(store.importStatus)
                                 .font(.subheadline)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(.secondary)
                                 .multilineTextAlignment(.center)
 
-                            Text("\(Int(importManager.importProgress * 100))% Complete")
+                            Text("\(Int(store.importProgress * 100))% Complete")
                                 .font(.caption)
                                 .fontWeight(.medium)
-                                .foregroundColor(.blue)
+                                .foregroundStyle(.blue)
                         }
 
                         Text("Please don't close this screen during import")
                             .font(.caption)
-                            .foregroundColor(.orange)
+                            .foregroundStyle(.orange)
                             .padding(.horizontal)
                             .multilineTextAlignment(.center)
                     }
                     .padding()
-                } else if importManager.importSuccess {
+                } else if store.importSuccess {
                     VStack(spacing: 20) {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.system(size: 60))
-                            .foregroundColor(.green)
+                            .foregroundStyle(.green)
 
                         Text("Import Successful!")
                             .font(.title2)
                             .fontWeight(.semibold)
 
-                        if let result = importResult {
+                        if let result = store.importResult {
                             VStack(spacing: 12) {
                                 Text("Import Summary")
                                     .font(.headline)
@@ -68,28 +67,28 @@ struct DatabaseImportProgressView: View {
                                 if result.organizationsMerged > 0 {
                                     HStack {
                                         Image(systemName: "arrow.triangle.merge")
-                                            .foregroundColor(.orange)
+                                            .foregroundStyle(.orange)
                                         Text("\(result.organizationsMerged) organizations merged with existing data")
                                             .font(.caption)
-                                            .foregroundColor(.secondary)
+                                            .foregroundStyle(.secondary)
                                     }
                                     .padding(.top, 8)
                                 }
                             }
                             .padding()
-                            .background(Color(.systemGray6))
-                            .cornerRadius(12)
+                            .background(Color.systemGray6)
+                            .clipShape(.rect(cornerRadius: 12))
                             .padding(.horizontal)
                         }
 
                         Text("Your data has been imported successfully. Duplicate organizations were automatically merged.")
                             .font(.body)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal)
 
                         Button {
-                            dismiss()
+                            store.send(.doneTapped)
                         } label: {
                             Label("Done", systemImage: "checkmark")
                                 .frame(maxWidth: .infinity)
@@ -98,11 +97,11 @@ struct DatabaseImportProgressView: View {
                         .padding(.horizontal)
                     }
                     .padding()
-                } else if let error = importManager.importError {
+                } else if let error = store.importError {
                     VStack(spacing: 20) {
                         Image(systemName: "exclamationmark.triangle.fill")
                             .font(.system(size: 60))
-                            .foregroundColor(.red)
+                            .foregroundStyle(.red)
 
                         Text("Import Failed")
                             .font(.title2)
@@ -110,12 +109,12 @@ struct DatabaseImportProgressView: View {
 
                         Text(error)
                             .font(.body)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal)
 
                         Button {
-                            dismiss()
+                            store.send(.doneTapped)
                         } label: {
                             Label("Close", systemImage: "xmark")
                                 .frame(maxWidth: .infinity)
@@ -129,22 +128,17 @@ struct DatabaseImportProgressView: View {
                 Spacer()
             }
             .navigationTitle("Import Progress")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationBarTitle()
             .toolbar {
-                if !importManager.isImporting {
-                    ToolbarItem(placement: .navigationBarTrailing) {
+                if !store.isImporting {
+                    ToolbarItem(placement: .platformTrailing) {
                         Button("Done") {
-                            dismiss()
+                            store.send(.doneTapped)
                         }
                     }
                 }
             }
-            .interactiveDismissDisabled(importManager.isImporting)
-        }
-        .onReceive(NotificationCenter.default.publisher(for: .importCompleted)) { notification in
-            if let result = notification.object as? DatabaseImportManager.ImportResult {
-                importResult = result
-            }
+            .interactiveDismissDisabled(store.isImporting)
         }
     }
 }
@@ -178,7 +172,7 @@ struct ImportStatCard: View {
             HStack {
                 Image(systemName: icon)
                     .font(.caption)
-                    .foregroundColor(color)
+                    .foregroundStyle(color)
 
                 Text("\(count)")
                     .font(.headline)
@@ -187,11 +181,11 @@ struct ImportStatCard: View {
 
             Text(title)
                 .font(.caption2)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
         .padding(8)
         .background(color.opacity(0.1))
-        .cornerRadius(8)
+        .clipShape(.rect(cornerRadius: 8))
     }
 }

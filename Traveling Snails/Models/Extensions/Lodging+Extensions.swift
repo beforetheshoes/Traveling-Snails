@@ -79,7 +79,9 @@ extension Lodging: DetailDisplayable {
         ))
 
         // Stay Details
-        let nights = Calendar.current.dateComponents([.day], from: start, to: end).day ?? 0
+        let startDay = Calendar.current.startOfDay(for: start)
+        let endDay = Calendar.current.startOfDay(for: end)
+        let nights = Calendar.current.dateComponents([.day], from: startDay, to: endDay).day ?? 0
         var stayRows = [
             DetailRowData(label: "Check-in", value: checkInDateFormatted),
             DetailRowData(label: "Check-in Timezone", value: checkInTZId),

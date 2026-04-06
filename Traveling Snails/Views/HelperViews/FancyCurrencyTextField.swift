@@ -33,12 +33,12 @@ struct FancyCurrencyTextField: View {
 
                 Text("$")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(color)
+                    .foregroundStyle(color)
             }
 
             VStack(alignment: .leading, spacing: 2) {
                 TextField("0.00", text: $textValue)
-                    .keyboardType(.decimalPad)
+                    .platformKeyboardType(.decimalPad)
                     .focused($isFocused)
                     .font(.system(size: 18, weight: .medium))
                     .onChange(of: textValue) { _, newValue in
@@ -56,7 +56,7 @@ struct FancyCurrencyTextField: View {
                 if isFocused {
                     Text("Enter amount in USD")
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                         .transition(.opacity)
                 }
             }
@@ -67,7 +67,7 @@ struct FancyCurrencyTextField: View {
             if !isFocused && value > 0 {
                 Text(value, format: .currency(code: "USD"))
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                     .transition(.opacity)
             }
         }
@@ -75,7 +75,7 @@ struct FancyCurrencyTextField: View {
         .padding(.vertical, 12)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemGray6))
+                .fill(Color.systemGray6)
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(isFocused ? color : Color.clear, lineWidth: 2)

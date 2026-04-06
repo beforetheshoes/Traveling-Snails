@@ -18,6 +18,7 @@ enum TripRoute: Hashable {
 struct AppFeature {
     enum AppTab: Int, CaseIterable, Hashable {
         case trips
+        case collections
         case organizations
         case settings
     }
@@ -40,6 +41,7 @@ struct AppFeature {
         var selectedTab: AppTab = .trips
         var selectedTripID: Trip.ID?
         var selectedOrganizationID: Organization.ID?
+        var selectedCollectionID: Collection.ID?
         var tripDetailPathByTripID: [Trip.ID: [TripRoute]] = [:]
         var tripReselectTokenByTripID: [Trip.ID: Int] = [:]
     }
@@ -48,12 +50,14 @@ struct AppFeature {
         case selectTab(AppTab)
         case selectTrip(Trip.ID, source: NavigationSource)
         case selectOrganization(Organization.ID)
+        case selectCollection(Collection.ID)
         case reselectTrip(Trip.ID)
         case clearTripSelection(reason: ClearTripSelectionReason)
         case restoreTabNavigation(AppTab)
         case setTripDetailPath(Trip.ID, [TripRoute])
         case reconcileAvailableTrips([Trip.ID])
         case reconcileAvailableOrganizations([Organization.ID])
+        case reconcileAvailableCollections([Collection.ID])
     }
 
     @ObservableState
@@ -62,6 +66,7 @@ struct AppFeature {
         var showingSyncIndicator = false
         var navigation = NavigationState()
         var trips = TripsFeature.State()
+        var collections = CollectionsFeature.State()
         var organizations = OrganizationsFeature.State()
         var settings = SettingsFeature.State()
     }
@@ -73,12 +78,14 @@ struct AppFeature {
         case periodicSyncTick
         case navigation(NavigationAction)
         case trips(TripsFeature.Action)
+        case collections(CollectionsFeature.Action)
         case organizations(OrganizationsFeature.Action)
         case settings(SettingsFeature.Action)
     }
 
     @Dependency(\.continuousClock) var clock
     @Dependency(\.defaultSyncEngine) var syncEngine
+    @Dependency(\.biometricAuthClient) var biometricAuthClient
 
     private enum CancelID {
         case syncIndicator
@@ -88,6 +95,9 @@ struct AppFeature {
     var body: some ReducerOf<Self> {
         Scope(state: \.trips, action: \.trips) {
             TripsFeature()
+        }
+        Scope(state: \.collections, action: \.collections) {
+            CollectionsFeature()
         }
         Scope(state: \.organizations, action: \.organizations) {
             OrganizationsFeature()
@@ -123,6 +133,11 @@ struct AppFeature {
                 return .none
 
             case .scenePhaseChanged(let phase):
+                if phase == .background {
+                    return .run { _ in
+                        await biometricAuthClient.resetSession()
+                    }
+                }
                 if phase == .active {
                     return .run { _ in
                         try await syncEngine.sendChanges()
@@ -139,7 +154,7 @@ struct AppFeature {
                 reduceNavigation(into: &state, action: navAction)
                 return .none
 
-            case .trips, .organizations, .settings:
+            case .trips, .collections, .organizations, .settings:
                 return .none
             }
         }
@@ -172,6 +187,13 @@ struct AppFeature {
             #endif
             state.navigation.selectedOrganizationID = organizationID
             state.navigation.selectedTab = .organizations
+
+        case .selectCollection(let collectionID):
+            #if DEBUG
+            Logger.shared.debug("AppNavigation selectCollection: \(collectionID)", category: .navigation)
+            #endif
+            state.navigation.selectedCollectionID = collectionID
+            state.navigation.selectedTab = .collections
 
         case .reselectTrip(let tripID):
             #if DEBUG
@@ -230,6 +252,14 @@ struct AppFeature {
                !validIDs.contains(selected) {
                 state.navigation.selectedOrganizationID = nil
             }
+
+        case .reconcileAvailableCollections(let availableCollections):
+            let validIDs = Set(availableCollections)
+            guard !validIDs.isEmpty else { return }
+            if let selected = state.navigation.selectedCollectionID,
+               !validIDs.contains(selected) {
+                state.navigation.selectedCollectionID = nil
+            }
         }
     }
 
@@ -247,8 +277,27 @@ extension AppFeature.NavigationState: Equatable {}
 
 extension AppFeature.State: Equatable {
     static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.isInitialSyncComplete == rhs.isInitialSyncComplete &&
-        lhs.showingSyncIndicator == rhs.showingSyncIndicator &&
-        lhs.navigation == rhs.navigation
+        let coreEqual =
+            lhs.isInitialSyncComplete == rhs.isInitialSyncComplete &&
+            lhs.showingSyncIndicator == rhs.showingSyncIndicator &&
+            lhs.navigation == rhs.navigation
+        let childrenEqual =
+            lhs.trips.trips.map(\.id) == rhs.trips.trips.map(\.id) &&
+            lhs.collections.collections.map(\.id) == rhs.collections.collections.map(\.id) &&
+            lhs.organizations.organizations.map(\.id) == rhs.organizations.organizations.map(\.id)
+        let settingsEqual1 =
+            lhs.settings.activeSheet == rhs.settings.activeSheet &&
+            lhs.settings.showingImportPicker == rhs.settings.showingImportPicker &&
+            lhs.settings.importError == rhs.settings.importError &&
+            lhs.settings.showingImportError == rhs.settings.showingImportError &&
+            lhs.settings.showingOrganizationCleanupAlert == rhs.settings.showingOrganizationCleanupAlert &&
+            lhs.settings.organizationCleanupMessage == rhs.settings.organizationCleanupMessage
+        let settingsEqual2 =
+            lhs.settings.allTripsLocked == rhs.settings.allTripsLocked &&
+            lhs.settings.canUseBiometrics == rhs.settings.canUseBiometrics &&
+            lhs.settings.isFaceID == rhs.settings.isFaceID &&
+            lhs.settings.colorSchemePreference == rhs.settings.colorSchemePreference &&
+            lhs.settings.biometricTimeoutMinutes == rhs.settings.biometricTimeoutMinutes
+        return coreEqual && childrenEqual && settingsEqual1 && settingsEqual2
     }
 }

@@ -7,7 +7,7 @@
 import QuickLook
 import SwiftUI
 
-@available(iOS 18.0, *)
+@available(iOS 18.0, macOS 14.0, *)
 struct ImprovedQuickLookView: View {
     let url: URL
     @Environment(\.dismiss) private var dismiss
@@ -32,15 +32,15 @@ struct ImprovedQuickLookView: View {
                 }
             }
             .navigationTitle("Preview")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationBarTitle()
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .platformTopLeading) {
                     Button("Done") {
                         dismiss()
                     }
                 }
 
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .platformTopTrailing) {
                     ShareLink(item: url) {
                         Image(systemName: "square.and.arrow.up")
                     }
@@ -72,11 +72,13 @@ struct ImprovedQuickLookView: View {
             }
 
             // Check if QuickLook can handle this file type using the URL
+            #if os(iOS)
             let canPreview = QLPreviewController.canPreview(url as QLPreviewItem)
             if !canPreview {
                 loadError = "This file type cannot be previewed"
                 return
             }
+            #endif
 
             isLoading = false
         } catch {
@@ -86,7 +88,9 @@ struct ImprovedQuickLookView: View {
     }
 }
 
+#if os(iOS)
 @available(iOS 18.0, *)
+@MainActor
 struct ModernQuickLookContainer: UIViewControllerRepresentable {
     let url: URL
     let onError: (String) -> Void
@@ -94,7 +98,6 @@ struct ModernQuickLookContainer: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> QLPreviewController {
         let controller = QLPreviewController()
         controller.dataSource = context.coordinator
-        controller.delegate = context.coordinator
 
         // Modern iOS 18 configurations
         controller.modalPresentationStyle = .fullScreen
@@ -111,7 +114,7 @@ struct ModernQuickLookContainer: UIViewControllerRepresentable {
         Coordinator(url: url, onError: onError)
     }
 
-    class Coordinator: NSObject, QLPreviewControllerDataSource, QLPreviewControllerDelegate {
+    class Coordinator: NSObject, QLPreviewControllerDataSource {
         let url: URL
         let onError: (String) -> Void
 
@@ -129,12 +132,19 @@ struct ModernQuickLookContainer: UIViewControllerRepresentable {
             url as QLPreviewItem
         }
 
-        func previewController(_ controller: QLPreviewController, editingModeFor previewItem: QLPreviewItem) -> QLPreviewItemEditingMode {
-            .disabled
-        }
-
-        func previewControllerDidDismiss(_ controller: QLPreviewController) {
-            // Handle dismissal
-        }
     }
 }
+#elseif os(macOS)
+@available(macOS 14.0, *)
+@MainActor
+struct ModernQuickLookContainer: View {
+    let url: URL
+    let onError: (String) -> Void
+
+    var body: some View {
+        Text("Preview not available on macOS. Use Quick Look from Finder.")
+            .foregroundStyle(.secondary)
+            .padding()
+    }
+}
+#endif

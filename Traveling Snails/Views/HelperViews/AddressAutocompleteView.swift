@@ -16,6 +16,9 @@ struct AddressAutocompleteView: View {
     @State private var isSearching = false
     @State private var showResults = false
     @State private var hasSelectedAddress = false
+    @State private var pendingSearchQuery = ""
+    @State private var pendingSelection: MKLocalSearchCompletion?
+    @State private var selectionRequestID: UUID?
 
     let placeholder: String
 
@@ -29,10 +32,10 @@ struct AddressAutocompleteView: View {
             // Search field
             HStack {
                 Image(systemName: "magnifyingglass")
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
 
                 TextField(placeholder, text: $searchText)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .textFieldStyle(.roundedBorder)
                     .onChange(of: searchText) { _, newValue in
                         handleSearchTextChange(newValue)
                     }
@@ -48,7 +51,7 @@ struct AddressAutocompleteView: View {
                         clearSelection()
                     }
                     .font(.caption)
-                    .foregroundColor(.blue)
+                    .foregroundStyle(.blue)
                 }
             }
 
@@ -56,16 +59,16 @@ struct AddressAutocompleteView: View {
             if let address = selectedAddress, hasSelectedAddress {
                 HStack {
                     Image(systemName: "location.fill")
-                        .foregroundColor(.green)
+                        .foregroundStyle(.green)
                         .font(.caption)
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Selected Address:")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                         Text(address.displayAddress)
                             .font(.body)
-                            .foregroundColor(.primary)
+                            .foregroundStyle(.primary)
                     }
 
                     Spacer()
@@ -74,12 +77,12 @@ struct AddressAutocompleteView: View {
                         changeAddress()
                     }
                     .font(.caption)
-                    .foregroundColor(.blue)
+                    .foregroundStyle(.blue)
                 }
                 .padding(.vertical, 8)
                 .padding(.horizontal, 12)
                 .background(Color.green.opacity(0.1))
-                .cornerRadius(8)
+                .clipShape(.rect(cornerRadius: 8))
             }
 
             // Search results
@@ -87,7 +90,7 @@ struct AddressAutocompleteView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     Text("Search Results")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                         .padding(.horizontal, 12)
                         .padding(.top, 8)
 
@@ -98,13 +101,13 @@ struct AddressAutocompleteView: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(completion.title)
                                     .font(.body)
-                                    .foregroundColor(.primary)
+                                    .foregroundStyle(.primary)
                                     .multilineTextAlignment(.leading)
 
                                 if !completion.subtitle.isEmpty {
                                     Text(completion.subtitle)
                                         .font(.caption)
-                                        .foregroundColor(.secondary)
+                                        .foregroundStyle(.secondary)
                                         .multilineTextAlignment(.leading)
                                 }
                             }
@@ -113,7 +116,7 @@ struct AddressAutocompleteView: View {
                             .padding(.horizontal, 16)
                         }
                         .buttonStyle(PlainButtonStyle())
-                        .background(Color(.systemBackground))
+                        .background(Color.systemBackground)
 
                         if completion != searchResults.prefix(5).last {
                             Divider()
@@ -121,8 +124,8 @@ struct AddressAutocompleteView: View {
                         }
                     }
                 }
-                .background(Color(.systemBackground))
-                .cornerRadius(8)
+                .background(Color.systemBackground)
+                .clipShape(.rect(cornerRadius: 8))
                 .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
                 .padding(.top, 4)
             }
@@ -134,7 +137,7 @@ struct AddressAutocompleteView: View {
                         .scaleEffect(0.8)
                     Text("Finding address...")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
                 .padding(.horizontal, 12)
             }
@@ -163,6 +166,15 @@ struct AddressAutocompleteView: View {
                 }
             }
         }
+        .onDisappear {
+            pendingSearchQuery = ""
+        }
+        .task(id: pendingSearchQuery) {
+            await runDebouncedSearch(query: pendingSearchQuery)
+        }
+        .task(id: selectionRequestID) {
+            await resolvePendingSelection()
+        }
     }
 
     private func handleSearchTextChange(_ newValue: String) {
@@ -174,12 +186,7 @@ struct AddressAutocompleteView: View {
         // Only search if we don't have a selected address
         if !hasSelectedAddress {
             showResults = true
-            // Add a small delay to prevent too many API calls
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                if self.searchText == newValue && !self.hasSelectedAddress {
-                    self.searchCompleter.queryFragment = newValue
-                }
-            }
+            pendingSearchQuery = newValue
         }
     }
 
@@ -203,11 +210,9 @@ struct AddressAutocompleteView: View {
 
     private func setupSearchCompleter() {
         let delegate = SearchCompleterDelegate { results in
-            DispatchQueue.main.async {
-                // Only update results if we're still in search mode
-                if !self.hasSelectedAddress {
-                    self.searchResults = results
-                }
+            // Only update results if we're still in search mode
+            if !hasSelectedAddress {
+                searchResults = results
             }
         }
         searchCompleterDelegate = delegate
@@ -219,37 +224,63 @@ struct AddressAutocompleteView: View {
         // Immediately set flags to prevent UI flickering
         showResults = false
         isSearching = true
+        pendingSelection = completion
+        selectionRequestID = UUID()
+    }
+
+    @MainActor
+    private func runDebouncedSearch(query: String) async {
+        guard !query.isEmpty, !hasSelectedAddress else { return }
+        do {
+            try await Task.sleep(for: .milliseconds(300))
+        } catch {
+            return
+        }
+        guard !Task.isCancelled else { return }
+        if searchText == query && !hasSelectedAddress {
+            searchCompleter.queryFragment = query
+        }
+    }
+
+    @MainActor
+    private func resolvePendingSelection() async {
+        guard let completion = pendingSelection else { return }
+        defer {
+            selectionRequestID = nil
+            pendingSelection = nil
+        }
 
         let searchRequest = MKLocalSearch.Request(completion: completion)
         let search = MKLocalSearch(request: searchRequest)
 
-        search.start { response, error in
-            DispatchQueue.main.async {
-                self.isSearching = false
+        do {
+            let response = try await search.start()
+            isSearching = false
 
-                guard let response = response,
-                      let mapItem = response.mapItems.first else {
-                    Logger.shared.warning("Failed to get location for completion: \(error?.localizedDescription ?? "Unknown error")", category: .network)
-                    // Reset to search mode on error
-                    self.showResults = true
-                    return
-                }
-
-                let address = Address(from: mapItem.placemark)
-
-                // Set everything in the right order
-                self.selectedAddress = address
-                self.searchText = address.displayAddress
-                self.hasSelectedAddress = true
-                self.searchResults = []
-                self.searchCompleter.queryFragment = ""
+            guard let mapItem = response.mapItems.first else {
+                Logger.shared.warning("Failed to get location for completion: No map items", category: .network)
+                showResults = true
+                return
             }
+
+            guard #available(iOS 26.0, macOS 26.0, *) else { return }
+            let address = Address(from: mapItem)
+            selectedAddress = address
+            searchText = address.displayAddress
+            hasSelectedAddress = true
+            searchResults = []
+            searchCompleter.queryFragment = ""
+        } catch {
+            isSearching = false
+            Logger.shared.warning("Failed to get location for completion: \(error.localizedDescription)", category: .network)
+            showResults = true
         }
     }
 }
 
 // Helper class to handle search completer delegate
-class SearchCompleterDelegate: NSObject, MKLocalSearchCompleterDelegate {
+@MainActor
+final class SearchCompleterDelegate: NSObject, @preconcurrency MKLocalSearchCompleterDelegate {
     private let onResults: ([MKLocalSearchCompletion]) -> Void
 
     init(onResults: @escaping ([MKLocalSearchCompletion]) -> Void) {
@@ -289,7 +320,7 @@ class SearchCompleterDelegate: NSObject, MKLocalSearchCompleterDelegate {
                     }
                     .padding()
                     .background(Color.gray.opacity(0.1))
-                    .cornerRadius(8)
+                    .clipShape(.rect(cornerRadius: 8))
                     .padding()
                 }
 

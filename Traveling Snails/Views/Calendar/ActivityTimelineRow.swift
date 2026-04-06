@@ -23,7 +23,7 @@ struct ActivityTimelineRow: View {
 
                 Text(wrapper.tripActivity.end, style: .time)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
             .frame(width: 60)
 
@@ -31,7 +31,7 @@ struct ActivityTimelineRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Image(systemName: wrapper.tripActivity.icon)
-                        .foregroundColor(wrapper.type.color)
+                        .foregroundStyle(wrapper.type.color)
                         .font(.caption)
 
                     Text(wrapper.tripActivity.name)
@@ -42,7 +42,7 @@ struct ActivityTimelineRow: View {
                 if let organization = wrapper.tripActivity.organization, !organization.isNone {
                     Text(organization.name)
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
 
                 HStack {
@@ -52,16 +52,16 @@ struct ActivityTimelineRow: View {
 
                     Text("\(hours)h \(minutes)m")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
 
                     if wrapper.tripActivity.cost > 0 {
                         Text("•")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
 
                         Text(wrapper.tripActivity.cost, format: .currency(code: "USD"))
                             .font(.caption)
-                            .foregroundColor(.green)
+                            .foregroundStyle(.green)
                     }
                 }
             }

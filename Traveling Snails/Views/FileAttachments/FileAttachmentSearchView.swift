@@ -8,11 +8,16 @@ import SQLiteData
 import SwiftUI
 
 struct FileAttachmentSearchView: View {
-    @FetchAll private var allAttachments: [EmbeddedFileAttachment]
+    private enum ActiveSheet: Identifiable {
+        case export
+        var id: Int { 0 }
+    }
+
+    @FetchAll private var attachmentRecords: [EmbeddedFileAttachment]
 
     @State private var searchText = ""
     @State private var selectedFileType: FileType = .all
-    @State private var showingExportView = false
+    @State private var activeSheet: ActiveSheet?
 
     enum FileType: String, CaseIterable {
         case all = "All"
@@ -33,14 +38,14 @@ struct FileAttachmentSearchView: View {
     }
 
     var filteredAttachments: [EmbeddedFileAttachment] {
-        var filtered = allAttachments
+        var filtered = attachmentRecords
 
         // Filter by search text
         if !searchText.isEmpty {
             filtered = filtered.filter { attachment in
-                attachment.displayName.localizedCaseInsensitiveContains(searchText) ||
-                attachment.originalFileName.localizedCaseInsensitiveContains(searchText) ||
-                attachment.fileDescription.localizedCaseInsensitiveContains(searchText)
+                attachment.displayName.localizedStandardContains(searchText) ||
+                attachment.originalFileName.localizedStandardContains(searchText) ||
+                attachment.fileDescription.localizedStandardContains(searchText)
             }
         }
 
@@ -66,7 +71,7 @@ struct FileAttachmentSearchView: View {
             VStack(spacing: 0) {
                 // Search and filters
                 VStack(spacing: 12) {
-                    UnifiedSearchBar(text: $searchText)
+                    SearchBarView(text: $searchText)
 
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
@@ -84,7 +89,7 @@ struct FileAttachmentSearchView: View {
                     }
                 }
                 .padding(.vertical)
-                .background(Color(.systemGroupedBackground))
+                .background(Color.systemGroupedBackground)
 
                 // Results
                 if filteredAttachments.isEmpty {
@@ -107,25 +112,28 @@ struct FileAttachmentSearchView: View {
             }
             .navigationTitle("All Attachments")
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .platformTrailing) {
                     Button {
-                        showingExportView = true
+                        activeSheet = .export
                     } label: {
                         Image(systemName: "square.and.arrow.up")
                     }
                     .disabled(filteredAttachments.isEmpty)
                 }
             }
-            .sheet(isPresented: $showingExportView) {
-                NavigationStack {
-                    EmbeddedFileAttachmentExportView(attachments: filteredAttachments)
-                        .navigationTitle("Export Attachments")
-                        .navigationBarTitleDisplayMode(.inline)
-                        .toolbar {
-                            ToolbarItem(placement: .navigationBarTrailing) {
-                                Button("Done") { showingExportView = false }
+            .sheet(item: $activeSheet) { sheet in
+                switch sheet {
+                case .export:
+                    NavigationStack {
+                        EmbeddedFileAttachmentExportView(attachments: filteredAttachments)
+                            .navigationTitle("Export Attachments")
+                            .inlineNavigationBarTitle()
+                            .toolbar {
+                                ToolbarItem(placement: .platformTrailing) {
+                                    Button("Done") { activeSheet = nil }
+                                }
                             }
-                        }
+                    }
                 }
             }
         }

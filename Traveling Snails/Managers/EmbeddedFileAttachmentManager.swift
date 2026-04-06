@@ -9,8 +9,9 @@ import QuickLook
 import SwiftUI
 import UniformTypeIdentifiers
 
+@MainActor
 @Observable
-class EmbeddedFileAttachmentManager {
+final class EmbeddedFileAttachmentManager {
     static let shared = EmbeddedFileAttachmentManager()
 
     private init() {}
@@ -105,6 +106,7 @@ class EmbeddedFileAttachmentManager {
         }
     }
 
+    @MainActor
     func validateFileAccess(for attachment: EmbeddedFileAttachment) -> (isValid: Bool, error: String?) {
         guard let data = attachment.fileData else {
             return (false, "No file data stored")
@@ -119,6 +121,7 @@ class EmbeddedFileAttachmentManager {
             return (false, "Cannot create temporary file")
         }
 
+        #if os(iOS)
         let canPreview = QLPreviewController.canPreview(tempURL as QLPreviewItem)
 
         // Clean up temp file
@@ -127,6 +130,10 @@ class EmbeddedFileAttachmentManager {
         if !canPreview {
             return (false, "File type cannot be previewed")
         }
+        #else
+        // Clean up temp file
+        try? FileManager.default.removeItem(at: tempURL)
+        #endif
 
         return (true, nil)
     }

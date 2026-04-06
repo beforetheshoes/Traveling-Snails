@@ -25,10 +25,10 @@ struct MonthView: View {
                     Text(day)
                         .font(.caption)
                         .fontWeight(.semibold)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, minHeight: 30)
                         .padding(.vertical, 4)
-                        .background(Color(.systemGray6))
+                        .background(Color.systemGray6)
                 }
 
                 // Month days with padding
@@ -50,7 +50,7 @@ struct MonthView: View {
             }
             .padding(.horizontal, 8)
         }
-        .background(Color(.systemBackground))
+        .background(Color.systemBackground)
     }
 
     private var monthDaysWithPadding: [Date?] {

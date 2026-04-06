@@ -12,12 +12,16 @@ enum UserDefaultsConstants {
     // MARK: - App Settings Keys
 
     /// Key for storing the user's preferred color scheme (light/dark/auto)
-    /// Used in: AppSettings.swift
+    /// Used in: SettingsClient.swift
     static let colorScheme = "colorScheme"
 
     /// Key for storing biometric authentication timeout in minutes
-    /// Used in: AppSettings.swift, BiometricAuthManager.swift
+    /// Used in: SettingsClient.swift, BiometricAuthManager.swift
     static let biometricTimeoutMinutes = "biometricTimeoutMinutes"
+
+    /// Key for hiding past trips in the trips list (default: true)
+    /// Used in: TripsNavigatorView.swift
+    static let hidePastTrips = "hidePastTrips"
 
     // MARK: - Environment Detection Keys
 

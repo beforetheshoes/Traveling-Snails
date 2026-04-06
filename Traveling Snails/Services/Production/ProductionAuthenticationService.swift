@@ -10,18 +10,18 @@ import os.lock
 import SwiftUI
 
 /// Production implementation of AuthenticationService using LocalAuthentication framework
-final class ProductionAuthenticationService: AuthenticationService, Sendable {
+final class ProductionAuthenticationService: AuthenticationService, @unchecked Swift.Sendable {
     // MARK: - Properties
 
     /// Thread-safe storage
     private let lock = OSAllocatedUnfairLock()
 
     /// Simple session tracking - which trips are authenticated this session
-    /// nonisolated(unsafe) is appropriate here because we use OSAllocatedUnfairLock for synchronization
-    nonisolated(unsafe) private var authenticatedTripIDs: Set<UUID> = []
+    /// is appropriate here because we use OSAllocatedUnfairLock for synchronization
+    private var authenticatedTripIDs: Set<UUID> = []
 
     /// Notification handlers for state changes
-    nonisolated(unsafe) private var stateChangeHandlers: [(UUID) -> Void] = []
+    private var stateChangeHandlers: [@Sendable (UUID) -> Void] = []
 
     // MARK: - AuthenticationService Implementation
 
@@ -123,20 +123,6 @@ final class ProductionAuthenticationService: AuthenticationService, Sendable {
         return true
         #else
 
-        // Perform biometric authentication with fresh context
-        let context = LAContext()
-
-        // Check if biometrics are available before attempting authentication
-        var error: NSError?
-        guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
-            if let error = error {
-                Logger.shared.debug("Biometrics not available: \(error.localizedDescription)")
-            } else {
-                Logger.shared.debug("Biometrics not available, returning false")
-            }
-            return false
-        }
-
         Logger.shared.debug("Starting biometric authentication with timeout protection...")
 
         // Add timeout protection to prevent indefinite hanging
@@ -145,6 +131,17 @@ final class ProductionAuthenticationService: AuthenticationService, Sendable {
         return await withTaskGroup(of: Bool.self) { group in
             // Authentication task
             group.addTask {
+                let context = LAContext()
+                var error: NSError?
+                guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {
+                    if let error {
+                        Logger.shared.debug("Biometrics not available: \(error.localizedDescription)")
+                    } else {
+                        Logger.shared.debug("Biometrics not available, returning false")
+                    }
+                    return false
+                }
+
                 do {
                     let result = try await context.evaluatePolicy(
                         .deviceOwnerAuthentication,
@@ -264,7 +261,7 @@ final class ProductionAuthenticationService: AuthenticationService, Sendable {
 
     /// Add a state change handler
     /// - Parameter handler: The handler to add
-    func addStateChangeHandler(_ handler: @escaping (UUID) -> Void) {
+    func addStateChangeHandler(_ handler: @escaping @Sendable (UUID) -> Void) {
         lock.withLock { stateChangeHandlers.append(handler) }
     }
 

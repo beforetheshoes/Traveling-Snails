@@ -88,7 +88,7 @@ struct ActivityLocationSection<T: TripActivityProtocol>: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Address")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
 
                 AddressAutocompleteView(
                     selectedAddress: $editData.customAddress,
@@ -125,7 +125,7 @@ struct ActivityLocationSection<T: TripActivityProtocol>: View {
                 if let address = displayAddress {
                     Text(address.displayAddress)
                         .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
             }
 
@@ -147,7 +147,7 @@ struct ActivityLocationSection<T: TripActivityProtocol>: View {
         Button(action: showMap) {
             AddressMapView(address: address)
                 .frame(height: 150)
-                .cornerRadius(8)
+                .clipShape(.rect(cornerRadius: 8))
                 .allowsHitTesting(false)
         }
         .buttonStyle(.plain)

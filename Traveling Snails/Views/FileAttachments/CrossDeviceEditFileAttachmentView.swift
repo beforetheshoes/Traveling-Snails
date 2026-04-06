@@ -4,36 +4,47 @@
 //
 //
 
-import Dependencies
+import ComposableArchitecture
 import SQLiteData
 import SwiftUI
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 
-@available(iOS 18.0, *)
+@available(iOS 18.0, macOS 14.0, *)
 struct CrossDeviceEditFileAttachmentView: View {
     @Environment(\.dismiss) private var dismiss
-    @Dependency(\.defaultDatabase) private var database
-    let attachment: EmbeddedFileAttachment
-    @State private var editedDescription: String = ""
-    @State private var isSaving = false
-    @State private var saveError: String?
+    @State private var store: StoreOf<CrossDeviceEditFileAttachmentFeature>
+
+    init(
+        attachment: EmbeddedFileAttachment,
+        store: StoreOf<CrossDeviceEditFileAttachmentFeature>
+    ) {
+        self._store = State(initialValue: store)
+    }
 
     var body: some View {
+        @Bindable var store = self.store
+
         NavigationStack {
             Form {
                 Section("File Information") {
-                    LabeledContent("Original Name", value: attachment.originalFileName)
-                    LabeledContent("Type", value: attachment.fileExtension.uppercased())
-                    LabeledContent("Size", value: attachment.formattedFileSize)
-                    LabeledContent("Created", value: attachment.createdDate.formatted(date: .abbreviated, time: .shortened))
+                    LabeledContent("Original Name", value: store.attachment.originalFileName)
+                    LabeledContent("Type", value: store.attachment.fileExtension.uppercased())
+                    LabeledContent("Size", value: store.attachment.formattedFileSize)
+                    LabeledContent("Created", value: store.attachment.createdDate.formatted(date: .abbreviated, time: .shortened))
                 }
 
                 Section("Description") {
-                    TextField("Add a description", text: $editedDescription, axis: .vertical)
+                    TextField("Add a description", text: $store.editedDescription, axis: .vertical)
                         .lineLimit(3...6)
-                        .disabled(isSaving)
+                        .disabled(store.isSaving)
                 }
 
-                if attachment.isImage, let data = attachment.fileData, let image = UIImage(data: data) {
+                #if os(iOS)
+                if store.attachment.isImage, let data = store.attachment.fileData, let image = UIImage(data: data) {
                     Section("Preview") {
                         Image(uiImage: image)
                             .resizable()
@@ -44,8 +55,19 @@ struct CrossDeviceEditFileAttachmentView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
                 }
+                #elseif os(macOS)
+                if store.attachment.isImage, let data = store.attachment.fileData, let image = NSImage(data: data) {
+                    Section("Preview") {
+                        Image(nsImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(maxWidth: 300)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                }
+                #endif
 
-                if let saveError = saveError {
+                if let saveError = store.saveError {
                     Section {
                         Text(saveError)
                             .foregroundStyle(.red)
@@ -54,46 +76,27 @@ struct CrossDeviceEditFileAttachmentView: View {
                 }
             }
             .navigationTitle("Edit Attachment")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationBarTitle()
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .platformTopLeading) {
                     Button("Cancel") {
                         dismiss()
                     }
-                    .disabled(isSaving)
+                    .disabled(store.isSaving)
                 }
 
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .platformTopTrailing) {
                     Button("Save") {
-                        Task {
-                            await saveChanges()
-                        }
+                        store.send(.saveTapped)
                     }
-                    .disabled(isSaving)
+                    .disabled(store.isSaving)
                 }
             }
-            .onAppear {
-                editedDescription = attachment.fileDescription
+            .onChange(of: store.shouldDismiss) { _, shouldDismiss in
+                guard shouldDismiss else { return }
+                dismiss()
+                store.send(.dismissHandled)
             }
-        }
-    }
-
-    private func saveChanges() async {
-        isSaving = true
-        saveError = nil
-
-        do {
-            var updatedAttachment = attachment
-            updatedAttachment.fileDescription = editedDescription
-            let attachmentToSave = updatedAttachment
-            try await database.write { db in
-                try EmbeddedFileAttachment.upsert { attachmentToSave }.execute(db)
-            }
-            dismiss()
-        } catch {
-            Logger.shared.error("Failed to save file attachment: \(error.localizedDescription)", category: .fileAttachment)
-            saveError = L(L10n.Save.attachmentFailed)
-            isSaving = false
         }
     }
 }

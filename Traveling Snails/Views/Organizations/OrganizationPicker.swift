@@ -4,213 +4,208 @@
 //
 //
 
-import Dependencies
+import ComposableArchitecture
 import SQLiteData
 import SwiftUI
 
 struct OrganizationPicker: View {
     @Environment(\.dismiss) private var dismiss
-    @FetchAll private var organizations: [Organization]
+    @FetchAll private var organizationRecords: [Organization]
 
     @Binding var selectedOrganization: Organization?
-    @State private var showingAddOrganization = false
-    @State private var searchText = ""
+    @State private var store: StoreOf<OrganizationPickerFeature>
 
-    // Get sorted organizations with None first, then alphabetical
-    var sortedOrganizations: [Organization] {
-        // Separate None organization from others
-        let none = organizations.filter { $0.name == "None" }
-        let others = organizations.filter { $0.name != "None" }.sorted { $0.name < $1.name }
+    init(
+        selectedOrganization: Binding<Organization?>,
+        store: StoreOf<OrganizationPickerFeature>
+    ) {
+        self._selectedOrganization = selectedOrganization
+        self._store = State(initialValue: store)
+    }
 
+    private var sortedOrganizations: [Organization] {
+        let none = organizationRecords.filter { $0.name == "None" }
+        let others = organizationRecords.filter { $0.name != "None" }.sorted { $0.name < $1.name }
         return none + others
     }
 
-    var filteredOrganizations: [Organization] {
-        if searchText.isEmpty {
-            return sortedOrganizations
-        } else {
-            // Apply search filter but maintain None-first ordering if None matches
-            return sortedOrganizations.filter {
-                $0.name.localizedCaseInsensitiveContains(searchText)
-            }
+    private var filteredOrganizations: [Organization] {
+        guard !store.searchText.isEmpty else { return sortedOrganizations }
+        return sortedOrganizations.filter {
+            $0.name.localizedStandardContains(store.searchText)
         }
     }
 
     var body: some View {
+        @Bindable var store = self.store
+
         VStack {
-            // Search bar
-            UnifiedSearchBar(text: $searchText)
+            SearchBarView(text: $store.searchText)
 
             List {
-                // All organizations (including None first, then alphabetical)
                 ForEach(filteredOrganizations) { organization in
                     Button {
-                        selectedOrganization = organization
-                        dismiss()
+                        store.send(.organizationTapped(organization.id))
                     } label: {
                         HStack {
                             VStack(alignment: .leading) {
                                 Text(organization.name)
-                                    .foregroundColor(.primary)
+                                    .foregroundStyle(.primary)
                                 if !organization.phone.isEmpty {
                                     Text(organization.phone)
                                         .font(.caption)
-                                        .foregroundColor(.secondary)
+                                        .foregroundStyle(.secondary)
                                 }
                             }
                             Spacer()
-                            if selectedOrganization?.id == organization.id {
+                            if store.selectedOrganizationID == organization.id {
                                 Image(systemName: "checkmark")
-                                    .foregroundColor(.blue)
+                                    .foregroundStyle(.blue)
                             }
                         }
                     }
                 }
 
-                // "Add New" option
-                if !searchText.isEmpty && !filteredOrganizations.contains(where: { $0.name.localizedCaseInsensitiveContains(searchText) }) {
+                if !store.searchText.isEmpty && !filteredOrganizations.contains(where: { $0.name.localizedStandardContains(store.searchText) }) {
                     Button {
-                        showingAddOrganization = true
+                        store.send(.addNewTapped)
                     } label: {
                         HStack {
                             Image(systemName: "plus.circle.fill")
-                                .foregroundColor(.green)
-                            Text("Add \"\(searchText)\"")
-                                .foregroundColor(.primary)
+                                .foregroundStyle(.green)
+                            Text("Add \"\(store.searchText)\"")
+                                .foregroundStyle(.primary)
                         }
                     }
                 }
 
-                // General "Add New" button
                 Button {
-                    showingAddOrganization = true
+                    store.send(.addNewTapped)
                 } label: {
                     HStack {
                         Image(systemName: "plus.circle")
-                            .foregroundColor(.blue)
+                            .foregroundStyle(.blue)
                         Text("Add New Organization")
-                            .foregroundColor(.blue)
+                            .foregroundStyle(.blue)
                     }
                 }
             }
         }
         .navigationTitle("Select Organization")
-        .navigationBarTitleDisplayMode(.inline)
+        .inlineNavigationBarTitle()
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .platformTrailing) {
                 Button("Done") {
-                    dismiss()
+                    store.send(.doneTapped)
                 }
-                .disabled(selectedOrganization == nil)
+                .disabled(store.selectedOrganizationID == nil)
             }
         }
-        .sheet(isPresented: $showingAddOrganization) {
-            AddOrganizationForm(
-                prefilledName: searchText.isEmpty ? nil : searchText
-            ) { newOrg in
-                    selectedOrganization = newOrg
-                    showingAddOrganization = false
+        .navigationDestination(
+            item: $store.scope(state: \.addOrganization, action: \.addOrganization)
+        ) { addStore in
+            AddOrganizationForm(store: addStore)
+        }
+        .onChange(of: store.shouldDismiss) { _, shouldDismiss in
+            guard shouldDismiss else { return }
+            if let selectedID = store.selectedOrganizationID {
+                selectedOrganization = organizationRecords.first(where: { $0.id == selectedID })
             }
+            dismiss()
+            store.send(.dismissHandled)
         }
     }
 }
 
-// MARK: - Add Organization Form
-
 struct AddOrganizationForm: View {
     @Environment(\.dismiss) private var dismiss
-    @Dependency(\.defaultDatabase) private var database
 
-    let prefilledName: String?
-    let onSave: (Organization) -> Void
+    @State private var store: StoreOf<AddOrganizationFeature>
 
-    @State private var name = ""
-    @State private var phone = ""
-    @State private var email = ""
-    @State private var website = ""
-    @State private var logoURL = ""
-    @State private var logoURLSecurityLevel: SecureURLHandler.URLSecurityLevel = .safe
-    @State private var selectedAddress: Address?
-    @State private var showBlockedURLAlert = false
-    @State private var showSuspiciousURLAlert = false
-    @State private var errorMessage = ""
-
-    init(prefilledName: String? = nil, onSave: @escaping (Organization) -> Void) {
-        self.prefilledName = prefilledName
-        self.onSave = onSave
+    init(store: StoreOf<AddOrganizationFeature>) {
+        self._store = State(initialValue: store)
     }
 
     var body: some View {
+        @Bindable var store = self.store
         NavigationStack {
             Form {
                 Section("Organization Details") {
-                    TextField("Organization Name", text: $name)
-                    TextField("Phone", text: $phone)
-                        .keyboardType(.phonePad)
-                    TextField("Email", text: $email)
-                        .keyboardType(.emailAddress)
-                    TextField("Website", text: $website)
-                        .keyboardType(.URL)
+                    TextField("Organization Name", text: $store.name)
+                    TextField("Phone", text: $store.phone)
+                        .platformKeyboardType(.phonePad)
+                    TextField("Email", text: $store.email)
+                        .platformKeyboardType(.emailAddress)
+                    TextField("Website", text: $store.website)
+                        .platformKeyboardType(.URL)
 
                     HStack {
-                        TextField("Logo URL", text: $logoURL)
-                            .keyboardType(.URL)
-                            .autocapitalization(.none)
-                            .onChange(of: logoURL) { _, newValue in
-                                let trimmedValue = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
-                                if trimmedValue.isEmpty {
-                                    logoURLSecurityLevel = .safe
-                                } else {
-                                    logoURLSecurityLevel = SecureURLHandler.evaluateURL(trimmedValue)
-                                }
+                        TextField("Logo URL", text: $store.logoURL)
+                            .platformKeyboardType(.URL)
+                            .noAutocapitalization()
+                            .onChange(of: store.logoURL) { _, newValue in
+                                store.send(.logoURLChanged(newValue))
                             }
 
-                        // Security indicator
-                        securityIndicator(for: logoURLSecurityLevel)
+                        securityIndicator(for: store.logoURLSecurityLevel)
                     }
                 }
 
                 Section("Address") {
                     AddressAutocompleteView(
-                        selectedAddress: $selectedAddress,
+                        selectedAddress: $store.selectedAddress,
                         placeholder: "Enter organization address"
                     )
                 }
             }
             .navigationTitle("Add Organization")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationBarTitle()
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .platformLeading) {
                     Button("Cancel") {
                         dismiss()
                     }
                 }
 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .platformTrailing) {
                     Button("Save") {
-                        saveOrganization()
+                        store.send(.saveTapped)
                     }
-                    .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .disabled(!store.canSave)
                 }
             }
             .onAppear {
-                if let prefilledName = prefilledName {
-                    name = prefilledName
+                store.send(.onAppear)
+            }
+            .alert("Invalid URL", isPresented: $store.showBlockedURLAlert) {
+                Button("OK") {
+                    store.send(.dismissBlockedURLAlert)
                 }
-            }
-            .alert("Invalid URL", isPresented: $showBlockedURLAlert) {
-                Button("OK") { }
             } message: {
-                Text(errorMessage)
+                Text(store.errorMessage)
             }
-            .alert("Suspicious URL", isPresented: $showSuspiciousURLAlert) {
-                Button("Cancel") { }
+            .alert("Suspicious URL", isPresented: $store.showSuspiciousURLAlert) {
+                Button("Cancel") {
+                    store.send(.dismissSuspiciousURLAlert)
+                }
                 Button("Save Anyway") {
-                    performSave()
+                    store.send(.saveConfirmedAfterWarning)
                 }
             } message: {
-                Text(errorMessage)
+                Text(store.errorMessage)
             }
+            .alert("Save Error", isPresented: $store.showSaveErrorAlert) {
+                Button("OK") {
+                    store.send(.dismissSaveErrorAlert)
+                }
+            } message: {
+                Text(store.errorMessage)
+            }
+        }
+        .onChange(of: store.shouldDismiss) { _, shouldDismiss in
+            guard shouldDismiss else { return }
+            dismiss()
+            store.send(.dismissHandled)
         }
     }
 
@@ -218,84 +213,27 @@ struct AddOrganizationForm: View {
         Group {
             switch level {
             case .safe:
-                if !logoURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                if !store.logoURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.green)
+                        .foregroundStyle(.green)
                 }
             case .suspicious:
                 Image(systemName: "exclamationmark.triangle.fill")
-                    .foregroundColor(.orange)
+                    .foregroundStyle(.orange)
             case .blocked:
                 Image(systemName: "xmark.circle.fill")
-                    .foregroundColor(.red)
+                    .foregroundStyle(.red)
             }
         }
         .frame(width: 24, height: 24)
     }
-
-    private func saveOrganization() {
-        let trimmedLogoURL = logoURL.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        // Empty URL is acceptable - just save without validation
-        if trimmedLogoURL.isEmpty {
-            performSave()
-            return
-        }
-
-        // Only validate non-empty URLs
-        let urlSecurityLevel = SecureURLHandler.evaluateURL(trimmedLogoURL)
-
-        switch urlSecurityLevel {
-        case .blocked:
-            errorMessage = SecureURLHandler.alertMessage(for: .blocked, action: .cache, url: trimmedLogoURL)
-            showBlockedURLAlert = true
-        case .suspicious:
-            errorMessage = SecureURLHandler.alertMessage(for: .suspicious, action: .cache, url: trimmedLogoURL)
-            showSuspiciousURLAlert = true
-        case .safe:
-            performSave()
-        }
-    }
-
-    private func performSave() {
-        var organization = Organization(
-            name: name.trimmingCharacters(in: .whitespacesAndNewlines),
-            phone: phone.trimmingCharacters(in: .whitespacesAndNewlines),
-            email: email.trimmingCharacters(in: .whitespacesAndNewlines),
-            website: website.trimmingCharacters(in: .whitespacesAndNewlines),
-            logoURL: logoURL.trimmingCharacters(in: .whitespacesAndNewlines)
-        )
-
-        // Handle address if selected
-        do {
-            try database.write { db in
-                if let selectedAddress, !selectedAddress.isEmpty {
-                    let normalizedAddress = Address(
-                        id: selectedAddress.id,
-                        street: selectedAddress.street,
-                        city: selectedAddress.city,
-                        state: selectedAddress.state,
-                        country: selectedAddress.country,
-                        postalCode: selectedAddress.postalCode,
-                        latitude: selectedAddress.latitude,
-                        longitude: selectedAddress.longitude,
-                        formattedAddress: selectedAddress.formattedAddress
-                    )
-                    try Address.upsert { normalizedAddress }.execute(db)
-                    organization.addressID = normalizedAddress.id
-                }
-
-                try Organization.upsert { organization }.execute(db)
-            }
-            onSave(organization)
-            dismiss()
-        } catch {
-            // Handle error appropriately
-            Logger.shared.error("Failed to save organization: \(error.localizedDescription)", category: .database)
-        }
-    }
 }
 
 #Preview {
-    OrganizationPicker(selectedOrganization: .constant(nil))
+    OrganizationPicker(
+        selectedOrganization: .constant(nil),
+        store: StoreOf<OrganizationPickerFeature>.init(initialState: OrganizationPickerFeature.State()) {
+            OrganizationPickerFeature()
+        }
+    )
 }

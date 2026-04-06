@@ -36,12 +36,12 @@ struct ActivityBarView: View {
                         Text(wrapper.tripActivity.name)
                             .font(.caption2)
                             .fontWeight(.medium)
-                            .foregroundColor(.white)
+                            .foregroundStyle(.white)
                             .lineLimit(1)
 
                         Text(timeWithTimezone(wrapper.tripActivity.start, timezone: wrapper.tripActivity.startTZ))
                             .font(.caption2)
-                            .foregroundColor(.white.opacity(0.8))
+                            .foregroundStyle(.white.opacity(0.8))
                     }
                     Spacer()
                 }

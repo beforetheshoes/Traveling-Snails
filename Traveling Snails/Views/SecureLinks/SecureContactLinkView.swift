@@ -5,6 +5,11 @@
 //
 
 import SwiftUI
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 
 struct SecureContactLink: View {
     let text: String
@@ -24,7 +29,7 @@ struct SecureContactLink: View {
         Button(text) {
             handleContactAction()
         }
-        .foregroundColor(canOpenURL ? .blue : .secondary)
+        .foregroundStyle(canOpenURL ? .blue : .secondary)
         .buttonStyle(.plain)
         .disabled(!canOpenURL)
         .alert(alertTitle, isPresented: $showingAlert) {
@@ -43,7 +48,11 @@ struct SecureContactLink: View {
 
     private var canOpenURL: Bool {
         guard let url = URL(string: urlString) else { return false }
+        #if os(iOS)
         return UIApplication.shared.canOpenURL(url)
+        #elseif os(macOS)
+        return true
+        #endif
     }
 
     private func handleContactAction() {

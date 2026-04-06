@@ -7,8 +7,13 @@
 import SwiftUI
 
 struct ArrivalTimeZonePicker: View {
+    private enum ActiveSheet: Identifiable {
+        case picker
+        var id: Int { 0 }
+    }
+
     @Binding var selectedTimeZoneId: String
-    @State private var showingSheet = false
+    @State private var activeSheet: ActiveSheet?
 
     var selectedTimeZone: TimeZone {
         TimeZone(identifier: selectedTimeZoneId) ?? TimeZone.current
@@ -18,7 +23,7 @@ struct ArrivalTimeZonePicker: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Arrival Timezone")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
 
             HStack {
                 Text(TimeZoneHelper.formatTimeZone(selectedTimeZone))
@@ -27,20 +32,23 @@ struct ArrivalTimeZonePicker: View {
                 Spacer()
 
                 Button("Change") {
-                    showingSheet = true
+                    activeSheet = .picker
                 }
                 .font(.caption)
-                .foregroundColor(.blue)
+                .foregroundStyle(.blue)
             }
             .padding(.vertical, 8)
             .padding(.horizontal, 12)
-            .background(Color(.systemGray6))
-            .cornerRadius(8)
+            .background(Color.systemGray6)
+            .clipShape(.rect(cornerRadius: 8))
         }
-        .sheet(isPresented: $showingSheet) {
-            NavigationStack {
-                TimeZonePickerSheet(selectedTimeZoneId: $selectedTimeZoneId)
-                    .navigationTitle("Arrival Timezone")
+        .sheet(item: $activeSheet) { sheet in
+            switch sheet {
+            case .picker:
+                NavigationStack {
+                    TimeZonePickerSheet(selectedTimeZoneId: $selectedTimeZoneId)
+                        .navigationTitle("Arrival Timezone")
+                }
             }
         }
     }

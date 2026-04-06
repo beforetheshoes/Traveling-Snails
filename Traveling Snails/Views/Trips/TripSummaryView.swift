@@ -28,30 +28,13 @@ struct TripSummaryView: View {
                 Text("\(activities.count)")
                     .font(.title2)
                     .fontWeight(.bold)
-                    .foregroundColor(.blue)
+                    .foregroundStyle(.blue)
 
                 Text("Activities")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
             
-            // Sharing status
-            if trip.shareID != nil {
-                Divider()
-                    .frame(height: 30)
-                
-                VStack {
-                    Image(systemName: "person.2.fill")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundColor(.blue)
-
-                    Text("Shared")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-            }
-
             Divider()
                 .frame(height: 30)
 
@@ -60,11 +43,11 @@ struct TripSummaryView: View {
                 Text(totalCost, format: .currency(code: "USD"))
                     .font(.title2)
                     .fontWeight(.bold)
-                    .foregroundColor(.green)
+                    .foregroundStyle(.green)
 
                 Text("Total Cost")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
 
             if let range = dateRange {
@@ -80,23 +63,23 @@ struct TripSummaryView: View {
 
                         Text("-")
                             .font(.headline)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
 
                         Text(range.upperBound, format: .dateTime.month(.defaultDigits).day())
                             .font(.headline)
                             .fontWeight(.bold)
                     }
-                    .foregroundColor(.purple)
+                    .foregroundStyle(.purple)
 
                     Text("Duration")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
             }
         }
         .padding()
-        .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .background(Color.systemBackground)
+        .clipShape(.rect(cornerRadius: 12))
         .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
         .padding(.horizontal)
     }

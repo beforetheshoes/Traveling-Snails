@@ -9,6 +9,7 @@ import Testing
 @testable import Traveling_Snails
 
 @Suite("File Attachment Localization Tests")
+@MainActor
 struct FileAttachmentLocalizationTests {
     @Test("File attachments localization keys should return proper text", .tags(.ui, .fast, .parallel, .swiftui, .fileAttachment, .localization, .validation))
     func fileAttachmentsLocalizationTest() {

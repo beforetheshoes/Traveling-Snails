@@ -7,7 +7,7 @@
 import QuickLook
 import SwiftUI
 
-@available(iOS 18.0, *)
+@available(iOS 18.0, macOS 14.0, *)
 struct CrossDeviceQuickLookView: View {
     let attachment: EmbeddedFileAttachment
     @Environment(\.dismiss) private var dismiss
@@ -54,16 +54,16 @@ struct CrossDeviceQuickLookView: View {
                 }
             }
             .navigationTitle("Preview")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationBarTitle()
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .platformTopLeading) {
                     Button("Done") {
                         dismiss()
                     }
                 }
 
                 if canProceed, let url = tempFileURL {
-                    ToolbarItem(placement: .topBarTrailing) {
+                    ToolbarItem(placement: .platformTopTrailing) {
                         ShareLink(item: url) {
                             Image(systemName: "square.and.arrow.up")
                         }
@@ -127,8 +127,13 @@ struct CrossDeviceQuickLookView: View {
         info += readable ? "✅ Temporary file is readable\n" : "❌ Temporary file is not readable\n"
 
         // Check QuickLook compatibility
+        #if os(iOS)
         let canPreview = QLPreviewController.canPreview(tempURL as QLPreviewItem)
         info += canPreview ? "✅ QuickLook can preview this file\n" : "❌ QuickLook cannot preview this file type\n"
+        #else
+        let canPreview = true
+        info += "QuickLook preview availability not checked on macOS\n"
+        #endif
 
         // Final verdict
         if exists && readable && canPreview {
@@ -143,6 +148,7 @@ struct CrossDeviceQuickLookView: View {
     }
 }
 
+#if os(iOS)
 @available(iOS 18.0, *)
 struct CrossDeviceQuickLookContainer: UIViewControllerRepresentable {
     let url: URL
@@ -179,3 +185,15 @@ struct CrossDeviceQuickLookContainer: UIViewControllerRepresentable {
         }
     }
 }
+#elseif os(macOS)
+@available(macOS 14.0, *)
+struct CrossDeviceQuickLookContainer: View {
+    let url: URL
+
+    var body: some View {
+        Text("Preview not available on macOS. Use Quick Look from Finder.")
+            .foregroundStyle(.secondary)
+            .padding()
+    }
+}
+#endif

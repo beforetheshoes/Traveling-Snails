@@ -6,6 +6,11 @@
 
 import Photos
 import SwiftUI
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 
 @Observable
 @MainActor
@@ -63,6 +68,7 @@ class PermissionStatusManager {
     // MARK: - Settings Navigation
 
     func openAppSettings() {
+        #if os(iOS)
         guard let settingsUrl = URL(string: UIApplication.openSettingsURLString) else {
             return
         }
@@ -70,6 +76,11 @@ class PermissionStatusManager {
         if UIApplication.shared.canOpenURL(settingsUrl) {
             UIApplication.shared.open(settingsUrl)
         }
+        #elseif os(macOS)
+        if let url = URL(string: "x-apple.systempreferences:") {
+            NSWorkspace.shared.open(url)
+        }
+        #endif
     }
 
     // MARK: - Permission Status Checking

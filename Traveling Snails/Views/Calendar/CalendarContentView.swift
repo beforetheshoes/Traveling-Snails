@@ -7,6 +7,18 @@ import ComposableArchitecture
 import SwiftUI
 
 struct CalendarContentView: View {
+    private enum ActiveSheet: Identifiable {
+        case activityCreation
+        case dayDetail
+
+        var id: Int {
+            switch self {
+            case .activityCreation: 0
+            case .dayDetail: 1
+            }
+        }
+    }
+
     @Bindable var store: StoreOf<CalendarFeature>
     @Environment(\.dismiss) private var dismiss
 
@@ -40,7 +52,9 @@ struct CalendarContentView: View {
                                         store.send(.dragEnd(point: point, time: time))
                                     },
                                     onActivityTap: { activity in
-                                        store.send(.activityTapped(.from(activity)))
+                                        if let destination = DestinationType.from(activity) {
+                                            store.send(.activityTapped(destination))
+                                        }
                                     }
                                 )
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -55,7 +69,9 @@ struct CalendarContentView: View {
                                         store.send(.longPress(point: point, time: time))
                                     },
                                     onActivityTap: { activity in
-                                        store.send(.activityTapped(.from(activity)))
+                                        if let destination = DestinationType.from(activity) {
+                                            store.send(.activityTapped(destination))
+                                        }
                                     }
                                 )
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -82,19 +98,16 @@ struct CalendarContentView: View {
                 }
         }
         .navigationTitle(store.trip.name)
-        .navigationBarTitleDisplayMode(.inline)
-        .background(Color(.systemBackground))
+        .inlineNavigationBarTitle()
+        .background(Color.systemBackground)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
+            ToolbarItem(placement: .platformLeading) {
                 Button("Done") { dismiss() }
             }
 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .platformTrailing) {
                     CalendarToolbarMenu(store: store)
                 }
-            }
-            .sheet(isPresented: $store.showingActivityCreation) {
-                ActivityCreationSheet(store: store)
             }
             .confirmationDialog(
                 "Choose Activity Type",
@@ -120,16 +133,35 @@ struct CalendarContentView: View {
                     Text("What type of activity would you like to add?")
                 }
             }
-        .sheet(isPresented: $store.showingDayDetail) {
-            NavigationStack {
-                DayDetailView(
-                    date: store.selectedDate,
-                    activities: store.selectedDayActivities,
-                    trip: store.trip
-                )
+        .sheet(item: activeSheet) { sheet in
+            switch sheet {
+            case .activityCreation:
+                ActivityCreationSheet(store: store)
+            case .dayDetail:
+                NavigationStack {
+                    DayDetailView(
+                        date: store.selectedDate,
+                        activities: store.selectedDayActivities,
+                        trip: store.trip
+                    )
+                }
             }
         }
         // Removed onDisappear cancelActivityCreation() to prevent interference with dialog interactions
+    }
+
+    private var activeSheet: Binding<ActiveSheet?> {
+        Binding(
+            get: {
+                if store.showingActivityCreation { return .activityCreation }
+                if store.showingDayDetail { return .dayDetail }
+                return nil
+            },
+            set: { newValue in
+                $store.showingActivityCreation.wrappedValue = (newValue == .activityCreation)
+                $store.showingDayDetail.wrappedValue = (newValue == .dayDetail)
+            }
+        )
     }
 }
 
@@ -180,10 +212,27 @@ struct ActivityCreationSheet: View {
                             trip: store.trip,
                             activityType: Transportation.self,
                             startTime: data.startTime,
-                            endTime: data.endTime ?? Calendar.current.date(byAdding: .hour, value: 2, to: data.startTime) ?? data.startTime
+                            endTime: data.endTime ?? Calendar.current.date(byAdding: .hour, value: 2, to: data.startTime) ?? data.startTime,
+                            store: Store(
+                                initialState: PrefilledAddActivityFeature.State(
+                                    trip: store.trip,
+                                    activityKind: .transportation,
+                                    editData: TripActivityEditData(
+                                        from: Transportation(
+                                            name: "New Transportation",
+                                            start: data.startTime,
+                                            end: data.endTime ?? Calendar.current.date(byAdding: .hour, value: 2, to: data.startTime) ?? data.startTime,
+                                            trip: nil,
+                                            organization: nil
+                                        )
+                                    )
+                                )
+                            ) {
+                                PrefilledAddActivityFeature()
+                            }
                         )
                     } else {
-                        UniversalAddTripActivityRootView.forTransportation(trip: store.trip)
+                        AddTripActivityView.forTransportation(trip: store.trip)
                     }
                 case .lodging:
                     if let data = store.pendingActivityData {
@@ -191,10 +240,27 @@ struct ActivityCreationSheet: View {
                             trip: store.trip,
                             activityType: Lodging.self,
                             startTime: data.startTime,
-                            endTime: data.endTime ?? Calendar.current.date(byAdding: .day, value: 1, to: data.startTime) ?? data.startTime
+                            endTime: data.endTime ?? Calendar.current.date(byAdding: .day, value: 1, to: data.startTime) ?? data.startTime,
+                            store: Store(
+                                initialState: PrefilledAddActivityFeature.State(
+                                    trip: store.trip,
+                                    activityKind: .lodging,
+                                    editData: TripActivityEditData(
+                                        from: Lodging(
+                                            name: "New Lodging",
+                                            start: data.startTime,
+                                            end: data.endTime ?? Calendar.current.date(byAdding: .day, value: 1, to: data.startTime) ?? data.startTime,
+                                            trip: nil,
+                                            organization: nil
+                                        )
+                                    )
+                                )
+                            ) {
+                                PrefilledAddActivityFeature()
+                            }
                         )
                     } else {
-                        UniversalAddTripActivityRootView.forLodging(trip: store.trip)
+                        AddTripActivityView.forLodging(trip: store.trip)
                     }
                 case .activity:
                     if let data = store.pendingActivityData {
@@ -202,10 +268,27 @@ struct ActivityCreationSheet: View {
                             trip: store.trip,
                             activityType: Activity.self,
                             startTime: data.startTime,
-                            endTime: data.endTime ?? Calendar.current.date(byAdding: .hour, value: 2, to: data.startTime) ?? data.startTime
+                            endTime: data.endTime ?? Calendar.current.date(byAdding: .hour, value: 2, to: data.startTime) ?? data.startTime,
+                            store: Store(
+                                initialState: PrefilledAddActivityFeature.State(
+                                    trip: store.trip,
+                                    activityKind: .activity,
+                                    editData: TripActivityEditData(
+                                        from: Activity(
+                                            name: "New Activity",
+                                            start: data.startTime,
+                                            end: data.endTime ?? Calendar.current.date(byAdding: .hour, value: 2, to: data.startTime) ?? data.startTime,
+                                            trip: nil,
+                                            organization: nil
+                                        )
+                                    )
+                                )
+                            ) {
+                                PrefilledAddActivityFeature()
+                            }
                         )
                     } else {
-                        UniversalAddTripActivityRootView.forActivity(trip: store.trip)
+                        AddTripActivityView.forActivity(trip: store.trip)
                     }
                 }
             }
@@ -228,7 +311,7 @@ struct DragPreviewView: View {
             .overlay(
                 Text("New Activity")
                     .font(.caption)
-                    .foregroundColor(.blue)
+                    .foregroundStyle(.blue)
                     .fontWeight(.medium)
                     .position(x: frame.midX, y: frame.midY)
             )

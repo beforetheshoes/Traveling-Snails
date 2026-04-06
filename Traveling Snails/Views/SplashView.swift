@@ -5,31 +5,36 @@ struct SplashView: View {
     @Binding var isVisible: Bool
 
     var body: some View {
-        ZStack {
-            // Background color matching your SVG
-            Color(red: 135 / 255, green: 206 / 255, blue: 235 / 255)
-                .edgesIgnoringSafeArea(.all)
+        Button {
+            withAnimation(.easeInOut(duration: 0.3)) {
+                isVisible = false
+            }
+        } label: {
+            ZStack {
+                // Background color matching your SVG
+                Color(red: 135 / 255, green: 206 / 255, blue: 235 / 255)
+                    .edgesIgnoringSafeArea(.all)
 
-            AnimatedSVGView()
-                .edgesIgnoringSafeArea(.all)
-        }
-        .onAppear {
-            // Auto-dismiss after 4 seconds (adjust as needed)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 4.0) {
-                withAnimation(.easeInOut(duration: 0.5)) {
-                    isVisible = false
-                }
+                AnimatedSVGView()
+                    .edgesIgnoringSafeArea(.all)
             }
         }
-        .onTapGesture {
-            // Allow tap to dismiss early
-            withAnimation(.easeInOut(duration: 0.3)) {
+        .buttonStyle(.plain)
+        .task {
+            do {
+                try await Task.sleep(for: .seconds(4))
+            } catch {
+                return
+            }
+            guard !Task.isCancelled else { return }
+            withAnimation(.easeInOut(duration: 0.5)) {
                 isVisible = false
             }
         }
     }
 }
 
+#if os(iOS)
 struct AnimatedSVGView: UIViewRepresentable {
     func makeUIView(context: Context) -> WKWebView {
         let configuration = WKWebViewConfiguration()
@@ -188,6 +193,15 @@ struct AnimatedSVGView: UIViewRepresentable {
         }
     }
 }
+#else
+struct AnimatedSVGView: View {
+    var body: some View {
+        Image(systemName: "tortoise.fill")
+            .font(.system(size: 80))
+            .foregroundStyle(.white)
+    }
+}
+#endif
 
 // Alternative: If you want to customize the splash duration or add fade effects
 struct CustomizableSplashView: View {
@@ -196,6 +210,7 @@ struct CustomizableSplashView: View {
     let fadeOutDuration: TimeInterval
 
     @State private var svgOpacity: Double = 0
+    @State private var dismissRequestID: UUID?
 
     init(isVisible: Binding<Bool>,
          splashDuration: TimeInterval = 4.0,
@@ -206,38 +221,54 @@ struct CustomizableSplashView: View {
     }
 
     var body: some View {
-        ZStack {
-            Color(red: 135 / 255, green: 206 / 255, blue: 235 / 255)
-                .edgesIgnoringSafeArea(.all)
+        Button {
+            dismissRequestID = UUID()
+        } label: {
+            ZStack {
+                Color(red: 135 / 255, green: 206 / 255, blue: 235 / 255)
+                    .edgesIgnoringSafeArea(.all)
 
-            AnimatedSVGView()
-                .opacity(svgOpacity)
-                .edgesIgnoringSafeArea(.all)
+                AnimatedSVGView()
+                    .opacity(svgOpacity)
+                    .edgesIgnoringSafeArea(.all)
+            }
         }
-        .onAppear {
+        .buttonStyle(.plain)
+        .task {
             // Fade in the SVG
             withAnimation(.easeIn(duration: 0.5)) {
                 svgOpacity = 1.0
             }
 
             // Auto-dismiss after specified duration
-            DispatchQueue.main.asyncAfter(deadline: .now() + splashDuration) {
-                dismissSplash()
+            do {
+                try await Task.sleep(for: .seconds(splashDuration))
+            } catch {
+                return
             }
+            guard !Task.isCancelled else { return }
+            await dismissSplash()
         }
-        .onTapGesture {
-            dismissSplash()
+        .task(id: dismissRequestID) {
+            guard dismissRequestID != nil else { return }
+            await dismissSplash()
+            dismissRequestID = nil
         }
     }
 
-    private func dismissSplash() {
+    @MainActor
+    private func dismissSplash() async {
         withAnimation(.easeOut(duration: fadeOutDuration)) {
             svgOpacity = 0.0
         }
 
-        DispatchQueue.main.asyncAfter(deadline: .now() + fadeOutDuration) {
-            isVisible = false
+        do {
+            try await Task.sleep(for: .seconds(fadeOutDuration))
+        } catch {
+            return
         }
+        guard !Task.isCancelled else { return }
+        isVisible = false
     }
 }
 

@@ -8,7 +8,7 @@
 import CloudKit
 import Foundation
 
-class CloudKitErrorHandler: @unchecked Sendable {
+final class CloudKitErrorHandler: @unchecked Swift.Sendable {
     static let shared = CloudKitErrorHandler()
     
     private init() {}

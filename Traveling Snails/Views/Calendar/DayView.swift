@@ -20,6 +20,7 @@ struct DayView: View {
     private let hourHeight: CGFloat = 60
 
     @State private var hasAutoScrolled = false // Track if we've already auto-scrolled to prevent resets
+    @State private var pendingScrollHour: Int?
 
     private var isCompactDevice: Bool {
         #if os(iOS)
@@ -48,7 +49,7 @@ struct DayView: View {
                         .frame(height: isCompactDevice ? 36 : 42) // Responsive height
                     }
                 }
-                .background(Color(.systemGray6))
+                .background(Color.systemGray6)
                 .padding(.vertical, isCompactDevice ? 4 : 6)
             }
 
@@ -62,7 +63,7 @@ struct DayView: View {
                                 ForEach(0..<24, id: \.self) { hour in
                                     Text(hourFormatter.string(from: timeForHour(hour)))
                                         .font(.caption2)
-                                        .foregroundColor(.secondary)
+                                        .foregroundStyle(.secondary)
                                         .frame(width: 50, height: hourHeight, alignment: .topTrailing)
                                         .padding(.trailing, 2)
                                         .id("hour-\(hour)")
@@ -86,7 +87,7 @@ struct DayView: View {
                 }
                 .onAppear {
                     if !hasAutoScrolled {
-                        scrollToOptimalStartTime(proxy: proxy)
+                        pendingScrollHour = calculateOptimalStartHour()
                         hasAutoScrolled = true
                     }
                 }
@@ -94,7 +95,20 @@ struct DayView: View {
                     hasAutoScrolled = false // Reset auto-scroll flag when date changes
                 }
                 // Removed onChange(of: activities) to prevent unwanted scroll resets during dialog interactions
-                .background(Color(.systemBackground))
+                .task(id: pendingScrollHour) {
+                    guard let startHour = pendingScrollHour else { return }
+                    do {
+                        try await Task.sleep(for: .milliseconds(100))
+                    } catch {
+                        return
+                    }
+                    guard !Task.isCancelled else { return }
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        proxy.scrollTo("hour-\(startHour)", anchor: .top)
+                    }
+                    pendingScrollHour = nil
+                }
+                .background(Color.systemBackground)
             }
         }
     }
@@ -108,16 +122,6 @@ struct DayView: View {
             let activityEnd = wrapper.tripActivity.end
 
             return activityStart < endOfHour && activityEnd > startOfHour
-        }
-    }
-
-    private func scrollToOptimalStartTime(proxy: ScrollViewProxy) {
-        let startHour = calculateOptimalStartHour()
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            withAnimation(.easeInOut(duration: 0.5)) {
-                proxy.scrollTo("hour-\(startHour)", anchor: .top)
-            }
         }
     }
 
@@ -222,11 +226,11 @@ struct DayColumnContent: View {
                 VStack(spacing: 0) {
                     ForEach(0..<24, id: \.self) { _ in
                         Rectangle()
-                            .fill(Color(.systemGray6))
+                            .fill(Color.systemGray6)
                             .frame(height: hourHeight)
                             .overlay(
                                 Rectangle()
-                                    .fill(Color(.separator))
+                                    .fill(Color.separator)
                                     .frame(height: 0.5),
                                 alignment: .bottom
                             )
@@ -248,7 +252,7 @@ struct DayColumnContent: View {
                             .overlay(
                                 Text(activityPos.activity.tripActivity.name)
                                     .font(.caption2)
-                                    .foregroundColor(.white)
+                                    .foregroundStyle(.white)
                                     .lineLimit(nil)
                                     .padding(.horizontal, 4)
                                     .frame(width: position.width, height: position.height, alignment: .topLeading)

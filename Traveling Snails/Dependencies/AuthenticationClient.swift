@@ -6,7 +6,7 @@
 import Dependencies
 import Foundation
 
-struct AuthenticationClient: Sendable {
+struct AuthenticationClient {
     var allTripsLocked: @Sendable () async -> Bool
     var lockAllTrips: @Sendable () async -> Void
 }

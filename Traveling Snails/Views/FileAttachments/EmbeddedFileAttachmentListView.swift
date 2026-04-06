@@ -4,20 +4,33 @@
 //
 //
 
-import Dependencies
+import ComposableArchitecture
 import SQLiteData
 import SwiftUI
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 
-/// Unified file attachment list view with enhanced UI components and error handling
+/// File attachment list view with enhanced UI components and error handling
 struct EmbeddedFileAttachmentListView: View {
-    @Dependency(\.defaultDatabase) private var database
-
     let attachments: [EmbeddedFileAttachment]
     let onAttachmentAdded: (EmbeddedFileAttachment) -> Void
     let onAttachmentRemoved: (EmbeddedFileAttachment) -> Void
+    @State private var store: StoreOf<EmbeddedFileAttachmentListFeature>
 
-    @State private var errorMessage: String?
-    @State private var isProcessing = false
+    init(
+        attachments: [EmbeddedFileAttachment],
+        onAttachmentAdded: @escaping (EmbeddedFileAttachment) -> Void,
+        onAttachmentRemoved: @escaping (EmbeddedFileAttachment) -> Void,
+        store: StoreOf<EmbeddedFileAttachmentListFeature>
+    ) {
+        self.attachments = attachments
+        self.onAttachmentAdded = onAttachmentAdded
+        self.onAttachmentRemoved = onAttachmentRemoved
+        self._store = State(initialValue: store)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -32,7 +45,7 @@ struct EmbeddedFileAttachmentListView: View {
             }
 
             // Error display
-            if let errorMessage = errorMessage {
+            if let errorMessage = store.errorMessage {
                 errorView(errorMessage)
             }
         }
@@ -44,11 +57,11 @@ struct EmbeddedFileAttachmentListView: View {
         HStack {
             Spacer()
 
-            UnifiedFilePicker.allFiles(
+            AttachmentPickerView.allFiles(
                 onSelected: handleAttachmentAdded,
                 onError: handleError
             )
-            .disabled(isProcessing)
+            .disabled(store.isProcessing)
         }
     }
 
@@ -66,19 +79,17 @@ struct EmbeddedFileAttachmentListView: View {
     private var attachmentsList: some View {
         LazyVStack(spacing: 12) {
             ForEach(attachments) { attachment in
-                EnhancedAttachmentRowView(
-                    attachment: attachment,
+                    EnhancedAttachmentRowView(
+                        attachment: attachment,
                     onEdit: {
                         // Edit functionality would be handled here
                         Logger.shared.info("Edit attachment: \(attachment.displayName)", category: .fileAttachment)
                     },
-                    onDelete: {
-                        Task {
-                            await handleAttachmentRemoved(attachment)
+                        onDelete: {
+                            handleAttachmentRemoved(attachment)
                         }
-                    }
-                )
-            }
+                    )
+                }
         }
     }
 
@@ -86,24 +97,24 @@ struct EmbeddedFileAttachmentListView: View {
     private func errorView(_ message: String) -> some View {
         HStack {
             Image(systemName: "exclamationmark.triangle.fill")
-                .foregroundColor(.orange)
+                .foregroundStyle(.orange)
 
             Text(message)
                 .font(.caption)
-                .foregroundColor(.orange)
+                .foregroundStyle(.orange)
 
             Spacer()
 
             Button("Dismiss") {
-                errorMessage = nil
+                store.send(.clearError)
             }
             .font(.caption)
-            .foregroundColor(.blue)
+            .foregroundStyle(.blue)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .background(Color.orange.opacity(0.1))
-        .cornerRadius(8)
+        .clipShape(.rect(cornerRadius: 8))
     }
 
     // MARK: - Actions
@@ -111,62 +122,49 @@ struct EmbeddedFileAttachmentListView: View {
     private func handleAttachmentAdded(_ attachment: EmbeddedFileAttachment) {
         Logger.shared.info("Attachment added: \(attachment.displayName)", category: .fileAttachment)
         onAttachmentAdded(attachment)
-
-        // Post success notification
-        NotificationCenter.default.post(
-            name: .fileAttachmentAdded,
-            object: attachment
-        )
     }
 
-    private func handleAttachmentRemoved(_ attachment: EmbeddedFileAttachment) async {
+    private func handleAttachmentRemoved(_ attachment: EmbeddedFileAttachment) {
         Logger.shared.info("Removing attachment: \(attachment.displayName)", category: .fileAttachment)
-
-        isProcessing = true
 
         // Remove from callback first
         onAttachmentRemoved(attachment)
-
-        do {
-            try await database.write { db in
-                try EmbeddedFileAttachment.find(attachment.id).delete().execute(db)
-            }
-            isProcessing = false
-            NotificationCenter.default.post(
-                name: .fileAttachmentRemoved,
-                object: attachment
-            )
-        } catch {
-            isProcessing = false
-            Logger.shared.error("Failed to remove attachment: \(error.localizedDescription)", category: .fileAttachment)
-            handleError(L(L10n.Delete.attachmentFailed))
-        }
+        store.send(.removeAttachmentTapped(attachment))
     }
 
     private func handleError(_ message: String) {
         Logger.shared.error("File attachment error: \(message)", category: .fileAttachment)
-        errorMessage = message
-
-        // Auto-dismiss error after 5 seconds
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [errorMessage] in
-            if self.errorMessage == errorMessage {
-                self.errorMessage = nil
-            }
-        }
+        store.send(.showError(message))
     }
 }
 
 // MARK: - Enhanced Attachment Row View (Renamed to avoid conflicts)
 
 struct EnhancedAttachmentRowView: View {
+    private enum ActiveSheet: Identifiable {
+        case quickLook
+        case edit
+
+        var id: Int {
+            switch self {
+            case .quickLook: 0
+            case .edit: 1
+            }
+        }
+    }
+
     let attachment: EmbeddedFileAttachment
     let onEdit: () -> Void
     let onDelete: () -> Void
 
     @State private var showingDeleteConfirmation = false
-    @State private var showingEditView = false
-    @State private var showingQuickLook = false
+    @State private var activeSheet: ActiveSheet?
+    #if os(iOS)
     @State private var thumbnailImage: UIImage?
+    #elseif os(macOS)
+    @State private var thumbnailImage: NSImage?
+    #endif
+    @State private var thumbnailData: Data?
 
     var body: some View {
         HStack(spacing: 12) {
@@ -186,22 +184,22 @@ struct EnhancedAttachmentRowView: View {
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
                         .background(.brown.opacity(0.1))
-                        .foregroundColor(.brown)
-                        .cornerRadius(4)
+                        .foregroundStyle(.brown)
+                        .clipShape(.rect(cornerRadius: 4))
 
                     // File size
                     Text(attachment.formattedFileSize)
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
 
                     // Creation date
                     Text("•")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
 
                     Text(attachment.createdDate, style: .date)
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
             }
 
@@ -213,7 +211,7 @@ struct EnhancedAttachmentRowView: View {
         .padding(.vertical, 12)
         .padding(.horizontal, 16)
         .background(Color.gray.opacity(0.05))
-        .cornerRadius(12)
+        .clipShape(.rect(cornerRadius: 12))
         .swipeActions(edge: .trailing) {
             Button(role: .destructive) {
                 showingDeleteConfirmation = true
@@ -240,14 +238,24 @@ struct EnhancedAttachmentRowView: View {
         } message: {
             Text("This will permanently delete the attachment. This action cannot be undone.")
         }
-        .sheet(isPresented: $showingQuickLook) {
-            CrossDeviceQuickLookView(attachment: attachment)
-        }
-        .sheet(isPresented: $showingEditView) {
-            CrossDeviceEditFileAttachmentView(attachment: attachment)
+        .sheet(item: $activeSheet) { sheet in
+            switch sheet {
+            case .quickLook:
+                CrossDeviceQuickLookView(attachment: attachment)
+            case .edit:
+                CrossDeviceEditFileAttachmentView(
+                    attachment: attachment,
+                    store: StoreOf<CrossDeviceEditFileAttachmentFeature>.init(initialState: CrossDeviceEditFileAttachmentFeature.State(attachment: attachment)) {
+                        CrossDeviceEditFileAttachmentFeature()
+                    }
+                )
+            }
         }
         .onAppear {
-            loadThumbnail()
+            thumbnailData = attachment.isImage ? attachment.fileData : nil
+        }
+        .task(id: thumbnailData) {
+            thumbnailImage = await decodeThumbnail(from: thumbnailData)
         }
     }
 
@@ -255,11 +263,11 @@ struct EnhancedAttachmentRowView: View {
     private var fileIcon: some View {
         Group {
             if attachment.isImage, let image = thumbnailImage {
-                Image(uiImage: image)
+                platformImage(image)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: 44, height: 44)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .clipShape(.rect(cornerRadius: 8))
             } else {
                 ZStack {
                     RoundedRectangle(cornerRadius: 8)
@@ -268,7 +276,7 @@ struct EnhancedAttachmentRowView: View {
 
                     Image(systemName: attachment.fileSystemIcon)
                         .font(.title2)
-                        .foregroundColor(attachment.fileIconColor)
+                        .foregroundStyle(attachment.fileIconColor)
                 }
             }
         }
@@ -279,11 +287,11 @@ struct EnhancedAttachmentRowView: View {
         HStack(spacing: 16) {  // Increased spacing for better mobile UX
             // Preview button - works for all file types
             Button {
-                showingQuickLook = true
+                activeSheet = .quickLook
             } label: {
                 Image(systemName: "eye")
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.blue)
+                    .foregroundStyle(.blue)
                     .frame(minWidth: 44, minHeight: 44)  // Apple recommended minimum tap target size
             }
             .buttonStyle(.plain)
@@ -291,11 +299,11 @@ struct EnhancedAttachmentRowView: View {
 
             // Edit button - placeholder for now
             Button {
-                showingEditView = true
+                activeSheet = .edit
             } label: {
                 Image(systemName: "pencil")
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.blue)
+                    .foregroundStyle(.blue)
                     .frame(minWidth: 44, minHeight: 44)  // Apple recommended minimum tap target size
             }
             .buttonStyle(.plain)
@@ -307,7 +315,7 @@ struct EnhancedAttachmentRowView: View {
             } label: {
                 Image(systemName: "trash")
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.red)
+                    .foregroundStyle(.red)
                     .frame(minWidth: 44, minHeight: 44)  // Apple recommended minimum tap target size
             }
             .buttonStyle(.plain)
@@ -315,24 +323,29 @@ struct EnhancedAttachmentRowView: View {
         }
     }
 
-    private func loadThumbnail() {
-        guard attachment.isImage, let data = attachment.fileData else { return }
-
-        Task {
-            // Load thumbnail on background thread using async/await
-            let image = await withCheckedContinuation { continuation in
-                DispatchQueue.global(qos: .userInitiated).async {
-                    let result = UIImage(data: data)
-                    continuation.resume(returning: result)
-                }
-            }
-
-            // Update UI on main thread
-            await MainActor.run {
-                thumbnailImage = image
-            }
-        }
+    #if os(iOS)
+    private func platformImage(_ image: UIImage) -> Image {
+        Image(uiImage: image)
     }
+
+    private func decodeThumbnail(from data: Data?) async -> UIImage? {
+        guard let data else { return nil }
+        return await Task(priority: .userInitiated) {
+            UIImage(data: data)
+        }.value
+    }
+    #elseif os(macOS)
+    private func platformImage(_ image: NSImage) -> Image {
+        Image(nsImage: image)
+    }
+
+    private func decodeThumbnail(from data: Data?) async -> NSImage? {
+        guard let data else { return nil }
+        return await Task(priority: .userInitiated) {
+            NSImage(data: data)
+        }.value
+    }
+    #endif
 }
 
 // MARK: - EmbeddedFileAttachment Extensions
@@ -386,7 +399,10 @@ extension EmbeddedFileAttachment {
     EmbeddedFileAttachmentListView(
         attachments: [],
         onAttachmentAdded: { _ in },
-        onAttachmentRemoved: { _ in }
+        onAttachmentRemoved: { _ in },
+        store: StoreOf<EmbeddedFileAttachmentListFeature>.init(initialState: EmbeddedFileAttachmentListFeature.State()) {
+            EmbeddedFileAttachmentListFeature()
+        }
     )
     .padding()
 }

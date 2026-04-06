@@ -5,6 +5,8 @@
 //
 
 import SwiftUI
+
+#if os(iOS)
 import UIKit
 
 struct CurrencyTextField: UIViewRepresentable {
@@ -97,9 +99,7 @@ struct CurrencyTextField: UIViewRepresentable {
         func textFieldDidEndEditing(_ textField: UITextField) {
             // Update the binding
             let newValue = Decimal(centValue) / Decimal(100)
-            DispatchQueue.main.async {
-                self.parent.value = newValue
-            }
+            parent.value = newValue
 
             // Remove focus styling
             UIView.animate(withDuration: 0.2) {
@@ -122,9 +122,7 @@ struct CurrencyTextField: UIViewRepresentable {
 
             // Update the binding in real-time as user types
             let newValue = Decimal(centValue) / Decimal(100)
-            DispatchQueue.main.async {
-                self.parent.value = newValue
-            }
+            parent.value = newValue
 
             textField.text = parent.formatCurrency(centValue)
             textField.selectedTextRange = textField.textRange(from: textField.endOfDocument, to: textField.endOfDocument)
@@ -132,3 +130,28 @@ struct CurrencyTextField: UIViewRepresentable {
         }
     }
 }
+
+#elseif os(macOS)
+
+struct CurrencyTextField: View {
+    @Binding var value: Decimal
+    var placeholder: String = "Amount"
+    var currencyCode: String = Locale.current.currency?.identifier ?? "USD"
+    var color: Color = .blue
+
+    private var formattedValue: String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = currencyCode
+        formatter.minimumFractionDigits = 2
+        formatter.maximumFractionDigits = 2
+        return formatter.string(from: value as NSDecimalNumber) ?? "$0.00"
+    }
+
+    var body: some View {
+        TextField(placeholder, value: $value, format: .currency(code: currencyCode))
+            .textFieldStyle(.roundedBorder)
+    }
+}
+
+#endif

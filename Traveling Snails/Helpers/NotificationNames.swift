@@ -38,8 +38,7 @@ extension Notification.Name {
 
     // MARK: - Database Operation Notifications
 
-    /// Posted when database import operation completes
-    /// Used by: DatabaseImportProgressView.swift
+    /// Legacy import completion notification retained for compatibility with older tests.
     static let importCompleted = Notification.Name("importCompleted")
 
     // MARK: - Cloud Storage Notifications

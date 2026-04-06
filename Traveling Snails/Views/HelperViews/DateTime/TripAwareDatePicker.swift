@@ -58,11 +58,11 @@ struct TripAwareDatePicker: View {
             if let range = dateRange {
                 Text("Limited to trip dates: \(formatDateRange(range))")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             } else if trip.hasStartDate || trip.hasEndDate {
                 Text(partialRangeText)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
         }
     }

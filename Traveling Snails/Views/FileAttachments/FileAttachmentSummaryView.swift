@@ -8,22 +8,22 @@ import SQLiteData
 import SwiftUI
 
 struct FileAttachmentSummaryView: View {
-    @FetchAll private var allAttachments: [EmbeddedFileAttachment]
+    @FetchAll private var attachmentRecords: [EmbeddedFileAttachment]
 
     private var totalSize: Int64 {
-        allAttachments.reduce(0) { $0 + $1.fileSize }
+        attachmentRecords.reduce(0) { $0 + $1.fileSize }
     }
 
     private var imageCount: Int {
-        allAttachments.filter { $0.isImage }.count
+        attachmentRecords.filter { $0.isImage }.count
     }
 
     private var documentCount: Int {
-        allAttachments.filter { $0.isDocument || $0.isPDF }.count
+        attachmentRecords.filter { $0.isDocument || $0.isPDF }.count
     }
 
     private var otherCount: Int {
-        allAttachments.count - imageCount - documentCount
+        attachmentRecords.count - imageCount - documentCount
     }
 
     var body: some View {
@@ -61,7 +61,7 @@ struct FileAttachmentSummaryView: View {
             HStack(spacing: 12) {
                 StatCard(
                     title: "Total Files",
-                    value: "\(allAttachments.count)",
+                    value: "\(attachmentRecords.count)",
                     icon: "doc.on.doc",
                     color: .blue
                 )
@@ -72,7 +72,7 @@ struct FileAttachmentSummaryView: View {
 
                         Image(systemName: "externaldrive")
                             .font(.title2)
-                            .foregroundColor(.blue)
+                            .foregroundStyle(.blue)
                             .frame(height: 24)
 
                         VStack(alignment: .leading, spacing: 2) {
@@ -84,7 +84,7 @@ struct FileAttachmentSummaryView: View {
 
                             Text("Storage Used")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(.secondary)
                                 .lineLimit(1)
                         }
 
@@ -95,7 +95,7 @@ struct FileAttachmentSummaryView: View {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 12)
                 .background(Color.blue.opacity(0.1))
-                .cornerRadius(10)
+                .clipShape(.rect(cornerRadius: 10))
             }
             .frame(maxWidth: .infinity)
         }

@@ -7,43 +7,68 @@
 import SwiftUI
 
 /// Reusable form field component with consistent styling
-struct ActivityFormField: View {
+struct ActivityFormField<Content: View>: View {
     let label: String
-    let content: AnyView
+    let content: Content
 
-    init<Content: View>(label: String, @ViewBuilder content: () -> Content) {
+    init(label: String, @ViewBuilder content: () -> Content) {
         self.label = label
-        self.content = AnyView(content())
+        self.content = content()
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
 
             content
         }
     }
 }
 
-/// Convenience initializer for text fields
-extension ActivityFormField {
-    init(label: String, text: Binding<String>, placeholder: String = "") {
-        self.label = label
-        self.content = AnyView(
-            TextField(placeholder.isEmpty ? label : placeholder, text: text)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-        )
-    }
+struct SingleLineTextInput: View {
+    let placeholder: String
+    @Binding var text: String
 
+    var body: some View {
+        TextField(placeholder, text: $text)
+            .textFieldStyle(RoundedBorderTextFieldStyle())
+    }
+}
+
+struct MultiLineTextInput: View {
+    let placeholder: String
+    @Binding var text: String
+    let axis: Axis
+
+    var body: some View {
+        TextField(placeholder, text: $text, axis: axis)
+            .textFieldStyle(RoundedBorderTextFieldStyle())
+            .lineLimit(3...6)
+    }
+}
+
+extension ActivityFormField where Content == SingleLineTextInput {
+    init(label: String, text: Binding<String>, placeholder: String = "") {
+        self.init(label: label) {
+            SingleLineTextInput(
+                placeholder: placeholder.isEmpty ? label : placeholder,
+                text: text
+            )
+        }
+    }
+}
+
+extension ActivityFormField where Content == MultiLineTextInput {
     init(label: String, text: Binding<String>, placeholder: String = "", axis: Axis) {
-        self.label = label
-        self.content = AnyView(
-            TextField(placeholder.isEmpty ? label : placeholder, text: text, axis: axis)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .lineLimit(3...6)
-        )
+        self.init(label: label) {
+            MultiLineTextInput(
+                placeholder: placeholder.isEmpty ? label : placeholder,
+                text: text,
+                axis: axis
+            )
+        }
     }
 }
 
@@ -57,21 +82,21 @@ struct ActivityFormButton: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(label)
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
 
             Button(action: action) {
                 HStack {
                     Text(value)
-                        .foregroundColor(.primary)
+                        .foregroundStyle(.primary)
                     Spacer()
                     Image(systemName: "chevron.right")
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                         .font(.caption)
                 }
                 .padding(.vertical, 12)
                 .padding(.horizontal, 16)
-                .background(Color(.systemGray6))
-                .cornerRadius(8)
+                .background(Color.systemGray6)
+                .clipShape(.rect(cornerRadius: 8))
             }
             .buttonStyle(.plain)
         }
@@ -80,11 +105,10 @@ struct ActivityFormButton: View {
 
 #Preview {
     VStack(spacing: 20) {
-        ActivityFormField(
-            label: "Activity Name",
-            text: .constant("Test Activity"),
-            placeholder: "Enter activity name"
-        )
+        ActivityFormField(label: "Activity Name") {
+            TextField("Enter activity name", text: .constant("Test Activity"))
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+        }
 
         ActivityFormField(label: "Notes") {
             TextField("Add notes here", text: .constant("Test notes"), axis: .vertical)

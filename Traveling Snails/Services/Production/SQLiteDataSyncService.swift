@@ -7,7 +7,7 @@ import Foundation
 import SQLiteData
 
 @MainActor
-final class SQLiteDataSyncService: SyncService, AdvancedSyncService {
+final class SQLiteDataSyncService: SyncService, AdvancedSyncService, @unchecked Swift.Sendable {
     private let syncEngine: SyncEngine?
 
     init(database: DatabaseWriter? = DatabaseAccess.database) {
@@ -26,6 +26,7 @@ final class SQLiteDataSyncService: SyncService, AdvancedSyncService {
                 Activity.self,
                 Lodging.self,
                 Transportation.self,
+                TransportationLeg.self,
                 EmbeddedFileAttachment.self
             )
         } catch {

@@ -17,14 +17,14 @@ struct EditableFieldView<Content: View, EditContent: View>: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Image(systemName: systemImage)
-                    .foregroundColor(.blue)
+                    .foregroundStyle(.blue)
                     .frame(width: 24, height: 24)
 
                 if isEditing {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(label)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                         editContent()
                     }
                 } else {
@@ -53,8 +53,8 @@ struct EditableSection: View {
                 content()
             }
             .padding(.horizontal)
-            .background(Color(.systemGray6))
-            .cornerRadius(12)
+            .background(Color.systemGray6)
+            .clipShape(.rect(cornerRadius: 12))
             .padding(.horizontal)
         }
     }
