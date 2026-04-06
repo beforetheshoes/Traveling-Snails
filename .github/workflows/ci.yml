@@ -44,6 +44,8 @@ jobs:
             -project "Traveling Snails.xcodeproj" \
             -scheme "Traveling Snails" \
             -destination "generic/platform=iOS" \
+            -skipMacroValidation \
+            -skipPackagePluginValidation \
             CODE_SIGNING_ALLOWED=NO \
             -quiet
 
@@ -53,6 +55,8 @@ jobs:
             -project "Traveling Snails.xcodeproj" \
             -scheme "Traveling Snails" \
             -destination "platform=macOS" \
+            -skipMacroValidation \
+            -skipPackagePluginValidation \
             CODE_SIGN_IDENTITY="-" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
@@ -64,6 +68,8 @@ jobs:
             -project "Traveling Snails.xcodeproj" \
             -scheme "Traveling Snails" \
             -destination "platform=macOS" \
+            -skipMacroValidation \
+            -skipPackagePluginValidation \
             CODE_SIGN_IDENTITY="-" \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGNING_ALLOWED=NO \
