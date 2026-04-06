@@ -25,6 +25,7 @@ extension DependencyValues {
             BookItem.self,
             MovieItem.self,
             TVShowItem.self,
+            RestaurantItem.self,
             delegate: syncEngineDelegate
         )
 

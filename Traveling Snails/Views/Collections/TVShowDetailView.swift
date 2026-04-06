@@ -8,6 +8,7 @@ import SwiftUI
 
 struct TVShowDetailView: View {
     @Bindable var store: StoreOf<TVShowItemDetailFeature>
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         let item = store.state.tvShowItem
@@ -122,6 +123,9 @@ struct TVShowDetailView: View {
             Text("Are you sure you want to delete \"\(item.title)\"?")
         }
         .onAppear { store.send(.onAppear) }
+        .onChange(of: store.isDeleted) { _, isDeleted in
+            if isDeleted { dismiss() }
+        }
     }
 
     // MARK: - Sections

@@ -13,12 +13,14 @@ enum MediaSearchResultItem: Equatable, Identifiable {
     case book(BookSearchResult)
     case movie(MovieSearchResult)
     case tvShow(TVShowSearchResult)
+    case restaurant(RestaurantSearchResult)
 
     var id: String {
         switch self {
         case .book(let r): return "book-\(r.id)"
         case .movie(let r): return "movie-\(r.id)"
         case .tvShow(let r): return "tvshow-\(r.id)"
+        case .restaurant(let r): return "restaurant-\(r.id)"
         }
     }
 
@@ -27,6 +29,7 @@ enum MediaSearchResultItem: Equatable, Identifiable {
         case .book(let r): return r.title
         case .movie(let r): return r.title
         case .tvShow(let r): return r.title
+        case .restaurant(let r): return r.name
         }
     }
 
@@ -35,6 +38,7 @@ enum MediaSearchResultItem: Equatable, Identifiable {
         case .book(let r): return r.authorDisplay
         case .movie(let r): return r.releaseDate.isEmpty ? "" : String(r.releaseDate.prefix(4))
         case .tvShow(let r): return r.firstAirDate.isEmpty ? "" : String(r.firstAirDate.prefix(4))
+        case .restaurant(let r): return r.address
         }
     }
 
@@ -43,6 +47,7 @@ enum MediaSearchResultItem: Equatable, Identifiable {
         case .book(let r): return r.thumbnailURL
         case .movie(let r): return r.posterURL
         case .tvShow(let r): return r.posterURL
+        case .restaurant: return ""
         }
     }
 
@@ -54,6 +59,8 @@ enum MediaSearchResultItem: Equatable, Identifiable {
             return r.genreNames.prefix(2).joined(separator: ", ")
         case .tvShow(let r):
             return r.genreNames.prefix(2).joined(separator: ", ")
+        case .restaurant(let r):
+            return r.category
         }
     }
 }
@@ -77,6 +84,7 @@ struct MediaSearchFeature {
             case .book: return "Search by title, author, or ISBN"
             case .movie: return "Search movies by title"
             case .tvShow: return "Search TV shows by title"
+            case .restaurant: return "Search restaurants by name or cuisine"
             default: return "Search"
             }
         }
@@ -86,6 +94,7 @@ struct MediaSearchFeature {
             case .book: return "Add Book"
             case .movie: return "Add Movie"
             case .tvShow: return "Add TV Show"
+            case .restaurant: return "Add Restaurant"
             default: return "Add Item"
             }
         }
@@ -98,11 +107,13 @@ struct MediaSearchFeature {
         case searchFailed(String)
         case resultSelected(MediaSearchResultItem)
         case itemSaved
+        case generateSnapshot(RestaurantItem)
         case dismissed
     }
 
     @Dependency(\.googleBooksClient) private var googleBooksClient
     @Dependency(\.tmdbClient) private var tmdbClient
+    @Dependency(\.mapKitSearchClient) private var mapKitSearchClient
     @Dependency(\.defaultDatabase) private var database
 
     private enum CancelID { case search }
@@ -143,6 +154,9 @@ struct MediaSearchFeature {
                         case .tvShow:
                             let tvResults = try await tmdbClient.searchTVShows(query)
                             results = tvResults.map { .tvShow($0) }
+                        case .restaurant:
+                            let restaurantResults = try await mapKitSearchClient.search(query)
+                            results = restaurantResults.map { .restaurant($0) }
                         default:
                             results = []
                         }
@@ -176,11 +190,10 @@ struct MediaSearchFeature {
                         }
                         if !bookItem.coverImageURL.isEmpty {
                             if let imageData = await MediaCacheService.shared.downloadCoverImage(from: bookItem.coverImageURL) {
-                                var withImage = bookItem
-                                withImage.coverImageData = imageData
-                                let toSave = withImage
                                 try await database.write { db in
-                                    try BookItem.upsert { toSave }.execute(db)
+                                    try BookItem.find(bookItem.id)
+                                        .update { $0.coverImageData = #bind(imageData) }
+                                        .execute(db)
                                 }
                             }
                         }
@@ -195,11 +208,10 @@ struct MediaSearchFeature {
                         }
                         if !movieItem.posterURL.isEmpty {
                             if let imageData = await MediaCacheService.shared.downloadCoverImage(from: movieItem.posterURL) {
-                                var withImage = movieItem
-                                withImage.coverImageData = imageData
-                                let toSave = withImage
                                 try await database.write { db in
-                                    try MovieItem.upsert { toSave }.execute(db)
+                                    try MovieItem.find(movieItem.id)
+                                        .update { $0.coverImageData = #bind(imageData) }
+                                        .execute(db)
                                 }
                             }
                         }
@@ -214,24 +226,106 @@ struct MediaSearchFeature {
                         }
                         if !tvItem.posterURL.isEmpty {
                             if let imageData = await MediaCacheService.shared.downloadCoverImage(from: tvItem.posterURL) {
-                                var withImage = tvItem
-                                withImage.coverImageData = imageData
-                                let toSave = withImage
                                 try await database.write { db in
-                                    try TVShowItem.upsert { toSave }.execute(db)
+                                    try TVShowItem.find(tvItem.id)
+                                        .update { $0.coverImageData = #bind(imageData) }
+                                        .execute(db)
                                 }
                             }
                         }
                         await send(.itemSaved)
+                    }
+
+                case .restaurant(let restaurantResult):
+                    let restaurantItem = restaurantResult.toRestaurantItem(collectionID: collectionID)
+                    return .run { send in
+                        try await database.write { db in
+                            try RestaurantItem.upsert { restaurantItem }.execute(db)
+                        }
+                        await send(.itemSaved)
+                        if restaurantItem.hasCoordinate || !restaurantItem.websiteURL.isEmpty {
+                            await send(.generateSnapshot(restaurantItem))
+                        }
                     }
                 }
 
             case .itemSaved:
                 return .none
 
+            case .generateSnapshot(let restaurantItem):
+                return .run { [mapKitSearchClient] _ in
+                    var imageData: Data?
+
+                    var imageType = ""
+
+                    // Try to fetch a brand image with a 10-second overall time limit
+                    if !restaurantItem.websiteURL.isEmpty {
+                        Logger.shared.info("Restaurant cover: trying brand image from \(restaurantItem.websiteURL)", category: .network)
+                        imageData = await withTimeLimit(seconds: 10) {
+                            await mapKitSearchClient.fetchBrandImage(restaurantItem.websiteURL)
+                        }
+                        if imageData != nil {
+                            imageType = "brand"
+                            Logger.shared.info("Restaurant cover: got brand image for '\(restaurantItem.title)' (\(imageData!.count) bytes)", category: .network)
+                        } else {
+                            Logger.shared.info("Restaurant cover: no brand image for '\(restaurantItem.title)', falling back to map", category: .network)
+                        }
+                    }
+
+                    // Fall back to a map snapshot if no brand image was found
+                    if imageData == nil && restaurantItem.hasCoordinate {
+                        imageData = await mapKitSearchClient.generateSnapshot(
+                            restaurantItem.latitude,
+                            restaurantItem.longitude,
+                            restaurantItem.title
+                        )
+                        if imageData != nil {
+                            imageType = "map"
+                            Logger.shared.info("Restaurant cover: got map snapshot for '\(restaurantItem.title)' (\(imageData!.count) bytes)", category: .network)
+                        } else {
+                            Logger.shared.error("Restaurant cover: map snapshot ALSO failed for '\(restaurantItem.title)'", category: .network)
+                        }
+                    }
+
+                    if let imageData {
+                        let itemID = restaurantItem.id
+                        let type = imageType
+                        try? await database.write { db in
+                            try RestaurantItem.find(itemID)
+                                .update {
+                                    $0.coverImageData = #bind(imageData)
+                                    $0.coverImageType = #bind(type)
+                                }
+                                .execute(db)
+                        }
+                    }
+                }
+
             case .dismissed:
                 return .none
             }
         }
+    }
+}
+
+// MARK: - Time-limited async helper
+
+private func withTimeLimit<T: Sendable>(seconds: Int, operation: @escaping @Sendable () async -> T?) async -> T? {
+    await withTaskGroup(of: T?.self) { group in
+        group.addTask { await operation() }
+        group.addTask {
+            try? await Task.sleep(for: .seconds(seconds))
+            return nil
+        }
+
+        // Return whichever finishes first
+        for await result in group {
+            if let result {
+                group.cancelAll()
+                return result
+            }
+        }
+        group.cancelAll()
+        return nil
     }
 }

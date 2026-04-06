@@ -9,7 +9,7 @@ import Foundation
 import Testing
 @testable import Traveling_Snails
 
-@Suite("TripEditErrorAnalytics Tests")
+@Suite("TripEditErrorAnalytics Tests", .serialized)
 struct TripEditErrorAnalyticsTests {
     @Test("TripEditErrorType correctly maps from AppError", .tags(.unit, .fast, .parallel, .validation, .errorHandling, .dataModel))
     func errorTypeMappingIsCorrect() {
@@ -73,18 +73,21 @@ struct TripEditErrorAnalyticsTests {
 
     @Test("Analytics can be reset for clean state", .tags(.unit, .fast, .serial, .validation, .errorHandling, .utility))
     func analyticsCanBeReset() {
+        // Start from a known clean state
+        TripEditErrorAnalytics.reset()
+
         // Record some errors
         TripEditErrorAnalytics.recordError(.networkUnavailable, context: "test1", retryCount: 0)
         TripEditErrorAnalytics.recordError(.databaseSaveFailed("test"), context: "test2", retryCount: 1)
 
         // Get state before reset
         let stateBefore = TripEditErrorAnalytics.getAnalyticsState()
-        #expect(stateBefore.eventCount >= 2)
+        #expect(stateBefore.eventCount == 2)
 
         // Reset
         TripEditErrorAnalytics.reset()
 
-        // Get state after reset
+        // Verify clean state immediately after reset
         let stateAfter = TripEditErrorAnalytics.getAnalyticsState()
         #expect(stateAfter.eventCount == 0)
         #expect(stateAfter.lastCleanup >= stateBefore.lastCleanup)

@@ -12,6 +12,7 @@ enum CollectionRoute: Hashable {
     case bookItem(UUID)
     case movieItem(UUID)
     case tvShowItem(UUID)
+    case restaurantItem(UUID)
 }
 
 @Reducer
@@ -28,11 +29,21 @@ struct CollectionDetailFeature {
         }
     }
 
+    enum GroupBy: String, CaseIterable, Equatable {
+        case none = "None"
+        case city = "City"
+        case state = "State"
+        case country = "Country"
+
+        var displayName: String { rawValue }
+    }
+
     @ObservableState
     struct State: Equatable {
         var collection: Collection
         var path: [CollectionRoute] = []
         var viewMode: ViewMode = .grid
+        var groupBy: GroupBy = .none
         var showingAddSheet = false
         var sharedRecord: SharedRecord?
         var isPreparingShare = false
@@ -46,9 +57,11 @@ struct CollectionDetailFeature {
         case refreshCollection
         case collectionLoaded(Collection?)
         case viewModeChanged(ViewMode)
+        case groupByChanged(GroupBy)
         case addItemTapped
         case addSheetDismissed
         case itemSelected(CollectionRoute)
+        case pathChanged([CollectionRoute])
 
         case shareTapped
         case shareCreated(SharedRecord)
@@ -63,10 +76,14 @@ struct CollectionDetailFeature {
         case deleteBookItem(BookItem)
         case deleteMovieItem(MovieItem)
         case deleteTVShowItem(TVShowItem)
+        case deleteRestaurantItem(RestaurantItem)
+
+        case regenerateMissingCovers([RestaurantItem])
     }
 
     @Dependency(\.defaultDatabase) private var database
     @Dependency(\.defaultSyncEngine) private var syncEngine
+    @Dependency(\.mapKitSearchClient) private var mapKitSearchClient
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
@@ -92,6 +109,10 @@ struct CollectionDetailFeature {
                 state.viewMode = mode
                 return .none
 
+            case .groupByChanged(let groupBy):
+                state.groupBy = groupBy
+                return .none
+
             case .addItemTapped:
                 state.showingAddSheet = true
                 return .none
@@ -102,6 +123,10 @@ struct CollectionDetailFeature {
 
             case .itemSelected(let route):
                 state.path.append(route)
+                return .none
+
+            case .pathChanged(let newPath):
+                state.path = newPath
                 return .none
 
             case .shareTapped:
@@ -181,6 +206,52 @@ struct CollectionDetailFeature {
                         try TVShowItem.find(tvShowItem.id).delete().execute(db)
                     }
                 }
+
+            case .deleteRestaurantItem(let restaurantItem):
+                return .run { _ in
+                    try await database.write { db in
+                        try RestaurantItem.find(restaurantItem.id).delete().execute(db)
+                    }
+                }
+
+            case .regenerateMissingCovers(let items):
+                // Only regenerate for items without covers that aren't custom-set
+                let needsCovers = items.filter {
+                    $0.coverImageData == nil
+                    && $0.coverImageType != "custom"
+                    && ($0.hasCoordinate || !$0.websiteURL.isEmpty)
+                }
+                guard !needsCovers.isEmpty else { return .none }
+                return .merge(needsCovers.map { item in
+                    .run { [mapKitSearchClient, database] _ in
+                        var imageData: Data?
+                        var imageType = ""
+
+                        if !item.websiteURL.isEmpty {
+                            imageData = await mapKitSearchClient.fetchBrandImage(item.websiteURL)
+                            if imageData != nil { imageType = "brand" }
+                        }
+
+                        if imageData == nil && item.hasCoordinate {
+                            imageData = await mapKitSearchClient.generateSnapshot(
+                                item.latitude, item.longitude, item.title
+                            )
+                            if imageData != nil { imageType = "map" }
+                        }
+
+                        if let imageData {
+                            let type = imageType
+                            try? await database.write { db in
+                                try RestaurantItem.find(item.id)
+                                    .update {
+                                        $0.coverImageData = #bind(imageData)
+                                        $0.coverImageType = #bind(type)
+                                    }
+                                    .execute(db)
+                            }
+                        }
+                    }
+                })
             }
         }
     }

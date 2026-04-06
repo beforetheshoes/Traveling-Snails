@@ -38,4 +38,10 @@ struct StatusBadgeView: View {
         self.systemImage = status.systemImage
         self.color = status.color
     }
+
+    init(status: RestaurantStatus) {
+        self.displayName = status.displayName
+        self.systemImage = status.systemImage
+        self.color = status.color
+    }
 }

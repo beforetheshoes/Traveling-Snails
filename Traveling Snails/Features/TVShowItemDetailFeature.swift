@@ -15,6 +15,7 @@ struct TVShowItemDetailFeature {
         var isEditing = false
         var editedNotes: String = ""
         var showingDeleteConfirmation = false
+        var isDeleted = false
     }
 
     enum Action: Equatable {
@@ -124,6 +125,7 @@ struct TVShowItemDetailFeature {
                 return .none
 
             case .deleted:
+                state.isDeleted = true
                 return .none
 
             case .refreshFromAPI:
@@ -168,10 +170,12 @@ struct TVShowItemDetailFeature {
 
             case .coverImageDownloaded(let data):
                 state.tvShowItem.coverImageData = data
-                let updated = state.tvShowItem
+                let id = state.tvShowItem.id
                 return .run { _ in
                     try await database.write { db in
-                        try TVShowItem.upsert { updated }.execute(db)
+                        try TVShowItem.find(id)
+                            .update { $0.coverImageData = #bind(data) }
+                            .execute(db)
                     }
                 }
             }

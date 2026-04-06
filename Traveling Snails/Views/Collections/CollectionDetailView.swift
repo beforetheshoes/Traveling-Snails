@@ -13,6 +13,7 @@ struct CollectionDetailView: View {
     @FetchAll var bookItems: [BookItem]
     @FetchAll var movieItems: [MovieItem]
     @FetchAll var tvShowItems: [TVShowItem]
+    @FetchAll var restaurantItems: [RestaurantItem]
 
     init(store: StoreOf<CollectionDetailFeature>) {
         self.store = store
@@ -29,6 +30,10 @@ struct CollectionDetailView: View {
             TVShowItem.where { $0.collectionID.eq(collectionID) }
                 .order { $0.createdDate.desc() }
         )
+        _restaurantItems = FetchAll(
+            RestaurantItem.where { $0.collectionID.eq(collectionID) }
+                .order { $0.createdDate.desc() }
+        )
     }
 
     private var collectionType: CollectionType {
@@ -42,18 +47,28 @@ struct CollectionDetailView: View {
         NavigationStack(path: Binding(
             get: { store.state.path },
             set: { newPath in
-                if newPath.count < store.state.path.count {
-                    // User popped
-                }
+                store.send(.pathChanged(newPath))
             }
         )) {
             Group {
                 if isEmpty {
-                    ContentUnavailableView {
-                        Label("No Items", systemImage: collection.type.systemImage)
-                    } description: {
-                        Text("Use + or right-click to search and add \(collection.type.displayName.lowercased()).")
-                    }
+                    Color.clear
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .contentShape(Rectangle())
+                        .overlay {
+                            ContentUnavailableView {
+                                Label("No Items", systemImage: collection.type.systemImage)
+                            } description: {
+                                Text("Use + or right-click to search and add \(collection.type.displayName.lowercased()).")
+                            }
+                        }
+                        .contextMenu {
+                            Button {
+                                store.send(.addItemTapped)
+                            } label: {
+                                Label("Add \(collection.type.singularName)…", systemImage: "plus")
+                            }
+                        }
                 } else {
                     ScrollView {
                         switch viewMode {
@@ -63,13 +78,13 @@ struct CollectionDetailView: View {
                             listContent
                         }
                     }
-                }
-            }
-            .contextMenu {
-                Button {
-                    store.send(.addItemTapped)
-                } label: {
-                    Label("Add \(collection.type.singularName)…", systemImage: "plus")
+                    .contextMenu {
+                        Button {
+                            store.send(.addItemTapped)
+                        } label: {
+                            Label("Add \(collection.type.singularName)…", systemImage: "plus")
+                        }
+                    }
                 }
             }
             .navigationTitle(collection.name.isEmpty ? collection.type.singularName : collection.name)
@@ -87,6 +102,23 @@ struct CollectionDetailView: View {
                         }
                         .pickerStyle(.segmented)
                         .frame(width: 100)
+
+                        if collectionType == .restaurant {
+                            Menu {
+                                Picker("Group By", selection: Binding(
+                                    get: { store.state.groupBy },
+                                    set: { store.send(.groupByChanged($0)) }
+                                )) {
+                                    ForEach(CollectionDetailFeature.GroupBy.allCases, id: \.self) { group in
+                                        Text(group.displayName).tag(group)
+                                    }
+                                }
+                            } label: {
+                                Image(systemName: store.state.groupBy == .none
+                                    ? "rectangle.3.group"
+                                    : "rectangle.3.group.fill")
+                            }
+                        }
 
                         Button {
                             store.send(.addItemTapped)
@@ -122,6 +154,12 @@ struct CollectionDetailView: View {
             )
         }
         .onAppear { store.send(.onAppear) }
+        .onChange(of: restaurantItems) { _, items in
+            let missing = items.filter { $0.coverImageData == nil }
+            if !missing.isEmpty {
+                store.send(.regenerateMissingCovers(missing))
+            }
+        }
     }
 
     // MARK: - Helpers
@@ -131,6 +169,7 @@ struct CollectionDetailView: View {
         case .book: return bookItems.isEmpty
         case .movie: return movieItems.isEmpty
         case .tvShow: return tvShowItems.isEmpty
+        case .restaurant: return restaurantItems.isEmpty
         default: return true
         }
     }
@@ -150,6 +189,8 @@ struct CollectionDetailView: View {
             MediaItemGridView(items: tvShowItems.map { MediaGridItem(id: $0.id, title: $0.title, subtitle: $0.displaySubtitle, coverImageURL: $0.posterURL, coverImageData: $0.coverImageData, rating: $0.rating) }) { id in
                 store.send(.itemSelected(.tvShowItem(id)))
             }
+        case .restaurant:
+            groupedRestaurantGrid
         default:
             EmptyView()
         }
@@ -189,6 +230,8 @@ struct CollectionDetailView: View {
                         }
                     Divider().padding(.leading, 74)
                 }
+            case .restaurant:
+                groupedRestaurantList
             default:
                 EmptyView()
             }
@@ -221,6 +264,112 @@ struct CollectionDetailView: View {
                         TVShowItemDetailFeature()
                     }
                 )
+            }
+        case .restaurantItem(let id):
+            if let item = restaurantItems.first(where: { $0.id == id }) {
+                RestaurantDetailView(
+                    store: Store(initialState: RestaurantItemDetailFeature.State(restaurantItem: item)) {
+                        RestaurantItemDetailFeature()
+                    }
+                )
+            }
+        }
+    }
+
+    // MARK: - Restaurant Grouping
+
+    private typealias GroupBy = CollectionDetailFeature.GroupBy
+
+    private func restaurantGroupKey(for item: RestaurantItem) -> String {
+        switch store.state.groupBy {
+        case .none: return ""
+        case .city: return item.city ?? ""
+        case .state: return item.state ?? ""
+        case .country: return item.country ?? ""
+        }
+    }
+
+    private var groupedRestaurants: [(key: String, items: [RestaurantItem])] {
+        let groupBy = store.state.groupBy
+        guard groupBy != .none else { return [("", restaurantItems)] }
+
+        var groups: [String: [RestaurantItem]] = [:]
+        for item in restaurantItems {
+            let key = restaurantGroupKey(for: item)
+            groups[key.isEmpty ? "Unknown" : key, default: []].append(item)
+        }
+        return groups.sorted { $0.key < $1.key }.map { (key: $0.key, items: $0.value) }
+    }
+
+    @ViewBuilder
+    private var groupedRestaurantGrid: some View {
+        let groups = groupedRestaurants
+        ForEach(groups, id: \.key) { group in
+            if store.state.groupBy != .none {
+                Section {
+                    RestaurantGridView(items: group.items) { id in
+                        store.send(.itemSelected(.restaurantItem(id)))
+                    } onDelete: { item in
+                        store.send(.deleteRestaurantItem(item))
+                    }
+                } header: {
+                    HStack {
+                        Text(group.key)
+                            .font(.title3)
+                            .fontWeight(.semibold)
+                        Spacer()
+                        Text("\(group.items.count)")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.horizontal)
+                    .padding(.top, group.key == groups.first?.key ? 0 : 12)
+                }
+            } else {
+                RestaurantGridView(items: group.items) { id in
+                    store.send(.itemSelected(.restaurantItem(id)))
+                } onDelete: { item in
+                    store.send(.deleteRestaurantItem(item))
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var groupedRestaurantList: some View {
+        let groups = groupedRestaurants
+        ForEach(groups, id: \.key) { group in
+            if store.state.groupBy != .none {
+                HStack {
+                    Text(group.key)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text("\(group.items.count)")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+                .padding(.horizontal)
+                .padding(.top, 12)
+                .padding(.bottom, 4)
+            }
+
+            ForEach(group.items) { item in
+                MediaItemListRow(title: item.title, subtitle: item.displaySubtitle, coverImageURL: "", coverImageData: item.coverImageData, statusText: item.status.displayName, statusColor: item.status.color, rating: item.rating, placeholderIcon: "fork.knife")
+                    .padding(.horizontal)
+                    .padding(.vertical, 8)
+                    .onTapGesture {
+                        store.send(.itemSelected(.restaurantItem(item.id)))
+                    }
+                    .contextMenu {
+                        Button(role: .destructive) {
+                            store.send(.deleteRestaurantItem(item))
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
+                Divider().padding(.leading, 74)
             }
         }
     }
@@ -287,6 +436,7 @@ struct MediaItemListRow: View {
     let statusText: String
     let statusColor: Color
     let rating: Int
+    var placeholderIcon: String = "book.closed"
 
     var body: some View {
         HStack(spacing: 12) {
@@ -295,7 +445,8 @@ struct MediaItemListRow: View {
                 imageData: coverImageData,
                 width: 50,
                 height: 75,
-                cornerRadius: 4
+                cornerRadius: 4,
+                placeholderIcon: placeholderIcon
             )
 
             VStack(alignment: .leading, spacing: 4) {
@@ -330,5 +481,60 @@ struct MediaItemListRow: View {
             Spacer()
         }
         .contentShape(Rectangle())
+    }
+}
+
+// MARK: - Restaurant Grid with Context Menu
+
+struct RestaurantGridView: View {
+    let items: [RestaurantItem]
+    let onItemSelected: (UUID) -> Void
+    let onDelete: (RestaurantItem) -> Void
+
+    private let columns = [
+        GridItem(.adaptive(minimum: 140, maximum: 180), spacing: 16)
+    ]
+
+    var body: some View {
+        LazyVGrid(columns: columns, spacing: 20) {
+            ForEach(items) { item in
+                VStack(alignment: .leading, spacing: 6) {
+                    CoverArtView(
+                        imageURL: "",
+                        imageData: item.coverImageData,
+                        width: 140,
+                        height: 140,
+                        cornerRadius: 24,
+                        placeholderIcon: "fork.knife",
+                        imageContentMode: item.isBrandImage ? .fit : .fill
+                    )
+
+                    Text(item.title)
+                        .font(.caption)
+                        .fontWeight(.medium)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+
+                    Text(item.displaySubtitle)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+
+                    if item.rating > 0 {
+                        StaticRatingView(rating: item.rating, starSize: 10)
+                    }
+                }
+                .frame(width: 140)
+                .onTapGesture { onItemSelected(item.id) }
+                .contextMenu {
+                    Button(role: .destructive) {
+                        onDelete(item)
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
+                }
+            }
+        }
+        .padding(.horizontal)
     }
 }

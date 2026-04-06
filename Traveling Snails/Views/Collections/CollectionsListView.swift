@@ -28,11 +28,13 @@ struct CollectionsListView: View {
             newCollectionMenu
         }
         .navigationTitle("Collections")
+        #if os(iOS)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 newCollectionMenuButton
             }
         }
+        #endif
         .sheet(isPresented: $showingAddSheet) {
             addCollectionSheet
         }
@@ -66,6 +68,26 @@ struct CollectionsListView: View {
                 Text("Right-click or use the + button to create your first collection.")
             }
         }
+
+        #if os(macOS)
+        Section {
+            Menu {
+                ForEach(CollectionType.allCases, id: \.self) { type in
+                    Button {
+                        addCollectionType = type
+                        addCollectionName = ""
+                        showingAddSheet = true
+                    } label: {
+                        Label(type.displayName, systemImage: type.systemImage)
+                    }
+                }
+            } label: {
+                Label("New Collection…", systemImage: "plus")
+                    .foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+        }
+        #endif
     }
 
     @ViewBuilder

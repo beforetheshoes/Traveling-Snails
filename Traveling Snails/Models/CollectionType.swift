@@ -14,6 +14,7 @@ enum CollectionType: String, Codable, CaseIterable, QueryBindable, Hashable {
     case game
     case music
     case app
+    case restaurant
 
     var displayName: String {
         switch self {
@@ -24,6 +25,7 @@ enum CollectionType: String, Codable, CaseIterable, QueryBindable, Hashable {
         case .game: return "Video Games"
         case .music: return "Music"
         case .app: return "Apps"
+        case .restaurant: return "Restaurants"
         }
     }
 
@@ -36,6 +38,7 @@ enum CollectionType: String, Codable, CaseIterable, QueryBindable, Hashable {
         case .game: return "Video Game"
         case .music: return "Music"
         case .app: return "App"
+        case .restaurant: return "Restaurant"
         }
     }
 
@@ -48,6 +51,7 @@ enum CollectionType: String, Codable, CaseIterable, QueryBindable, Hashable {
         case .game: return "gamecontroller"
         case .music: return "music.note"
         case .app: return "app"
+        case .restaurant: return "fork.knife"
         }
     }
 
@@ -60,6 +64,7 @@ enum CollectionType: String, Codable, CaseIterable, QueryBindable, Hashable {
         case .game: return .green
         case .music: return .pink
         case .app: return .blue
+        case .restaurant: return .teal
         }
     }
 }

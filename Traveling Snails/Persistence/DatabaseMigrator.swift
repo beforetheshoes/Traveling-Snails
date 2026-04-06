@@ -482,5 +482,57 @@ func makeMigrator() -> DatabaseMigrator {
         try #sql("CREATE INDEX IF NOT EXISTS \"idx_tVShowItems_externalID\" ON \"tVShowItems\"(\"externalID\")").execute(db)
     }
 
+    // MARK: - Add restaurant items table
+
+    migrator.registerMigration("Add restaurant items") { db in
+        try #sql(
+            """
+            CREATE TABLE "restaurantItems" (
+              "id" TEXT PRIMARY KEY NOT NULL,
+              "collectionID" TEXT NOT NULL REFERENCES "collections"("id") ON DELETE CASCADE,
+              "title" TEXT NOT NULL DEFAULT '',
+              "cuisine" TEXT NOT NULL DEFAULT '',
+              "phone" TEXT NOT NULL DEFAULT '',
+              "address" TEXT NOT NULL DEFAULT '',
+              "latitude" REAL NOT NULL DEFAULT 0,
+              "longitude" REAL NOT NULL DEFAULT 0,
+              "priceLevel" INTEGER NOT NULL DEFAULT 0,
+              "websiteURL" TEXT NOT NULL DEFAULT '',
+              "coverImageData" BLOB,
+              "externalID" TEXT NOT NULL DEFAULT '',
+              "rating" INTEGER NOT NULL DEFAULT 0,
+              "status" TEXT NOT NULL DEFAULT 'wantToVisit',
+              "visitedDate" TEXT NOT NULL,
+              "hasVisitedDate" INTEGER NOT NULL DEFAULT 0,
+              "notes" TEXT NOT NULL DEFAULT '',
+              "sortOrder" INTEGER NOT NULL DEFAULT 0,
+              "createdDate" TEXT NOT NULL
+            ) STRICT
+            """
+        ).execute(db)
+
+        try #sql("CREATE INDEX IF NOT EXISTS \"idx_restaurantItems_collectionID\" ON \"restaurantItems\"(\"collectionID\")").execute(db)
+        try #sql("CREATE INDEX IF NOT EXISTS \"idx_restaurantItems_externalID\" ON \"restaurantItems\"(\"externalID\")").execute(db)
+    }
+
+    // MARK: - Enrich restaurant items with additional fields
+
+    migrator.registerMigration("Enrich restaurant items") { db in
+        // These columns omit NOT NULL so that CloudKit sync can insert NULL
+        // for records that were created before these fields existed.
+        try #sql("ALTER TABLE \"restaurantItems\" ADD COLUMN \"category\" TEXT DEFAULT ''").execute(db)
+        try #sql("ALTER TABLE \"restaurantItems\" ADD COLUMN \"city\" TEXT DEFAULT ''").execute(db)
+        try #sql("ALTER TABLE \"restaurantItems\" ADD COLUMN \"state\" TEXT DEFAULT ''").execute(db)
+        try #sql("ALTER TABLE \"restaurantItems\" ADD COLUMN \"postalCode\" TEXT DEFAULT ''").execute(db)
+        try #sql("ALTER TABLE \"restaurantItems\" ADD COLUMN \"country\" TEXT DEFAULT ''").execute(db)
+        try #sql("ALTER TABLE \"restaurantItems\" ADD COLUMN \"timeZoneIdentifier\" TEXT DEFAULT ''").execute(db)
+    }
+
+    // MARK: - Add cover image type tracking
+
+    migrator.registerMigration("Add cover image type") { db in
+        try #sql("ALTER TABLE \"restaurantItems\" ADD COLUMN \"coverImageType\" TEXT DEFAULT ''").execute(db)
+    }
+
     return migrator
 }
