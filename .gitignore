@@ -1,7 +1,48 @@
-.build/
+# Xcode
+xcuserdata/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+DerivedData/
+.derivedData/
 build/
-violations.json
-*.json
+timeline.xctimeline
+playground.xcworkspace
+
+# Swift Package Manager
+.build/
+.swiftpm/xcode/xcuserdata/
+
+# SwiftLint cache
+.swiftlint.cache/
 swiftlint_output.txt
+violations.json
+
+# IDE settings
+.vscode/
+
+# Claude Code local config
+.claude/
+
+# Secrets
 Secrets.xcconfig
-APIKeys.swift
+
+# CocoaPods
+Pods/
+Carthage/Build/
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Compliance/scripts (dev tooling, not app code)
+compliance/
+scripts/
+
+# OS files
+.DS_Store
+*.swp
+*~

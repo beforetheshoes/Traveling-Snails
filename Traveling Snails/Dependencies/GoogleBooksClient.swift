@@ -48,44 +48,40 @@ struct GoogleBooksClient {
 }
 
 extension GoogleBooksClient: DependencyKey {
-    static let liveValue: GoogleBooksClient = {
-        let apiKey = APIKeys.googleBooks
+    static let liveValue = GoogleBooksClient(
+        search: { query in
+            let apiKey = await APIKeys.googleBooks()
+            let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
 
-        if apiKey.isEmpty {
-            // Fallback to Open Library when no API key
-            return GoogleBooksClient(
-                search: { query in
-                    let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
-                    let url = URL(string: "https://openlibrary.org/search.json?q=\(encoded)&limit=20&fields=key,title,author_name,first_publish_year,number_of_pages_median,publisher,isbn,cover_i")!
-                    let (data, _) = try await URLSession.shared.data(from: url)
-                    let response = try JSONDecoder().decode(OpenLibrarySearchResponse.self, from: data)
-                    return response.docs.map { $0.toSearchResult() }
-                },
-                fetchDetail: { workKey in
-                    let url = URL(string: "https://openlibrary.org\(workKey).json")!
-                    let (data, _) = try await URLSession.shared.data(from: url)
-                    let work = try JSONDecoder().decode(OpenLibraryWork.self, from: data)
-                    return work.toSearchResult(key: workKey)
-                }
-            )
-        }
-
-        return GoogleBooksClient(
-            search: { query in
-                let encoded = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? query
-                let url = URL(string: "https://www.googleapis.com/books/v1/volumes?q=\(encoded)&maxResults=20&key=\(apiKey)")!
+            if apiKey.isEmpty {
+                // Fallback to Open Library
+                let url = URL(string: "https://openlibrary.org/search.json?q=\(encoded)&limit=20&fields=key,title,author_name,first_publish_year,number_of_pages_median,publisher,isbn,cover_i")!
                 let (data, _) = try await URLSession.shared.data(from: url)
-                let response = try JSONDecoder().decode(GoogleBooksResponse.self, from: data)
-                return (response.items ?? []).map { $0.toSearchResult() }
-            },
-            fetchDetail: { volumeID in
-                let url = URL(string: "https://www.googleapis.com/books/v1/volumes/\(volumeID)?key=\(apiKey)")!
-                let (data, _) = try await URLSession.shared.data(from: url)
-                let item = try JSONDecoder().decode(GoogleBooksItem.self, from: data)
-                return item.toSearchResult()
+                let response = try JSONDecoder().decode(OpenLibrarySearchResponse.self, from: data)
+                return response.docs.map { $0.toSearchResult() }
             }
-        )
-    }()
+
+            let url = URL(string: "https://www.googleapis.com/books/v1/volumes?q=\(encoded)&maxResults=20&key=\(apiKey)")!
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let response = try JSONDecoder().decode(GoogleBooksResponse.self, from: data)
+            return (response.items ?? []).map { $0.toSearchResult() }
+        },
+        fetchDetail: { volumeID in
+            let apiKey = await APIKeys.googleBooks()
+
+            if apiKey.isEmpty {
+                let url = URL(string: "https://openlibrary.org\(volumeID).json")!
+                let (data, _) = try await URLSession.shared.data(from: url)
+                let work = try JSONDecoder().decode(OpenLibraryWork.self, from: data)
+                return work.toSearchResult(key: volumeID)
+            }
+
+            let url = URL(string: "https://www.googleapis.com/books/v1/volumes/\(volumeID)?key=\(apiKey)")!
+            let (data, _) = try await URLSession.shared.data(from: url)
+            let item = try JSONDecoder().decode(GoogleBooksItem.self, from: data)
+            return item.toSearchResult()
+        }
+    )
 
     static let testValue = GoogleBooksClient(
         search: { _ in [] },

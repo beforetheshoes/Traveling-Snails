@@ -17,7 +17,7 @@ struct MacAppView: View {
 
         NavigationSplitView(columnVisibility: .constant(.all)) {
             MacSidebarView(store: store)
-                .navigationSplitViewColumnWidth(min: 180, ideal: 220, max: 280)
+                .navigationSplitViewColumnWidth(min: 130, ideal: 160, max: 260)
         } detail: {
             switch state.navigation.selectedTab {
             case .trips:

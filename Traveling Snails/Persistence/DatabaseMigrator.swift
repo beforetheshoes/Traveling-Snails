@@ -410,5 +410,77 @@ func makeMigrator() -> DatabaseMigrator {
         try #sql("CREATE INDEX IF NOT EXISTS \"idx_bookItems_externalID\" ON \"bookItems\"(\"externalID\")").execute(db)
     }
 
+    // MARK: - Add movie and TV show items tables
+
+    migrator.registerMigration("Add movie and TV show items") { db in
+        try #sql(
+            """
+            CREATE TABLE "movieItems" (
+              "id" TEXT PRIMARY KEY NOT NULL,
+              "collectionID" TEXT NOT NULL REFERENCES "collections"("id") ON DELETE CASCADE,
+              "title" TEXT NOT NULL DEFAULT '',
+              "overview" TEXT NOT NULL DEFAULT '',
+              "releaseDate" TEXT NOT NULL DEFAULT '',
+              "runtime" INTEGER NOT NULL DEFAULT 0,
+              "director" TEXT NOT NULL DEFAULT '',
+              "cast" TEXT NOT NULL DEFAULT '',
+              "genres" TEXT NOT NULL DEFAULT '',
+              "posterURL" TEXT NOT NULL DEFAULT '',
+              "backdropURL" TEXT NOT NULL DEFAULT '',
+              "coverImageData" BLOB,
+              "externalID" TEXT NOT NULL DEFAULT '',
+              "imdbID" TEXT NOT NULL DEFAULT '',
+              "rating" INTEGER NOT NULL DEFAULT 0,
+              "status" TEXT NOT NULL DEFAULT 'wantToWatch',
+              "watchedDate" TEXT NOT NULL,
+              "hasWatchedDate" INTEGER NOT NULL DEFAULT 0,
+              "notes" TEXT NOT NULL DEFAULT '',
+              "sortOrder" INTEGER NOT NULL DEFAULT 0,
+              "createdDate" TEXT NOT NULL,
+              "voteAverage" REAL NOT NULL DEFAULT 0,
+              "originalLanguage" TEXT NOT NULL DEFAULT ''
+            ) STRICT
+            """
+        ).execute(db)
+
+        try #sql("CREATE INDEX IF NOT EXISTS \"idx_movieItems_collectionID\" ON \"movieItems\"(\"collectionID\")").execute(db)
+        try #sql("CREATE INDEX IF NOT EXISTS \"idx_movieItems_externalID\" ON \"movieItems\"(\"externalID\")").execute(db)
+
+        try #sql(
+            """
+            CREATE TABLE "tVShowItems" (
+              "id" TEXT PRIMARY KEY NOT NULL,
+              "collectionID" TEXT NOT NULL REFERENCES "collections"("id") ON DELETE CASCADE,
+              "title" TEXT NOT NULL DEFAULT '',
+              "overview" TEXT NOT NULL DEFAULT '',
+              "firstAirDate" TEXT NOT NULL DEFAULT '',
+              "lastAirDate" TEXT NOT NULL DEFAULT '',
+              "numberOfSeasons" INTEGER NOT NULL DEFAULT 0,
+              "numberOfEpisodes" INTEGER NOT NULL DEFAULT 0,
+              "creators" TEXT NOT NULL DEFAULT '',
+              "cast" TEXT NOT NULL DEFAULT '',
+              "genres" TEXT NOT NULL DEFAULT '',
+              "posterURL" TEXT NOT NULL DEFAULT '',
+              "backdropURL" TEXT NOT NULL DEFAULT '',
+              "coverImageData" BLOB,
+              "externalID" TEXT NOT NULL DEFAULT '',
+              "imdbID" TEXT NOT NULL DEFAULT '',
+              "rating" INTEGER NOT NULL DEFAULT 0,
+              "status" TEXT NOT NULL DEFAULT 'wantToWatch',
+              "showStatus" TEXT NOT NULL DEFAULT '',
+              "notes" TEXT NOT NULL DEFAULT '',
+              "sortOrder" INTEGER NOT NULL DEFAULT 0,
+              "createdDate" TEXT NOT NULL,
+              "voteAverage" REAL NOT NULL DEFAULT 0,
+              "originalLanguage" TEXT NOT NULL DEFAULT '',
+              "network" TEXT NOT NULL DEFAULT ''
+            ) STRICT
+            """
+        ).execute(db)
+
+        try #sql("CREATE INDEX IF NOT EXISTS \"idx_tVShowItems_collectionID\" ON \"tVShowItems\"(\"collectionID\")").execute(db)
+        try #sql("CREATE INDEX IF NOT EXISTS \"idx_tVShowItems_externalID\" ON \"tVShowItems\"(\"externalID\")").execute(db)
+    }
+
     return migrator
 }

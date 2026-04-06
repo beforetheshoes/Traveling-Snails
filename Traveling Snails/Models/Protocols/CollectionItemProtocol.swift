@@ -11,7 +11,7 @@ protocol CollectionItemProtocol: Identifiable, Equatable {
     var title: String { get set }
     var notes: String { get set }
     var rating: Int { get set }
-    var coverImageURL: String { get set }
+    var coverImageURL: String { get }
     var coverImageData: Data? { get set }
     var externalID: String { get set }
     var sortOrder: Int { get set }

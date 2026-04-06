@@ -43,43 +43,48 @@ struct SettingsContentView: View {
             get: { store.activeSheet },
             set: { store.send(.activeSheetChanged($0)) }
         )) { activeSheet in
-            switch activeSheet {
-            case .dataBrowser:
-                DataBrowserView(
-                    store: store.scope(
-                        state: \.dataBrowser,
-                        action: \.dataBrowser
+            Group {
+                switch activeSheet {
+                case .dataBrowser:
+                    DataBrowserView(
+                        store: store.scope(
+                            state: \.dataBrowser,
+                            action: \.dataBrowser
+                        )
                     )
-                )
-            case .exportView:
-                DatabaseExportView(
-                    store: store.scope(
-                        state: \.databaseExport,
-                        action: \.databaseExport
+                case .exportView:
+                    DatabaseExportView(
+                        store: store.scope(
+                            state: \.databaseExport,
+                            action: \.databaseExport
+                        )
                     )
-                )
-            case .fileAttachmentSettings:
-                FileAttachmentSettingsView(
-                    store: store.scope(
-                        state: \.fileAttachmentSettings,
-                        action: \.fileAttachmentSettings
+                case .fileAttachmentSettings:
+                    FileAttachmentSettingsView(
+                        store: store.scope(
+                            state: \.fileAttachmentSettings,
+                            action: \.fileAttachmentSettings
+                        )
                     )
-                )
-            case .databaseImportProgress:
-                DatabaseImportProgressView(
-                    store: store.scope(
-                        state: \.databaseImport,
-                        action: \.databaseImport
+                case .databaseImportProgress:
+                    DatabaseImportProgressView(
+                        store: store.scope(
+                            state: \.databaseImport,
+                            action: \.databaseImport
+                        )
                     )
-                )
-            case .databaseCleanup:
-                DatabaseCleanupView(
-                    store: store.scope(
-                        state: \.databaseCleanup,
-                        action: \.databaseCleanup
+                case .databaseCleanup:
+                    DatabaseCleanupView(
+                        store: store.scope(
+                            state: \.databaseCleanup,
+                            action: \.databaseCleanup
+                        )
                     )
-                )
+                }
             }
+            #if os(macOS)
+            .frame(minWidth: 600, minHeight: 450)
+            #endif
         }
         .fileImporter(
             isPresented: $store.showingImportPicker,
@@ -104,6 +109,18 @@ struct AppearanceSection: View {
 
     var body: some View {
         Section("Appearance") {
+            #if os(macOS)
+            Picker(selection: Binding(
+                get: { store.colorSchemePreference },
+                set: { store.send(.colorSchemeChanged($0)) }
+            )) {
+                Text("System").tag(ColorSchemePreference.system)
+                Text("Light").tag(ColorSchemePreference.light)
+                Text("Dark").tag(ColorSchemePreference.dark)
+            } label: {
+                Label("Appearance", systemImage: "moon.fill")
+            }
+            #else
             HStack {
                 Image(systemName: "moon.fill")
                     .foregroundStyle(.blue)
@@ -124,6 +141,7 @@ struct AppearanceSection: View {
                 .pickerStyle(.segmented)
                 .frame(width: 180)
             }
+            #endif
         }
     }
 }
@@ -365,6 +383,8 @@ struct ImportResultSection: View {
 struct DeveloperSection: View {
     let store: StoreOf<SettingsFeature>
 
+    @State private var refreshResult: String?
+
     var body: some View {
         Section("Developer") {
             NavigationLink {
@@ -383,6 +403,21 @@ struct DeveloperSection: View {
                 )
             }
             .foregroundStyle(.primary)
+
+            Button {
+                refreshResult = nil
+                Task {
+                    await APIKeyManager.shared.refreshKeys()
+                    refreshResult = "Keys refreshed from CloudKit"
+                }
+            } label: {
+                SettingsRow(
+                    icon: "arrow.clockwise.icloud",
+                    iconColor: .blue,
+                    title: "Refresh API Keys",
+                    subtitle: refreshResult ?? "Re-fetch keys from CloudKit"
+                )
+            }
         }
     }
 }

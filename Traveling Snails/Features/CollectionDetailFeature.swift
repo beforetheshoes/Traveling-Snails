@@ -10,6 +10,8 @@ import SQLiteData
 
 enum CollectionRoute: Hashable {
     case bookItem(UUID)
+    case movieItem(UUID)
+    case tvShowItem(UUID)
 }
 
 @Reducer
@@ -59,6 +61,8 @@ struct CollectionDetailFeature {
         case cancelEditName
 
         case deleteBookItem(BookItem)
+        case deleteMovieItem(MovieItem)
+        case deleteTVShowItem(TVShowItem)
     }
 
     @Dependency(\.defaultDatabase) private var database
@@ -161,6 +165,20 @@ struct CollectionDetailFeature {
                 return .run { _ in
                     try await database.write { db in
                         try BookItem.find(bookItem.id).delete().execute(db)
+                    }
+                }
+
+            case .deleteMovieItem(let movieItem):
+                return .run { _ in
+                    try await database.write { db in
+                        try MovieItem.find(movieItem.id).delete().execute(db)
+                    }
+                }
+
+            case .deleteTVShowItem(let tvShowItem):
+                return .run { _ in
+                    try await database.write { db in
+                        try TVShowItem.find(tvShowItem.id).delete().execute(db)
                     }
                 }
             }

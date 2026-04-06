@@ -23,6 +23,8 @@ extension DependencyValues {
             EmbeddedFileAttachment.self,
             Collection.self,
             BookItem.self,
+            MovieItem.self,
+            TVShowItem.self,
             delegate: syncEngineDelegate
         )
 

@@ -42,9 +42,9 @@ struct MediaSearchSheet: View {
                 } else if results.isEmpty {
                     Spacer()
                     ContentUnavailableView {
-                        Label("Search Books", systemImage: "magnifyingglass")
+                        Label(store.sheetTitle, systemImage: "magnifyingglass")
                     } description: {
-                        Text("Search by title, author, or ISBN to add books to your collection.")
+                        Text(store.searchPlaceholder)
                     }
                     Spacer()
                 } else {
@@ -58,7 +58,7 @@ struct MediaSearchSheet: View {
                     .listStyle(.plain)
                 }
             }
-            .navigationTitle("Add Book")
+            .navigationTitle(store.sheetTitle)
             .inlineNavigationBarTitle()
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -76,7 +76,7 @@ struct MediaSearchSheet: View {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(.secondary)
 
-            TextField("Search by title, author, or ISBN", text: $store.searchText.sending(\.searchTextChanged))
+            TextField(store.searchPlaceholder, text: $store.searchText.sending(\.searchTextChanged))
             #if os(iOS)
             .textFieldStyle(.plain)
             .submitLabel(.search)
@@ -111,10 +111,10 @@ struct MediaSearchSheet: View {
     }
 
     @ViewBuilder
-    private func searchResultRow(_ result: BookSearchResult) -> some View {
+    private func searchResultRow(_ result: MediaSearchResultItem) -> some View {
         HStack(spacing: 12) {
             CoverArtView(
-                imageURL: result.thumbnailURL.replacingOccurrences(of: "http://", with: "https://"),
+                imageURL: result.thumbnailURL,
                 imageData: nil,
                 width: 50,
                 height: 75,
@@ -128,24 +128,17 @@ struct MediaSearchSheet: View {
                     .lineLimit(2)
                     .foregroundStyle(.primary)
 
-                if !result.authorDisplay.isEmpty {
-                    Text(result.authorDisplay)
+                if !result.subtitle.isEmpty {
+                    Text(result.subtitle)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                 }
 
-                HStack(spacing: 8) {
-                    if !result.publishedDate.isEmpty {
-                        Text(result.publishedDate)
-                            .font(.caption)
-                            .foregroundStyle(.tertiary)
-                    }
-                    if result.pageCount > 0 {
-                        Text("\(result.pageCount) pages")
-                            .font(.caption)
-                            .foregroundStyle(.tertiary)
-                    }
+                if !result.detail.isEmpty {
+                    Text(result.detail)
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
                 }
             }
 

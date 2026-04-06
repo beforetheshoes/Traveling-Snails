@@ -24,10 +24,13 @@ struct CollectionsListView: View {
         List(selection: $selectedCollectionID) {
             collectionsContent(collections: collections)
         }
+        .contextMenu {
+            newCollectionMenu
+        }
         .navigationTitle("Collections")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                addMenu
+                newCollectionMenuButton
             }
         }
         .sheet(isPresented: $showingAddSheet) {
@@ -60,7 +63,7 @@ struct CollectionsListView: View {
             ContentUnavailableView {
                 Label("No Collections", systemImage: "square.stack")
             } description: {
-                Text("Tap + to create your first collection.")
+                Text("Right-click or use the + button to create your first collection.")
             }
         }
     }
@@ -92,6 +95,8 @@ struct CollectionsListView: View {
                     Label("Rename", systemImage: "pencil")
                 }
                 Divider()
+                newCollectionMenu
+                Divider()
                 Button(role: .destructive) {
                     store.send(.deleteCollection(collection))
                 } label: {
@@ -114,7 +119,24 @@ struct CollectionsListView: View {
             }
     }
 
-    private var addMenu: some View {
+    // MARK: - New Collection Menu
+
+    @ViewBuilder
+    private var newCollectionMenu: some View {
+        Menu("New Collection") {
+            ForEach(CollectionType.allCases, id: \.self) { type in
+                Button {
+                    addCollectionType = type
+                    addCollectionName = ""
+                    showingAddSheet = true
+                } label: {
+                    Label(type.displayName, systemImage: type.systemImage)
+                }
+            }
+        }
+    }
+
+    private var newCollectionMenuButton: some View {
         Menu {
             ForEach(CollectionType.allCases, id: \.self) { type in
                 Button {
@@ -170,15 +192,9 @@ struct CollectionRowView: View {
                 .foregroundStyle(collection.type.color)
                 .frame(width: 32, height: 32)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(collection.name.isEmpty ? collection.type.singularName : collection.name)
-                    .font(.body)
-                    .fontWeight(.medium)
-
-                Text(collection.type.singularName)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
+            Text(collection.name.isEmpty ? collection.type.singularName : collection.name)
+                .font(.body)
+                .fontWeight(.medium)
 
             Spacer()
         }
