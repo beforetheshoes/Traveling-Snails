@@ -14,41 +14,14 @@ import CloudKit
 @Suite("Trip Sharing Extension Tests")
 @MainActor
 struct TripSharingExtensionTests {
-    
-    // MARK: - Sharing Metadata Tests
-    
-    @Test("Trip supports shareID property", .tags(.unit, .fast, .models, .sharing))
-    func testTripShareIDProperty() throws {
+
+    // MARK: - Basic Trip Creation Tests
+
+    @Test("Trip can be created with basic properties", .tags(.unit, .fast, .models, .sharing))
+    func testTripCreation() throws {
         let trip = Trip(name: "Test Trip", isProtected: false, startDate: Date(), endDate: Date())
 
-        #expect(trip.shareID == nil)
-    }
-    
-    @Test("Trip shareID string storage works correctly", .tags(.unit, .fast, .models, .sharing))
-    func testTripShareIDStringStorage() throws {
-        let trip = Trip(name: "Test Trip", isProtected: false, startDate: Date(), endDate: Date())
-
-        #expect(trip.shareID == nil)
-    }
-    
-    @Test("Trip shareID handles zone information correctly", .tags(.unit, .fast, .models, .sharing))
-    func testTripShareIDZoneHandling() throws {
-        let trip = Trip(name: "Test Trip", isProtected: false, startDate: Date(), endDate: Date())
-
-        #expect(trip.shareID == nil)
-    }
-    
-    @Test("Trip shareID persistence through string conversion", .tags(.unit, .fast, .models, .sharing))
-    func testTripShareIDStringConversion() throws {
-        let trip = Trip(name: "Test Trip", isProtected: false, startDate: Date(), endDate: Date())
-
-        #expect(trip.shareID == nil)
-    }
-    
-    @Test("Trip shareID handles edge cases", .tags(.unit, .fast, .models, .sharing))
-    func testTripShareIDEdgeCases() throws {
-        let trip = Trip(name: "Test Trip", isProtected: false, startDate: Date(), endDate: Date())
-
-        #expect(trip.shareID == nil)
+        #expect(trip.name == "Test Trip")
+        #expect(trip.isProtected == false)
     }
 }

@@ -16,20 +16,35 @@ struct CoverArtView: View {
     var width: CGFloat = 120
     var height: CGFloat = 180
     var cornerRadius: CGFloat = 8
+    var placeholderIcon: String = "book.closed"
+    var imageContentMode: ContentMode = .fill
 
     var body: some View {
         Group {
             if let imageData, let image = platformImage(from: imageData) {
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
+                if imageContentMode == .fit {
+                    Color.systemGray6
+                        .overlay {
+                            image
+                                .resizable()
+                                .interpolation(.high)
+                                .antialiased(true)
+                                .aspectRatio(contentMode: .fit)
+                                .padding(8)
+                        }
+                } else {
+                    image
+                        .resizable()
+                        .interpolation(.high)
+                        .aspectRatio(contentMode: .fill)
+                }
             } else if let url = URL(string: imageURL), !imageURL.isEmpty {
                 AsyncImage(url: url) { phase in
                     switch phase {
                     case .success(let image):
                         image
                             .resizable()
-                            .aspectRatio(contentMode: .fill)
+                            .aspectRatio(contentMode: imageContentMode)
                     case .failure:
                         placeholderView
                     case .empty:
@@ -62,7 +77,7 @@ struct CoverArtView: View {
         RoundedRectangle(cornerRadius: cornerRadius)
             .fill(Color.systemGray5)
             .overlay {
-                Image(systemName: "book.closed")
+                Image(systemName: placeholderIcon)
                     .font(.system(size: width * 0.3))
                     .foregroundStyle(.secondary)
             }

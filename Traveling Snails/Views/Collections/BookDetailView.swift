@@ -8,6 +8,7 @@ import SwiftUI
 
 struct BookDetailView: View {
     let store: StoreOf<BookItemDetailFeature>
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         let item = store.state.bookItem
@@ -130,6 +131,9 @@ struct BookDetailView: View {
             Text("Are you sure you want to delete \"\(item.title)\"?")
         }
         .onAppear { store.send(.onAppear) }
+        .onChange(of: store.isDeleted) { _, isDeleted in
+            if isDeleted { dismiss() }
+        }
     }
 
     // MARK: - Sections

@@ -1,9 +1,10 @@
+import Foundation
 import SQLiteData
 import Testing
 
 @testable import Traveling_Snails
 
-@Suite("TransportationLeg migrations")
+@Suite("TransportationLeg migrations", .serialized)
 struct TransportationLegMigrationTests {
     @Test("Existing transportations get backfilled with 1 leg", .tags(.unit, .medium, .database))
     func backfillsExistingTransportation() throws {
@@ -143,16 +144,15 @@ struct TransportationLegMigrationTests {
                 """
             ).execute(db)
 
-            // Mark the first migration as applied (GRDB/SQLiteData uses grdb_migrations).
+            // Mark the first migration as applied (GRDB uses grdb_migrations with identifier only).
             try #sql(
                 """
                 CREATE TABLE IF NOT EXISTS "grdb_migrations" (
-                  "identifier" TEXT NOT NULL PRIMARY KEY,
-                  "appliedAt" TEXT NOT NULL
+                  "identifier" TEXT NOT NULL PRIMARY KEY
                 )
                 """
             ).execute(db)
-            try #sql("INSERT OR REPLACE INTO grdb_migrations(identifier, appliedAt) VALUES('Create core tables', datetime('now'))")
+            try #sql("INSERT OR REPLACE INTO grdb_migrations(identifier) VALUES('Create core tables')")
                 .execute(db)
 
             // Insert one transportation row.

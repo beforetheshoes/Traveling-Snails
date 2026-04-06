@@ -8,6 +8,7 @@ import SwiftUI
 
 struct MovieDetailView: View {
     @Bindable var store: StoreOf<MovieItemDetailFeature>
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         let item = store.state.movieItem
@@ -127,6 +128,9 @@ struct MovieDetailView: View {
             Text("Are you sure you want to delete \"\(item.title)\"?")
         }
         .onAppear { store.send(.onAppear) }
+        .onChange(of: store.isDeleted) { _, isDeleted in
+            if isDeleted { dismiss() }
+        }
     }
 
     // MARK: - Sections

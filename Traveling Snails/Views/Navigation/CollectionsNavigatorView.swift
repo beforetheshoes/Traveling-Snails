@@ -45,13 +45,8 @@ struct CollectionsNavigationView: View {
     private func detailContent(collections: [Collection]) -> some View {
         if let selectedID = selectedCollectionID,
            let collection = collections.first(where: { $0.id == selectedID }) {
-            CollectionDetailView(
-                store: Store(
-                    initialState: CollectionDetailFeature.State(collection: collection)
-                ) {
-                    CollectionDetailFeature()
-                }
-            )
+            CollectionDetailWrapper(collection: collection)
+                .id(selectedID)
         } else {
             ContentUnavailableView {
                 Label("Select a Collection", systemImage: "square.stack")
@@ -59,5 +54,26 @@ struct CollectionsNavigationView: View {
                 Text("Choose a collection from the sidebar to view its items.")
             }
         }
+    }
+}
+
+// MARK: - Wrapper that holds a stable Store in @State
+
+private struct CollectionDetailWrapper: View {
+    let collection: Collection
+
+    @State private var store: StoreOf<CollectionDetailFeature>
+
+    init(collection: Collection) {
+        self.collection = collection
+        self._store = State(initialValue: Store(
+            initialState: CollectionDetailFeature.State(collection: collection)
+        ) {
+            CollectionDetailFeature()
+        })
+    }
+
+    var body: some View {
+        CollectionDetailView(store: store)
     }
 }

@@ -113,13 +113,22 @@ struct MediaSearchSheet: View {
     @ViewBuilder
     private func searchResultRow(_ result: MediaSearchResultItem) -> some View {
         HStack(spacing: 12) {
-            CoverArtView(
-                imageURL: result.thumbnailURL,
-                imageData: nil,
-                width: 50,
-                height: 75,
-                cornerRadius: 4
-            )
+            if case .restaurant = result {
+                Image(systemName: "fork.knife")
+                    .font(.title3)
+                    .foregroundStyle(.teal)
+                    .frame(width: 50, height: 75)
+                    .background(Color.teal.opacity(0.15))
+                    .clipShape(RoundedRectangle(cornerRadius: 4))
+            } else {
+                CoverArtView(
+                    imageURL: result.thumbnailURL,
+                    imageData: nil,
+                    width: 50,
+                    height: 75,
+                    cornerRadius: 4
+                )
+            }
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(result.title)
