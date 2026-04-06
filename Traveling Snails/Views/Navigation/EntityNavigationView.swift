@@ -3,13 +3,14 @@
 //  Traveling Snails
 //
 
+import ComposableArchitecture
 import Foundation
 import SQLiteData
 import SwiftUI
 
 // MARK: - Entity Navigation View
 
-struct EntityNavigationView<Item: NavigationItem, DetailView: View>: View {
+struct EntityNavigationView<Item: NavigationItem, DetailView: View, AddView: View>: View {
     private enum ActiveSheet: Identifiable {
         case add
 
@@ -32,17 +33,12 @@ struct EntityNavigationView<Item: NavigationItem, DetailView: View>: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     private var usesCompactNavigation: Bool {
-        #if os(iOS)
         true
-        #else
-        false
-        #endif
     }
 
     // Content builders
     let detailViewBuilder: (Item) -> DetailView
-    let addViewBuilder: () -> AnyView
-    let rowContentBuilder: ((Item, Bool) -> AnyView)?
+    let addViewBuilder: () -> AddView
 
     // Search filtering
     let searchFilter: ((Item, String) -> Bool)?
@@ -56,8 +52,7 @@ struct EntityNavigationView<Item: NavigationItem, DetailView: View>: View {
         configuration: NavigationConfiguration<Item>,
         selectedItemID: Binding<UUID?>,
         detailViewBuilder: @escaping (Item) -> DetailView,
-        addViewBuilder: @escaping () -> AnyView,
-        rowContentBuilder: ((Item, Bool) -> AnyView)? = nil,
+        addViewBuilder: @escaping () -> AddView,
         searchFilter: ((Item, String) -> Bool)? = nil,
         onItemSelection: @escaping (Item, Bool) -> Void,
         onAddItem: (() -> Void)? = nil
@@ -67,7 +62,6 @@ struct EntityNavigationView<Item: NavigationItem, DetailView: View>: View {
         self._selectedItemID = selectedItemID
         self.detailViewBuilder = detailViewBuilder
         self.addViewBuilder = addViewBuilder
-        self.rowContentBuilder = rowContentBuilder
         self.searchFilter = searchFilter
         self.onItemSelection = onItemSelection
         self.onAddItem = onAddItem
@@ -139,6 +133,25 @@ struct EntityNavigationView<Item: NavigationItem, DetailView: View>: View {
                     #endif
                 }
             } else {
+                #if os(macOS)
+                HStack(spacing: 0) {
+                    listContent
+                        .frame(minWidth: 220, idealWidth: 260, maxWidth: 300)
+                    Divider()
+                    Group {
+                        if let selectedItem {
+                            detailViewBuilder(selectedItem)
+                        } else {
+                            ContentUnavailableView(
+                                NSLocalizedString("navigation.detail.selectItem.title", value: "Select an Item", comment: "Title when no item is selected"),
+                                systemImage: "sidebar.left",
+                                description: Text(NSLocalizedString("navigation.detail.selectItem.description", value: "Choose an item from the list to view details", comment: "Description when no item is selected"))
+                            )
+                        }
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                #else
                 NavigationSplitView {
                     listContent
                 } detail: {
@@ -152,6 +165,7 @@ struct EntityNavigationView<Item: NavigationItem, DetailView: View>: View {
                         )
                     }
                 }
+                #endif
             }
         }
         .id(usesCompactNavigation ? "compact-nav" : "split-nav")
@@ -180,7 +194,7 @@ struct EntityNavigationView<Item: NavigationItem, DetailView: View>: View {
         .navigationTitle(configuration.title)
         .accessibilityIdentifier("NavigationView_\(configuration.title.replacingOccurrences(of: " ", with: ""))")
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .platformTrailing) {
                 Button {
                     if let onAddItem {
                         onAddItem()
@@ -241,16 +255,10 @@ struct EntityNavigationView<Item: NavigationItem, DetailView: View>: View {
 
     @ViewBuilder
     private func itemRowContent(for item: Item, isSelected: Bool) -> some View {
-        Group {
-            if let customRow = rowContentBuilder {
-                customRow(item, isSelected)
-            } else {
-                EnhancedItemRowView(
-                    item: item,
-                    isSelected: isSelected
-                )
-            }
-        }
+        EnhancedItemRowView(
+            item: item,
+            isSelected: isSelected
+        )
         .contentShape(Rectangle())
     }
 }
@@ -325,7 +333,7 @@ struct EnhancedItemRowView<Item: NavigationItem>: View {
         .frame(maxWidth: .infinity)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(isSelected ? item.displayColor.opacity(0.1) : Color(.systemBackground))
+                .fill(isSelected ? item.displayColor.opacity(0.1) : Color.systemBackground)
                 .overlay(
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(item.displayColor.opacity(isSelected ? 0.3 : 0), lineWidth: isSelected ? 1 : 0)
@@ -359,9 +367,9 @@ extension Trip: NavigationItem, Hashable {
             let end = formatter.string(from: endDate)
             return "\(start) - \(end)"
         } else if hasStartDate {
-            return String(format: NSLocalizedString("trip.startsOn", value: "Starts %@", comment: "Trip start date format"), formatter.string(from: startDate))
+            return String.localizedStringWithFormat( NSLocalizedString("trip.startsOn", value: "Starts %@", comment: "Trip start date format"), formatter.string(from: startDate))
         } else if hasEndDate {
-            return String(format: NSLocalizedString("trip.endsOn", value: "Ends %@", comment: "Trip end date format"), formatter.string(from: endDate))
+            return String.localizedStringWithFormat( NSLocalizedString("trip.endsOn", value: "Ends %@", comment: "Trip end date format"), formatter.string(from: endDate))
         } else {
             return NSLocalizedString("trip.noDates", value: "No dates set", comment: "Trip with no dates")
         }
@@ -401,13 +409,13 @@ extension Organization: NavigationItem, Hashable {
         if totalCount > 0 {
             var components: [String] = []
             if transportCount > 0 {
-                components.append(String(format: NSLocalizedString("organization.transportCount", value: "%d transport", comment: "Transport count"), transportCount))
+                components.append(String.localizedStringWithFormat( NSLocalizedString("organization.transportCount", value: "%d transport", comment: "Transport count"), transportCount))
             }
             if lodgingCount > 0 {
-                components.append(String(format: NSLocalizedString("organization.lodgingCount", value: "%d lodging", comment: "Lodging count"), lodgingCount))
+                components.append(String.localizedStringWithFormat( NSLocalizedString("organization.lodgingCount", value: "%d lodging", comment: "Lodging count"), lodgingCount))
             }
             if activityCount > 0 {
-                components.append(String(format: NSLocalizedString("organization.activityCount", value: "%d activities", comment: "Activity count"), activityCount))
+                components.append(String.localizedStringWithFormat( NSLocalizedString("organization.activityCount", value: "%d activities", comment: "Activity count"), activityCount))
             }
             return components.joined(separator: ", ")
         }
@@ -426,14 +434,14 @@ extension Organization: NavigationItem, Hashable {
 
 // MARK: - Convenience Initializers
 
-extension EntityNavigationView where Item == Trip, DetailView == AnyView {
+extension EntityNavigationView where Item == Trip, DetailView == IsolatedTripDetailView, AddView == AddTrip {
     static func trips(
         trips: [Trip],
         selectedTripID: Binding<Trip.ID?>,
         tripPath: Binding<[TripRoute]>,
         tripResetToken: Int,
         onTripSelection: @escaping (Trip, Bool) -> Void
-    ) -> EntityNavigationView<Trip, AnyView> {
+    ) -> EntityNavigationView<Trip, IsolatedTripDetailView, AddTrip> {
         let config = NavigationConfiguration<Trip>(
             title: NSLocalizedString("navigation.trips.title", value: "Trips", comment: "Trips navigation title"),
             emptyStateTitle: NSLocalizedString("navigation.trips.empty.title", value: "No Trips", comment: "Empty trips title"),
@@ -452,16 +460,27 @@ extension EntityNavigationView where Item == Trip, DetailView == AnyView {
                 set: { selectedTripID.wrappedValue = $0 }
             ),
             detailViewBuilder: { trip in
-                AnyView(
-                    IsolatedTripDetailView(
-                        trip: trip,
-                        path: tripPath,
-                        resetToken: tripResetToken
-                    )
+                IsolatedTripDetailView(
+                    trip: trip,
+                    path: tripPath,
+                    resetToken: tripResetToken,
+                    store: Store(
+                        initialState: TripDetailFeature.State(
+                            trip: trip,
+                            initialPath: tripPath.wrappedValue,
+                            resetToken: tripResetToken
+                        )
+                    ) {
+                        TripDetailFeature()
+                    }
                 )
             },
             addViewBuilder: {
-                AnyView(AddTrip())
+                AddTrip(
+                    store: StoreOf<AddTripFeature>.init(initialState: AddTripFeature.State()) {
+                        AddTripFeature()
+                    }
+                )
             },
             onItemSelection: { item, isReselect in
                 onTripSelection(item, isReselect)
@@ -470,13 +489,13 @@ extension EntityNavigationView where Item == Trip, DetailView == AnyView {
     }
 }
 
-extension EntityNavigationView where Item == Organization, DetailView == AnyView {
+extension EntityNavigationView where Item == Organization, DetailView == OrganizationDetailView, AddView == AddOrganizationForm {
     static func organizations(
         organizations: [Organization],
         selectedOrganizationID: Binding<Organization.ID?>,
         onOrganizationSelected: @escaping (Organization) -> Void,
         onOpenTrip: @escaping (Trip.ID) -> Void
-    ) -> EntityNavigationView<Organization, AnyView> {
+    ) -> EntityNavigationView<Organization, OrganizationDetailView, AddOrganizationForm> {
         let config = NavigationConfiguration<Organization>(
             title: NSLocalizedString("navigation.organizations.title", value: "Organizations", comment: "Organizations navigation title"),
             emptyStateTitle: NSLocalizedString("navigation.organizations.empty.title", value: "No Organizations", comment: "Empty organizations title"),
@@ -495,15 +514,19 @@ extension EntityNavigationView where Item == Organization, DetailView == AnyView
                 set: { selectedOrganizationID.wrappedValue = $0 }
             ),
             detailViewBuilder: { organization in
-                AnyView(
-                    OrganizationDetailView(
-                        organization: organization,
-                        onOpenTrip: onOpenTrip
-                    )
+                OrganizationDetailView(
+                    onOpenTrip: onOpenTrip,
+                    store: StoreOf<OrganizationFeature>.init(initialState: OrganizationFeature.State(organization: organization)) {
+                        OrganizationFeature()
+                    }
                 )
             },
             addViewBuilder: {
-                AnyView(AddOrganizationForm { _ in })
+                AddOrganizationForm(
+                    store: StoreOf<AddOrganizationFeature>.init(initialState: AddOrganizationFeature.State()) {
+                        AddOrganizationFeature()
+                    }
+                )
             },
             onItemSelection: { item, _ in
                 onOrganizationSelected(item)

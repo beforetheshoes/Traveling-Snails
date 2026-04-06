@@ -9,8 +9,9 @@ import QuickLook
 import SwiftUI
 import UniformTypeIdentifiers
 
+@MainActor
 @Observable
-class EmbeddedFileAttachmentManager: @unchecked Sendable {
+final class EmbeddedFileAttachmentManager {
     static let shared = EmbeddedFileAttachmentManager()
 
     private init() {}
@@ -120,6 +121,7 @@ class EmbeddedFileAttachmentManager: @unchecked Sendable {
             return (false, "Cannot create temporary file")
         }
 
+        #if os(iOS)
         let canPreview = QLPreviewController.canPreview(tempURL as QLPreviewItem)
 
         // Clean up temp file
@@ -128,6 +130,10 @@ class EmbeddedFileAttachmentManager: @unchecked Sendable {
         if !canPreview {
             return (false, "File type cannot be previewed")
         }
+        #else
+        // Clean up temp file
+        try? FileManager.default.removeItem(at: tempURL)
+        #endif
 
         return (true, nil)
     }

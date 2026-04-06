@@ -5,6 +5,11 @@
 //
 
 import SwiftUI
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 
 struct FileAttachmentSearchResultView: View {
     private enum ActiveSheet: Identifiable {
@@ -14,7 +19,11 @@ struct FileAttachmentSearchResultView: View {
 
     let attachment: EmbeddedFileAttachment
     @State private var activeSheet: ActiveSheet?
+    #if os(iOS)
     @State private var thumbnailImage: UIImage?
+    #elseif os(macOS)
+    @State private var thumbnailImage: NSImage?
+    #endif
 
     private var associatedActivity: String {
         if let activity = attachment.activity {
@@ -35,7 +44,7 @@ struct FileAttachmentSearchResultView: View {
                 // File thumbnail/icon
                 Group {
                     if attachment.isImage, let image = thumbnailImage {
-                        Image(uiImage: image)
+                        platformImage(image)
                             .resizable()
                             .aspectRatio(contentMode: .fill)
                             .frame(width: 50, height: 50)
@@ -90,8 +99,18 @@ struct FileAttachmentSearchResultView: View {
             .padding(.vertical, 4)
         }
         .buttonStyle(.plain)
-        .onAppear {
-            loadThumbnail()
+        .task(id: attachment.id) {
+            guard attachment.isImage, let data = attachment.fileData else {
+                thumbnailImage = nil
+                return
+            }
+            thumbnailImage = await Task(priority: .userInitiated) {
+                #if os(iOS)
+                UIImage(data: data)
+                #elseif os(macOS)
+                NSImage(data: data)
+                #endif
+            }.value
         }
         .sheet(item: $activeSheet) { sheet in
             switch sheet {
@@ -101,15 +120,13 @@ struct FileAttachmentSearchResultView: View {
         }
     }
 
-    private func loadThumbnail() {
-        guard attachment.isImage, let data = attachment.fileData else { return }
-
-        Task.detached(priority: .userInitiated) {
-            if let image = UIImage(data: data) {
-                await MainActor.run {
-                    thumbnailImage = image
-                }
-            }
-        }
+    #if os(iOS)
+    private func platformImage(_ image: UIImage) -> Image {
+        Image(uiImage: image)
     }
+    #elseif os(macOS)
+    private func platformImage(_ image: NSImage) -> Image {
+        Image(nsImage: image)
+    }
+    #endif
 }

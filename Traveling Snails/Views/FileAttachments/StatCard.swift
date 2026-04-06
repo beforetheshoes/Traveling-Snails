@@ -16,7 +16,7 @@ struct StatCard: View {
         VStack(spacing: 6) {
             Image(systemName: icon)
                 .font(.title2)
-                .foregroundColor(color)
+                .foregroundStyle(color)
                 .frame(height: 24)
 
             Text(value)
@@ -27,7 +27,7 @@ struct StatCard: View {
 
             Text(title)
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .multilineTextAlignment(.center)
         }
@@ -35,6 +35,6 @@ struct StatCard: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 12)
         .background(color.opacity(0.1))
-        .cornerRadius(10)
+        .clipShape(.rect(cornerRadius: 10))
     }
 }

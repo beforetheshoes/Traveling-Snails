@@ -10,11 +10,11 @@ import SwiftUI
 
 // MARK: - Database Browser Tab
 struct DatabaseBrowserTab: View {
-    @FetchAll private var trips: [Trip]
-    @FetchAll private var transportation: [Transportation]
+    @FetchAll private var tripRecords: [Trip]
+    @FetchAll private var transportationRecords: [Transportation]
     @FetchAll private var lodging: [Lodging]
     @FetchAll private var activities: [Activity]
-    @FetchAll private var organizations: [Organization]
+    @FetchAll private var organizationRecords: [Organization]
     @FetchAll private var addresses: [Address]
     @FetchAll private var attachments: [EmbeddedFileAttachment]
 
@@ -148,22 +148,22 @@ struct DatabaseBrowserTab: View {
 
     private var filteredTrips: [Trip] {
         if store.searchText.isEmpty {
-            return trips.sorted { $0.name < $1.name }
+            return tripRecords.sorted { $0.name < $1.name }
         }
-        return trips.filter {
-            $0.name.localizedCaseInsensitiveContains(store.searchText) ||
-            $0.notes.localizedCaseInsensitiveContains(store.searchText)
+        return tripRecords.filter {
+            $0.name.localizedStandardContains(store.searchText) ||
+            $0.notes.localizedStandardContains(store.searchText)
         }.sorted { $0.name < $1.name }
     }
 
     private var filteredTransportation: [Transportation] {
         if store.searchText.isEmpty {
-            return transportation.sorted { $0.name < $1.name }
+            return transportationRecords.sorted { $0.name < $1.name }
         }
-        return transportation.filter {
-            $0.name.localizedCaseInsensitiveContains(store.searchText) ||
-            $0.confirmation.localizedCaseInsensitiveContains(store.searchText) ||
-            $0.notes.localizedCaseInsensitiveContains(store.searchText)
+        return transportationRecords.filter {
+            $0.name.localizedStandardContains(store.searchText) ||
+            $0.confirmation.localizedStandardContains(store.searchText) ||
+            $0.notes.localizedStandardContains(store.searchText)
         }.sorted { $0.name < $1.name }
     }
 
@@ -172,9 +172,9 @@ struct DatabaseBrowserTab: View {
             return lodging.sorted { $0.name < $1.name }
         }
         return lodging.filter {
-            $0.name.localizedCaseInsensitiveContains(store.searchText) ||
-            $0.reservation.localizedCaseInsensitiveContains(store.searchText) ||
-            $0.notes.localizedCaseInsensitiveContains(store.searchText)
+            $0.name.localizedStandardContains(store.searchText) ||
+            $0.reservation.localizedStandardContains(store.searchText) ||
+            $0.notes.localizedStandardContains(store.searchText)
         }.sorted { $0.name < $1.name }
     }
 
@@ -183,20 +183,20 @@ struct DatabaseBrowserTab: View {
             return activities.sorted { $0.name < $1.name }
         }
         return activities.filter {
-            $0.name.localizedCaseInsensitiveContains(store.searchText) ||
-            $0.reservation.localizedCaseInsensitiveContains(store.searchText) ||
-            $0.notes.localizedCaseInsensitiveContains(store.searchText)
+            $0.name.localizedStandardContains(store.searchText) ||
+            $0.reservation.localizedStandardContains(store.searchText) ||
+            $0.notes.localizedStandardContains(store.searchText)
         }.sorted { $0.name < $1.name }
     }
 
     private var filteredOrganizations: [Organization] {
         if store.searchText.isEmpty {
-            return organizations.sorted { $0.name < $1.name }
+            return organizationRecords.sorted { $0.name < $1.name }
         }
-        return organizations.filter {
-            $0.name.localizedCaseInsensitiveContains(store.searchText) ||
-            $0.email.localizedCaseInsensitiveContains(store.searchText) ||
-            $0.website.localizedCaseInsensitiveContains(store.searchText)
+        return organizationRecords.filter {
+            $0.name.localizedStandardContains(store.searchText) ||
+            $0.email.localizedStandardContains(store.searchText) ||
+            $0.website.localizedStandardContains(store.searchText)
         }.sorted { $0.name < $1.name }
     }
 
@@ -205,9 +205,9 @@ struct DatabaseBrowserTab: View {
             return addresses.sorted { $0.displayAddress < $1.displayAddress }
         }
         return addresses.filter {
-            $0.displayAddress.localizedCaseInsensitiveContains(store.searchText) ||
-            $0.street.localizedCaseInsensitiveContains(store.searchText) ||
-            $0.city.localizedCaseInsensitiveContains(store.searchText)
+            $0.displayAddress.localizedStandardContains(store.searchText) ||
+            $0.street.localizedStandardContains(store.searchText) ||
+            $0.city.localizedStandardContains(store.searchText)
         }.sorted { $0.displayAddress < $1.displayAddress }
     }
 
@@ -216,8 +216,8 @@ struct DatabaseBrowserTab: View {
             return attachments.sorted { $0.originalFileName < $1.originalFileName }
         }
         return attachments.filter {
-            $0.originalFileName.localizedCaseInsensitiveContains(store.searchText) ||
-            $0.fileDescription.localizedCaseInsensitiveContains(store.searchText)
+            $0.originalFileName.localizedStandardContains(store.searchText) ||
+            $0.fileDescription.localizedStandardContains(store.searchText)
         }.sorted { $0.originalFileName < $1.originalFileName }
     }
 }
@@ -333,7 +333,9 @@ private struct LodgingRowView: View {
 
                 Spacer()
 
-                let nights = Calendar.current.dateComponents([.day], from: lodging.start, to: lodging.end).day ?? 0
+                let startDay = Calendar.current.startOfDay(for: lodging.start)
+                let endDay = Calendar.current.startOfDay(for: lodging.end)
+                let nights = Calendar.current.dateComponents([.day], from: startDay, to: endDay).day ?? 0
                 Text("\(nights) night\(nights == 1 ? "" : "s")")
                     .font(.caption)
                     .padding(.horizontal, 6)
@@ -611,7 +613,7 @@ struct DetailCard<Content: View>: View {
             content
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color.systemGray6)
         .clipShape(.rect(cornerRadius: 12))
     }
 }

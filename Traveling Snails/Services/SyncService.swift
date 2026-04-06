@@ -60,13 +60,13 @@ protocol SyncService: Sendable {
 }
 
 /// Network status for sync operations
-enum NetworkStatus: Sendable {
+enum NetworkStatus {
     case online
     case offline
 }
 
 /// Sync progress tracking for large datasets
-struct SyncProgress: Sendable {
+struct SyncProgress {
     let totalBatches: Int
     let completedBatches: Int
     let isCompleted: Bool
@@ -78,7 +78,7 @@ struct SyncProgress: Sendable {
 }
 
 /// Errors that can occur during sync operations
-enum SyncError: Error, LocalizedError, Sendable {
+enum SyncError: Error, LocalizedError {
     case networkUnavailable
     case cloudKitQuotaExceeded
     case conflictResolutionFailed
@@ -112,7 +112,7 @@ enum SyncError: Error, LocalizedError, Sendable {
 }
 
 /// Sync event types for monitoring
-enum SyncEventType: Sendable {
+enum SyncEventType {
     case started
     case progress(SyncProgress)
     case completed
@@ -148,7 +148,7 @@ protocol AdvancedSyncService: SyncService {
 }
 
 /// Statistics about sync operations
-struct SyncStatistics: Sendable {
+struct SyncStatistics {
     var totalSyncsPerformed: Int
     var successfulSyncs: Int
     var failedSyncs: Int

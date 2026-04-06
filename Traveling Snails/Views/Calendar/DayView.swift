@@ -49,7 +49,7 @@ struct DayView: View {
                         .frame(height: isCompactDevice ? 36 : 42) // Responsive height
                     }
                 }
-                .background(Color(.systemGray6))
+                .background(Color.systemGray6)
                 .padding(.vertical, isCompactDevice ? 4 : 6)
             }
 
@@ -108,7 +108,7 @@ struct DayView: View {
                     }
                     pendingScrollHour = nil
                 }
-                .background(Color(.systemBackground))
+                .background(Color.systemBackground)
             }
         }
     }
@@ -226,11 +226,11 @@ struct DayColumnContent: View {
                 VStack(spacing: 0) {
                     ForEach(0..<24, id: \.self) { _ in
                         Rectangle()
-                            .fill(Color(.systemGray6))
+                            .fill(Color.systemGray6)
                             .frame(height: hourHeight)
                             .overlay(
                                 Rectangle()
-                                    .fill(Color(.separator))
+                                    .fill(Color.separator)
                                     .frame(height: 0.5),
                                 alignment: .bottom
                             )

@@ -15,7 +15,7 @@ enum DatabaseImportEvent: Sendable, Equatable {
     case finished(DatabaseImportManager.ImportResult)
 }
 
-struct DatabaseImportClient: Sendable {
+struct DatabaseImportClient {
     var importDatabase: @Sendable (URL, DatabaseWriter) -> AsyncStream<DatabaseImportEvent>
 }
 
@@ -25,10 +25,32 @@ extension DatabaseImportClient: DependencyKey {
             AsyncStream { continuation in
                 let workTask = Task {
                     let manager = await MainActor.run { DatabaseImportManager() }
+                    await withTaskGroup(of: Void.self) { group in
+                        group.addTask {
+                            while !Task.isCancelled {
+                                let snapshot = await MainActor.run {
+                                    DatabaseImportProgressSnapshot(
+                                        progress: manager.importProgress,
+                                        status: manager.importStatus,
+                                        isImporting: manager.isImporting,
+                                        importError: manager.importError,
+                                        importSuccess: manager.importSuccess
+                                    )
+                                }
+                                continuation.yield(.progress(snapshot))
 
-                    let pollTask = Task {
-                        while !Task.isCancelled {
-                            let snapshot = await MainActor.run {
+                                do {
+                                    try await Task.sleep(for: .milliseconds(150))
+                                } catch {
+                                    break
+                                }
+                            }
+                        }
+
+                        group.addTask {
+                            let result = await manager.importDatabase(from: url, into: database)
+                            guard !Task.isCancelled else { return }
+                            let finalSnapshot = await MainActor.run {
                                 DatabaseImportProgressSnapshot(
                                     progress: manager.importProgress,
                                     status: manager.importStatus,
@@ -37,30 +59,15 @@ extension DatabaseImportClient: DependencyKey {
                                     importSuccess: manager.importSuccess
                                 )
                             }
-                            continuation.yield(.progress(snapshot))
-
-                            do {
-                                try await Task.sleep(for: .milliseconds(150))
-                            } catch {
-                                break
-                            }
+                            continuation.yield(.progress(finalSnapshot))
+                            continuation.yield(.finished(result))
+                            continuation.finish()
                         }
-                    }
 
-                    let result = await manager.importDatabase(from: url, into: database)
-                    let finalSnapshot = await MainActor.run {
-                        DatabaseImportProgressSnapshot(
-                            progress: manager.importProgress,
-                            status: manager.importStatus,
-                            isImporting: manager.isImporting,
-                            importError: manager.importError,
-                            importSuccess: manager.importSuccess
-                        )
+                        await group.next()
+                        group.cancelAll()
+                        while await group.next() != nil {}
                     }
-                    continuation.yield(.progress(finalSnapshot))
-                    continuation.yield(.finished(result))
-                    pollTask.cancel()
-                    continuation.finish()
                 }
 
                 continuation.onTermination = { _ in

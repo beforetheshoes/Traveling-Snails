@@ -6,9 +6,14 @@
 
 import Foundation
 import SwiftUI
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 
 @Observable
-class ImageCacheManager: @unchecked Sendable {
+final class ImageCacheManager: @unchecked Swift.Sendable {
     static let shared = ImageCacheManager()
 
     private let cacheDirectory: URL
@@ -46,7 +51,13 @@ class ImageCacheManager: @unchecked Sendable {
             }
 
             // Validate image data
-            guard UIImage(data: data) != nil else {
+            let isValidImage: Bool
+            #if os(iOS)
+            isValidImage = UIImage(data: data) != nil
+            #elseif os(macOS)
+            isValidImage = NSImage(data: data) != nil
+            #endif
+            guard isValidImage else {
                 Logger.shared.warning("Invalid image data", category: .fileManagement)
                 return nil
             }
@@ -84,11 +95,11 @@ class ImageCacheManager: @unchecked Sendable {
 
 // MARK: - Updated CachedAsyncImage using SecureURLHandler
 
-struct CachedAsyncImage<Content: View & Sendable, Placeholder: View & Sendable>: View {
+struct CachedAsyncImage<Content: View, Placeholder: View>: View {
     let urlString: String?
     let organizationId: UUID
-    let content: @Sendable (Image) -> Content
-    let placeholder: @Sendable () -> Placeholder
+    let content: (Image) -> Content
+    let placeholder: () -> Placeholder
 
     @State private var cachedImageURL: URL?
     @State private var isLoading = false
@@ -102,8 +113,8 @@ struct CachedAsyncImage<Content: View & Sendable, Placeholder: View & Sendable>:
     init(
         url urlString: String?,
         organizationId: UUID,
-        @ViewBuilder content: @escaping @Sendable (Image) -> Content,
-        @ViewBuilder placeholder: @escaping @Sendable () -> Placeholder
+        @ViewBuilder content: @escaping (Image) -> Content,
+        @ViewBuilder placeholder: @escaping () -> Placeholder
     ) {
         self.urlString = urlString
         self.organizationId = organizationId
@@ -209,11 +220,12 @@ struct CachedAsyncImage<Content: View & Sendable, Placeholder: View & Sendable>:
 
 // MARK: - Sendable Wrapper (unchanged)
 
-struct SendableAnyView: View, Sendable {
-    private let viewBuilder: @Sendable () -> AnyView
+@MainActor
+struct SendableAnyView: View {
+    private let viewBuilder: () -> AnyView
 
-    init<Content: View & Sendable>(_ content: @escaping @Sendable () -> Content) {
-        self.viewBuilder = { AnyView(content()) }
+    init<Content: View>(_ content: @escaping () -> Content) {
+        self.viewBuilder = { AnyView.init(content()) }
     }
 
     var body: some View {
@@ -228,20 +240,18 @@ extension CachedAsyncImage where Content == SendableAnyView, Placeholder == Send
         self.init(
             url: urlString,
             organizationId: organizationId,
-            content: { image in
-                SendableAnyView {
+            content: { image in SendableAnyView {
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fit)
                 }
             },
-            placeholder: {
-                SendableAnyView {
+            placeholder: { SendableAnyView {
                     RoundedRectangle(cornerRadius: 8)
                         .fill(Color.secondary.opacity(0.3))
                         .overlay(
                             Image(systemName: "building.2")
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(.secondary)
                         )
                 }
             }

@@ -17,28 +17,32 @@ struct DatabaseExportView: View {
     @Environment(\.dismiss) private var dismiss
     @Bindable var store: StoreOf<DatabaseExportFeature>
 
-    @FetchAll private var allTrips: [Trip]
-    @FetchAll private var allTransportation: [Transportation]
+    @FetchAll private var tripRecords: [Trip]
+    @FetchAll private var transportationRecords: [Transportation]
     @FetchAll private var allLodging: [Lodging]
     @FetchAll private var allActivities: [Activity]
     @FetchAll private var allOrganizations: [Organization]
     @FetchAll private var allAddresses: [Address]
-    @FetchAll private var allAttachments: [EmbeddedFileAttachment]
+    @FetchAll private var attachmentRecords: [EmbeddedFileAttachment]
 
     @State private var activeSheet: ShareSheetPayload?
 
     // Responsive padding based on device type
     private var navigationBarPadding: CGFloat {
+        #if os(iOS)
         UIDevice.current.userInterfaceIdiom == .pad ? 80 : 20
+        #else
+        20
+        #endif
     }
 
     // Check for protected trips
     private var hasProtectedTrips: Bool {
-        allTrips.contains { $0.isProtected }
+        tripRecords.contains { $0.isProtected }
     }
 
     private var protectedTripsCount: Int {
-        allTrips.filter { $0.isProtected }.count
+        tripRecords.filter { $0.isProtected }.count
     }
 
     var body: some View {
@@ -125,10 +129,10 @@ struct DatabaseExportView: View {
                                 }
                             }
                         }
-                        .background(Color(.systemBackground))
+                        .background(Color.systemBackground)
                         .overlay(
                             RoundedRectangle(cornerRadius: 12)
-                                .stroke(Color(.systemGray4), lineWidth: 1)
+                                .stroke(Color.secondary.opacity(0.3), lineWidth: 1)
                         )
                         .frame(maxHeight: 300)
 
@@ -189,7 +193,7 @@ struct DatabaseExportView: View {
                                 }
                             }
                             .padding()
-                            .background(Color(.systemGray6))
+                            .background(Color.systemGray6)
                             .clipShape(.rect(cornerRadius: 12))
                         }
 
@@ -227,13 +231,13 @@ struct DatabaseExportView: View {
                                 store.send(
                                     .generateTapped(
                                         .init(
-                                            trips: allTrips,
-                                            transportation: allTransportation,
+                                            trips: tripRecords,
+                                            transportation: transportationRecords,
                                             lodging: allLodging,
                                             activities: allActivities,
                                             organizations: allOrganizations,
                                             addresses: allAddresses,
-                                            attachments: allAttachments
+                                            attachments: attachmentRecords
                                         )
                                     )
                                 )
@@ -254,9 +258,9 @@ struct DatabaseExportView: View {
             }
             .padding(.top, navigationBarPadding)
             .navigationTitle("Export Data")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationBarTitle()
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .platformTrailing) {
                     Button("Done") { dismiss() }
                 }
             }
@@ -278,16 +282,16 @@ struct DatabaseExportView: View {
                 GridItem(.flexible()),
                 GridItem(.flexible()),
             ], spacing: 8) {
-                DataCountCard(title: "Trips", count: allTrips.count, icon: "airplane")
-                DataCountCard(title: "Transportation", count: allTransportation.count, icon: "car")
+                DataCountCard(title: "Trips", count: tripRecords.count, icon: "airplane")
+                DataCountCard(title: "Transportation", count: transportationRecords.count, icon: "car")
                 DataCountCard(title: "Lodging", count: allLodging.count, icon: "bed.double")
                 DataCountCard(title: "Activities", count: allActivities.count, icon: "ticket")
                 DataCountCard(title: "Organizations", count: allOrganizations.count, icon: "building.2")
-                DataCountCard(title: "Attachments", count: allAttachments.count, icon: "paperclip")
+                DataCountCard(title: "Attachments", count: attachmentRecords.count, icon: "paperclip")
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(Color.systemGray6)
         .clipShape(.rect(cornerRadius: 12))
     }
 
@@ -328,7 +332,7 @@ struct DataCountCard: View {
             Spacer()
         }
         .padding(8)
-        .background(Color(.systemBackground))
+        .background(Color.systemBackground)
         .clipShape(.rect(cornerRadius: 8))
     }
 }

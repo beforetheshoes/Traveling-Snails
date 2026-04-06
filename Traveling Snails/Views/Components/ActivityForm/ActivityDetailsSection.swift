@@ -5,6 +5,11 @@
 //
 
 import SwiftUI
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 
 /// Reusable section component for displaying and editing activity details (confirmation, notes, contact info)
 struct ActivityDetailsSection<T: TripActivityProtocol>: View {
@@ -71,11 +76,11 @@ struct ActivityDetailsSection<T: TripActivityProtocol>: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(confirmationLabel)
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
 
                     Text(confirmationDisplayValue)
                         .font(.subheadline)
-                        .foregroundColor(confirmationDisplayValue == "Not provided" ? .secondary : .primary)
+                        .foregroundStyle(confirmationDisplayValue == "Not provided" ? .secondary : .primary)
                 }
                 Spacer()
             }
@@ -98,11 +103,11 @@ struct ActivityDetailsSection<T: TripActivityProtocol>: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Notes")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
 
                     Text(notesDisplayValue)
                         .font(.subheadline)
-                        .foregroundColor(notesDisplayValue == "No notes" ? .secondary : .primary)
+                        .foregroundStyle(notesDisplayValue == "No notes" ? .secondary : .primary)
                 }
                 Spacer()
             }
@@ -118,7 +123,7 @@ struct ActivityDetailsSection<T: TripActivityProtocol>: View {
                 Text("Contact Information")
                     .font(.subheadline)
                     .fontWeight(.medium)
-                    .foregroundColor(color)
+                    .foregroundStyle(color)
 
                 VStack(spacing: 12) {
                     if organization.hasPhone {
@@ -153,18 +158,18 @@ struct ActivityDetailsSection<T: TripActivityProtocol>: View {
         HStack {
             Image(systemName: icon)
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
                 .frame(width: 16)
 
             Text(label)
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
                 .frame(width: 60, alignment: .leading)
 
             Button(action: action) {
                 Text(value)
                     .font(.subheadline)
-                    .foregroundColor(.blue)
+                    .foregroundStyle(.blue)
             }
             .buttonStyle(.plain)
 
@@ -220,16 +225,24 @@ struct ActivityDetailsSection<T: TripActivityProtocol>: View {
 
     private func callPhone(_ phone: String) {
         guard let url = URL(string: "tel:\(phone.replacingOccurrences(of: " ", with: ""))") else { return }
+        #if os(iOS)
         if UIApplication.shared.canOpenURL(url) {
             UIApplication.shared.open(url)
         }
+        #elseif os(macOS)
+        NSWorkspace.shared.open(url)
+        #endif
     }
 
     private func sendEmail(_ email: String) {
         guard let url = URL(string: "mailto:\(email)") else { return }
+        #if os(iOS)
         if UIApplication.shared.canOpenURL(url) {
             UIApplication.shared.open(url)
         }
+        #elseif os(macOS)
+        NSWorkspace.shared.open(url)
+        #endif
     }
 
     private func openWebsite(_ website: String) {
@@ -238,9 +251,13 @@ struct ActivityDetailsSection<T: TripActivityProtocol>: View {
             urlString = "https://" + website
         }
         guard let url = URL(string: urlString) else { return }
+        #if os(iOS)
         if UIApplication.shared.canOpenURL(url) {
             UIApplication.shared.open(url)
         }
+        #elseif os(macOS)
+        NSWorkspace.shared.open(url)
+        #endif
     }
 }
 

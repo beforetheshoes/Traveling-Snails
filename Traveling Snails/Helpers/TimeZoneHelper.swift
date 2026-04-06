@@ -4,25 +4,29 @@
 //
 //
 
-import CoreLocation
 import Foundation
+import MapKit
 
 struct TimeZoneHelper {
     // Get timezone from coordinates
     static func getTimeZone(from coordinate: CLLocationCoordinate2D) async -> TimeZone? {
-        await withCheckedContinuation { continuation in
-            let geocoder = CLGeocoder()
-            let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+        let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
 
-            geocoder.reverseGeocodeLocation(location) { placemarks, _ in
-                guard let placemark = placemarks?.first,
-                      let timeZone = placemark.timeZone else {
-                    continuation.resume(returning: nil)
-                    return
-                }
-                continuation.resume(returning: timeZone)
+        if #available(iOS 26.0, macOS 26.0, *) {
+            guard let request = MKReverseGeocodingRequest(location: location) else {
+                return nil
+            }
+            do {
+                let mapItems = try await request.mapItems
+                return mapItems.first?.timeZone
+            } catch {
+                return nil
             }
         }
+
+        // Approximate timezone for earlier OS versions when MapKit reverse geocoding is unavailable.
+        let hoursFromGMT = Int((coordinate.longitude / 15.0).rounded())
+        return TimeZone(secondsFromGMT: hoursFromGMT * 3_600)
     }
 
     // Get timezone from address

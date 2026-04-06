@@ -30,7 +30,7 @@ struct TransportationDateTimeSection: View {
             VStack(alignment: .leading, spacing: 16) {
                 Text("🛫 Departure")
                     .font(.headline)
-                    .foregroundColor(.blue)
+                    .foregroundStyle(.blue)
 
                 // FIX: Add timezone environment
                 DatePicker("Date & Time", selection: $startDate)
@@ -40,13 +40,13 @@ struct TransportationDateTimeSection: View {
             }
             .padding()
             .background(Color.blue.opacity(0.05))
-            .cornerRadius(12)
+            .clipShape(.rect(cornerRadius: 12))
 
             // Arrival Section
             VStack(alignment: .leading, spacing: 16) {
                 Text("🛬 Arrival")
                     .font(.headline)
-                    .foregroundColor(.green)
+                    .foregroundStyle(.green)
 
                 // FIX: Add timezone environment
                 DatePicker("Date & Time", selection: $endDate)
@@ -56,7 +56,7 @@ struct TransportationDateTimeSection: View {
             }
             .padding()
             .background(Color.green.opacity(0.05))
-            .cornerRadius(12)
+            .clipShape(.rect(cornerRadius: 12))
         }
     }
 }

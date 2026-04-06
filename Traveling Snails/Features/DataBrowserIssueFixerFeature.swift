@@ -129,20 +129,20 @@ struct DataBrowserIssueFixerFeature {
                 try await database.write { db in
                     for transportation in results.invalidTimezoneTransportation {
                         try Transportation.find(transportation.id).update {
-                            $0.startTZId = defaultTZ
-                            $0.endTZId = defaultTZ
+                            $0.startTZId = #bind(defaultTZ)
+                            $0.endTZId = #bind(defaultTZ)
                         }.execute(db)
                     }
                     for lodging in results.invalidTimezoneLodging {
                         try Lodging.find(lodging.id).update {
-                            $0.checkInTZId = defaultTZ
-                            $0.checkOutTZId = defaultTZ
+                            $0.checkInTZId = #bind(defaultTZ)
+                            $0.checkOutTZId = #bind(defaultTZ)
                         }.execute(db)
                     }
                     for activity in results.invalidTimezoneActivities {
                         try Activity.find(activity.id).update {
-                            $0.startTZId = defaultTZ
-                            $0.endTZId = defaultTZ
+                            $0.startTZId = #bind(defaultTZ)
+                            $0.endTZId = #bind(defaultTZ)
                         }.execute(db)
                     }
                 }
@@ -158,17 +158,17 @@ struct DataBrowserIssueFixerFeature {
                 try await database.write { db in
                     for transportation in results.invalidDateTransportation {
                         try Transportation.find(transportation.id).update {
-                            $0.end = transportation.start.addingTimeInterval(3600)
+                            $0.end = #bind(transportation.start.addingTimeInterval(3600))
                         }.execute(db)
                     }
                     for lodging in results.invalidDateLodging {
                         try Lodging.find(lodging.id).update {
-                            $0.end = lodging.start.addingTimeInterval(24 * 3600)
+                            $0.end = #bind(lodging.start.addingTimeInterval(24 * 3600))
                         }.execute(db)
                     }
                     for activity in results.invalidDateActivities {
                         try Activity.find(activity.id).update {
-                            $0.end = activity.start.addingTimeInterval(3600)
+                            $0.end = #bind(activity.start.addingTimeInterval(3600))
                         }.execute(db)
                     }
                 }

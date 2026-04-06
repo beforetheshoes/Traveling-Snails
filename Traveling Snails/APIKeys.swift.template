@@ -1,0 +1,13 @@
+//
+//  APIKeys.swift.template
+//  Traveling Snails
+//
+//  Copy this file to APIKeys.swift and fill in your API keys.
+//  APIKeys.swift is gitignored and will not be committed.
+//
+
+import Foundation
+
+enum APIKeys {
+    static let googleBooks = "YOUR_GOOGLE_BOOKS_API_KEY"
+}

@@ -48,14 +48,17 @@ enum DestinationType: Hashable {
     }
 
     // Helper method to create DestinationType from any TripActivityProtocol
-    static func from(_ activity: any TripActivityProtocol) -> DestinationType {
+    static func from(_ activity: any TripActivityProtocol) -> DestinationType? {
         switch activity.activityType {
         case .lodging:
-            return .lodging(activity as! Lodging)
+            guard let lodging = activity as? Lodging else { return nil }
+            return .lodging(lodging)
         case .transportation:
-            return .transportation(activity as! Transportation)
+            guard let transportation = activity as? Transportation else { return nil }
+            return .transportation(transportation)
         case .activity:
-            return .activity(activity as! Activity)
+            guard let activity = activity as? Activity else { return nil }
+            return .activity(activity)
         }
     }
 }

@@ -8,13 +8,13 @@ import Foundation
 
 /// Production implementation of CloudStorageService using NSUbiquitousKeyValueStore
 /// NSUbiquitousKeyValueStore is thread-safe, so this service is naturally Sendable
-final class iCloudStorageService: CloudStorageService, Sendable {
+final class iCloudStorageService: CloudStorageService, @unchecked Swift.Sendable {
     // MARK: - Properties
 
     // NSUbiquitousKeyValueStore is not marked as Sendable but is documented as thread-safe
-    // nonisolated(unsafe) is appropriate here because NSUbiquitousKeyValueStore is immutable after initialization
+    // is appropriate here because NSUbiquitousKeyValueStore is immutable after initialization
     // and all its methods are thread-safe according to Apple documentation
-    nonisolated(unsafe) private let store: NSUbiquitousKeyValueStore
+    private let store: NSUbiquitousKeyValueStore
 
     // MARK: - Initialization
 

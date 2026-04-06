@@ -15,7 +15,7 @@ struct CloudKitSyncIndicatorView: View {
         VStack(spacing: 20) {
             Image(systemName: "icloud.and.arrow.down")
                 .font(.system(size: 60))
-                .foregroundColor(.blue)
+                .foregroundStyle(.blue)
                 .symbolEffect(.bounce, options: .repeating)
 
             VStack(spacing: 8) {
@@ -25,7 +25,7 @@ struct CloudKitSyncIndicatorView: View {
 
                 Text("Your trips and data are being synchronized from iCloud. This may take a moment.")
                     .font(.body)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal)
             }
@@ -34,7 +34,7 @@ struct CloudKitSyncIndicatorView: View {
                 .scaleEffect(1.2)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemBackground))
+        .background(Color.systemBackground)
     }
 }
 

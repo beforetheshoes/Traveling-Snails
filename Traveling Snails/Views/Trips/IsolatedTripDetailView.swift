@@ -18,7 +18,7 @@ struct IsolatedTripDetailView: View {
         trip: Trip,
         path: Binding<[TripRoute]>,
         resetToken: Int,
-        store: StoreOf<TripDetailFeature>? = nil
+        store: StoreOf<TripDetailFeature>
     ) {
         self.trip = trip
         self._externalPath = path
@@ -35,16 +35,7 @@ struct IsolatedTripDetailView: View {
             Activity.where { $0.tripID.eq(tripID) }.order { $0.start }
         )
 
-        let resolvedStore = store ?? Store(
-            initialState: TripDetailFeature.State(
-                trip: trip,
-                initialPath: path.wrappedValue,
-                resetToken: resetToken
-            )
-        ) {
-            TripDetailFeature()
-        }
-        self._store = State(initialValue: resolvedStore)
+        self._store = State(initialValue: store)
     }
 
     private var allActivities: [ActivityWrapper] {
@@ -81,20 +72,49 @@ struct IsolatedTripDetailView: View {
             NavigationStack {
                 switch activeSheet {
                 case .addActivity:
-                    AddTripActivityView.forActivity(trip: trip)
+                    AddTripActivityView.forActivity(trip: store.trip)
                 case .addLodging:
-                    AddTripActivityView.forLodging(trip: trip)
+                    AddTripActivityView.forLodging(trip: store.trip)
                 case .addTransportation:
-                    AddTripActivityView.forTransportation(trip: trip)
+                    AddTripActivityView.forTransportation(trip: store.trip)
                 case .editTrip:
-                    EditTripView(trip: trip)
-                case .shareTrip:
-                    TripSharingView(trip: trip)
+                    EditTripView(
+                        store: StoreOf<EditTripFeature>.init(initialState: EditTripFeature.State(trip: store.trip)) {
+                            EditTripFeature()
+                        }
+                    )
                 }
             }
         }
-        .fullScreenCover(isPresented: showingCalendarBinding) {
-            TripCalendarRootView(trip: trip)
+        #if os(iOS)
+        .sheet(
+            item: Binding(
+                get: { store.sharedRecord },
+                set: { _ in store.send(.shareDismissed) }
+            )
+        ) { sharedRecord in
+            NavigationStack {
+                CloudSharingView(sharedRecord: sharedRecord)
+            }
+        }
+        #endif
+        .alert(
+            "Sharing Error",
+            isPresented: Binding(
+                get: { store.shareError != nil },
+                set: { if !$0 { store.send(.shareDismissed) } }
+            )
+        ) {
+            Button("OK") { store.send(.shareDismissed) }
+        } message: {
+            Text(store.shareError ?? "")
+        }
+        .sheet(isPresented: showingCalendarBinding) {
+            TripCalendarRootView(
+                store: StoreOf<CalendarFeature>.init(initialState: CalendarFeature.State(trip: store.trip)) {
+                    CalendarFeature()
+                }
+            )
         }
         .confirmationDialog(
             "Remove Protection",
@@ -151,9 +171,9 @@ struct IsolatedTripDetailView: View {
 
             Spacer()
         }
-        .background(Color(.systemBackground))
-        .navigationTitle(trip.name)
-        .navigationBarTitleDisplayMode(.inline)
+        .background(Color.systemBackground)
+        .navigationTitle(store.trip.name)
+        .inlineNavigationBarTitle()
     }
 
     private var tripContentView: some View {
@@ -172,10 +192,10 @@ struct IsolatedTripDetailView: View {
                     .pickerStyle(.segmented)
                     .padding(.horizontal)
 
-                    TripSummaryView(trip: trip, activities: allActivities)
+                    TripSummaryView(trip: store.trip, activities: allActivities)
                 }
                 .padding(.vertical)
-                .background(Color(.systemGray6))
+                .background(Color.systemGray6)
             }
 
             Group {
@@ -187,10 +207,10 @@ struct IsolatedTripDetailView: View {
                 }
             }
         }
-        .navigationTitle(trip.name)
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle(store.trip.name)
+        .inlineNavigationBarTitle()
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
+            ToolbarItem(placement: .platformLeading) {
                 Button {
                     store.send(.editTripTapped)
                 } label: {
@@ -198,7 +218,7 @@ struct IsolatedTripDetailView: View {
                 }
             }
 
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .platformTrailing) {
                 Menu {
                     Button {
                         store.send(.addActivityTapped)
@@ -231,9 +251,13 @@ struct IsolatedTripDetailView: View {
                     Button {
                         store.send(.shareTripTapped)
                     } label: {
-                        Label("Share Trip", systemImage: "person.2.badge.plus")
+                        if store.isPreparingShare {
+                            Label("Preparing Share...", systemImage: "hourglass")
+                        } else {
+                            Label("Share Trip", systemImage: "person.2.badge.plus")
+                        }
                     }
-                    .disabled(store.isTripProtected)
+                    .disabled(store.isTripProtected || store.isPreparingShare)
 
                     Divider()
 
@@ -293,7 +317,7 @@ struct IsolatedTripDetailView: View {
     }
 
     private var calendarView: some View {
-        CompactCalendarView(trip: trip, activities: allActivities) { activity in
+        CompactCalendarView(trip: store.trip, activities: allActivities) { activity in
             guard let route = TripRouteMapper.route(from: activity) else {
                 return
             }

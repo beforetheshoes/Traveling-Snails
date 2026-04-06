@@ -15,7 +15,7 @@ struct PrefilledAddActivityFeature {
         let trip: Trip
         let activityKind: ActivityKind
         var editData: TripActivityEditData
-        var showingOrganizationPicker = false
+        @Presents var organizationPicker: OrganizationPickerFeature.State?
         var isSaving = false
         var shouldDismiss = false
         var errorMessage: String?
@@ -25,6 +25,8 @@ struct PrefilledAddActivityFeature {
         case binding(BindingAction<State>)
         case onAppear
         case ensureNoneOrganizationSucceeded(Organization)
+        case showOrganizationPicker
+        case organizationPicker(PresentationAction<OrganizationPickerFeature.Action>)
         case saveTapped
         case saveSucceeded
         case saveFailed(String)
@@ -38,6 +40,19 @@ struct PrefilledAddActivityFeature {
         Reduce { state, action in
             switch action {
             case .binding:
+                return .none
+
+            case .showOrganizationPicker:
+                state.organizationPicker = OrganizationPickerFeature.State(
+                    selectedOrganizationID: state.editData.organization?.id
+                )
+                return .none
+
+            case .organizationPicker(.dismiss):
+                state.organizationPicker = nil
+                return .none
+
+            case .organizationPicker:
                 return .none
 
             case .onAppear:
@@ -105,6 +120,8 @@ struct PrefilledAddActivityFeature {
                                     organization: organization
                                 )
                                 try Transportation.upsert { transportation }.execute(db)
+                                try TransportationLeg.where { $0.transportationID.eq(transportation.id) }.delete().execute(db)
+                                try TransportationLeg.insert { TransportationLeg.makeDefaultLeg(for: transportation) }.execute(db)
 
                             case .activity:
                                 let activity = Activity(
@@ -144,6 +161,9 @@ struct PrefilledAddActivityFeature {
                 state.shouldDismiss = false
                 return .none
             }
+        }
+        .ifLet(\.$organizationPicker, action: \.organizationPicker) {
+            OrganizationPickerFeature()
         }
     }
 }

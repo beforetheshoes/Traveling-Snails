@@ -9,43 +9,30 @@ import SQLiteData
 import SwiftUI
 
 struct OrganizationPicker: View {
-    private enum ActiveSheet: Identifiable {
-        case addOrganization
-
-        var id: Int { 0 }
-    }
-
     @Environment(\.dismiss) private var dismiss
-    @FetchAll private var organizations: [Organization]
+    @FetchAll private var organizationRecords: [Organization]
 
     @Binding var selectedOrganization: Organization?
     @State private var store: StoreOf<OrganizationPickerFeature>
 
     init(
         selectedOrganization: Binding<Organization?>,
-        store: StoreOf<OrganizationPickerFeature>? = nil
+        store: StoreOf<OrganizationPickerFeature>
     ) {
         self._selectedOrganization = selectedOrganization
-        let resolvedStore = store ?? Store(
-            initialState: OrganizationPickerFeature.State(
-                selectedOrganizationID: selectedOrganization.wrappedValue?.id
-            )
-        ) {
-            OrganizationPickerFeature()
-        }
-        self._store = State(initialValue: resolvedStore)
+        self._store = State(initialValue: store)
     }
 
     private var sortedOrganizations: [Organization] {
-        let none = organizations.filter { $0.name == "None" }
-        let others = organizations.filter { $0.name != "None" }.sorted { $0.name < $1.name }
+        let none = organizationRecords.filter { $0.name == "None" }
+        let others = organizationRecords.filter { $0.name != "None" }.sorted { $0.name < $1.name }
         return none + others
     }
 
     private var filteredOrganizations: [Organization] {
         guard !store.searchText.isEmpty else { return sortedOrganizations }
         return sortedOrganizations.filter {
-            $0.name.localizedCaseInsensitiveContains(store.searchText)
+            $0.name.localizedStandardContains(store.searchText)
         }
     }
 
@@ -79,7 +66,7 @@ struct OrganizationPicker: View {
                     }
                 }
 
-                if !store.searchText.isEmpty && !filteredOrganizations.contains(where: { $0.name.localizedCaseInsensitiveContains(store.searchText) }) {
+                if !store.searchText.isEmpty && !filteredOrganizations.contains(where: { $0.name.localizedStandardContains(store.searchText) }) {
                     Button {
                         store.send(.addNewTapped)
                     } label: {
@@ -105,63 +92,38 @@ struct OrganizationPicker: View {
             }
         }
         .navigationTitle("Select Organization")
-        .navigationBarTitleDisplayMode(.inline)
+        .inlineNavigationBarTitle()
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .platformTrailing) {
                 Button("Done") {
                     store.send(.doneTapped)
                 }
                 .disabled(store.selectedOrganizationID == nil)
             }
         }
-        .sheet(item: addOrganizationSheet) { sheet in
-            switch sheet {
-            case .addOrganization:
-                AddOrganizationForm(
-                    prefilledName: store.searchText.isEmpty ? nil : store.searchText
-                ) { organizationID in
-                    store.send(.organizationCreated(organizationID))
-                }
-            }
+        .navigationDestination(
+            item: $store.scope(state: \.addOrganization, action: \.addOrganization)
+        ) { addStore in
+            AddOrganizationForm(store: addStore)
         }
         .onChange(of: store.shouldDismiss) { _, shouldDismiss in
             guard shouldDismiss else { return }
             if let selectedID = store.selectedOrganizationID {
-                selectedOrganization = organizations.first(where: { $0.id == selectedID })
+                selectedOrganization = organizationRecords.first(where: { $0.id == selectedID })
             }
             dismiss()
             store.send(.dismissHandled)
         }
-    }
-
-    private var addOrganizationSheet: Binding<ActiveSheet?> {
-        Binding(
-            get: {
-                store.showingAddOrganization ? .addOrganization : nil
-            },
-            set: { newValue in
-                store.send(.addSheetChanged(newValue != nil))
-            }
-        )
     }
 }
 
 struct AddOrganizationForm: View {
     @Environment(\.dismiss) private var dismiss
 
-    let onSave: (Organization.ID) -> Void
     @State private var store: StoreOf<AddOrganizationFeature>
 
-    init(
-        prefilledName: String? = nil,
-        onSave: @escaping (Organization.ID) -> Void,
-        store: StoreOf<AddOrganizationFeature>? = nil
-    ) {
-        self.onSave = onSave
-        let resolvedStore = store ?? Store(initialState: AddOrganizationFeature.State(prefilledName: prefilledName)) {
-            AddOrganizationFeature()
-        }
-        self._store = State(initialValue: resolvedStore)
+    init(store: StoreOf<AddOrganizationFeature>) {
+        self._store = State(initialValue: store)
     }
 
     var body: some View {
@@ -171,16 +133,16 @@ struct AddOrganizationForm: View {
                 Section("Organization Details") {
                     TextField("Organization Name", text: $store.name)
                     TextField("Phone", text: $store.phone)
-                        .keyboardType(.phonePad)
+                        .platformKeyboardType(.phonePad)
                     TextField("Email", text: $store.email)
-                        .keyboardType(.emailAddress)
+                        .platformKeyboardType(.emailAddress)
                     TextField("Website", text: $store.website)
-                        .keyboardType(.URL)
+                        .platformKeyboardType(.URL)
 
                     HStack {
                         TextField("Logo URL", text: $store.logoURL)
-                            .keyboardType(.URL)
-                            .textInputAutocapitalization(.never)
+                            .platformKeyboardType(.URL)
+                            .noAutocapitalization()
                             .onChange(of: store.logoURL) { _, newValue in
                                 store.send(.logoURLChanged(newValue))
                             }
@@ -197,15 +159,15 @@ struct AddOrganizationForm: View {
                 }
             }
             .navigationTitle("Add Organization")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationBarTitle()
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .platformLeading) {
                     Button("Cancel") {
                         dismiss()
                     }
                 }
 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .platformTrailing) {
                     Button("Save") {
                         store.send(.saveTapped)
                     }
@@ -241,8 +203,7 @@ struct AddOrganizationForm: View {
             }
         }
         .onChange(of: store.shouldDismiss) { _, shouldDismiss in
-            guard shouldDismiss, let organizationID = store.createdOrganizationID else { return }
-            onSave(organizationID)
+            guard shouldDismiss else { return }
             dismiss()
             store.send(.dismissHandled)
         }
@@ -269,5 +230,10 @@ struct AddOrganizationForm: View {
 }
 
 #Preview {
-    OrganizationPicker(selectedOrganization: .constant(nil))
+    OrganizationPicker(
+        selectedOrganization: .constant(nil),
+        store: StoreOf<OrganizationPickerFeature>.init(initialState: OrganizationPickerFeature.State()) {
+            OrganizationPickerFeature()
+        }
+    )
 }

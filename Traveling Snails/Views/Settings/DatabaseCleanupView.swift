@@ -56,9 +56,9 @@ struct DatabaseCleanupView: View {
                 }
             }
             .navigationTitle("Database Cleanup")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationBarTitle()
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .platformTrailing) {
                     Button("Done") {
                         dismiss()
                     }
@@ -101,7 +101,7 @@ struct DatabaseCleanupView: View {
 
 #Preview {
     DatabaseCleanupView(
-        store: Store(initialState: DatabaseCleanupFeature.State()) {
+        store: StoreOf<DatabaseCleanupFeature>.init(initialState: DatabaseCleanupFeature.State()) {
             DatabaseCleanupFeature()
         }
     )

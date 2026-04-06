@@ -31,6 +31,7 @@ final class SQLiteDataTestBase {
                         Activity.self,
                         Lodging.self,
                         Transportation.self,
+                        TransportationLeg.self,
                         EmbeddedFileAttachment.self
                     )
                 }
@@ -48,6 +49,7 @@ final class SQLiteDataTestBase {
             try Activity.delete().execute(db)
             try Lodging.delete().execute(db)
             try Transportation.delete().execute(db)
+            try TransportationLeg.delete().execute(db)
             try Trip.delete().execute(db)
             try Organization.delete().execute(db)
             try Address.delete().execute(db)
@@ -64,6 +66,9 @@ final class SQLiteDataTestBase {
         let transportation = try database.read { db in
             try Transportation.fetchAll(db)
         }
+        let transportationLegs = try database.read { db in
+            try TransportationLeg.fetchAll(db)
+        }
         let activities = try database.read { db in
             try Activity.fetchAll(db)
         }
@@ -71,6 +76,7 @@ final class SQLiteDataTestBase {
         #expect(trips.isEmpty, "Trips should be empty at test start")
         #expect(lodgings.isEmpty, "Lodgings should be empty at test start")
         #expect(transportation.isEmpty, "Transportation should be empty at test start")
+        #expect(transportationLegs.isEmpty, "Transportation legs should be empty at test start")
         #expect(activities.isEmpty, "Activities should be empty at test start")
     }
 }

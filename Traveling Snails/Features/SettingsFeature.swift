@@ -181,13 +181,13 @@ struct SettingsFeature {
                             try await database.write { db in
                                 if !duplicateIDs.isEmpty {
                                     try Transportation.where { $0.organizationID.in(optionalIDs) }.update {
-                                        $0.organizationID = noneOrganizations[0].id
+                                        $0.organizationID = #bind(noneOrganizations[0].id)
                                     }.execute(db)
                                     try Lodging.where { $0.organizationID.in(optionalIDs) }.update {
-                                        $0.organizationID = noneOrganizations[0].id
+                                        $0.organizationID = #bind(noneOrganizations[0].id)
                                     }.execute(db)
                                     try Activity.where { $0.organizationID.in(optionalIDs) }.update {
-                                        $0.organizationID = noneOrganizations[0].id
+                                        $0.organizationID = #bind(noneOrganizations[0].id)
                                     }.execute(db)
                                     try Organization.where { $0.id.in(duplicateIDs) }.delete().execute(db)
                                 }

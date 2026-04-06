@@ -5,6 +5,8 @@
 //
 
 import SwiftUI
+
+#if os(iOS)
 import UIKit
 
 struct CurrencyTextField: UIViewRepresentable {
@@ -128,3 +130,28 @@ struct CurrencyTextField: UIViewRepresentable {
         }
     }
 }
+
+#elseif os(macOS)
+
+struct CurrencyTextField: View {
+    @Binding var value: Decimal
+    var placeholder: String = "Amount"
+    var currencyCode: String = Locale.current.currency?.identifier ?? "USD"
+    var color: Color = .blue
+
+    private var formattedValue: String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = currencyCode
+        formatter.minimumFractionDigits = 2
+        formatter.maximumFractionDigits = 2
+        return formatter.string(from: value as NSDecimalNumber) ?? "$0.00"
+    }
+
+    var body: some View {
+        TextField(placeholder, value: $value, format: .currency(code: currencyCode))
+            .textFieldStyle(.roundedBorder)
+    }
+}
+
+#endif

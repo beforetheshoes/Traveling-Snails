@@ -13,26 +13,26 @@ struct DataBrowserView: View {
     @Environment(\.dismiss) private var dismiss
     @Bindable var store: StoreOf<DataBrowserFeature>
 
-    @FetchAll private var allTrips: [Trip]
-    @FetchAll private var allTransportation: [Transportation]
+    @FetchAll private var tripRecords: [Trip]
+    @FetchAll private var transportationRecords: [Transportation]
     @FetchAll private var allLodging: [Lodging]
     @FetchAll private var allActivities: [Activity]
     @FetchAll private var allOrganizations: [Organization]
     @FetchAll private var allAddresses: [Address]
-    @FetchAll private var allAttachments: [EmbeddedFileAttachment]
+    @FetchAll private var attachmentRecords: [EmbeddedFileAttachment]
 
     typealias IssueType = DataBrowserFeature.IssueType
     typealias DiagnosticResults = DataBrowserFeature.DiagnosticResults
 
     private var snapshot: DataBrowserFeature.DataSnapshot {
         .init(
-            trips: allTrips,
-            transportation: allTransportation,
+            trips: tripRecords,
+            transportation: transportationRecords,
             lodging: allLodging,
             activities: allActivities,
             organizations: allOrganizations,
             addresses: allAddresses,
-            attachments: allAttachments
+            attachments: attachmentRecords
         )
     }
 
@@ -42,51 +42,42 @@ struct DataBrowserView: View {
                 get: { store.selectedTab },
                 set: { store.send(.selectedTabChanged($0)) }
             )) {
-                // Overview Tab
-                DataBrowserOverviewTab(
-                    results: store.diagnosticResults,
-                    isRunning: store.isRunning,
-                    onRunDiagnostic: { store.send(.runDiagnostic(snapshot)) },
-                    onShowFixes: { store.send(.fixOptionsChanged(true)) }
-                )
-                .tabItem {
-                    Label("Overview", systemImage: "chart.pie")
+                Tab("Overview", systemImage: "chart.pie", value: 0) {
+                    DataBrowserOverviewTab(
+                        results: store.diagnosticResults,
+                        isRunning: store.isRunning,
+                        onRunDiagnostic: { store.send(.runDiagnostic(snapshot)) },
+                        onShowFixes: { store.send(.fixOptionsChanged(true)) }
+                    )
                 }
-                .tag(0)
 
-                // Database Browser Tab
-                DatabaseBrowserTab(
-                    store: store.scope(state: \.databaseBrowser, action: \.databaseBrowser)
-                )
-                .tabItem {
-                    Label("Browse", systemImage: "folder")
+                Tab("Browse", systemImage: "folder", value: 1) {
+                    DatabaseBrowserTab(
+                        store: store.scope(state: \.databaseBrowser, action: \.databaseBrowser)
+                    )
                 }
-                .tag(1)
 
-                // Issues Tab
-                DataBrowserIssuesTab(results: store.diagnosticResults) { issue in
-                    store.send(.issueSelected(issue))
+                Tab("Issues", systemImage: "exclamationmark.triangle", value: 2) {
+                    DataBrowserIssuesTab(results: store.diagnosticResults) { issue in
+                        store.send(.issueSelected(issue))
+                    }
+                    .badge(store.diagnosticResults.hasIssues ? store.diagnosticResults.totalIssues : 0)
                 }
-                .tabItem {
-                    Label("Issues", systemImage: "exclamationmark.triangle")
-                }
-                .tag(2)
-                .badge(store.diagnosticResults.hasIssues ? store.diagnosticResults.totalIssues : 0)
 
-                // Tools Tab
-                ToolsTab(
-                    onDataChanged: { store.send(.runDiagnostic(snapshot)) },
-                    store: store.scope(state: \.tools, action: \.tools)
-                )
-                .tabItem {
-                    Label("Tools", systemImage: "wrench.and.screwdriver")
+                Tab("Tools", systemImage: "wrench.and.screwdriver", value: 3) {
+                    ToolsTab(
+                        onDataChanged: { store.send(.runDiagnostic(snapshot)) },
+                        store: store.scope(state: \.tools, action: \.tools),
+                        exportStore: StoreOf<DatabaseExportFeature>.init(initialState: DatabaseExportFeature.State()) {
+                            DatabaseExportFeature()
+                        }
+                    )
                 }
-                .tag(3)
             }
             .navigationTitle("Data Browser")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationBarTitle()
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .platformTrailing) {
                     Button("Done") {
                         dismiss()
                     }
@@ -456,13 +447,13 @@ private struct DataBrowserIssueFixerSheet: View {
                 }
             }
             .navigationTitle(store.selectedIssue?.rawValue ?? "Fix All Issues")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationBarTitle()
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .platformLeading) {
                     Button("Cancel") { dismiss() }
                 }
 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .platformTrailing) {
                     Button("Done") {
                         onFixed()
                         dismiss()
@@ -529,7 +520,7 @@ private struct IssueFixerContent: View {
                     .padding()
                 }
                 .frame(maxHeight: 200)
-                .background(Color(.systemGray6))
+                .background(Color.systemGray6)
                 .clipShape(.rect(cornerRadius: 12))
                 .padding(.horizontal)
             }
@@ -574,7 +565,7 @@ private struct AllIssuesFixerContent: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color(.systemGray5))
+                        .background(Color.systemGray5)
                         .foregroundStyle(.primary)
                         .clipShape(.rect(cornerRadius: 12))
                     }
@@ -615,7 +606,7 @@ private struct AllIssuesFixerContent: View {
                             .padding(.horizontal)
                         }
                         .frame(maxHeight: 250)
-                        .background(Color(.systemGray6))
+                        .background(Color.systemGray6)
                         .clipShape(.rect(cornerRadius: 12))
                     }
 
@@ -648,7 +639,7 @@ private struct AllIssuesFixerContent: View {
                     .padding()
                 }
                 .frame(maxHeight: 300)
-                .background(Color(.systemGray6))
+                .background(Color.systemGray6)
                 .clipShape(.rect(cornerRadius: 12))
                 .padding(.horizontal)
             }

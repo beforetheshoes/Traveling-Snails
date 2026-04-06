@@ -4,15 +4,25 @@
 //
 
 import SQLiteData
+import os.lock
 
 enum DatabaseAccess {
     @TaskLocal
     static var scopedDatabase: DatabaseWriter?
-    nonisolated(unsafe) private static var globalDatabase: DatabaseWriter?
+    private static let globalDatabaseState = OSAllocatedUnfairLock(initialState: Optional<DatabaseWriter>.none)
 
     static var database: DatabaseWriter? {
-        get { scopedDatabase ?? globalDatabase }
-        set { globalDatabase = newValue }
+        get {
+            if let scopedDatabase {
+                return scopedDatabase
+            }
+            return globalDatabaseState.withLock { $0 }
+        }
+        set {
+            globalDatabaseState.withLock { state in
+                state = newValue
+            }
+        }
     }
 
     @MainActor

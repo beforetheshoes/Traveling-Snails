@@ -44,17 +44,14 @@ struct AttachmentPickerView: View {
         allowedContentTypes: [UTType] = [.pdf, .plainText, .rtf, .jpeg, .png, .heic, .data, .item],
         onFileSelected: @escaping (EmbeddedFileAttachment) -> Void,
         onError: ((String) -> Void)? = nil,
-        store: StoreOf<AttachmentPickerFeature>? = nil
+        store: StoreOf<AttachmentPickerFeature>
     ) {
         self.allowsPhotos = allowsPhotos
         self.allowsDocuments = allowsDocuments
         self.allowedContentTypes = allowedContentTypes
         self.onFileSelected = onFileSelected
         self.onError = onError
-        let resolvedStore = store ?? Store(initialState: AttachmentPickerFeature.State()) {
-            AttachmentPickerFeature()
-        }
-        self._store = State(initialValue: resolvedStore)
+        self._store = State(initialValue: store)
     }
 
     var body: some View {
@@ -357,7 +354,10 @@ extension AttachmentPickerView {
             allowsDocuments: false,
             allowedContentTypes: [.jpeg, .png, .heic],
             onFileSelected: onSelected,
-            onError: onError
+            onError: onError,
+            store: StoreOf<AttachmentPickerFeature>.init(initialState: AttachmentPickerFeature.State()) {
+                AttachmentPickerFeature()
+            }
         )
     }
 
@@ -368,7 +368,10 @@ extension AttachmentPickerView {
             allowsDocuments: true,
             allowedContentTypes: [.pdf, .plainText, .rtf],
             onFileSelected: onSelected,
-            onError: onError
+            onError: onError,
+            store: StoreOf<AttachmentPickerFeature>.init(initialState: AttachmentPickerFeature.State()) {
+                AttachmentPickerFeature()
+            }
         )
     }
 
@@ -378,7 +381,10 @@ extension AttachmentPickerView {
             allowsPhotos: true,
             allowsDocuments: true,
             onFileSelected: onSelected,
-            onError: onError
+            onError: onError,
+            store: StoreOf<AttachmentPickerFeature>.init(initialState: AttachmentPickerFeature.State()) {
+                AttachmentPickerFeature()
+            }
         )
     }
 }

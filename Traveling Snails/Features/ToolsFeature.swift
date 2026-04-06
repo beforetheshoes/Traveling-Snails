@@ -88,6 +88,8 @@ struct ToolsFeature {
                             try Trip.upsert { testTrip }.execute(db)
                             try Organization.upsert { testOrg }.execute(db)
                             try Transportation.upsert { testTransportation }.execute(db)
+                            try TransportationLeg.where { $0.transportationID.eq(testTransportation.id) }.delete().execute(db)
+                            try TransportationLeg.insert { TransportationLeg.makeDefaultLeg(for: testTransportation) }.execute(db)
                         }
                         await send(.operationCompleted("Test data created successfully", shouldRefresh: true))
                     } catch {

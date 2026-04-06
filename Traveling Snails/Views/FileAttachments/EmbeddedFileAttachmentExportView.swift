@@ -70,7 +70,7 @@ struct EmbeddedFileAttachmentExportView: View {
                                 }
                                 .padding(.vertical, 8)
                                 .padding(.horizontal, 12)
-                                .background(Color(.systemGray6))
+                                .background(Color.systemGray6)
                                 .clipShape(.rect(cornerRadius: 8))
                             }
                             .buttonStyle(.plain)
@@ -105,6 +105,7 @@ struct EmbeddedFileAttachmentExportView: View {
     }
 }
 
+#if os(iOS)
 // Keep the existing ShareSheet since it still works
 struct ShareSheet: UIViewControllerRepresentable {
     let items: [Any]
@@ -116,3 +117,13 @@ struct ShareSheet: UIViewControllerRepresentable {
 
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
+#elseif os(macOS)
+struct ShareSheet: View {
+    let items: [Any]
+
+    var body: some View {
+        Text("Use File > Share to share items on macOS")
+            .padding()
+    }
+}
+#endif

@@ -22,7 +22,7 @@ struct MonthDayCell: View {
                     Text("\(calendar.component(.day, from: date))")
                         .font(.system(.body, design: .rounded))
                         .fontWeight(isToday ? .bold : .medium)
-                        .foregroundColor(isToday ? .white : (isCurrentMonth ? .primary : .secondary))
+                        .foregroundStyle(isToday ? .white : (isCurrentMonth ? .primary : .secondary))
                         .frame(width: 24, height: 24)
                         .background(isToday ? Color.blue : Color.clear)
                         .clipShape(Circle())
@@ -32,7 +32,7 @@ struct MonthDayCell: View {
                     if !activities.isEmpty {
                         Text("\(activities.count)")
                             .font(.caption2)
-                            .foregroundColor(.white)
+                            .foregroundStyle(.white)
                             .frame(width: 16, height: 16)
                             .background(Color.red)
                             .clipShape(Circle())
@@ -52,7 +52,7 @@ struct MonthDayCell: View {
                 if activities.count > 8 {
                     Text("+\(activities.count - 8)")
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
 
                 Spacer()
@@ -62,7 +62,7 @@ struct MonthDayCell: View {
         .frame(maxWidth: .infinity)
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .fill(activities.isEmpty ? Color.clear : Color(.systemGray6))
+                .fill(activities.isEmpty ? Color.clear : Color.systemGray6)
         )
         .opacity(isCurrentMonth ? 1.0 : 0.3)
     }

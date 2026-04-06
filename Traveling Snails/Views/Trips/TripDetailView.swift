@@ -1,3 +1,4 @@
+import ComposableArchitecture
 import SwiftUI
 
 struct TripDetailView: View {
@@ -23,7 +24,16 @@ struct TripDetailView: View {
             IsolatedTripDetailView(
                 trip: trip,
                 path: $path,
-                resetToken: resetToken
+                resetToken: resetToken,
+                store: Store(
+                    initialState: TripDetailFeature.State(
+                        trip: trip,
+                        initialPath: path,
+                        resetToken: resetToken
+                    )
+                ) {
+                    TripDetailFeature()
+                }
             )
             .navigationDestination(for: TripRoute.self) { route in
                 if let destination = TripRouteMapper.destination(from: route, in: trip) {
@@ -42,11 +52,38 @@ struct TripDetailView: View {
     private func tripDestinationView(_ destination: DestinationType) -> some View {
         switch destination {
         case .lodging(let lodging):
-            TripActivityDetailView<Lodging>(activity: lodging)
+            TripActivityDetailView<Lodging>(
+                activity: lodging,
+                store: Store(
+                    initialState: TripActivityDetailFeature.State(
+                        snapshot: TripActivityDetailFeature.ActivityTarget(activity: lodging)
+                    )
+                ) {
+                    TripActivityDetailFeature()
+                }
+            )
         case .transportation(let transportation):
-            TripActivityDetailView<Transportation>(activity: transportation)
+            TripActivityDetailView<Transportation>(
+                activity: transportation,
+                store: Store(
+                    initialState: TripActivityDetailFeature.State(
+                        snapshot: TripActivityDetailFeature.ActivityTarget(activity: transportation)
+                    )
+                ) {
+                    TripActivityDetailFeature()
+                }
+            )
         case .activity(let activity):
-            TripActivityDetailView<Activity>(activity: activity)
+            TripActivityDetailView<Activity>(
+                activity: activity,
+                store: Store(
+                    initialState: TripActivityDetailFeature.State(
+                        snapshot: TripActivityDetailFeature.ActivityTarget(activity: activity)
+                    )
+                ) {
+                    TripActivityDetailFeature()
+                }
+            )
         }
     }
 }

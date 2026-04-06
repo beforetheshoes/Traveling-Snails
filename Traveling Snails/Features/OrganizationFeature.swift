@@ -6,7 +6,7 @@ import SQLiteData
 struct OrganizationFeature {
     @ObservableState
     struct State: Equatable {
-        let organization: Organization
+        var organization: Organization
 
         var isEditing = false
         var editedName = ""
@@ -57,6 +57,8 @@ struct OrganizationFeature {
 
     enum Action: BindableAction, Equatable {
         case binding(BindingAction<State>)
+        case onAppear
+        case organizationLoaded(Organization?)
         case startEditing
         case cancelEditing
         case saveTapped
@@ -77,6 +79,20 @@ struct OrganizationFeature {
         Reduce { state, action in
             switch action {
             case .binding:
+                return .none
+
+            case .onAppear:
+                let organizationID = state.organization.id
+                return .run { send in
+                    let latestOrganization = try? await database.read { db in
+                        try Organization.find(organizationID).fetchOne(db)
+                    }
+                    await send(.organizationLoaded(latestOrganization))
+                }
+
+            case .organizationLoaded(let organization):
+                guard let organization else { return .none }
+                state.organization = organization
                 return .none
 
             case .startEditing:
@@ -160,7 +176,7 @@ struct OrganizationFeature {
 
             case .saveSucceeded:
                 state.isEditing = false
-                return .none
+                return .send(.onAppear)
 
             case .saveFailed(let message):
                 state.showingSaveError = true

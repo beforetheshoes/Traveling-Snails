@@ -74,8 +74,8 @@ struct ActivitySubmitButton: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
                 .background(isValid && !isSaving ? color : Color.gray)
-                .foregroundColor(.white)
-                .cornerRadius(12)
+                .foregroundStyle(.white)
+                .clipShape(.rect(cornerRadius: 12))
             }
             .disabled(!isValid || isSaving)
 
@@ -97,16 +97,16 @@ struct ActivitySubmitButton: View {
                     // Fallback to original error display
                     HStack {
                         Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(.red)
+                            .foregroundStyle(.red)
 
                         Text(L(L10n.Save.activityFailed))
-                            .foregroundColor(.red)
+                            .foregroundStyle(.red)
                             .font(.caption)
                     }
                     .padding(.vertical, 8)
                     .padding(.horizontal, 12)
                     .background(Color.red.opacity(0.1))
-                    .cornerRadius(8)
+                    .clipShape(.rect(cornerRadius: 8))
                 }
             }
         }

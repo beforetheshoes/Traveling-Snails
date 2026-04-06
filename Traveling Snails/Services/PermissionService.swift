@@ -47,6 +47,7 @@ protocol PermissionService: Sendable {
     func getLocationAuthorizationStatus() -> LocationAuthorizationStatus
 
     /// Open the app's settings page
+    @MainActor
     func openAppSettings()
 
     /// Check if a specific permission is required by the app

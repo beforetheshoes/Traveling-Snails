@@ -9,17 +9,21 @@ import AVFoundation
 import Foundation
 import os.lock
 import Photos
+#if os(iOS)
 import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 
 /// Production implementation of PermissionService using system frameworks
-final class SystemPermissionService: NSObject, PermissionService, @unchecked Sendable {
+final class SystemPermissionService: NSObject, PermissionService, @unchecked Swift.Sendable {
     // MARK: - Properties
 
     private let lock = OSAllocatedUnfairLock()
 
-    // nonisolated(unsafe) is appropriate here because we use OSAllocatedUnfairLock for synchronization
-    nonisolated(unsafe) private var locationManager: CLLocationManager?
-    nonisolated(unsafe) private var observers: [WeakPermissionServiceObserver] = []
+    // is appropriate here because we use OSAllocatedUnfairLock for synchronization
+    private var locationManager: CLLocationManager?
+    private var observers: [WeakPermissionServiceObserver] = []
 
     // MARK: - Initialization
 
@@ -171,7 +175,9 @@ final class SystemPermissionService: NSObject, PermissionService, @unchecked Sen
         }
     }
 
+    @MainActor
     func openAppSettings() {
+        #if os(iOS)
         guard let settingsUrl = URL(string: UIApplication.openSettingsURLString) else {
             Logger.shared.warning("Failed to create Settings URL")
             return
@@ -182,6 +188,11 @@ final class SystemPermissionService: NSObject, PermissionService, @unchecked Sen
         } else {
             Logger.shared.warning("Cannot open Settings URL")
         }
+        #elseif os(macOS)
+        if let url = URL(string: "x-apple.systempreferences:") {
+            NSWorkspace.shared.open(url)
+        }
+        #endif
     }
 
     func isPermissionRequired(_ permission: PermissionType) -> Bool {
@@ -204,7 +215,7 @@ final class SystemPermissionService: NSObject, PermissionService, @unchecked Sen
 
     // MARK: - Private Implementation
 
-    nonisolated(unsafe) private var locationContinuation: CheckedContinuation<LocationAuthorizationStatus, Never>?
+    private var locationContinuation: CheckedContinuation<LocationAuthorizationStatus, Never>?
 
     private func setupLocationManager() {
         let manager = CLLocationManager()
@@ -380,7 +391,7 @@ extension SystemPermissionService: AdvancedPermissionService {
 
 // MARK: - Weak Observer Wrapper
 
-private struct WeakPermissionServiceObserver: @unchecked Sendable {
+private struct WeakPermissionServiceObserver: @unchecked Swift.Sendable {
     weak var observer: PermissionServiceObserver?
 
     init(_ observer: PermissionServiceObserver) {

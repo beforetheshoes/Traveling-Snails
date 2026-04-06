@@ -83,9 +83,15 @@ struct TripActivityDetailFeature {
 
         var isEditing = false
         var activeSheet: ActiveSheet?
+        @Presents var organizationPicker: OrganizationPickerFeature.State?
         var showDeleteConfirmation = false
         var shouldDismiss = false
         var errorMessage: String?
+
+        // Transportation legs (multi-leg itinerary)
+        var transportationLegs: [TransportationLeg] = []
+        var legsValidationError: String?
+        var showingLegsEditor = false
 
         init(snapshot: ActivityTarget) {
             self.snapshot = snapshot
@@ -97,6 +103,9 @@ struct TripActivityDetailFeature {
     enum Action: BindableAction, Equatable {
         case binding(BindingAction<State>)
         case onAppear
+        case loadTransportationLegs
+        case transportationLegsLoaded([TransportationLeg])
+        case addLegTapped
         case startEditing
         case cancelEditing
         case saveTapped
@@ -108,6 +117,8 @@ struct TripActivityDetailFeature {
         case deleteSucceeded
         case deleteFailed(String)
         case sheetChanged(ActiveSheet?)
+        case showOrganizationPicker
+        case organizationPicker(PresentationAction<OrganizationPickerFeature.Action>)
         case attachmentAdded(EmbeddedFileAttachment)
         case attachmentPersisted(EmbeddedFileAttachment)
         case attachmentPersistFailed(String)
@@ -124,29 +135,94 @@ struct TripActivityDetailFeature {
         Reduce { state, action in
             switch action {
             case .binding:
+                if state.snapshot.activityType == .transportation {
+                    state.transportationLegs = normalizeLegs(state.transportationLegs)
+                    state.legsValidationError = validateTransportationLegs(state.transportationLegs)
+                    applyDerivedTransportationFields(editData: &state.editData, legs: state.transportationLegs)
+                }
                 return .none
 
             case .onAppear:
                 state.editData = state.snapshot.editData()
                 state.attachments = state.snapshot.fileAttachments
+                if state.snapshot.activityType == .transportation {
+                    return .send(.loadTransportationLegs)
+                }
+                return .none
+
+            case .loadTransportationLegs:
+                guard case let .transportation(transportation) = state.snapshot else { return .none }
+                let transportationID = transportation.id
+                return .run { send in
+                    do {
+                        let legs = try await database.read { db in
+                            try TransportationLeg.where { $0.transportationID.eq(transportationID) }
+                                .order { $0.sortIndex.asc() }
+                                .fetchAll(db)
+                        }
+                        await send(.transportationLegsLoaded(legs))
+                    } catch {
+                        Logger.shared.error("Failed to load transportation legs: \(error.localizedDescription)", category: .database)
+                        await send(.transportationLegsLoaded([]))
+                    }
+                }
+
+            case .transportationLegsLoaded(let legs):
+                guard case let .transportation(transportation) = state.snapshot else { return .none }
+                if legs.isEmpty {
+                    state.transportationLegs = [TransportationLeg.makeDefaultLeg(for: transportation)]
+                } else {
+                    state.transportationLegs = normalizeLegs(legs)
+                }
+                state.legsValidationError = validateTransportationLegs(state.transportationLegs)
+                applyDerivedTransportationFields(editData: &state.editData, legs: state.transportationLegs)
+                return .none
+
+            case .addLegTapped:
+                guard case let .transportation(transportation) = state.snapshot else { return .none }
+                let last = state.transportationLegs.sorted(by: { $0.sortIndex < $1.sortIndex }).last
+                let departure = last?.arrival ?? state.editData.end
+                let tzId = last?.arrivalTZId ?? state.editData.endTZId
+                let newLeg = TransportationLeg(
+                    transportationID: transportation.id,
+                    sortIndex: state.transportationLegs.count,
+                    type: last?.type ?? (state.editData.transportationType ?? .plane),
+                    departure: departure,
+                    departureTZId: tzId,
+                    arrival: departure.addingTimeInterval(2 * 3600),
+                    arrivalTZId: tzId
+                )
+                state.transportationLegs.append(newLeg)
+                state.transportationLegs = normalizeLegs(state.transportationLegs)
+                state.legsValidationError = validateTransportationLegs(state.transportationLegs)
+                applyDerivedTransportationFields(editData: &state.editData, legs: state.transportationLegs)
                 return .none
 
             case .startEditing:
                 state.editData = state.snapshot.editData()
                 state.attachments = state.snapshot.fileAttachments
                 state.isEditing = true
+                if state.snapshot.activityType == .transportation, state.transportationLegs.isEmpty {
+                    return .send(.loadTransportationLegs)
+                }
                 return .none
 
             case .cancelEditing:
                 state.editData = state.snapshot.editData()
                 state.attachments = state.snapshot.fileAttachments
                 state.isEditing = false
+                state.showingLegsEditor = false
                 return .none
 
             case .saveTapped:
+                if state.snapshot.activityType == .transportation, state.legsValidationError != nil {
+                    state.errorMessage = state.legsValidationError
+                    return .none
+                }
                 let snapshot = state.snapshot
                 let editData = state.editData
                 let attachments = state.attachments
+                let legs = state.transportationLegs
                 return .run { send in
                     do {
                         let savedTarget = try await database.write { db in
@@ -154,6 +230,7 @@ struct TripActivityDetailFeature {
                                 snapshot: snapshot,
                                 editData: editData,
                                 attachments: attachments,
+                                transportationLegs: legs,
                                 in: db
                             )
                         }
@@ -215,6 +292,19 @@ struct TripActivityDetailFeature {
                 state.activeSheet = sheet
                 return .none
 
+            case .showOrganizationPicker:
+                state.organizationPicker = OrganizationPickerFeature.State(
+                    selectedOrganizationID: state.editData.organization?.id
+                )
+                return .none
+
+            case .organizationPicker(.dismiss):
+                state.organizationPicker = nil
+                return .none
+
+            case .organizationPicker:
+                return .none
+
             case .attachmentAdded(let attachment):
                 let snapshot = state.snapshot
                 return .run { send in
@@ -261,12 +351,16 @@ struct TripActivityDetailFeature {
                 return .none
             }
         }
+        .ifLet(\.$organizationPicker, action: \.organizationPicker) {
+            OrganizationPickerFeature()
+        }
     }
 
     private static func persist<DB: Database>(
         snapshot: ActivityTarget,
         editData: TripActivityEditData,
         attachments: [EmbeddedFileAttachment],
+        transportationLegs: [TransportationLeg],
         in db: DB
     ) throws -> ActivityTarget {
         switch snapshot {
@@ -355,19 +449,37 @@ struct TripActivityDetailFeature {
             return .lodging(lodging)
 
         case .transportation(var transportation):
+            let legs = normalizeLegs(transportationLegs.isEmpty ? [TransportationLeg.makeDefaultLeg(for: transportation)] : transportationLegs)
+            if let validationError = validateTransportationLegs(legs) {
+                throw ActivitySaveError.saveFailed(
+                    NSError(domain: "TripActivityDetailFeature", code: 1, userInfo: [NSLocalizedDescriptionKey: validationError])
+                )
+            }
+            if let first = legs.first, let last = legs.last {
+                transportation.start = first.departure
+                transportation.startTZId = first.departureTZId
+                transportation.end = last.arrival
+                transportation.endTZId = last.arrivalTZId
+                transportation.type = first.type
+            }
             transportation.name = editData.name
-            transportation.start = editData.start
-            transportation.end = editData.end
-            transportation.startTZId = editData.startTZId
-            transportation.endTZId = editData.endTZId
             transportation.cost = editData.cost
             transportation.paid = editData.paid
             transportation.confirmation = editData.confirmationField
             transportation.notes = editData.notes
             transportation.organizationID = editData.organization?.id
-            transportation.type = editData.transportationType ?? .plane
 
             try Transportation.upsert { transportation }.execute(db)
+            try TransportationLeg.where { $0.transportationID.eq(transportation.id) }.delete().execute(db)
+            let legsToSave = legs.enumerated().map { index, leg -> TransportationLeg in
+                var legToSave = leg
+                legToSave.transportationID = transportation.id
+                legToSave.sortIndex = index
+                return legToSave
+            }
+            try TransportationLeg.insert {
+                for leg in legsToSave { leg }
+            }.execute(db)
             try EmbeddedFileAttachment.where { $0.transportationID.eq(transportation.id) }.delete().execute(db)
             let drafts = attachments.map {
                 EmbeddedFileAttachment.Draft(
@@ -421,6 +533,42 @@ struct TripActivityDetailFeature {
         try EmbeddedFileAttachment.upsert { updated }.execute(db)
         return updated
     }
+}
+
+private func applyDerivedTransportationFields(editData: inout TripActivityEditData, legs: [TransportationLeg]) {
+    guard let first = legs.sorted(by: { $0.sortIndex < $1.sortIndex }).first,
+          let last = legs.sorted(by: { $0.sortIndex < $1.sortIndex }).last
+    else { return }
+    editData.start = first.departure
+    editData.startTZId = first.departureTZId
+    editData.end = last.arrival
+    editData.endTZId = last.arrivalTZId
+    editData.transportationType = first.type
+}
+
+private func normalizeLegs(_ legs: [TransportationLeg]) -> [TransportationLeg] {
+    legs.sorted(by: { $0.sortIndex < $1.sortIndex }).enumerated().map { index, leg in
+        var updated = leg
+        updated.sortIndex = index
+        return updated
+    }
+}
+
+private func validateTransportationLegs(_ legs: [TransportationLeg]) -> String? {
+    guard !legs.isEmpty else { return "At least one leg is required." }
+    let sorted = legs.sorted(by: { $0.sortIndex < $1.sortIndex })
+    for (index, leg) in sorted.enumerated() {
+        if leg.arrival < leg.departure {
+            return "Leg \(index + 1): arrival must be after departure."
+        }
+        if index > 0 {
+            let prev = sorted[index - 1]
+            if leg.departure < prev.arrival {
+                return "Leg \(index + 1): departure must be after previous arrival."
+            }
+        }
+    }
+    return nil
 }
 
 extension TripActivityDetailFeature.ActivityTarget {

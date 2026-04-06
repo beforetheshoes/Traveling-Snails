@@ -5,6 +5,7 @@
 //
 
 import SwiftUI
+import ComposableArchitecture
 
 struct DayDetailView: View {
     private enum ActiveSheet: Identifiable {
@@ -83,9 +84,9 @@ struct DayDetailView: View {
                 }
             }
             .navigationTitle("Day Details")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationBarTitle()
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .platformTrailing) {
                     Button("Done") { dismiss() }
                 }
             }
@@ -97,7 +98,24 @@ struct DayDetailView: View {
                             trip: trip,
                             activityType: Activity.self,
                             startTime: Calendar.current.startOfDay(for: date),
-                            endTime: Calendar.current.date(byAdding: .hour, value: 1, to: Calendar.current.startOfDay(for: date)) ?? date
+                            endTime: Calendar.current.date(byAdding: .hour, value: 1, to: Calendar.current.startOfDay(for: date)) ?? date,
+                            store: Store(
+                                initialState: PrefilledAddActivityFeature.State(
+                                    trip: trip,
+                                    activityKind: .activity,
+                                    editData: TripActivityEditData(
+                                        from: Activity(
+                                            name: "New Activity",
+                                            start: Calendar.current.startOfDay(for: date),
+                                            end: Calendar.current.date(byAdding: .hour, value: 1, to: Calendar.current.startOfDay(for: date)) ?? date,
+                                            trip: nil,
+                                            organization: nil
+                                        )
+                                    )
+                                )
+                            ) {
+                                PrefilledAddActivityFeature()
+                            }
                         )
                     }
                 }

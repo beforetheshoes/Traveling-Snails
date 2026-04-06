@@ -125,7 +125,7 @@ struct SyncDiagnosticView: View {
             }
         }
         .navigationTitle("Sync Diagnostics")
-        .navigationBarTitleDisplayMode(.inline)
+        .inlineNavigationBarTitle()
         .onAppear {
             store.send(.onAppear)
         }
@@ -230,7 +230,7 @@ struct AdvancedMetricsView: View {
 #Preview {
     NavigationStack {
         SyncDiagnosticView(
-            store: Store(initialState: SyncDiagnosticFeature.State()) {
+            store: StoreOf<SyncDiagnosticFeature>.init(initialState: SyncDiagnosticFeature.State()) {
                 SyncDiagnosticFeature()
             }
         )

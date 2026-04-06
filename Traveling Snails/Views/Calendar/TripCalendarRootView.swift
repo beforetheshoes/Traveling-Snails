@@ -12,13 +12,9 @@ struct TripCalendarRootView: View {
     @State private var store: StoreOf<CalendarFeature>
 
     init(
-        trip: Trip,
-        store: StoreOf<CalendarFeature>? = nil
+        store: StoreOf<CalendarFeature>
     ) {
-        let resolvedStore = store ?? Store(initialState: CalendarFeature.State(trip: trip)) {
-            CalendarFeature()
-        }
-        self._store = State(initialValue: resolvedStore)
+        self._store = State(initialValue: store)
     }
 
     var body: some View {
@@ -28,11 +24,38 @@ struct TripCalendarRootView: View {
                 .navigationDestination(for: DestinationType.self) { destination in
                     switch destination {
                     case .lodging(let lodging):
-                        TripActivityDetailView<Lodging>(activity: lodging)
+                        TripActivityDetailView<Lodging>(
+                            activity: lodging,
+                            store: Store(
+                                initialState: TripActivityDetailFeature.State(
+                                    snapshot: TripActivityDetailFeature.ActivityTarget(activity: lodging)
+                                )
+                            ) {
+                                TripActivityDetailFeature()
+                            }
+                        )
                     case .transportation(let transportation):
-                        TripActivityDetailView<Transportation>(activity: transportation)
+                        TripActivityDetailView<Transportation>(
+                            activity: transportation,
+                            store: Store(
+                                initialState: TripActivityDetailFeature.State(
+                                    snapshot: TripActivityDetailFeature.ActivityTarget(activity: transportation)
+                                )
+                            ) {
+                                TripActivityDetailFeature()
+                            }
+                        )
                     case .activity(let activity):
-                        TripActivityDetailView<Activity>(activity: activity)
+                        TripActivityDetailView<Activity>(
+                            activity: activity,
+                            store: Store(
+                                initialState: TripActivityDetailFeature.State(
+                                    snapshot: TripActivityDetailFeature.ActivityTarget(activity: activity)
+                                )
+                            ) {
+                                TripActivityDetailFeature()
+                            }
+                        )
                     }
                 }
         }
@@ -41,5 +64,9 @@ struct TripCalendarRootView: View {
 
 #Preview {
     let trip = Trip(name: "Sample Trip")
-    TripCalendarRootView(trip: trip)
+    TripCalendarRootView(
+        store: StoreOf<CalendarFeature>.init(initialState: CalendarFeature.State(trip: trip)) {
+            CalendarFeature()
+        }
+    )
 }

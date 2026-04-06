@@ -152,6 +152,7 @@ struct EmbeddedFileAttachmentTests {
     }
 
     @Suite("EmbeddedFileAttachmentManager Tests")
+    @MainActor
     struct EmbeddedFileAttachmentManagerTests {
         @Test("Manager singleton", .tags(.unit, .fast, .parallel, .dataModel, .fileAttachment, .validation))
         func managerSingleton() {

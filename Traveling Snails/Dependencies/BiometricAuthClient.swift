@@ -1,7 +1,7 @@
 import Dependencies
 import Foundation
 
-struct BiometricAuthClient: Sendable {
+struct BiometricAuthClient {
     var canUseBiometrics: @Sendable () async -> Bool
     var isEnabled: @Sendable () async -> Bool
     var biometricType: @Sendable () async -> BiometricType
@@ -14,64 +14,19 @@ struct BiometricAuthClient: Sendable {
 }
 
 extension BiometricAuthClient: DependencyKey {
-    static let liveValue: BiometricAuthClient = {
-        return BiometricAuthClient(
-            canUseBiometrics: {
-                await MainActor.run {
-                    (ModernBiometricAuthManager.shared ?? ModernBiometricAuthManager.production())
-                        .canUseBiometrics()
-                }
-            },
-            isEnabled: {
-                await MainActor.run {
-                    (ModernBiometricAuthManager.shared ?? ModernBiometricAuthManager.production())
-                        .isEnabled
-                }
-            },
-            biometricType: {
-                await MainActor.run {
-                    (ModernBiometricAuthManager.shared ?? ModernBiometricAuthManager.production())
-                        .biometricType
-                }
-            },
-            isProtected: { trip in
-                await MainActor.run {
-                    (ModernBiometricAuthManager.shared ?? ModernBiometricAuthManager.production())
-                        .isProtected(trip)
-                }
-            },
-            isAuthenticated: { trip in
-                await MainActor.run {
-                    (ModernBiometricAuthManager.shared ?? ModernBiometricAuthManager.production())
-                        .isAuthenticated(for: trip)
-                }
-            },
-            authenticateTrip: { trip in
-                let authManager = await MainActor.run {
-                    ModernBiometricAuthManager.shared ?? ModernBiometricAuthManager.production()
-                }
-                return await authManager.authenticateTrip(trip)
-            },
-            lockTrip: { trip in
-                await MainActor.run {
-                    (ModernBiometricAuthManager.shared ?? ModernBiometricAuthManager.production())
-                        .lockTrip(trip)
-                }
-            },
-            toggleProtection: { trip in
-                await MainActor.run {
-                    (ModernBiometricAuthManager.shared ?? ModernBiometricAuthManager.production())
-                        .toggleProtection(for: trip)
-                }
-            },
-            resetSession: {
-                await MainActor.run {
-                    (ModernBiometricAuthManager.shared ?? ModernBiometricAuthManager.production())
-                        .resetSession()
-                }
-            }
-        )
-    }()
+    private static let authService = ProductionAuthenticationService()
+
+    static let liveValue = BiometricAuthClient(
+        canUseBiometrics: { authService.canUseBiometrics() },
+        isEnabled: { authService.isEnabled },
+        biometricType: { authService.biometricType },
+        isProtected: { trip in authService.isProtected(trip) },
+        isAuthenticated: { trip in authService.isAuthenticated(for: trip) },
+        authenticateTrip: { trip in await authService.authenticateTrip(trip) },
+        lockTrip: { trip in await MainActor.run { authService.lockTrip(trip) } },
+        toggleProtection: { trip in await MainActor.run { authService.toggleProtection(for: trip) } },
+        resetSession: { await MainActor.run { authService.resetSession() } }
+    )
 
     static let testValue = BiometricAuthClient(
         canUseBiometrics: { false },

@@ -23,11 +23,11 @@ struct WeekDayColumn: View {
             // Hours
             ForEach(0..<24, id: \.self) { hour in
                 Rectangle()
-                    .fill(Color(.systemGray6))
+                    .fill(Color.systemGray6)
                     .frame(height: 60)
                     .overlay(
                         Rectangle()
-                            .fill(Color(.separator))
+                            .fill(Color.separator)
                             .frame(height: 0.5),
                         alignment: .bottom
                     )
@@ -40,7 +40,7 @@ struct WeekDayColumn: View {
                                     .overlay(
                                         Text(wrapper.tripActivity.name)
                                             .font(.caption2)
-                                            .foregroundColor(.white)
+                                            .foregroundStyle(.white)
                                             .lineLimit(1)
                                             .padding(.horizontal, 2)
                                     )
@@ -63,12 +63,12 @@ struct WeekDayColumn: View {
             VStack(spacing: 4) {
                 Text(dayFormatter.string(from: date))
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
 
                 Text("\(calendar.component(.day, from: date))")
                     .font(.headline)
                     .fontWeight(isToday ? .bold : .medium)
-                    .foregroundColor(isToday ? .white : .primary)
+                    .foregroundStyle(isToday ? .white : .primary)
                     .frame(width: 32, height: 32)
                     .background(isToday ? Color.blue : Color.clear)
                     .clipShape(Circle())
@@ -76,7 +76,7 @@ struct WeekDayColumn: View {
                 if !activities.isEmpty {
                     Text("\(activities.count)")
                         .font(.caption2)
-                        .foregroundColor(.white)
+                        .foregroundStyle(.white)
                         .frame(width: 16, height: 16)
                         .background(Color.blue)
                         .clipShape(Circle())

@@ -10,11 +10,8 @@ struct AddTrip: View {
     @Environment(\.dismiss) private var dismiss
     @State private var store: StoreOf<AddTripFeature>
 
-    init(store: StoreOf<AddTripFeature>? = nil) {
-        let resolvedStore = store ?? Store(initialState: AddTripFeature.State()) {
-            AddTripFeature()
-        }
-        self._store = State(initialValue: resolvedStore)
+    init(store: StoreOf<AddTripFeature>) {
+        self._store = State(initialValue: store)
     }
 
     var body: some View {
@@ -60,9 +57,9 @@ struct AddTrip: View {
                 .disabled(store.isSaveDisabled)
             }
             .navigationTitle("New Trip")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationBarTitle()
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .platformLeading) {
                     Button("Cancel") {
                         dismiss()
                     }

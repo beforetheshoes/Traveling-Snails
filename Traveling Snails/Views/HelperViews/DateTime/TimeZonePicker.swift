@@ -72,7 +72,7 @@ struct TimeZonePicker: View {
             }
             .padding(.vertical, 8)
             .padding(.horizontal, 12)
-            .background(Color(.systemGray6))
+            .background(Color.systemGray6)
             .clipShape(.rect(cornerRadius: 8))
         }
         .sheet(item: $activeSheet) { sheet in

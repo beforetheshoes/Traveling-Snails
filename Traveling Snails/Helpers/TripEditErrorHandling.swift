@@ -6,6 +6,7 @@
 
 import Foundation
 import SwiftUI
+import os
 
 // MARK: - Network Status
 // Note: NetworkStatus is already defined in SyncService.swift, this is a local copy for view state
@@ -157,9 +158,13 @@ struct TripEditRecoveryPlan {
 // MARK: - Error Analytics
 
 enum TripEditErrorAnalytics {
-    nonisolated(unsafe) private static var errorHistory: [TripEditErrorEvent] = []
+    private struct State {
+        var errorHistory: [TripEditErrorEvent] = []
+        var lastCleanup = Date()
+    }
+
+    private static let state = OSAllocatedUnfairLock(initialState: State())
     private static let config = AppConfiguration.errorAnalytics
-    nonisolated(unsafe) private static var lastCleanup = Date()
 
     static func recordError(_ error: AppError, context: String, retryCount: Int) {
         // Perform periodic cleanup before adding new events
@@ -172,11 +177,13 @@ enum TripEditErrorAnalytics {
             retryCount: retryCount,
             timestamp: Date()
         )
-        errorHistory.append(event)
+        state.withLock { state in
+            state.errorHistory.append(event)
 
-        // Keep only the most recent events
-        if errorHistory.count > config.maxHistorySize {
-            errorHistory.removeFirst(errorHistory.count - config.maxHistorySize)
+            // Keep only the most recent events
+            if state.errorHistory.count > config.maxHistorySize {
+                state.errorHistory.removeFirst(state.errorHistory.count - config.maxHistorySize)
+            }
         }
 
         #if DEBUG
@@ -186,7 +193,7 @@ enum TripEditErrorAnalytics {
 
     static func getErrorPatterns() -> [String] {
         cleanupStaleEventsIfNeeded()
-        let recentErrors = errorHistory.suffix(10)
+        let recentErrors = state.withLock { $0.errorHistory.suffix(10) }
         var patterns: [String] = []
 
         // Detect rapid consecutive errors
@@ -209,41 +216,48 @@ enum TripEditErrorAnalytics {
     /// Manually trigger cleanup for testing or when memory pressure is detected
     static func cleanup() {
         let cutoffDate = Date().addingTimeInterval(-config.maxEventAge)
-        errorHistory.removeAll { $0.timestamp < cutoffDate }
-        lastCleanup = Date()
+        state.withLock { state in
+            state.errorHistory.removeAll { $0.timestamp < cutoffDate }
+            state.lastCleanup = Date()
+        }
     }
 
     /// Reset all analytics state - useful for testing
     static func reset() {
-        errorHistory.removeAll()
-        lastCleanup = Date()
+        state.withLock { state in
+            state.errorHistory.removeAll()
+            state.lastCleanup = Date()
+        }
     }
 
     /// Get current analytics state for debugging
     static func getAnalyticsState() -> TripEditAnalyticsState {
         cleanupStaleEventsIfNeeded()
-        return TripEditAnalyticsState(
-            eventCount: errorHistory.count,
-            oldestEventAge: errorHistory.first?.timestamp.timeIntervalSinceNow.magnitude,
-            newestEventAge: errorHistory.last?.timestamp.timeIntervalSinceNow.magnitude,
-            lastCleanup: lastCleanup
-        )
+        return state.withLock { state in
+            TripEditAnalyticsState(
+                eventCount: state.errorHistory.count,
+                oldestEventAge: state.errorHistory.first?.timestamp.timeIntervalSinceNow.magnitude,
+                newestEventAge: state.errorHistory.last?.timestamp.timeIntervalSinceNow.magnitude,
+                lastCleanup: state.lastCleanup
+            )
+        }
     }
 
     private static func cleanupStaleEventsIfNeeded() {
         let now = Date()
 
         // Only cleanup if enough time has passed since last cleanup
-        guard now.timeIntervalSince(lastCleanup) > config.cleanupInterval else { return }
+        let removedCount = state.withLock { state -> Int in
+            guard now.timeIntervalSince(state.lastCleanup) > config.cleanupInterval else { return 0 }
 
-        let cutoffDate = now.addingTimeInterval(-config.maxEventAge)
-        let originalCount = errorHistory.count
-
-        errorHistory.removeAll { $0.timestamp < cutoffDate }
-        lastCleanup = now
+            let cutoffDate = now.addingTimeInterval(-config.maxEventAge)
+            let originalCount = state.errorHistory.count
+            state.errorHistory.removeAll { $0.timestamp < cutoffDate }
+            state.lastCleanup = now
+            return originalCount - state.errorHistory.count
+        }
 
         #if DEBUG
-        let removedCount = originalCount - errorHistory.count
         if removedCount > 0 {
             Logger.secure(category: .app).debug("TripEditErrorAnalytics: Cleaned up \(removedCount) stale error events")
         }

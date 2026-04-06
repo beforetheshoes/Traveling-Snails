@@ -17,7 +17,7 @@ struct ActivityHeaderView: View {
             // Activity Icon with colored background
             Image(systemName: icon)
                 .font(.system(size: 60))
-                .foregroundColor(color)
+                .foregroundStyle(color)
                 .padding(8)
                 .background(color.opacity(0.1))
                 .clipShape(Circle())

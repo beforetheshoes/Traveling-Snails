@@ -36,6 +36,9 @@ struct OrganizationFeatureTests {
         await store.receive(\.saveSucceeded) {
             $0.isEditing = false
         }
+        await store.receive(\.onAppear)
+        await store.receive(\.organizationLoaded)
+        #expect(store.state.organization.name == "New Name")
 
         let saved = try await database.read { db in
             try Organization.find(organization.id).fetchOne(db)

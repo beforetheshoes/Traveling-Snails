@@ -20,18 +20,12 @@ struct ToolsTab: View {
 
     init(
         onDataChanged: @escaping () -> Void = {},
-        store: StoreOf<ToolsFeature>? = nil,
-        exportStore: StoreOf<DatabaseExportFeature>? = nil
+        store: StoreOf<ToolsFeature>,
+        exportStore: StoreOf<DatabaseExportFeature>
     ) {
         self.onDataChanged = onDataChanged
-        let resolvedStore = store ?? Store(initialState: ToolsFeature.State()) {
-            ToolsFeature()
-        }
-        let resolvedExportStore = exportStore ?? Store(initialState: DatabaseExportFeature.State()) {
-            DatabaseExportFeature()
-        }
-        self._store = State(initialValue: resolvedStore)
-        self._exportStore = State(initialValue: resolvedExportStore)
+        self._store = State(initialValue: store)
+        self._exportStore = State(initialValue: exportStore)
     }
 
     var body: some View {

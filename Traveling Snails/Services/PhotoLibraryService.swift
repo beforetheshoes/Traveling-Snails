@@ -6,7 +6,9 @@
 
 import Foundation
 import Photos
+#if os(iOS)
 import UIKit
+#endif
 
 /// Service protocol for photo library access and permissions
 /// Abstracts PHPhotoLibrary for testability
@@ -24,7 +26,11 @@ protocol PhotoLibraryService: Sendable {
 
     /// Present the limited library picker (iOS 14+)
     /// - Parameter viewController: The view controller to present from
+    #if os(iOS)
     func presentLimitedLibraryPicker(from viewController: UIViewController?)
+    #else
+    func presentLimitedLibraryPicker(from viewController: Any?)
+    #endif
 
     /// Whether the app should prevent automatic limited access alerts
     var preventsAutomaticLimitedAccessAlert: Bool { get set }

@@ -7,22 +7,22 @@
 import ComposableArchitecture
 import SQLiteData
 import SwiftUI
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 
-@available(iOS 18.0, *)
+@available(iOS 18.0, macOS 14.0, *)
 struct CrossDeviceEditFileAttachmentView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var store: StoreOf<CrossDeviceEditFileAttachmentFeature>
 
     init(
         attachment: EmbeddedFileAttachment,
-        store: StoreOf<CrossDeviceEditFileAttachmentFeature>? = nil
+        store: StoreOf<CrossDeviceEditFileAttachmentFeature>
     ) {
-        let resolvedStore = store ?? Store(
-            initialState: CrossDeviceEditFileAttachmentFeature.State(attachment: attachment)
-        ) {
-            CrossDeviceEditFileAttachmentFeature()
-        }
-        self._store = State(initialValue: resolvedStore)
+        self._store = State(initialValue: store)
     }
 
     var body: some View {
@@ -43,6 +43,7 @@ struct CrossDeviceEditFileAttachmentView: View {
                         .disabled(store.isSaving)
                 }
 
+                #if os(iOS)
                 if store.attachment.isImage, let data = store.attachment.fileData, let image = UIImage(data: data) {
                     Section("Preview") {
                         Image(uiImage: image)
@@ -54,6 +55,17 @@ struct CrossDeviceEditFileAttachmentView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
                 }
+                #elseif os(macOS)
+                if store.attachment.isImage, let data = store.attachment.fileData, let image = NSImage(data: data) {
+                    Section("Preview") {
+                        Image(nsImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(maxWidth: 300)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    }
+                }
+                #endif
 
                 if let saveError = store.saveError {
                     Section {
@@ -64,16 +76,16 @@ struct CrossDeviceEditFileAttachmentView: View {
                 }
             }
             .navigationTitle("Edit Attachment")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationBarTitle()
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .platformTopLeading) {
                     Button("Cancel") {
                         dismiss()
                     }
                     .disabled(store.isSaving)
                 }
 
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItem(placement: .platformTopTrailing) {
                     Button("Save") {
                         store.send(.saveTapped)
                     }

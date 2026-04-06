@@ -1,0 +1,18 @@
+name: Compliance Gates
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  compliance-audit:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run zero-known-issues compliance audit
+        run: |
+          bash scripts/compliance_audit.sh

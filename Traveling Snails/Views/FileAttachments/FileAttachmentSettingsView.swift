@@ -10,10 +10,10 @@ import SwiftUI
 
 struct FileAttachmentSettingsView: View {
     @Bindable var store: StoreOf<FileAttachmentSettingsFeature>
-    @FetchAll private var allAttachments: [EmbeddedFileAttachment]
+    @FetchAll private var attachmentRecords: [EmbeddedFileAttachment]
 
     private var totalSize: Int64 {
-        allAttachments.reduce(0) { $0 + $1.fileSize }
+        attachmentRecords.reduce(0) { $0 + $1.fileSize }
     }
 
     var body: some View {
@@ -27,7 +27,7 @@ struct FileAttachmentSettingsView: View {
 
                 Section("Management") {
                     Button {
-                        store.send(.findOrphanedTapped(allAttachments))
+                        store.send(.findOrphanedTapped(attachmentRecords))
                     } label: {
                         HStack {
                             if store.isScanning {
@@ -76,15 +76,15 @@ struct FileAttachmentSettingsView: View {
                 }
 
                 Section("Storage") {
-                    LabeledContent("Total Files", value: "\(allAttachments.count)")
+                    LabeledContent("Total Files", value: "\(attachmentRecords.count)")
                     LabeledContent("Total Size", value: ByteCountFormatter.string(fromByteCount: totalSize, countStyle: .file))
                 }
 
                 Section("File Types") {
-                    let imageCount = allAttachments.filter { $0.isImage }.count
-                    let documentCount = allAttachments.filter { $0.isDocument }.count
-                    let pdfCount = allAttachments.filter { $0.isPDF }.count
-                    let otherCount = allAttachments.count - imageCount - documentCount - pdfCount
+                    let imageCount = attachmentRecords.filter { $0.isImage }.count
+                    let documentCount = attachmentRecords.filter { $0.isDocument }.count
+                    let pdfCount = attachmentRecords.filter { $0.isPDF }.count
+                    let otherCount = attachmentRecords.count - imageCount - documentCount - pdfCount
 
                     LabeledContent("Images", value: "\(imageCount)")
                     LabeledContent("Documents", value: "\(documentCount)")
@@ -104,8 +104,8 @@ struct FileAttachmentSettingsView: View {
                 Button("Clear All", role: .destructive) {
                     store.send(
                         .clearAllConfirmed(
-                            ids: allAttachments.map(\.id),
-                            totalCount: allAttachments.count
+                            ids: attachmentRecords.map(\.id),
+                            totalCount: attachmentRecords.count
                         )
                     )
                 }

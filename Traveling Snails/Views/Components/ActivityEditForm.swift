@@ -159,7 +159,7 @@ struct ActivityEditForm: View {
         var sections = Array(groupedFields.keys)
 
         // Put "General" or "Info" section first if it exists
-        if let generalIndex = sections.firstIndex(where: { $0 == L(L10n.General.info) || $0.localizedCaseInsensitiveContains("general") }) {
+        if let generalIndex = sections.firstIndex(where: { $0 == L(L10n.General.info) || $0.localizedStandardContains("general") }) {
             let general = sections.remove(at: generalIndex)
             sections.insert(general, at: 0)
         }
@@ -203,16 +203,16 @@ struct ActivityEditForm: View {
                 .padding()
             }
             .navigationTitle(configuration.title)
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationBarTitle()
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .platformLeading) {
                     Button(configuration.cancelButtonTitle) {
                         handleCancel()
                     }
                     .disabled(formState.isLoading)
                 }
 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .platformTrailing) {
                     Button(configuration.saveButtonTitle) {
                         requestedAction = .save
                     }
@@ -450,7 +450,7 @@ struct TextFormField: FormField {
     }
 
     func createView() -> AnyView {
-        AnyView(
+        AnyView.init(
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
                     Text(title)
@@ -467,11 +467,11 @@ struct TextFormField: FormField {
                     TextField(placeholder, text: $text, axis: .vertical)
                         .textFieldStyle(.roundedBorder)
                         .lineLimit(3...6)
-                        .keyboardType(keyboardType)
+                        .platformKeyboardType(keyboardType)
                 } else {
                     TextField(placeholder, text: $text)
                         .textFieldStyle(.roundedBorder)
-                        .keyboardType(keyboardType)
+                        .platformKeyboardType(keyboardType)
                 }
             }
         )
@@ -515,7 +515,7 @@ struct DecimalFormField: FormField {
     }
 
     func createView() -> AnyView {
-        AnyView(
+        AnyView.init(
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
                     Text(title)
@@ -536,7 +536,7 @@ struct DecimalFormField: FormField {
 
                     TextField("0.00", value: $value, format: .number.precision(.fractionLength(2)))
                         .textFieldStyle(.roundedBorder)
-                        .keyboardType(.decimalPad)
+                        .platformKeyboardType(.decimalPad)
                 }
             }
         )
@@ -580,7 +580,7 @@ struct DateFormField: FormField {
     }
 
     func createView() -> AnyView {
-        AnyView(
+        AnyView.init(
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
                     Text(title)
@@ -594,7 +594,7 @@ struct DateFormField: FormField {
                 }
 
                 DatePicker("", selection: $date, displayedComponents: displayComponents)
-                    .datePickerStyle(.compact)
+                    .labelsHidden()
             }
         )
     }
@@ -638,7 +638,7 @@ struct PickerFormField<T: Hashable & CaseIterable & RawRepresentable>: FormField
     }
 
     func createView() -> AnyView {
-        AnyView(
+        AnyView.init(
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
                     Text(title)
@@ -699,7 +699,7 @@ struct ToggleFormField: FormField {
     }
 
     func createView() -> AnyView {
-        AnyView(
+        AnyView.init(
             Toggle(isOn: $isOn) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)

@@ -52,7 +52,9 @@ struct CalendarContentView: View {
                                         store.send(.dragEnd(point: point, time: time))
                                     },
                                     onActivityTap: { activity in
-                                        store.send(.activityTapped(.from(activity)))
+                                        if let destination = DestinationType.from(activity) {
+                                            store.send(.activityTapped(destination))
+                                        }
                                     }
                                 )
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -67,7 +69,9 @@ struct CalendarContentView: View {
                                         store.send(.longPress(point: point, time: time))
                                     },
                                     onActivityTap: { activity in
-                                        store.send(.activityTapped(.from(activity)))
+                                        if let destination = DestinationType.from(activity) {
+                                            store.send(.activityTapped(destination))
+                                        }
                                     }
                                 )
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -94,14 +98,14 @@ struct CalendarContentView: View {
                 }
         }
         .navigationTitle(store.trip.name)
-        .navigationBarTitleDisplayMode(.inline)
-        .background(Color(.systemBackground))
+        .inlineNavigationBarTitle()
+        .background(Color.systemBackground)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
+            ToolbarItem(placement: .platformLeading) {
                 Button("Done") { dismiss() }
             }
 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .platformTrailing) {
                     CalendarToolbarMenu(store: store)
                 }
             }
@@ -208,7 +212,24 @@ struct ActivityCreationSheet: View {
                             trip: store.trip,
                             activityType: Transportation.self,
                             startTime: data.startTime,
-                            endTime: data.endTime ?? Calendar.current.date(byAdding: .hour, value: 2, to: data.startTime) ?? data.startTime
+                            endTime: data.endTime ?? Calendar.current.date(byAdding: .hour, value: 2, to: data.startTime) ?? data.startTime,
+                            store: Store(
+                                initialState: PrefilledAddActivityFeature.State(
+                                    trip: store.trip,
+                                    activityKind: .transportation,
+                                    editData: TripActivityEditData(
+                                        from: Transportation(
+                                            name: "New Transportation",
+                                            start: data.startTime,
+                                            end: data.endTime ?? Calendar.current.date(byAdding: .hour, value: 2, to: data.startTime) ?? data.startTime,
+                                            trip: nil,
+                                            organization: nil
+                                        )
+                                    )
+                                )
+                            ) {
+                                PrefilledAddActivityFeature()
+                            }
                         )
                     } else {
                         AddTripActivityView.forTransportation(trip: store.trip)
@@ -219,7 +240,24 @@ struct ActivityCreationSheet: View {
                             trip: store.trip,
                             activityType: Lodging.self,
                             startTime: data.startTime,
-                            endTime: data.endTime ?? Calendar.current.date(byAdding: .day, value: 1, to: data.startTime) ?? data.startTime
+                            endTime: data.endTime ?? Calendar.current.date(byAdding: .day, value: 1, to: data.startTime) ?? data.startTime,
+                            store: Store(
+                                initialState: PrefilledAddActivityFeature.State(
+                                    trip: store.trip,
+                                    activityKind: .lodging,
+                                    editData: TripActivityEditData(
+                                        from: Lodging(
+                                            name: "New Lodging",
+                                            start: data.startTime,
+                                            end: data.endTime ?? Calendar.current.date(byAdding: .day, value: 1, to: data.startTime) ?? data.startTime,
+                                            trip: nil,
+                                            organization: nil
+                                        )
+                                    )
+                                )
+                            ) {
+                                PrefilledAddActivityFeature()
+                            }
                         )
                     } else {
                         AddTripActivityView.forLodging(trip: store.trip)
@@ -230,7 +268,24 @@ struct ActivityCreationSheet: View {
                             trip: store.trip,
                             activityType: Activity.self,
                             startTime: data.startTime,
-                            endTime: data.endTime ?? Calendar.current.date(byAdding: .hour, value: 2, to: data.startTime) ?? data.startTime
+                            endTime: data.endTime ?? Calendar.current.date(byAdding: .hour, value: 2, to: data.startTime) ?? data.startTime,
+                            store: Store(
+                                initialState: PrefilledAddActivityFeature.State(
+                                    trip: store.trip,
+                                    activityKind: .activity,
+                                    editData: TripActivityEditData(
+                                        from: Activity(
+                                            name: "New Activity",
+                                            start: data.startTime,
+                                            end: data.endTime ?? Calendar.current.date(byAdding: .hour, value: 2, to: data.startTime) ?? data.startTime,
+                                            trip: nil,
+                                            organization: nil
+                                        )
+                                    )
+                                )
+                            ) {
+                                PrefilledAddActivityFeature()
+                            }
                         )
                     } else {
                         AddTripActivityView.forActivity(trip: store.trip)

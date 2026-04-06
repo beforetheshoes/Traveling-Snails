@@ -70,7 +70,7 @@ enum ImportError: Error, LocalizedError {
 
 @MainActor
 @Observable
-final class DatabaseImportManager: @unchecked Sendable {
+final class DatabaseImportManager {
     var importProgress: Double = 0.0
     var importStatus: String = ""
     var isImporting: Bool = false
@@ -84,7 +84,7 @@ final class DatabaseImportManager: @unchecked Sendable {
 
     nonisolated init() {}
 
-    struct ImportResult: Equatable, Sendable {
+    struct ImportResult: Equatable {
         let tripsImported: Int
         let organizationsImported: Int
         let addressesImported: Int
@@ -708,6 +708,9 @@ final class DatabaseImportManager: @unchecked Sendable {
         let transportationToSave = transportation
         try? await database.write { db in
             try Transportation.upsert { transportationToSave }.execute(db)
+            // Ensure transportations always have at least one leg after multi-leg support.
+            try TransportationLeg.where { $0.transportationID.eq(transportationToSave.id) }.delete().execute(db)
+            try TransportationLeg.insert { TransportationLeg.makeDefaultLeg(for: transportationToSave) }.execute(db)
         }
         return transportationToSave
     }

@@ -45,6 +45,11 @@ nonisolated struct Trip: Identifiable {
         hasStartDate && hasEndDate
     }
 
+    var isPastTrip: Bool {
+        guard hasEndDate else { return false }
+        return endDate < Date.now
+    }
+
     var effectiveStartDate: Date? {
         hasStartDate ? startDate : nil
     }

@@ -41,19 +41,33 @@ nonisolated struct Address: Hashable, Identifiable {
         self.formattedAddress = formattedAddress
     }
 
-    init(from placemark: MKPlacemark) {
-        let street = [placemark.subThoroughfare, placemark.thoroughfare]
-            .compactMap { $0 }.joined(separator: " ")
+    @available(iOS 26.0, macOS 26.0, *)
+    init(from mapItem: MKMapItem) {
+        let coordinate = mapItem.location.coordinate
+
+        if let representations = mapItem.addressRepresentations {
+            self.init(
+                street: mapItem.address?.shortAddress ?? "",
+                city: representations.cityName ?? "",
+                state: "",
+                country: representations.regionName ?? "",
+                postalCode: "",
+                latitude: coordinate.latitude,
+                longitude: coordinate.longitude,
+                formattedAddress: representations.fullAddress(includingRegion: true, singleLine: false) ?? mapItem.name ?? ""
+            )
+            return
+        }
 
         self.init(
-            street: street,
-            city: placemark.locality ?? "",
-            state: placemark.administrativeArea ?? "",
-            country: placemark.country ?? "",
-            postalCode: placemark.postalCode ?? "",
-            latitude: placemark.coordinate.latitude,
-            longitude: placemark.coordinate.longitude,
-            formattedAddress: placemark.title ?? ""
+            street: mapItem.address?.shortAddress ?? "",
+            city: "",
+            state: "",
+            country: "",
+            postalCode: "",
+            latitude: coordinate.latitude,
+            longitude: coordinate.longitude,
+            formattedAddress: mapItem.address?.fullAddress ?? mapItem.name ?? ""
         )
     }
 

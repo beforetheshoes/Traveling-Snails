@@ -20,12 +20,12 @@ struct CompactDayView: View {
             VStack(spacing: 4) {
                 Text(date.formatted(.dateTime.weekday(.abbreviated)))
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
 
                 Text("\(calendar.component(.day, from: date))")
                     .font(.title2)
                     .fontWeight(isToday ? .bold : .medium)
-                    .foregroundColor(isToday ? .white : .primary)
+                    .foregroundStyle(isToday ? .white : .primary)
                     .frame(width: 36, height: 36)
                     .background(isToday ? Color.blue : Color.clear)
                     .clipShape(Circle())
@@ -51,7 +51,7 @@ struct CompactDayView: View {
         .padding(8)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(activities.isEmpty ? Color.clear : Color(.systemGray6))
+                .fill(activities.isEmpty ? Color.clear : Color.systemGray6)
                 .stroke(isToday ? Color.blue : Color.clear, lineWidth: 2)
         )
     }

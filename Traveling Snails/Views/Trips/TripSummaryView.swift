@@ -35,23 +35,6 @@ struct TripSummaryView: View {
                     .foregroundStyle(.secondary)
             }
             
-            // Sharing status
-            if trip.shareID != nil {
-                Divider()
-                    .frame(height: 30)
-                
-                VStack {
-                    Image(systemName: "person.2.fill")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .foregroundStyle(.blue)
-
-                    Text("Shared")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
             Divider()
                 .frame(height: 30)
 
@@ -95,7 +78,7 @@ struct TripSummaryView: View {
             }
         }
         .padding()
-        .background(Color(.systemBackground))
+        .background(Color.systemBackground)
         .clipShape(.rect(cornerRadius: 12))
         .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
         .padding(.horizontal)

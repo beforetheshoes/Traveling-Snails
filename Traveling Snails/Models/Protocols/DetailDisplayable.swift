@@ -27,7 +27,7 @@ struct DetailSection {
         self.title = title
         self.rows = rows
         if let textContent = textContent, !textContent.isEmpty {
-            self.content = AnyView(
+            self.content = AnyView.init(
                 Text(textContent)
                     .font(.body)
             )
@@ -90,9 +90,9 @@ struct GenericDetailView: View {
                 .padding()
             }
             .navigationTitle(title)
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationBarTitle()
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
                 }
             }

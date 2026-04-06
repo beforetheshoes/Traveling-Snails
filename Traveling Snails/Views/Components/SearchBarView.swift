@@ -20,7 +20,7 @@ struct SearchBarView: View {
     var body: some View {
         HStack {
             Image(systemName: "magnifyingglass")
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
 
             TextField(placeholder, text: $text)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
@@ -30,7 +30,7 @@ struct SearchBarView: View {
                     text = ""
                 }
                 .font(.caption)
-                .foregroundColor(.blue)
+                .foregroundStyle(.blue)
             }
         }
         .padding(.horizontal)

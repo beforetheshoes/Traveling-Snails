@@ -6,16 +6,21 @@
 
 import Combine
 import SwiftUI
+import os
 
 // MARK: - Localization Manager
 
 @Observable
-final class LocalizationManager: @unchecked Sendable {
+final class LocalizationManager: @unchecked Swift.Sendable {
     static let shared = LocalizationManager()
-    
+    private static let localizationDebuggingState = OSAllocatedUnfairLock(initialState: false)
+
     /// Enable/disable missing translation debug logging
     /// Set to true to log missing translations during development
-    nonisolated(unsafe) static var isLocalizationDebuggingEnabled: Bool = false
+    static var isLocalizationDebuggingEnabled: Bool {
+        get { localizationDebuggingState.withLock { $0 } }
+        set { localizationDebuggingState.withLock { $0 = newValue } }
+    }
 
     private(set) var currentLanguage: String
     private var bundle: Bundle
@@ -85,7 +90,23 @@ final class LocalizationManager: @unchecked Sendable {
 
     func localizedString(for key: String, arguments: CVarArg...) -> String {
         let format = localizedString(for: key)
-        return String(format: format, arguments: arguments)
+        guard !arguments.isEmpty else { return format }
+
+        var rendered = format
+        for argument in arguments {
+            if let placeholderRange = rendered.range(of: "%@") {
+                rendered.replaceSubrange(placeholderRange, with: String(describing: argument))
+                continue
+            }
+            if let placeholderRange = rendered.range(of: "%d") {
+                rendered.replaceSubrange(placeholderRange, with: String(describing: argument))
+                continue
+            }
+            if let placeholderRange = rendered.range(of: "%f") {
+                rendered.replaceSubrange(placeholderRange, with: String(describing: argument))
+            }
+        }
+        return rendered
     }
 }
 

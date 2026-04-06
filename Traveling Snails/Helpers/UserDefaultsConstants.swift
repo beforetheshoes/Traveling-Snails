@@ -19,6 +19,10 @@ enum UserDefaultsConstants {
     /// Used in: SettingsClient.swift, BiometricAuthManager.swift
     static let biometricTimeoutMinutes = "biometricTimeoutMinutes"
 
+    /// Key for hiding past trips in the trips list (default: true)
+    /// Used in: TripsNavigatorView.swift
+    static let hidePastTrips = "hidePastTrips"
+
     // MARK: - Environment Detection Keys
 
     /// Key for detecting if the app is running in test mode

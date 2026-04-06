@@ -9,12 +9,6 @@ import SQLiteData
 import SwiftUI
 
 struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
-    private enum ActiveSheet: Identifiable {
-        case organizationPicker
-
-        var id: Int { 0 }
-    }
-
     let trip: Trip
     let activityType: T.Type
     let startTime: Date
@@ -28,25 +22,14 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
         activityType: T.Type,
         startTime: Date,
         endTime: Date,
-        store: StoreOf<PrefilledAddActivityFeature>? = nil
+        store: StoreOf<PrefilledAddActivityFeature>
     ) {
         self.trip = trip
         self.activityType = activityType
         self.startTime = startTime
         self.endTime = endTime
 
-        // Create prefilled edit data based on activity type
-        let template = Self.createTemplate(for: activityType, startTime: startTime, endTime: endTime)
-        let resolvedStore = store ?? Store(
-            initialState: PrefilledAddActivityFeature.State(
-                trip: trip,
-                activityKind: Self.activityKind(for: activityType),
-                editData: TripActivityEditData(from: template)
-            )
-        ) {
-            PrefilledAddActivityFeature()
-        }
-        self._store = State(initialValue: resolvedStore)
+        self._store = State(initialValue: store)
     }
 
     private static func createTemplate(for type: T.Type, startTime: Date, endTime: Date) -> T {
@@ -191,7 +174,7 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
                     }
 
                     Button {
-                        store.showingOrganizationPicker = true
+                        store.send(.showOrganizationPicker)
                     } label: {
                         HStack {
                             Text(store.editData.organization?.name ?? "Select organization")
@@ -205,7 +188,7 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
                         }
                         .padding(.vertical, 12)
                         .padding(.horizontal, 16)
-                        .background(Color(.systemGray6))
+                        .background(Color.systemGray6)
                         .clipShape(.rect(cornerRadius: 8))
                     }
                     .buttonStyle(.plain)
@@ -270,7 +253,7 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
                     }
                     .padding(.vertical, 12)
                     .padding(.horizontal, 16)
-                    .background(Color(.systemGray6))
+                    .background(Color.systemGray6)
                     .clipShape(.rect(cornerRadius: 8))
                 }
                 .padding()
@@ -323,9 +306,9 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
             .padding()
         }
         .navigationTitle("New \(template.activityType.rawValue)")
-        .navigationBarTitleDisplayMode(.inline)
+        .inlineNavigationBarTitle()
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
+            ToolbarItem(placement: .platformLeading) {
                 Button("Cancel") {
                     if !store.isSaving {
                         dismiss()
@@ -334,12 +317,14 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
                 .disabled(store.isSaving)
             }
         }
-        .sheet(item: organizationSheet) { sheet in
-            switch sheet {
-            case .organizationPicker:
-                NavigationStack {
-                    OrganizationPicker(selectedOrganization: $store.editData.organization)
-                }
+        .sheet(
+            item: $store.scope(state: \.organizationPicker, action: \.organizationPicker)
+        ) { pickerStore in
+            NavigationStack {
+                OrganizationPicker(
+                    selectedOrganization: $store.editData.organization,
+                    store: pickerStore
+                )
             }
         }
         .onAppear {
@@ -361,14 +346,4 @@ struct PrefilledAddActivityView<T: TripActivityProtocol>: View {
         store.send(.saveTapped)
     }
 
-    private var organizationSheet: Binding<ActiveSheet?> {
-        Binding(
-            get: {
-                store.showingOrganizationPicker ? .organizationPicker : nil
-            },
-            set: { newValue in
-                store.showingOrganizationPicker = (newValue != nil)
-            }
-        )
-    }
 }

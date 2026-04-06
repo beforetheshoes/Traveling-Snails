@@ -12,21 +12,16 @@ struct AddTripActivityView: View {
     @Environment(\.dismiss) private var dismiss
 
     init(
-        trip: Trip,
-        activityType: ActivityType,
-        store: StoreOf<TripActivityFormFeature>? = nil
+        store: StoreOf<TripActivityFormFeature>
     ) {
-        let resolvedStore = store ?? Store(initialState: TripActivityFormFeature.State(trip: trip, activityType: activityType)) {
-            TripActivityFormFeature()
-        }
-        self._store = State(initialValue: resolvedStore)
+        self._store = State(initialValue: store)
     }
 
     var body: some View {
         NavigationStack {
             AddTripActivityFormView(store: store)
                 .navigationTitle("Add \(store.state.activityType.displayName)")
-                .navigationBarTitleDisplayMode(.inline)
+                .inlineNavigationBarTitle()
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
                         Button("Cancel") {
@@ -40,21 +35,34 @@ struct AddTripActivityView: View {
 
 extension AddTripActivityView {
     static func forActivity(trip: Trip) -> AddTripActivityView {
-        AddTripActivityView(trip: trip, activityType: .activity)
+        AddTripActivityView(
+            store: StoreOf<TripActivityFormFeature>.init(initialState: TripActivityFormFeature.State(trip: trip, activityType: .activity)) {
+                TripActivityFormFeature()
+            }
+        )
     }
 
     static func forLodging(trip: Trip) -> AddTripActivityView {
-        AddTripActivityView(trip: trip, activityType: .lodging)
+        AddTripActivityView(
+            store: StoreOf<TripActivityFormFeature>.init(initialState: TripActivityFormFeature.State(trip: trip, activityType: .lodging)) {
+                TripActivityFormFeature()
+            }
+        )
     }
 
     static func forTransportation(trip: Trip) -> AddTripActivityView {
-        AddTripActivityView(trip: trip, activityType: .transportation)
+        AddTripActivityView(
+            store: StoreOf<TripActivityFormFeature>.init(initialState: TripActivityFormFeature.State(trip: trip, activityType: .transportation)) {
+                TripActivityFormFeature()
+            }
+        )
     }
 }
 
 #Preview {
     AddTripActivityView(
-        trip: Trip(name: "Test Trip"),
-        activityType: .activity
+        store: StoreOf<TripActivityFormFeature>.init(initialState: TripActivityFormFeature.State(trip: Trip(name: "Test Trip"), activityType: .activity)) {
+            TripActivityFormFeature()
+        }
     )
 }

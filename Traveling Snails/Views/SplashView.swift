@@ -34,6 +34,7 @@ struct SplashView: View {
     }
 }
 
+#if os(iOS)
 struct AnimatedSVGView: UIViewRepresentable {
     func makeUIView(context: Context) -> WKWebView {
         let configuration = WKWebViewConfiguration()
@@ -192,6 +193,15 @@ struct AnimatedSVGView: UIViewRepresentable {
         }
     }
 }
+#else
+struct AnimatedSVGView: View {
+    var body: some View {
+        Image(systemName: "tortoise.fill")
+            .font(.system(size: 80))
+            .foregroundStyle(.white)
+    }
+}
+#endif
 
 // Alternative: If you want to customize the splash duration or add fade effects
 struct CustomizableSplashView: View {

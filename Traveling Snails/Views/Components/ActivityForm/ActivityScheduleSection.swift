@@ -84,7 +84,7 @@ struct ActivityScheduleSection<T: TripActivityProtocol>: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("Start Date & Time")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
 
                 DatePicker("Start", selection: $editData.start)
                     .datePickerStyle(.compact)
@@ -93,7 +93,7 @@ struct ActivityScheduleSection<T: TripActivityProtocol>: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("End Date & Time")
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
 
                 DatePicker("End", selection: $editData.end)
                     .datePickerStyle(.compact)
@@ -110,20 +110,20 @@ struct ActivityScheduleSection<T: TripActivityProtocol>: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(startLabel)
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
 
                     Text(formatStartDate())
                         .font(.headline)
 
                     Text(startTimezoneInfo())
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
 
                 Spacer()
 
                 Image(systemName: activityType == .transportation ? "arrow.right" : "arrow.down")
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
 
             // End time display
@@ -131,14 +131,14 @@ struct ActivityScheduleSection<T: TripActivityProtocol>: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(endLabel)
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
 
                     Text(formatEndDate())
                         .font(.headline)
 
                     Text(endTimezoneInfo())
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
 
                 Spacer()

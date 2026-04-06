@@ -14,28 +14,39 @@ struct AppView: View {
 
     var body: some View {
         let state = store.state
-        Group {
-            if !state.isInitialSyncComplete && state.trips.trips.isEmpty {
-                CloudKitSyncIndicatorView(isVisible: .constant(true))
-            } else {
-                mainContent(state: state)
+        rootContent(state: state)
+            .preferredColorScheme(colorSchemePreference.colorScheme)
+            .onAppear { store.send(.onAppear) }
+            .onChange(of: scenePhase) { _, newPhase in
+                store.send(.scenePhaseChanged(newPhase))
             }
-        }
-        .preferredColorScheme(colorSchemePreference.colorScheme)
-        .onAppear { store.send(.onAppear) }
-        .onChange(of: scenePhase) { _, newPhase in
-            store.send(.scenePhaseChanged(newPhase))
-        }
-        .onChange(of: state.trips.trips.map(\.id)) { _, ids in
-            store.send(.navigation(.reconcileAvailableTrips(ids)))
-        }
-        .onChange(of: state.organizations.organizations.map(\.id)) { _, ids in
-            store.send(.navigation(.reconcileAvailableOrganizations(ids)))
+            .onChange(of: state.trips.trips.map(\.id)) { _, ids in
+                store.send(.navigation(.reconcileAvailableTrips(ids)))
+            }
+            .onChange(of: state.collections.collections.map(\.id)) { _, ids in
+                store.send(.navigation(.reconcileAvailableCollections(ids)))
+            }
+            .onChange(of: state.organizations.organizations.map(\.id)) { _, ids in
+                store.send(.navigation(.reconcileAvailableOrganizations(ids)))
+            }
+
+
+    }
+
+    @ViewBuilder
+    private func rootContent(state: AppFeature.State) -> some View {
+        if !state.isInitialSyncComplete && state.trips.trips.isEmpty {
+            CloudKitSyncIndicatorView(isVisible: .constant(true))
+        } else {
+            mainContent(state: state)
         }
     }
 
     @ViewBuilder
     private func mainContent(state: AppFeature.State) -> some View {
+        #if os(macOS)
+        MacAppView(store: store)
+        #else
         let selectedTabBinding = Binding(
             get: { store.state.navigation.selectedTab },
             set: { store.send(.navigation(.selectTab($0))) }
@@ -45,6 +56,14 @@ struct AppView: View {
             set: { newID in
                 if let newID {
                     store.send(.navigation(.selectTrip(newID, source: .tripList)))
+                }
+            }
+        )
+        let selectedCollectionIDBinding = Binding(
+            get: { store.state.navigation.selectedCollectionID },
+            set: { newID in
+                if let newID {
+                    store.send(.navigation(.selectCollection(newID)))
                 }
             }
         )
@@ -73,61 +92,8 @@ struct AppView: View {
             return store.state.navigation.tripReselectTokenByTripID[selectedTripID, default: 0]
         }()
 
-        #if os(iOS)
         TabView(selection: selectedTabBinding) {
-            TripsNavigationView(
-                store: store.scope(state: \.trips, action: \.trips),
-                selectedTripID: selectedTripIDBinding,
-                tripPath: selectedTripPathBinding,
-                tripResetToken: tripResetToken,
-                onClearTripSelection: {
-                    store.send(.navigation(.clearTripSelection(reason: .explicit)))
-                },
-                onTripSelection: { trip, isReselect in
-                    if isReselect {
-                        store.send(.navigation(.reselectTrip(trip.id)))
-                    } else {
-                        store.send(.navigation(.selectTrip(trip.id, source: .tripList)))
-                    }
-                }
-            )
-            .tabItem { Label("Trips", systemImage: "airplane") }
-            .tag(AppFeature.AppTab.trips)
-
-            OrganizationsNavigationView(
-                store: store.scope(state: \.organizations, action: \.organizations),
-                selectedOrganizationID: selectedOrganizationIDBinding,
-                onOrganizationSelection: { organization in
-                    store.send(.navigation(.selectOrganization(organization.id)))
-                },
-                onOpenTrip: { tripID in
-                    store.send(.navigation(.selectTrip(tripID, source: .organization)))
-                    store.send(.navigation(.selectTab(.trips)))
-                }
-            )
-            .tabItem { Label("Organizations", systemImage: "building.2") }
-            .tag(AppFeature.AppTab.organizations)
-
-            SettingsRootView(
-                store: store.scope(state: \.settings, action: \.settings)
-            )
-            .tabItem { Label("Settings", systemImage: "gear") }
-            .tag(AppFeature.AppTab.settings)
-        }
-        #else
-        NavigationSplitView {
-            List {
-                Button("Trips") { store.send(.navigation(.selectTab(.trips))) }
-                    .listRowBackground(state.navigation.selectedTab == .trips ? Color.blue.opacity(0.2) : Color.clear)
-                Button("Organizations") { store.send(.navigation(.selectTab(.organizations))) }
-                    .listRowBackground(state.navigation.selectedTab == .organizations ? Color.blue.opacity(0.2) : Color.clear)
-                Button("Settings") { store.send(.navigation(.selectTab(.settings))) }
-                    .listRowBackground(state.navigation.selectedTab == .settings ? Color.blue.opacity(0.2) : Color.clear)
-            }
-            .navigationTitle("Traveling Snails")
-        } detail: {
-            switch state.navigation.selectedTab {
-            case .trips:
+            Tab("Trips", systemImage: "airplane", value: AppFeature.AppTab.trips) {
                 TripsNavigationView(
                     store: store.scope(state: \.trips, action: \.trips),
                     selectedTripID: selectedTripIDBinding,
@@ -144,7 +110,19 @@ struct AppView: View {
                         }
                     }
                 )
-            case .organizations:
+            }
+
+            Tab("Collections", systemImage: "square.stack", value: AppFeature.AppTab.collections) {
+                CollectionsNavigationView(
+                    store: store.scope(state: \.collections, action: \.collections),
+                    selectedCollectionID: selectedCollectionIDBinding,
+                    onCollectionSelected: { collection in
+                        store.send(.navigation(.selectCollection(collection.id)))
+                    }
+                )
+            }
+
+            Tab("Organizations", systemImage: "building.2", value: AppFeature.AppTab.organizations) {
                 OrganizationsNavigationView(
                     store: store.scope(state: \.organizations, action: \.organizations),
                     selectedOrganizationID: selectedOrganizationIDBinding,
@@ -156,7 +134,9 @@ struct AppView: View {
                         store.send(.navigation(.selectTab(.trips)))
                     }
                 )
-            case .settings:
+            }
+
+            Tab("Settings", systemImage: "gear", value: AppFeature.AppTab.settings) {
                 SettingsRootView(
                     store: store.scope(state: \.settings, action: \.settings)
                 )
@@ -169,3 +149,4 @@ struct AppView: View {
         ColorSchemePreference(rawValue: colorSchemeRawValue) ?? .system
     }
 }
+

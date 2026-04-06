@@ -13,7 +13,7 @@ struct FileAttachmentSearchView: View {
         var id: Int { 0 }
     }
 
-    @FetchAll private var allAttachments: [EmbeddedFileAttachment]
+    @FetchAll private var attachmentRecords: [EmbeddedFileAttachment]
 
     @State private var searchText = ""
     @State private var selectedFileType: FileType = .all
@@ -38,14 +38,14 @@ struct FileAttachmentSearchView: View {
     }
 
     var filteredAttachments: [EmbeddedFileAttachment] {
-        var filtered = allAttachments
+        var filtered = attachmentRecords
 
         // Filter by search text
         if !searchText.isEmpty {
             filtered = filtered.filter { attachment in
-                attachment.displayName.localizedCaseInsensitiveContains(searchText) ||
-                attachment.originalFileName.localizedCaseInsensitiveContains(searchText) ||
-                attachment.fileDescription.localizedCaseInsensitiveContains(searchText)
+                attachment.displayName.localizedStandardContains(searchText) ||
+                attachment.originalFileName.localizedStandardContains(searchText) ||
+                attachment.fileDescription.localizedStandardContains(searchText)
             }
         }
 
@@ -89,7 +89,7 @@ struct FileAttachmentSearchView: View {
                     }
                 }
                 .padding(.vertical)
-                .background(Color(.systemGroupedBackground))
+                .background(Color.systemGroupedBackground)
 
                 // Results
                 if filteredAttachments.isEmpty {
@@ -112,7 +112,7 @@ struct FileAttachmentSearchView: View {
             }
             .navigationTitle("All Attachments")
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .platformTrailing) {
                     Button {
                         activeSheet = .export
                     } label: {
@@ -127,9 +127,9 @@ struct FileAttachmentSearchView: View {
                     NavigationStack {
                         EmbeddedFileAttachmentExportView(attachments: filteredAttachments)
                             .navigationTitle("Export Attachments")
-                            .navigationBarTitleDisplayMode(.inline)
+                            .inlineNavigationBarTitle()
                             .toolbar {
-                                ToolbarItem(placement: .navigationBarTrailing) {
+                                ToolbarItem(placement: .platformTrailing) {
                                     Button("Done") { activeSheet = nil }
                                 }
                             }

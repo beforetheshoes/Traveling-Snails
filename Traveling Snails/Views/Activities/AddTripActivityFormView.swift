@@ -7,11 +7,6 @@ import ComposableArchitecture
 import SwiftUI
 
 struct AddTripActivityFormView: View {
-    private enum ActiveSheet: Identifiable {
-        case organizationPicker
-        var id: Int { 0 }
-    }
-
     @Bindable var store: StoreOf<TripActivityFormFeature>
     @Environment(\.dismiss) private var dismiss
 
@@ -29,12 +24,20 @@ struct AddTripActivityFormView: View {
             }
             .padding(.horizontal, 16)
         }
-        .sheet(item: Binding<ActiveSheet?>(
-            get: { store.showingOrganizationPicker ? .organizationPicker : nil },
-            set: { store.showingOrganizationPicker = $0 != nil }
-        )) { _ in
-            OrganizationPicker(
-                selectedOrganization: $store.editData.organization
+        .sheet(
+            item: $store.scope(state: \.organizationPicker, action: \.organizationPicker)
+        ) { pickerStore in
+            NavigationStack {
+                OrganizationPicker(
+                    selectedOrganization: $store.editData.organization,
+                    store: pickerStore
+                )
+            }
+        }
+        .navigationDestination(isPresented: $store.showingLegsEditor) {
+            TransportationLegsEditorView(
+                legs: $store.transportationLegs,
+                onAddLeg: { store.send(.addLegTapped) }
             )
         }
         .onAppear {
@@ -99,7 +102,7 @@ struct AddTripActivityFormView: View {
                 ActivityFormButton(
                     label: "Organization",
                     value: store.editData.organization?.name ?? "Select Organization"
-                ) { store.showingOrganizationPicker = true }
+                ) { store.send(.showOrganizationPicker) }
 
                 if store.supportsCustomLocation {
                     if store.editData.organization?.isNone == true {
@@ -130,23 +133,24 @@ struct AddTripActivityFormView: View {
         }
     }
 
+    @ViewBuilder
     private var scheduleSection: some View {
-        ActivitySectionCard(
-            headerIcon: store.activityType == .lodging ? "calendar.badge.plus" :
-                        store.activityType == .transportation ? store.currentIcon : "clock.fill",
-            headerTitle: "Schedule",
-            headerColor: colorFromString(store.color)
-        ) {
-            if store.activityType == .transportation {
-                TransportationDateTimeSection(
-                    trip: store.trip,
-                    startDate: $store.editData.start,
-                    endDate: $store.editData.end,
-                    startTimeZoneId: $store.editData.startTZId,
-                    endTimeZoneId: $store.editData.endTZId,
-                    address: store.locationAddress
-                )
-            } else {
+        if store.activityType == .transportation {
+            TransportationScheduleSectionView(
+                trip: store.trip,
+                icon: store.currentIcon,
+                color: colorFromString(store.color),
+                isEditing: true,
+                legs: $store.transportationLegs,
+                legsValidationError: store.legsValidationError,
+                showingLegsEditor: $store.showingLegsEditor
+            )
+        } else {
+            ActivitySectionCard(
+                headerIcon: store.activityType == .lodging ? "calendar.badge.plus" : "clock.fill",
+                headerTitle: "Schedule",
+                headerColor: colorFromString(store.color)
+            ) {
                 SingleLocationDateTimeSection(
                     startLabel: store.startLabel,
                     endLabel: store.endLabel,
@@ -275,7 +279,7 @@ struct AddTripActivityFormView: View {
                         }
                         .padding(.vertical, 8)
                         .padding(.horizontal, 8)
-                        .background(Color(.systemGray6))
+                        .background(Color.systemGray6)
                         .clipShape(.rect(cornerRadius: 8))
                     }
                 }

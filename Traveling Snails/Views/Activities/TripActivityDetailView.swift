@@ -12,22 +12,32 @@ struct TripActivityDetailView<T: TripActivityProtocol>: View {
     @Environment(\.dismiss) private var dismiss
     let activity: T
 
-    @FetchAll private var allAttachments: [EmbeddedFileAttachment]
+    @FetchAll private var fetchedAttachments: [EmbeddedFileAttachment]
     @State private var store: StoreOf<TripActivityDetailFeature>
 
     init(
         activity: T,
-        store: StoreOf<TripActivityDetailFeature>? = nil
+        store: StoreOf<TripActivityDetailFeature>
     ) {
         self.activity = activity
-        let resolvedStore = store ?? Store(
-            initialState: TripActivityDetailFeature.State(
-                snapshot: TripActivityDetailFeature.ActivityTarget(activity: activity)
+        switch activity.activityType {
+        case .activity:
+            self._fetchedAttachments = FetchAll(
+                EmbeddedFileAttachment.where { $0.activityID.eq(activity.id) }
+                    .order { $0.createdDate.desc() }
             )
-        ) {
-            TripActivityDetailFeature()
+        case .lodging:
+            self._fetchedAttachments = FetchAll(
+                EmbeddedFileAttachment.where { $0.lodgingID.eq(activity.id) }
+                    .order { $0.createdDate.desc() }
+            )
+        case .transportation:
+            self._fetchedAttachments = FetchAll(
+                EmbeddedFileAttachment.where { $0.transportationID.eq(activity.id) }
+                    .order { $0.createdDate.desc() }
+            )
         }
-        self._store = State(initialValue: resolvedStore)
+        self._store = State(initialValue: store)
     }
 
     /// Dynamic icon that updates based on current transportation type selection in edit mode
@@ -65,19 +75,31 @@ struct TripActivityDetailView<T: TripActivityProtocol>: View {
                         isEditing: store.isEditing,
                         color: activity.color,
                         supportsCustomLocation: activity.supportsCustomLocation,
-                        showingOrganizationPicker: { store.send(.sheetChanged(.organizationPicker)) },
+                        showingOrganizationPicker: { store.send(.showOrganizationPicker) },
                         showMap: { store.send(.sheetChanged(.map)) }
                     )
                 }
 
                 // Schedule Section
-                ActivityScheduleSection(
-                    activity: activity,
-                    editData: $store.editData,
-                    isEditing: store.isEditing,
-                    color: activity.color,
-                    trip: activity.trip
-                )
+                if activity.activityType == .transportation {
+                    TransportationScheduleSectionView(
+                        trip: activity.trip ?? Trip(name: ""),
+                        icon: currentIcon,
+                        color: activity.color,
+                        isEditing: store.isEditing,
+                        legs: $store.transportationLegs,
+                        legsValidationError: store.legsValidationError,
+                        showingLegsEditor: $store.showingLegsEditor
+                    )
+                } else {
+                    ActivityScheduleSection(
+                        activity: activity,
+                        editData: $store.editData,
+                        isEditing: store.isEditing,
+                        color: activity.color,
+                        trip: activity.trip
+                    )
+                }
 
                 // Cost & Payment Section
                 ActivityCostSection(
@@ -117,9 +139,9 @@ struct TripActivityDetailView<T: TripActivityProtocol>: View {
             .padding(.horizontal, 16)
         }
         .navigationTitle(store.isEditing ? "Edit \(activity.activityType.rawValue)" : "\(activity.activityType.rawValue) Details")
-        .navigationBarTitleDisplayMode(.inline)
+        .inlineNavigationBarTitle()
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .platformTrailing) {
                 Button(store.isEditing ? "Save" : "Edit") {
                     if store.isEditing {
                         store.send(.saveTapped)
@@ -130,11 +152,27 @@ struct TripActivityDetailView<T: TripActivityProtocol>: View {
             }
 
             if store.isEditing {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .platformLeading) {
                     Button("Cancel") {
                         store.send(.cancelEditing)
                     }
                 }
+            }
+        }
+        .navigationDestination(isPresented: $store.showingLegsEditor) {
+            TransportationLegsEditorView(
+                legs: $store.transportationLegs,
+                onAddLeg: { store.send(.addLegTapped) }
+            )
+        }
+        .sheet(
+            item: $store.scope(state: \.organizationPicker, action: \.organizationPicker)
+        ) { pickerStore in
+            NavigationStack {
+                OrganizationPicker(
+                    selectedOrganization: $store.editData.organization,
+                    store: pickerStore
+                )
             }
         }
         .sheet(
@@ -145,17 +183,15 @@ struct TripActivityDetailView<T: TripActivityProtocol>: View {
         ) { sheet in
             switch sheet {
             case .organizationPicker:
-                NavigationStack {
-                    OrganizationPicker(selectedOrganization: $store.editData.organization)
-                }
+                EmptyView()
             case .map:
                 if let address = displayAddress {
                     NavigationStack {
                         AddressMapView(address: address)
                             .navigationTitle(activity.displayLocation)
-                            .navigationBarTitleDisplayMode(.inline)
+                            .inlineNavigationBarTitle()
                             .toolbar {
-                                ToolbarItem(placement: .navigationBarTrailing) {
+                                ToolbarItem(placement: .platformTrailing) {
                                     Button("Done") {
                                         store.send(.sheetChanged(nil))
                                     }
@@ -181,7 +217,7 @@ struct TripActivityDetailView<T: TripActivityProtocol>: View {
             store.send(.onAppear)
             store.send(.fetchedAttachmentsChanged(fetchedAttachments))
         }
-        .onChange(of: allAttachments) { _, _ in
+        .onChange(of: fetchedAttachments) { _, _ in
             store.send(.fetchedAttachmentsChanged(fetchedAttachments))
         }
         .onChange(of: store.shouldDismiss) { _, shouldDismiss in
@@ -217,19 +253,6 @@ struct TripActivityDetailView<T: TripActivityProtocol>: View {
         .padding(.bottom)
     }
     
-    private var fetchedAttachments: [EmbeddedFileAttachment] {
-        allAttachments.filter { attachment in
-            switch activity.activityType {
-            case .activity:
-                return attachment.activityID == activity.id
-            case .lodging:
-                return attachment.lodgingID == activity.id
-            case .transportation:
-                return attachment.transportationID == activity.id
-            }
-        }
-    }
-
     private var displayAddress: Address? {
         if store.isEditing {
             return store.editData.customAddress ?? store.editData.organization?.address

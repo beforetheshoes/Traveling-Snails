@@ -2,12 +2,12 @@ import ComposableArchitecture
 import Foundation
 import SwiftUI
 
-struct SettingsSnapshot: Equatable, Sendable {
+struct SettingsSnapshot: Equatable {
     var colorSchemePreference: ColorSchemePreference
     var biometricTimeoutMinutes: Int
 }
 
-enum ColorSchemePreference: String, CaseIterable, Equatable, Sendable {
+enum ColorSchemePreference: String, CaseIterable, Equatable {
     case system
     case light
     case dark
@@ -24,7 +24,7 @@ enum ColorSchemePreference: String, CaseIterable, Equatable, Sendable {
     }
 }
 
-struct SettingsClient: Sendable {
+struct SettingsClient {
     var load: @Sendable () async -> SettingsSnapshot
     var saveColorScheme: @Sendable (ColorSchemePreference) async -> Void
     var saveBiometricTimeout: @Sendable (Int) async -> Void

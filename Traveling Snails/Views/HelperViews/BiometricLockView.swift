@@ -68,7 +68,7 @@ struct BiometricLockView: View {
             Spacer()
         }
         .navigationTitle(trip.name)
-        .navigationBarTitleDisplayMode(.inline)
+        .inlineNavigationBarTitle()
         .task {
             let biometricType = await biometricTypeProvider()
             isFaceID = biometricType == .faceID

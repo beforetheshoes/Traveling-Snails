@@ -46,6 +46,12 @@ struct AddOrganizationFeature {
         case dismissSuspiciousURLAlert
         case dismissSaveErrorAlert
         case dismissHandled
+        case delegate(Delegate)
+
+        @CasePathable
+        enum Delegate: Equatable {
+            case organizationCreated(Organization.ID)
+        }
     }
 
     @Dependency(\.defaultDatabase) private var database
@@ -97,6 +103,9 @@ struct AddOrganizationFeature {
                 state.isSaving = false
                 state.createdOrganizationID = organizationID
                 state.shouldDismiss = true
+                return .send(.delegate(.organizationCreated(organizationID)))
+
+            case .delegate:
                 return .none
 
             case .saveFailed(let message):

@@ -116,7 +116,7 @@ struct AddressAutocompleteView: View {
                             .padding(.horizontal, 16)
                         }
                         .buttonStyle(PlainButtonStyle())
-                        .background(Color(.systemBackground))
+                        .background(Color.systemBackground)
 
                         if completion != searchResults.prefix(5).last {
                             Divider()
@@ -124,7 +124,7 @@ struct AddressAutocompleteView: View {
                         }
                     }
                 }
-                .background(Color(.systemBackground))
+                .background(Color.systemBackground)
                 .clipShape(.rect(cornerRadius: 8))
                 .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
                 .padding(.top, 4)
@@ -263,7 +263,8 @@ struct AddressAutocompleteView: View {
                 return
             }
 
-            let address = Address(from: mapItem.placemark)
+            guard #available(iOS 26.0, macOS 26.0, *) else { return }
+            let address = Address(from: mapItem)
             selectedAddress = address
             searchText = address.displayAddress
             hasSelectedAddress = true

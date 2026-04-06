@@ -19,7 +19,10 @@ extension DependencyValues {
             Activity.self,
             Lodging.self,
             Transportation.self,
+            TransportationLeg.self,
             EmbeddedFileAttachment.self,
+            Collection.self,
+            BookItem.self,
             delegate: syncEngineDelegate
         )
 

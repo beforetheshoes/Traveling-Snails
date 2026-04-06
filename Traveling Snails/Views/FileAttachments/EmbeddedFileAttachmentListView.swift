@@ -7,6 +7,11 @@
 import ComposableArchitecture
 import SQLiteData
 import SwiftUI
+#if os(iOS)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 
 /// File attachment list view with enhanced UI components and error handling
 struct EmbeddedFileAttachmentListView: View {
@@ -19,15 +24,12 @@ struct EmbeddedFileAttachmentListView: View {
         attachments: [EmbeddedFileAttachment],
         onAttachmentAdded: @escaping (EmbeddedFileAttachment) -> Void,
         onAttachmentRemoved: @escaping (EmbeddedFileAttachment) -> Void,
-        store: StoreOf<EmbeddedFileAttachmentListFeature>? = nil
+        store: StoreOf<EmbeddedFileAttachmentListFeature>
     ) {
         self.attachments = attachments
         self.onAttachmentAdded = onAttachmentAdded
         self.onAttachmentRemoved = onAttachmentRemoved
-        let resolvedStore = store ?? Store(initialState: EmbeddedFileAttachmentListFeature.State()) {
-            EmbeddedFileAttachmentListFeature()
-        }
-        self._store = State(initialValue: resolvedStore)
+        self._store = State(initialValue: store)
     }
 
     var body: some View {
@@ -157,7 +159,11 @@ struct EnhancedAttachmentRowView: View {
 
     @State private var showingDeleteConfirmation = false
     @State private var activeSheet: ActiveSheet?
+    #if os(iOS)
     @State private var thumbnailImage: UIImage?
+    #elseif os(macOS)
+    @State private var thumbnailImage: NSImage?
+    #endif
     @State private var thumbnailData: Data?
 
     var body: some View {
@@ -237,7 +243,12 @@ struct EnhancedAttachmentRowView: View {
             case .quickLook:
                 CrossDeviceQuickLookView(attachment: attachment)
             case .edit:
-                CrossDeviceEditFileAttachmentView(attachment: attachment)
+                CrossDeviceEditFileAttachmentView(
+                    attachment: attachment,
+                    store: StoreOf<CrossDeviceEditFileAttachmentFeature>.init(initialState: CrossDeviceEditFileAttachmentFeature.State(attachment: attachment)) {
+                        CrossDeviceEditFileAttachmentFeature()
+                    }
+                )
             }
         }
         .onAppear {
@@ -252,7 +263,7 @@ struct EnhancedAttachmentRowView: View {
     private var fileIcon: some View {
         Group {
             if attachment.isImage, let image = thumbnailImage {
-                Image(uiImage: image)
+                platformImage(image)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .frame(width: 44, height: 44)
@@ -312,12 +323,29 @@ struct EnhancedAttachmentRowView: View {
         }
     }
 
+    #if os(iOS)
+    private func platformImage(_ image: UIImage) -> Image {
+        Image(uiImage: image)
+    }
+
     private func decodeThumbnail(from data: Data?) async -> UIImage? {
         guard let data else { return nil }
-        return await Task.detached(priority: .userInitiated) {
+        return await Task(priority: .userInitiated) {
             UIImage(data: data)
         }.value
     }
+    #elseif os(macOS)
+    private func platformImage(_ image: NSImage) -> Image {
+        Image(nsImage: image)
+    }
+
+    private func decodeThumbnail(from data: Data?) async -> NSImage? {
+        guard let data else { return nil }
+        return await Task(priority: .userInitiated) {
+            NSImage(data: data)
+        }.value
+    }
+    #endif
 }
 
 // MARK: - EmbeddedFileAttachment Extensions
@@ -371,7 +399,10 @@ extension EmbeddedFileAttachment {
     EmbeddedFileAttachmentListView(
         attachments: [],
         onAttachmentAdded: { _ in },
-        onAttachmentRemoved: { _ in }
+        onAttachmentRemoved: { _ in },
+        store: StoreOf<EmbeddedFileAttachmentListFeature>.init(initialState: EmbeddedFileAttachmentListFeature.State()) {
+            EmbeddedFileAttachmentListFeature()
+        }
     )
     .padding()
 }

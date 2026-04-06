@@ -54,14 +54,14 @@ protocol AuthenticationService: Sendable {
 }
 
 /// Represents the type of biometric authentication available
-enum BiometricType: Sendable {
+enum BiometricType {
     case none
     case faceID
     case touchID
 }
 
 /// Errors that can occur during authentication
-enum AuthenticationError: LocalizedError, Sendable {
+enum AuthenticationError: LocalizedError {
     case notAvailable
     case notEnrolled
     case lockout

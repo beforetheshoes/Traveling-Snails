@@ -20,15 +20,6 @@ struct DatabaseImportFeature {
         var importError: String?
         var importSuccess = false
         var importResult: DatabaseImportManager.ImportResult?
-
-        static func == (lhs: State, rhs: State) -> Bool {
-            lhs.importProgress == rhs.importProgress &&
-            lhs.importStatus == rhs.importStatus &&
-            lhs.isImporting == rhs.isImporting &&
-            lhs.importError == rhs.importError &&
-            lhs.importSuccess == rhs.importSuccess &&
-            lhs.importResult == rhs.importResult
-        }
     }
 
     enum Action: Equatable {

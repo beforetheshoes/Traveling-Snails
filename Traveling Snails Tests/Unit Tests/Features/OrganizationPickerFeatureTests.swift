@@ -20,7 +20,7 @@ struct OrganizationPickerFeatureTests {
         }
     }
 
-    @Test("creating organization closes sheet and dismisses")
+    @Test("creating organization via delegate closes sheet and dismisses")
     func creationDismisses() async {
         let id = Organization.ID()
 
@@ -29,12 +29,12 @@ struct OrganizationPickerFeatureTests {
         }
 
         await store.send(.addNewTapped) {
-            $0.showingAddOrganization = true
+            $0.addOrganization = AddOrganizationFeature.State()
         }
 
-        await store.send(.organizationCreated(id)) {
+        await store.send(.addOrganization(.presented(.delegate(.organizationCreated(id))))) {
             $0.selectedOrganizationID = id
-            $0.showingAddOrganization = false
+            $0.addOrganization = nil
             $0.shouldDismiss = true
         }
     }

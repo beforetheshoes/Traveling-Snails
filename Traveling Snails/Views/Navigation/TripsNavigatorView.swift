@@ -1,3 +1,4 @@
+import ComposableArchitecture
 import SQLiteData
 import SwiftUI
 
@@ -22,19 +23,27 @@ struct TripsNavigatorView: View {
 
     @State private var searchText = ""
     @State private var activeSheet: ActiveSheet?
+    @AppStorage(UserDefaultsConstants.hidePastTrips) private var hidePastTrips = true
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
 
     private var isCompact: Bool {
-        #if os(iOS)
         horizontalSizeClass == .compact
-        #else
-        false
-        #endif
+    }
+
+    private var visibleTrips: [Trip] {
+        if hidePastTrips {
+            return trips.filter { !$0.isPastTrip }
+        }
+        return trips
+    }
+
+    private var hiddenPastTripsCount: Int {
+        trips.filter(\.isPastTrip).count
     }
 
     private var filteredTrips: [Trip] {
-        guard !searchText.isEmpty else { return trips }
-        return trips.filter { trip in
+        guard !searchText.isEmpty else { return visibleTrips }
+        return visibleTrips.filter { trip in
             trip.displayName.localizedStandardContains(searchText) ||
             (trip.displaySubtitle?.localizedStandardContains(searchText) ?? false)
         }
@@ -60,15 +69,18 @@ struct TripsNavigatorView: View {
                     onClearTripSelection()
                     return
                 }
-                if selectedTripID != newSelectedTripID {
-                    selectedTripID = newSelectedTripID
-                }
                 let newTripPath = newPath.dropFirst().compactMap { route -> TripRoute? in
                     guard case let .activity(activityRoute) = route else { return nil }
                     return activityRoute
                 }
-                if tripPath != newTripPath {
-                    tripPath = newTripPath
+                let tripIDChanged = selectedTripID != newSelectedTripID
+                let tripPathChanged = tripPath != newTripPath
+                guard tripIDChanged || tripPathChanged else { return }
+                // Batch both mutations in a single transaction to avoid
+                // multiple navigation updates per frame
+                withTransaction(Transaction()) {
+                    if tripIDChanged { selectedTripID = newSelectedTripID }
+                    if tripPathChanged { tripPath = newTripPath }
                 }
             }
         )
@@ -98,6 +110,21 @@ struct TripsNavigatorView: View {
                         }
                 }
             } else {
+                #if os(macOS)
+                HStack(spacing: 0) {
+                    listContent
+                        .frame(minWidth: 220, idealWidth: 260, maxWidth: 300)
+                    Divider()
+                    Group {
+                        if let selectedTrip {
+                            regularTripDetail(for: selectedTrip)
+                        } else {
+                            noSelectionView
+                        }
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                #else
                 NavigationSplitView {
                     listContent
                 } detail: {
@@ -107,6 +134,7 @@ struct TripsNavigatorView: View {
                         noSelectionView
                     }
                 }
+                #endif
             }
         }
     }
@@ -156,19 +184,37 @@ struct TripsNavigatorView: View {
         }
         .navigationTitle(NSLocalizedString("navigation.trips.title", value: "Trips", comment: "Trips navigation title"))
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    activeSheet = .addTrip
-                } label: {
-                    Label(NSLocalizedString("navigation.trips.add", value: "Add Trip", comment: "Add trip button"), systemImage: "plus")
+            ToolbarItem(placement: .platformTrailing) {
+                HStack(spacing: 12) {
+                    if hiddenPastTripsCount > 0 {
+                        Button {
+                            withAnimation { hidePastTrips.toggle() }
+                        } label: {
+                            Label(
+                                hidePastTrips ? "\(hiddenPastTripsCount) past hidden" : "Showing all",
+                                systemImage: hidePastTrips ? "eye.slash" : "eye"
+                            )
+                        }
+                        .accessibilityIdentifier("TogglePastTrips")
+                    }
+
+                    Button {
+                        activeSheet = .addTrip
+                    } label: {
+                        Label(NSLocalizedString("navigation.trips.add", value: "Add Trip", comment: "Add trip button"), systemImage: "plus")
+                    }
+                    .accessibilityIdentifier("AddButton_Trips")
                 }
-                .accessibilityIdentifier("AddButton_Trips")
             }
         }
         .sheet(item: $activeSheet) { sheet in
             switch sheet {
             case .addTrip:
-                AddTrip()
+                AddTrip(
+                    store: StoreOf<AddTripFeature>.init(initialState: AddTripFeature.State()) {
+                        AddTripFeature()
+                    }
+                )
             }
         }
     }
@@ -185,7 +231,16 @@ struct TripsNavigatorView: View {
                     }
                 }
             ),
-            resetToken: tripResetToken
+            resetToken: tripResetToken,
+            store: Store(
+                initialState: TripDetailFeature.State(
+                    trip: trip,
+                    initialPath: tripPath,
+                    resetToken: tripResetToken
+                )
+            ) {
+                TripDetailFeature()
+            }
         )
     }
 
@@ -194,7 +249,16 @@ struct TripsNavigatorView: View {
             IsolatedTripDetailView(
                 trip: trip,
                 path: $tripPath,
-                resetToken: tripResetToken
+                resetToken: tripResetToken,
+                store: Store(
+                    initialState: TripDetailFeature.State(
+                        trip: trip,
+                        initialPath: tripPath,
+                        resetToken: tripResetToken
+                    )
+                ) {
+                    TripDetailFeature()
+                }
             )
             .navigationDestination(for: TripRoute.self) { route in
                 if let destination = TripRouteMapper.destination(from: route, in: trip) {
@@ -210,11 +274,38 @@ struct TripsNavigatorView: View {
     private func tripDestinationView(_ destination: DestinationType) -> some View {
         switch destination {
         case .lodging(let lodging):
-            TripActivityDetailView<Lodging>(activity: lodging)
+            TripActivityDetailView<Lodging>(
+                activity: lodging,
+                store: Store(
+                    initialState: TripActivityDetailFeature.State(
+                        snapshot: TripActivityDetailFeature.ActivityTarget(activity: lodging)
+                    )
+                ) {
+                    TripActivityDetailFeature()
+                }
+            )
         case .transportation(let transportation):
-            TripActivityDetailView<Transportation>(activity: transportation)
+            TripActivityDetailView<Transportation>(
+                activity: transportation,
+                store: Store(
+                    initialState: TripActivityDetailFeature.State(
+                        snapshot: TripActivityDetailFeature.ActivityTarget(activity: transportation)
+                    )
+                ) {
+                    TripActivityDetailFeature()
+                }
+            )
         case .activity(let activity):
-            TripActivityDetailView<Activity>(activity: activity)
+            TripActivityDetailView<Activity>(
+                activity: activity,
+                store: Store(
+                    initialState: TripActivityDetailFeature.State(
+                        snapshot: TripActivityDetailFeature.ActivityTarget(activity: activity)
+                    )
+                ) {
+                    TripActivityDetailFeature()
+                }
+            )
         }
     }
 }

@@ -1,3 +1,4 @@
+import CloudKit
 import ComposableArchitecture
 import Foundation
 import SQLiteData
@@ -21,20 +22,22 @@ struct TripDetailFeature {
         case addLodging
         case addTransportation
         case editTrip
-        case shareTrip
 
         var id: String { rawValue }
     }
 
     @ObservableState
     struct State: Equatable {
-        let trip: Trip
+        var trip: Trip
         var path: [TripRoute]
         var resetToken: Int
         var lastHandledResetToken: Int
 
         var viewMode: ViewMode = .list
         var activeSheet: ActiveSheet?
+        var sharedRecord: SharedRecord?
+        var isPreparingShare = false
+        var shareError: String?
         var showingCalendarView = false
         var showingRemoveProtectionConfirmation = false
 
@@ -63,6 +66,8 @@ struct TripDetailFeature {
 
     enum Action: Equatable {
         case onAppear
+        case refreshTrip
+        case tripLoaded(Trip?)
         case externalPathChanged([TripRoute])
         case resetTokenChanged(Int)
         case viewModeChanged(ViewMode)
@@ -75,6 +80,9 @@ struct TripDetailFeature {
         case addTransportationTapped
         case editTripTapped
         case shareTripTapped
+        case shareCreated(SharedRecord)
+        case shareFailed(String)
+        case shareDismissed
         case fullCalendarTapped
 
         case activitySelected(TripRoute)
@@ -95,12 +103,31 @@ struct TripDetailFeature {
     }
 
     @Dependency(\.biometricAuthClient) private var biometricAuthClient
+    @Dependency(\.defaultDatabase) private var database
+    @Dependency(\.defaultSyncEngine) private var syncEngine
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                return .send(.refreshAuthState)
+                return .merge(
+                    .send(.refreshAuthState),
+                    .send(.refreshTrip)
+                )
+
+            case .refreshTrip:
+                let tripID = state.trip.id
+                return .run { send in
+                    let trip = try? await database.read { db in
+                        try Trip.find(tripID).fetchOne(db)
+                    }
+                    await send(.tripLoaded(trip))
+                }
+
+            case .tripLoaded(let trip):
+                guard let trip else { return .none }
+                state.trip = trip
+                return .none
 
             case .externalPathChanged(let newPath):
                 if state.path != newPath {
@@ -148,7 +175,35 @@ struct TripDetailFeature {
                 return .none
 
             case .shareTripTapped:
-                state.activeSheet = .shareTrip
+                guard !state.isPreparingShare else { return .none }
+                state.isPreparingShare = true
+                state.shareError = nil
+                let trip = state.trip
+                return .run { [syncEngine] send in
+                    do {
+                        try await syncEngine.sendChanges()
+                        let record = try await syncEngine.share(record: trip) { share in
+                            share[CKShare.SystemFieldKey.title] = trip.name.isEmpty ? "Trip" : trip.name
+                        }
+                        await send(.shareCreated(record))
+                    } catch {
+                        await send(.shareFailed(error.localizedDescription))
+                    }
+                }
+
+            case .shareCreated(let record):
+                state.isPreparingShare = false
+                state.sharedRecord = record
+                return .none
+
+            case .shareFailed(let message):
+                state.isPreparingShare = false
+                state.shareError = message
+                return .none
+
+            case .shareDismissed:
+                state.sharedRecord = nil
+                state.shareError = nil
                 return .none
 
             case .fullCalendarTapped:

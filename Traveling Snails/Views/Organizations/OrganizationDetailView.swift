@@ -13,15 +13,11 @@ struct OrganizationDetailView: View {
     @State private var store: StoreOf<OrganizationFeature>
 
     init(
-        organization: Organization,
         onOpenTrip: @escaping (Trip.ID) -> Void,
-        store: StoreOf<OrganizationFeature>? = nil
+        store: StoreOf<OrganizationFeature>
     ) {
         self.onOpenTrip = onOpenTrip
-        let resolvedStore = store ?? Store(initialState: OrganizationFeature.State(organization: organization)) {
-            OrganizationFeature()
-        }
-        self._store = State(initialValue: resolvedStore)
+        self._store = State(initialValue: store)
     }
 
     var body: some View {
@@ -107,9 +103,9 @@ struct OrganizationDetailView: View {
             Spacer()
         }
         .navigationTitle(store.isEditing ? "Edit Organization" : "Organization")
-        .navigationBarTitleDisplayMode(.inline)
+        .inlineNavigationBarTitle()
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
+            ToolbarItem(placement: .platformTrailing) {
                 if store.isEditing {
                     HStack {
                         Button("Cancel") {
@@ -148,6 +144,9 @@ struct OrganizationDetailView: View {
             guard shouldDismiss else { return }
             dismiss()
             store.send(.dismissHandled)
+        }
+        .onAppear {
+            store.send(.onAppear)
         }
     }
 
@@ -190,8 +189,8 @@ private struct ContactInfoSection: View {
                         .padding(.horizontal, 4)
 
                     TextField("Logo URL", text: $editedLogoURL)
-                        .keyboardType(.URL)
-                        .textInputAutocapitalization(.never)
+                        .platformKeyboardType(.URL)
+                        .noAutocapitalization()
                 }
                 .padding(.vertical, 8)
             }
@@ -203,7 +202,7 @@ private struct ContactInfoSection: View {
 
                 if isEditing {
                     TextField("Phone", text: $editedPhone)
-                        .keyboardType(.phonePad)
+                        .platformKeyboardType(.phonePad)
                 } else {
                     if organization.phone.isEmpty {
                         Text("No phone")
@@ -222,8 +221,8 @@ private struct ContactInfoSection: View {
 
                 if isEditing {
                     TextField("Email", text: $editedEmail)
-                        .keyboardType(.emailAddress)
-                        .textInputAutocapitalization(.never)
+                        .platformKeyboardType(.emailAddress)
+                        .noAutocapitalization()
                 } else {
                     if organization.email.isEmpty {
                         Text("No email")
@@ -242,8 +241,8 @@ private struct ContactInfoSection: View {
 
                 if isEditing {
                     TextField("Website", text: $editedWebsite)
-                        .keyboardType(.URL)
-                        .textInputAutocapitalization(.never)
+                        .platformKeyboardType(.URL)
+                        .noAutocapitalization()
                 } else {
                     if organization.website.isEmpty {
                         Text("No website")
@@ -330,10 +329,13 @@ private struct AddressSection: View {
 }
 
 #Preview {
+    let org = Organization(name: "Test Org")
     NavigationStack {
         OrganizationDetailView(
-            organization: .init(name: "Test Org"),
-            onOpenTrip: { _ in }
+            onOpenTrip: { _ in },
+            store: StoreOf<OrganizationFeature>.init(initialState: OrganizationFeature.State(organization: org)) {
+                OrganizationFeature()
+            }
         )
     }
 }

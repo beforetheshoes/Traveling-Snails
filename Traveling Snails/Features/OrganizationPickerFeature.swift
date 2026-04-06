@@ -7,7 +7,7 @@ struct OrganizationPickerFeature {
     struct State: Equatable {
         var selectedOrganizationID: Organization.ID?
         var searchText = ""
-        var showingAddOrganization = false
+        @Presents var addOrganization: AddOrganizationFeature.State?
         var shouldDismiss = false
 
         init(selectedOrganizationID: Organization.ID? = nil) {
@@ -20,8 +20,7 @@ struct OrganizationPickerFeature {
         case organizationTapped(Organization.ID)
         case doneTapped
         case addNewTapped
-        case addSheetChanged(Bool)
-        case organizationCreated(Organization.ID)
+        case addOrganization(PresentationAction<AddOrganizationFeature.Action>)
         case dismissHandled
     }
 
@@ -43,23 +42,31 @@ struct OrganizationPickerFeature {
                 return .none
 
             case .addNewTapped:
-                state.showingAddOrganization = true
+                state.addOrganization = AddOrganizationFeature.State(
+                    prefilledName: state.searchText.isEmpty ? nil : state.searchText
+                )
                 return .none
 
-            case .addSheetChanged(let isPresented):
-                state.showingAddOrganization = isPresented
-                return .none
-
-            case .organizationCreated(let organizationID):
+            case .addOrganization(.presented(.delegate(.organizationCreated(let organizationID)))):
                 state.selectedOrganizationID = organizationID
-                state.showingAddOrganization = false
+                state.addOrganization = nil
                 state.shouldDismiss = true
+                return .none
+
+            case .addOrganization(.dismiss):
+                state.addOrganization = nil
+                return .none
+
+            case .addOrganization:
                 return .none
 
             case .dismissHandled:
                 state.shouldDismiss = false
                 return .none
             }
+        }
+        .ifLet(\.$addOrganization, action: \.addOrganization) {
+            AddOrganizationFeature()
         }
     }
 }

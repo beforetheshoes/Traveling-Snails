@@ -300,21 +300,32 @@ enum AppConfiguration {
 
     // MARK: - Custom Configuration Support
 
-    /// Storage for custom configurations (useful for testing)
-    nonisolated(unsafe) private static var customConfigurations: [String: Any] = [:]
+    /// Lock-protected storage for custom configurations (useful for testing)
+    private final class CustomConfigurationStorage: @unchecked Swift.Sendable {
+        let lock = NSLock()
+        var values: [String: Any] = [:]
+    }
+
+    private static let customConfigurationStorage = CustomConfigurationStorage()
 
     /// Register a custom configuration
     static func setCustomConfiguration<T>(_ config: T, for key: String) {
-        customConfigurations[key] = config
+        customConfigurationStorage.lock.withLock {
+            customConfigurationStorage.values[key] = config
+        }
     }
 
     /// Get a custom configuration
     static func getCustomConfiguration<T>(for key: String, default: T) -> T {
-        customConfigurations[key] as? T ?? `default`
+        customConfigurationStorage.lock.withLock {
+            customConfigurationStorage.values[key] as? T ?? `default`
+        }
     }
 
     /// Clear all custom configurations
     static func clearCustomConfigurations() {
-        customConfigurations.removeAll()
+        customConfigurationStorage.lock.withLock {
+            customConfigurationStorage.values.removeAll()
+        }
     }
 }

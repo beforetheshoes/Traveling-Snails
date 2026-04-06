@@ -76,7 +76,7 @@ struct DatabaseImportProgressView: View {
                                 }
                             }
                             .padding()
-                            .background(Color(.systemGray6))
+                            .background(Color.systemGray6)
                             .clipShape(.rect(cornerRadius: 12))
                             .padding(.horizontal)
                         }
@@ -128,10 +128,10 @@ struct DatabaseImportProgressView: View {
                 Spacer()
             }
             .navigationTitle("Import Progress")
-            .navigationBarTitleDisplayMode(.inline)
+            .inlineNavigationBarTitle()
             .toolbar {
                 if !store.isImporting {
-                    ToolbarItem(placement: .navigationBarTrailing) {
+                    ToolbarItem(placement: .platformTrailing) {
                         Button("Done") {
                             store.send(.doneTapped)
                         }

@@ -26,7 +26,7 @@ struct CalendarHeaderView: View {
 
                     Text("\(activities.count) total activities")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
                 }
 
                 Spacer()
@@ -35,7 +35,7 @@ struct CalendarHeaderView: View {
                     VStack(alignment: .trailing, spacing: 4) {
                         Text("Trip Dates")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
 
                         Text("\(tripRange.lowerBound.formatted(date: .abbreviated, time: .omitted)) - \(tripRange.upperBound.formatted(date: .abbreviated, time: .omitted))")
                             .font(.caption)
@@ -45,12 +45,12 @@ struct CalendarHeaderView: View {
                     VStack(alignment: .trailing, spacing: 4) {
                         Text("Activity Dates")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
 
                         Text("\(actualRange.lowerBound.formatted(date: .abbreviated, time: .omitted)) - \(actualRange.upperBound.formatted(date: .abbreviated, time: .omitted))")
                             .font(.caption)
                             .fontWeight(.medium)
-                            .foregroundColor(.orange)
+                            .foregroundStyle(.orange)
                     }
                 }
             }
@@ -74,7 +74,7 @@ struct CalendarHeaderView: View {
                 } label: {
                     Image(systemName: "chevron.left")
                         .font(.title2)
-                        .foregroundColor(.blue)
+                        .foregroundStyle(.blue)
                 }
 
                 Spacer()
@@ -87,7 +87,7 @@ struct CalendarHeaderView: View {
                     if calendarMode != .month {
                         Text(headerSubtitle)
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
                     }
                 }
 
@@ -100,7 +100,7 @@ struct CalendarHeaderView: View {
                 } label: {
                     Image(systemName: "chevron.right")
                         .font(.title2)
-                        .foregroundColor(.blue)
+                        .foregroundStyle(.blue)
                 }
             }
             .padding(.horizontal)
@@ -118,10 +118,10 @@ struct CalendarHeaderView: View {
                 }
             }
             .font(.caption)
-            .foregroundColor(.blue)
+            .foregroundStyle(.blue)
         }
         .padding(.vertical)
-        .background(Color(.systemGray6))
+        .background(Color.systemGray6)
     }
 
     private var headerTitle: String {

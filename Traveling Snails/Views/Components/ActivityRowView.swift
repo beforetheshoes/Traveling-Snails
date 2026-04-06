@@ -86,7 +86,9 @@ struct ActivityRowView: View {
                         .foregroundStyle(.secondary)
 
                     if let lodging = wrapper.tripActivity as? Lodging {
-                        let nights = Calendar.current.dateComponents([.day], from: lodging.start, to: lodging.end).day ?? 0
+                        let startDay = Calendar.current.startOfDay(for: lodging.start)
+                        let endDay = Calendar.current.startOfDay(for: lodging.end)
+                        let nights = Calendar.current.dateComponents([.day], from: startDay, to: endDay).day ?? 0
                         Text("• \(nights) night\(nights == 1 ? "" : "s")")
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -106,7 +108,7 @@ struct ActivityRowView: View {
         }
         .padding(.vertical, 8)
         .padding(.horizontal, 12)
-        .background(Color(.systemGray6))
+        .background(Color.systemGray6)
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 

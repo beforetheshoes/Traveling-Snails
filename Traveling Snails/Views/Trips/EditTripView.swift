@@ -10,11 +10,8 @@ struct EditTripView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var store: StoreOf<EditTripFeature>
 
-    init(trip: Trip, store: StoreOf<EditTripFeature>? = nil) {
-        let resolvedStore = store ?? Store(initialState: EditTripFeature.State(trip: trip)) {
-            EditTripFeature()
-        }
-        self._store = State(initialValue: resolvedStore)
+    init(store: StoreOf<EditTripFeature>) {
+        self._store = State(initialValue: store)
     }
 
     var body: some View {
@@ -219,6 +216,10 @@ struct EditTripView: View {
 #Preview {
     @Previewable @State var trip = Trip(name: "Test Trip")
     NavigationStack {
-        EditTripView(trip: trip)
+        EditTripView(
+            store: StoreOf<EditTripFeature>.init(initialState: EditTripFeature.State(trip: trip)) {
+                EditTripFeature()
+            }
+        )
     }
 }

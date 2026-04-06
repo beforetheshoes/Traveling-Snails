@@ -24,7 +24,7 @@ import os
 ///    ```
 ///
 /// Pattern 1 is preferred for new code as it aligns with Apple's privacy guidelines.
-final class Logger: @unchecked Sendable {
+final class Logger: @unchecked Swift.Sendable {
     static let shared = Logger()
 
     private let subsystem = Bundle.main.bundleIdentifier ?? "com.travelingsnails.app"
@@ -208,7 +208,7 @@ final class Logger: @unchecked Sendable {
         function: String = #function,
         line: Int = #line
     ) {
-        let formattedDuration = String(format: "%.3fs", duration)
+        let formattedDuration = String.localizedStringWithFormat( "%.3fs", duration)
         log("⏱️ \(operation) completed in \(formattedDuration)", category: category, level: .debug, file: file, function: function, line: line)
     }
 
@@ -231,7 +231,7 @@ final class Logger: @unchecked Sendable {
         if result == KERN_SUCCESS {
             let memoryUsage = memoryInfo.resident_size
             let memoryMB = Double(memoryUsage) / 1024.0 / 1024.0
-            let message = operation.map { "📊 Memory usage after \($0): \(String(format: "%.1fMB", memoryMB))" } ?? "📊 Current memory usage: \(String(format: "%.1fMB", memoryMB))"
+            let message = operation.map { "📊 Memory usage after \($0): \(String.localizedStringWithFormat( "%.1fMB", memoryMB))" } ?? "📊 Current memory usage: \(String.localizedStringWithFormat( "%.1fMB", memoryMB))"
             log(message, category: .debug, level: .debug, file: file, function: function, line: line)
         }
     }

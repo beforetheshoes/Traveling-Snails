@@ -27,7 +27,7 @@ struct DayHourRow: View {
             VStack {
                 Text(hourFormatter.string(from: hourTime))
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                 Spacer()
             }
             .frame(width: 60)
@@ -37,10 +37,10 @@ struct DayHourRow: View {
             // Hour content with drag support
             ZStack(alignment: .leading) {
                 Rectangle()
-                    .fill(Color(.systemBackground))
+                    .fill(Color.systemBackground)
                     .overlay(
                         Rectangle()
-                            .fill(Color(.separator))
+                            .fill(Color.separator)
                             .frame(height: 0.5),
                         alignment: .bottom
                     )

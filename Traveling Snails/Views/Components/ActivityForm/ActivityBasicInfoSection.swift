@@ -62,7 +62,7 @@ struct ActivityBasicInfoSection<T: TripActivityProtocol>: View {
             // Activity Icon (centered, prominent)
             Image(systemName: icon)
                 .font(.system(size: 50))
-                .foregroundColor(color)
+                .foregroundStyle(color)
                 .padding(12)
                 .background(color.opacity(0.1))
                 .clipShape(Circle())
@@ -79,7 +79,7 @@ struct ActivityBasicInfoSection<T: TripActivityProtocol>: View {
                     VStack(spacing: 8) {
                         Text("Name")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(.secondary)
 
                         HStack {
                             Text(editData.name.isEmpty ? "Unnamed Activity" : editData.name)
@@ -90,7 +90,7 @@ struct ActivityBasicInfoSection<T: TripActivityProtocol>: View {
                             if attachmentCount > 0 {
                                 Image(systemName: "paperclip")
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundStyle(.secondary)
                             }
                         }
                     }
@@ -106,7 +106,7 @@ struct ActivityBasicInfoSection<T: TripActivityProtocol>: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("Transportation Type")
                 .font(.caption)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
 
             Picker("Transportation Type", selection: Binding(
                 get: { editData.transportationType ?? .plane },
@@ -126,10 +126,12 @@ struct ActivityBasicInfoSection<T: TripActivityProtocol>: View {
     @ViewBuilder
     private func durationDisplay(for activity: T) -> some View {
         if activity.activityType == .lodging {
-            let nights = Calendar.current.dateComponents([.day], from: activity.start, to: activity.end).day ?? 0
+            let startDay = Calendar.current.startOfDay(for: activity.start)
+            let endDay = Calendar.current.startOfDay(for: activity.end)
+            let nights = Calendar.current.dateComponents([.day], from: startDay, to: endDay).day ?? 0
             Text("\(nights) night\(nights == 1 ? "" : "s")")
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
         } else {
             let duration = activity.duration()
             let hours = Int(duration) / 3600
@@ -137,11 +139,11 @@ struct ActivityBasicInfoSection<T: TripActivityProtocol>: View {
             if hours > 0 {
                 Text("\(hours)h \(minutes)m")
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             } else {
                 Text("\(minutes)m")
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
             }
         }
     }
