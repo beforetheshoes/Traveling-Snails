@@ -53,85 +53,14 @@ struct TripActivityDetailView<T: TripActivityProtocol>: View {
     }
 
     var body: some View {
-        @Bindable var store = self.store
-
         ScrollView {
             VStack(spacing: 24) {
-                // Basic Info Section (replaces headerSection)
-                ActivityBasicInfoSection(
-                    activity: activity,
-                    editData: $store.editData,
-                    isEditing: store.isEditing,
-                    color: activity.color,
-                    icon: currentIcon,
-                    attachmentCount: store.attachments.count
-                )
+                basicInfoSection
+                locationSection
+                scheduleSection
+                costAndDetailsSection
+                attachmentsSection
 
-                // Location Section (if applicable)
-                if !activity.supportsCustomLocation || (!store.editData.hideLocation || store.isEditing) {
-                    ActivityLocationSection(
-                        activity: activity,
-                        editData: $store.editData,
-                        isEditing: store.isEditing,
-                        color: activity.color,
-                        supportsCustomLocation: activity.supportsCustomLocation,
-                        showingOrganizationPicker: { store.send(.showOrganizationPicker) },
-                        showMap: { store.send(.sheetChanged(.map)) }
-                    )
-                }
-
-                // Schedule Section
-                if activity.activityType == .transportation {
-                    TransportationScheduleSectionView(
-                        trip: activity.trip ?? Trip(name: ""),
-                        icon: currentIcon,
-                        color: activity.color,
-                        isEditing: store.isEditing,
-                        legs: $store.transportationLegs,
-                        legsValidationError: store.legsValidationError,
-                        showingLegsEditor: $store.showingLegsEditor
-                    )
-                } else {
-                    ActivityScheduleSection(
-                        activity: activity,
-                        editData: $store.editData,
-                        isEditing: store.isEditing,
-                        color: activity.color,
-                        trip: activity.trip
-                    )
-                }
-
-                // Cost & Payment Section
-                ActivityCostSection(
-                    activity: activity,
-                    editData: $store.editData,
-                    isEditing: store.isEditing,
-                    color: activity.color
-                )
-
-                // Details Section
-                ActivityDetailsSection(
-                    activity: activity,
-                    editData: $store.editData,
-                    isEditing: store.isEditing,
-                    color: activity.color,
-                    supportsCustomLocation: activity.supportsCustomLocation
-                )
-
-                // File Attachments Section (always visible)
-                ActivityAttachmentsSection(
-                    attachments: $store.attachments,
-                    isEditing: store.isEditing,
-                    color: activity.color,
-                    onAttachmentAdded: { attachment in
-                        store.send(.attachmentAdded(attachment))
-                    },
-                    onAttachmentRemoved: { attachment in
-                        store.send(.attachmentRemoved(attachment))
-                    }
-                )
-
-                // Delete Button (only in edit mode)
                 if store.isEditing {
                     deleteButton
                 }
@@ -238,6 +167,91 @@ struct TripActivityDetailView<T: TripActivityProtocol>: View {
         } message: {
             Text(store.errorMessage ?? "")
         }
+    }
+
+    // MARK: - Body Helpers (split to assist type-checker)
+
+    @ViewBuilder
+    private var basicInfoSection: some View {
+        ActivityBasicInfoSection(
+            activity: activity,
+            editData: $store.editData,
+            isEditing: store.isEditing,
+            color: activity.color,
+            icon: currentIcon,
+            attachmentCount: store.attachments.count
+        )
+    }
+
+    @ViewBuilder
+    private var locationSection: some View {
+        if !activity.supportsCustomLocation || (!store.editData.hideLocation || store.isEditing) {
+            ActivityLocationSection(
+                activity: activity,
+                editData: $store.editData,
+                isEditing: store.isEditing,
+                color: activity.color,
+                supportsCustomLocation: activity.supportsCustomLocation,
+                showingOrganizationPicker: { store.send(.showOrganizationPicker) },
+                showMap: { store.send(.sheetChanged(.map)) }
+            )
+        }
+    }
+
+    @ViewBuilder
+    private var scheduleSection: some View {
+        if activity.activityType == .transportation {
+            TransportationScheduleSectionView(
+                trip: activity.trip ?? Trip(name: ""),
+                icon: currentIcon,
+                color: activity.color,
+                isEditing: store.isEditing,
+                legs: $store.transportationLegs,
+                legsValidationError: store.legsValidationError,
+                showingLegsEditor: $store.showingLegsEditor
+            )
+        } else {
+            ActivityScheduleSection(
+                activity: activity,
+                editData: $store.editData,
+                isEditing: store.isEditing,
+                color: activity.color,
+                trip: activity.trip
+            )
+        }
+    }
+
+    @ViewBuilder
+    private var costAndDetailsSection: some View {
+        ActivityCostSection(
+            activity: activity,
+            editData: $store.editData,
+            isEditing: store.isEditing,
+            color: activity.color
+        )
+
+        ActivityDetailsSection(
+            activity: activity,
+            editData: $store.editData,
+            isEditing: store.isEditing,
+            color: activity.color,
+            supportsCustomLocation: activity.supportsCustomLocation
+        )
+    }
+
+    @ViewBuilder
+    private var attachmentsSection: some View {
+        ActivityAttachmentsSection(
+            attachments: $store.attachments,
+            isEditing: store.isEditing,
+            color: activity.color,
+            onAttachmentAdded: { attachment in
+                store.send(.attachmentAdded(attachment))
+            },
+            onAttachmentRemoved: { attachment in
+                store.send(.attachmentRemoved(attachment))
+            }
+        )
     }
 
     @ViewBuilder
