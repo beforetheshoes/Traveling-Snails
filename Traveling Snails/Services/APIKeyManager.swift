@@ -98,6 +98,7 @@ actor APIKeyManager {
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: keychainService,
             kSecAttrAccount as String: key,
+            kSecUseDataProtectionKeychain as String: true,
         ]
 
         // Delete existing
@@ -121,6 +122,7 @@ actor APIKeyManager {
             kSecAttrAccount as String: key,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne,
+            kSecUseDataProtectionKeychain as String: true,
         ]
 
         var result: AnyObject?
@@ -140,6 +142,7 @@ actor APIKeyManager {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: keychainService,
+            kSecUseDataProtectionKeychain as String: true,
         ]
         SecItemDelete(query as CFDictionary)
         inMemoryCache.removeAll()
