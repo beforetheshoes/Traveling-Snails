@@ -26,7 +26,7 @@ extension UserIdentityClient: DependencyKey {
         let cache = DisplayNameCache()
         return UserIdentityClient(
             currentUserRecordName: {
-                let recordID = try await CKContainer.default().userRecordID()
+                let recordID = try await CKContainer(identifier: "iCloud.TravelingSnails").userRecordID()
                 return recordID.recordName
             },
             displayName: { userRecordName in
