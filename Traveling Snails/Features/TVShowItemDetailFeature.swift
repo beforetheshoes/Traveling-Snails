@@ -44,6 +44,7 @@ struct TVShowItemDetailFeature {
 
     @Dependency(\.defaultDatabase) private var database
     @Dependency(\.tmdbClient) private var tmdbClient
+    @Dependency(\.userIdentityClient) private var userIdentityClient
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
@@ -68,18 +69,26 @@ struct TVShowItemDetailFeature {
             case .ratingChanged(let rating):
                 state.tvShowItem.rating = rating
                 let updated = state.tvShowItem
-                return .run { _ in
+                return .run { [userIdentityClient] _ in
+                    let recordName = (try? await userIdentityClient.currentUserRecordName()) ?? ""
                     try await database.write { db in
                         try TVShowItem.upsert { updated }.execute(db)
+                        try TVShowItem.find(updated.id)
+                            .update { $0.lastEditedByUserRecordName = #bind(recordName) }
+                            .execute(db)
                     }
                 }
 
             case .statusChanged(let status):
                 state.tvShowItem.status = status
                 let updated = state.tvShowItem
-                return .run { _ in
+                return .run { [userIdentityClient] _ in
+                    let recordName = (try? await userIdentityClient.currentUserRecordName()) ?? ""
                     try await database.write { db in
                         try TVShowItem.upsert { updated }.execute(db)
+                        try TVShowItem.find(updated.id)
+                            .update { $0.lastEditedByUserRecordName = #bind(recordName) }
+                            .execute(db)
                     }
                 }
 
@@ -96,9 +105,13 @@ struct TVShowItemDetailFeature {
                 state.isEditing = false
                 state.tvShowItem.notes = state.editedNotes
                 let updated = state.tvShowItem
-                return .run { _ in
+                return .run { [userIdentityClient] _ in
+                    let recordName = (try? await userIdentityClient.currentUserRecordName()) ?? ""
                     try await database.write { db in
                         try TVShowItem.upsert { updated }.execute(db)
+                        try TVShowItem.find(updated.id)
+                            .update { $0.lastEditedByUserRecordName = #bind(recordName) }
+                            .execute(db)
                     }
                 }
 

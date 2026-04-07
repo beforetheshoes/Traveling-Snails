@@ -3,6 +3,7 @@
 //  Traveling Snails
 //
 
+import CloudKit
 import ComposableArchitecture
 import Foundation
 import SQLiteData
@@ -11,8 +12,22 @@ import SQLiteData
 struct CollectionsFeature {
     @ObservableState
     struct State {
-        @FetchAll(Collection.order { $0.createdDate.desc() })
-        var collections: [Collection] = []
+        @FetchAll(
+            Collection
+                .order { $0.createdDate.desc() }
+                .leftJoin(SyncMetadata.all) { $0.syncMetadataID.eq($1.id) }
+                .select {
+                    CollectionRow.Columns(
+                        collection: $0,
+                        share: $1.share
+                    )
+                }
+        )
+        var collectionRows: [CollectionRow] = []
+
+        var collections: [Collection] {
+            collectionRows.map(\.collection)
+        }
     }
 
     enum Action {

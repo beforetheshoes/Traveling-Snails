@@ -115,6 +115,7 @@ struct MediaSearchFeature {
     @Dependency(\.tmdbClient) private var tmdbClient
     @Dependency(\.mapKitSearchClient) private var mapKitSearchClient
     @Dependency(\.defaultDatabase) private var database
+    @Dependency(\.userIdentityClient) private var userIdentityClient
 
     private enum CancelID { case search }
 
@@ -184,9 +185,13 @@ struct MediaSearchFeature {
                 switch result {
                 case .book(let bookResult):
                     let bookItem = bookResult.toBookItem(collectionID: collectionID)
-                    return .run { send in
+                    return .run { [userIdentityClient] send in
+                        let recordName = (try? await userIdentityClient.currentUserRecordName()) ?? ""
                         try await database.write { db in
                             try BookItem.upsert { bookItem }.execute(db)
+                            try BookItem.find(bookItem.id)
+                                .update { $0.addedByUserRecordName = #bind(recordName) }
+                                .execute(db)
                         }
                         if !bookItem.coverImageURL.isEmpty {
                             if let imageData = await MediaCacheService.shared.downloadCoverImage(from: bookItem.coverImageURL) {
@@ -202,9 +207,13 @@ struct MediaSearchFeature {
 
                 case .movie(let movieResult):
                     let movieItem = movieResult.toMovieItem(collectionID: collectionID)
-                    return .run { send in
+                    return .run { [userIdentityClient] send in
+                        let recordName = (try? await userIdentityClient.currentUserRecordName()) ?? ""
                         try await database.write { db in
                             try MovieItem.upsert { movieItem }.execute(db)
+                            try MovieItem.find(movieItem.id)
+                                .update { $0.addedByUserRecordName = #bind(recordName) }
+                                .execute(db)
                         }
                         if !movieItem.posterURL.isEmpty {
                             if let imageData = await MediaCacheService.shared.downloadCoverImage(from: movieItem.posterURL) {
@@ -220,9 +229,13 @@ struct MediaSearchFeature {
 
                 case .tvShow(let tvResult):
                     let tvItem = tvResult.toTVShowItem(collectionID: collectionID)
-                    return .run { send in
+                    return .run { [userIdentityClient] send in
+                        let recordName = (try? await userIdentityClient.currentUserRecordName()) ?? ""
                         try await database.write { db in
                             try TVShowItem.upsert { tvItem }.execute(db)
+                            try TVShowItem.find(tvItem.id)
+                                .update { $0.addedByUserRecordName = #bind(recordName) }
+                                .execute(db)
                         }
                         if !tvItem.posterURL.isEmpty {
                             if let imageData = await MediaCacheService.shared.downloadCoverImage(from: tvItem.posterURL) {
@@ -238,9 +251,13 @@ struct MediaSearchFeature {
 
                 case .restaurant(let restaurantResult):
                     let restaurantItem = restaurantResult.toRestaurantItem(collectionID: collectionID)
-                    return .run { send in
+                    return .run { [userIdentityClient] send in
+                        let recordName = (try? await userIdentityClient.currentUserRecordName()) ?? ""
                         try await database.write { db in
                             try RestaurantItem.upsert { restaurantItem }.execute(db)
+                            try RestaurantItem.find(restaurantItem.id)
+                                .update { $0.addedByUserRecordName = #bind(recordName) }
+                                .execute(db)
                         }
                         await send(.itemSaved)
                         if restaurantItem.hasCoordinate || !restaurantItem.websiteURL.isEmpty {

@@ -47,6 +47,7 @@ struct BookItemDetailFeature {
 
     @Dependency(\.defaultDatabase) private var database
     @Dependency(\.googleBooksClient) private var googleBooksClient
+    @Dependency(\.userIdentityClient) private var userIdentityClient
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
@@ -71,9 +72,13 @@ struct BookItemDetailFeature {
             case .ratingChanged(let rating):
                 state.bookItem.rating = rating
                 let updated = state.bookItem
-                return .run { _ in
+                return .run { [userIdentityClient] _ in
+                    let recordName = (try? await userIdentityClient.currentUserRecordName()) ?? ""
                     try await database.write { db in
                         try BookItem.upsert { updated }.execute(db)
+                        try BookItem.find(updated.id)
+                            .update { $0.lastEditedByUserRecordName = #bind(recordName) }
+                            .execute(db)
                     }
                 }
 
@@ -85,9 +90,13 @@ struct BookItemDetailFeature {
                     state.bookItem.setFinishedDate(Date())
                 }
                 let updated = state.bookItem
-                return .run { _ in
+                return .run { [userIdentityClient] _ in
+                    let recordName = (try? await userIdentityClient.currentUserRecordName()) ?? ""
                     try await database.write { db in
                         try BookItem.upsert { updated }.execute(db)
+                        try BookItem.find(updated.id)
+                            .update { $0.lastEditedByUserRecordName = #bind(recordName) }
+                            .execute(db)
                     }
                 }
 
@@ -104,9 +113,13 @@ struct BookItemDetailFeature {
                 state.isEditing = false
                 state.bookItem.notes = state.editedNotes
                 let updated = state.bookItem
-                return .run { _ in
+                return .run { [userIdentityClient] _ in
+                    let recordName = (try? await userIdentityClient.currentUserRecordName()) ?? ""
                     try await database.write { db in
                         try BookItem.upsert { updated }.execute(db)
+                        try BookItem.find(updated.id)
+                            .update { $0.lastEditedByUserRecordName = #bind(recordName) }
+                            .execute(db)
                     }
                 }
 

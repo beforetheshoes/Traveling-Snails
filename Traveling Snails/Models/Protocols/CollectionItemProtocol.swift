@@ -16,6 +16,8 @@ protocol CollectionItemProtocol: Identifiable, Equatable {
     var externalID: String { get set }
     var sortOrder: Int { get set }
     var createdDate: Date { get }
+    var addedByUserRecordName: String { get }
+    var lastEditedByUserRecordName: String { get }
 
     static var collectionType: CollectionType { get }
     var displaySubtitle: String { get }

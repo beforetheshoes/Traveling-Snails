@@ -29,6 +29,8 @@ nonisolated struct BookItem: Hashable, Identifiable {
     var notes: String
     var sortOrder: Int
     var createdDate: Date
+    var addedByUserRecordName: String
+    var lastEditedByUserRecordName: String
 
     init(
         id: UUID = UUID(),
@@ -51,7 +53,9 @@ nonisolated struct BookItem: Hashable, Identifiable {
         hasFinishedDate: Bool = false,
         notes: String = "",
         sortOrder: Int = 0,
-        createdDate: Date = Date()
+        createdDate: Date = Date(),
+        addedByUserRecordName: String = "",
+        lastEditedByUserRecordName: String = ""
     ) {
         self.id = id
         self.collectionID = collectionID
@@ -74,6 +78,8 @@ nonisolated struct BookItem: Hashable, Identifiable {
         self.notes = notes
         self.sortOrder = sortOrder
         self.createdDate = createdDate
+        self.addedByUserRecordName = addedByUserRecordName
+        self.lastEditedByUserRecordName = lastEditedByUserRecordName
     }
 
     var effectiveStartedDate: Date? {

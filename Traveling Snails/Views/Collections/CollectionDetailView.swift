@@ -3,6 +3,7 @@
 //  Traveling Snails
 //
 
+import CloudKit
 import ComposableArchitecture
 import SQLiteData
 import SwiftUI
@@ -63,10 +64,12 @@ struct CollectionDetailView: View {
                             }
                         }
                         .contextMenu {
-                            Button {
-                                store.send(.addItemTapped)
-                            } label: {
-                                Label("Add \(collection.type.singularName)…", systemImage: "plus")
+                            if store.state.canWrite {
+                                Button {
+                                    store.send(.addItemTapped)
+                                } label: {
+                                    Label("Add \(collection.type.singularName)…", systemImage: "plus")
+                                }
                             }
                         }
                 } else {
@@ -79,10 +82,12 @@ struct CollectionDetailView: View {
                         }
                     }
                     .contextMenu {
-                        Button {
-                            store.send(.addItemTapped)
-                        } label: {
-                            Label("Add \(collection.type.singularName)…", systemImage: "plus")
+                        if store.state.canWrite {
+                            Button {
+                                store.send(.addItemTapped)
+                            } label: {
+                                Label("Add \(collection.type.singularName)…", systemImage: "plus")
+                            }
                         }
                     }
                 }
@@ -120,16 +125,35 @@ struct CollectionDetailView: View {
                             }
                         }
 
-                        Button {
-                            store.send(.addItemTapped)
-                        } label: {
-                            Image(systemName: "plus")
+                        if store.state.isShared && !store.state.participants.isEmpty {
+                            Button {
+                                store.send(.toggleParticipantSheet)
+                            } label: {
+                                ParticipantAvatarsView(participants: store.state.participants)
+                            }
+                            .buttonStyle(.plain)
                         }
 
-                        Button {
-                            store.send(.shareTapped)
-                        } label: {
-                            Image(systemName: "square.and.arrow.up")
+                        if store.state.canWrite {
+                            Button {
+                                store.send(.addItemTapped)
+                            } label: {
+                                Image(systemName: "plus")
+                            }
+                        }
+
+                        if store.state.isShared {
+                            Button {
+                                store.send(.manageShareTapped)
+                            } label: {
+                                Image(systemName: "person.2")
+                            }
+                        } else {
+                            Button {
+                                store.send(.shareTapped)
+                            } label: {
+                                Image(systemName: "square.and.arrow.up")
+                            }
                         }
                     }
                 }
@@ -152,6 +176,54 @@ struct CollectionDetailView: View {
                     MediaSearchFeature()
                 }
             )
+        }
+        #if os(iOS)
+        .sheet(
+            item: Binding(
+                get: { store.sharedRecord },
+                set: { _ in store.send(.shareDismissed) }
+            )
+        ) { sharedRecord in
+            NavigationStack {
+                CloudSharingView(sharedRecord: sharedRecord)
+            }
+        }
+        #elseif os(macOS)
+        .background {
+            if store.sharedRecord != nil {
+                MacCloudSharingView(
+                    sharedRecord: store.sharedRecord!,
+                    onDismiss: { store.send(.shareDismissed) }
+                )
+                .frame(width: 0, height: 0)
+            }
+        }
+        #endif
+        .alert(
+            "Sharing Error",
+            isPresented: Binding(
+                get: { store.shareError != nil },
+                set: { if !$0 { store.send(.shareDismissed) } }
+            )
+        ) {
+            Button("OK") { store.send(.shareDismissed) }
+        } message: {
+            if let error = store.shareError {
+                Text(error)
+            }
+        }
+        .popover(isPresented: Binding(
+            get: { store.state.showingParticipants },
+            set: { if !$0 { store.send(.toggleParticipantSheet) } }
+        )) {
+            ParticipantListView(
+                participants: store.state.participants,
+                onManageSharing: {
+                    store.send(.toggleParticipantSheet)
+                    store.send(.manageShareTapped)
+                }
+            )
+            .frame(minWidth: 280)
         }
         .onAppear { store.send(.onAppear) }
         .onChange(of: restaurantItems) { _, items in

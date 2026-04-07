@@ -31,6 +31,8 @@ nonisolated struct MovieItem: Hashable, Identifiable {
     var createdDate: Date
     var voteAverage: Double
     var originalLanguage: String
+    var addedByUserRecordName: String
+    var lastEditedByUserRecordName: String
 
     init(
         id: UUID = UUID(),
@@ -55,7 +57,9 @@ nonisolated struct MovieItem: Hashable, Identifiable {
         sortOrder: Int = 0,
         createdDate: Date = Date(),
         voteAverage: Double = 0,
-        originalLanguage: String = ""
+        originalLanguage: String = "",
+        addedByUserRecordName: String = "",
+        lastEditedByUserRecordName: String = ""
     ) {
         self.id = id
         self.collectionID = collectionID
@@ -80,6 +84,8 @@ nonisolated struct MovieItem: Hashable, Identifiable {
         self.createdDate = createdDate
         self.voteAverage = voteAverage
         self.originalLanguage = originalLanguage
+        self.addedByUserRecordName = addedByUserRecordName
+        self.lastEditedByUserRecordName = lastEditedByUserRecordName
     }
 
     var effectiveWatchedDate: Date? {

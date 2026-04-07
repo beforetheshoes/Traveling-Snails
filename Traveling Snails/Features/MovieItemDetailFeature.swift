@@ -46,6 +46,7 @@ struct MovieItemDetailFeature {
 
     @Dependency(\.defaultDatabase) private var database
     @Dependency(\.tmdbClient) private var tmdbClient
+    @Dependency(\.userIdentityClient) private var userIdentityClient
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
@@ -70,9 +71,13 @@ struct MovieItemDetailFeature {
             case .ratingChanged(let rating):
                 state.movieItem.rating = rating
                 let updated = state.movieItem
-                return .run { _ in
+                return .run { [userIdentityClient] _ in
+                    let recordName = (try? await userIdentityClient.currentUserRecordName()) ?? ""
                     try await database.write { db in
                         try MovieItem.upsert { updated }.execute(db)
+                        try MovieItem.find(updated.id)
+                            .update { $0.lastEditedByUserRecordName = #bind(recordName) }
+                            .execute(db)
                     }
                 }
 
@@ -82,9 +87,13 @@ struct MovieItemDetailFeature {
                     state.movieItem.setWatchedDate(Date())
                 }
                 let updated = state.movieItem
-                return .run { _ in
+                return .run { [userIdentityClient] _ in
+                    let recordName = (try? await userIdentityClient.currentUserRecordName()) ?? ""
                     try await database.write { db in
                         try MovieItem.upsert { updated }.execute(db)
+                        try MovieItem.find(updated.id)
+                            .update { $0.lastEditedByUserRecordName = #bind(recordName) }
+                            .execute(db)
                     }
                 }
 
@@ -101,9 +110,13 @@ struct MovieItemDetailFeature {
                 state.isEditing = false
                 state.movieItem.notes = state.editedNotes
                 let updated = state.movieItem
-                return .run { _ in
+                return .run { [userIdentityClient] _ in
+                    let recordName = (try? await userIdentityClient.currentUserRecordName()) ?? ""
                     try await database.write { db in
                         try MovieItem.upsert { updated }.execute(db)
+                        try MovieItem.find(updated.id)
+                            .update { $0.lastEditedByUserRecordName = #bind(recordName) }
+                            .execute(db)
                     }
                 }
 
@@ -118,9 +131,13 @@ struct MovieItemDetailFeature {
                     state.movieItem.clearWatchedDate()
                 }
                 let updated = state.movieItem
-                return .run { _ in
+                return .run { [userIdentityClient] _ in
+                    let recordName = (try? await userIdentityClient.currentUserRecordName()) ?? ""
                     try await database.write { db in
                         try MovieItem.upsert { updated }.execute(db)
+                        try MovieItem.find(updated.id)
+                            .update { $0.lastEditedByUserRecordName = #bind(recordName) }
+                            .execute(db)
                     }
                 }
 

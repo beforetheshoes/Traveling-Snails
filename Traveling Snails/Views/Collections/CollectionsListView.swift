@@ -19,10 +19,10 @@ struct CollectionsListView: View {
     @State private var renameText = ""
 
     var body: some View {
-        let collections = store.state.collections
+        let rows = store.state.collectionRows
 
         List(selection: $selectedCollectionID) {
-            collectionsContent(collections: collections)
+            collectionsContent(rows: rows)
         }
         .contextMenu {
             newCollectionMenu
@@ -56,12 +56,12 @@ struct CollectionsListView: View {
     }
 
     @ViewBuilder
-    private func collectionsContent(collections: [Collection]) -> some View {
+    private func collectionsContent(rows: [CollectionRow]) -> some View {
         ForEach(CollectionType.allCases, id: \.self) { type in
-            collectionSection(type: type, collections: collections)
+            collectionSection(type: type, rows: rows)
         }
 
-        if collections.isEmpty {
+        if rows.isEmpty {
             ContentUnavailableView {
                 Label("No Collections", systemImage: "square.stack")
             } description: {
@@ -91,20 +91,21 @@ struct CollectionsListView: View {
     }
 
     @ViewBuilder
-    private func collectionSection(type: CollectionType, collections: [Collection]) -> some View {
-        let filtered = collections.filter { $0.type == type }
+    private func collectionSection(type: CollectionType, rows: [CollectionRow]) -> some View {
+        let filtered = rows.filter { $0.collection.type == type }
         if !filtered.isEmpty {
             Section(type.displayName) {
-                ForEach(filtered) { collection in
-                    collectionRow(collection: collection)
+                ForEach(filtered) { row in
+                    collectionRowView(row: row)
                 }
             }
         }
     }
 
     @ViewBuilder
-    private func collectionRow(collection: Collection) -> some View {
-        CollectionRowView(collection: collection)
+    private func collectionRowView(row: CollectionRow) -> some View {
+        let collection = row.collection
+        CollectionRowView(collection: collection, isShared: row.isShared, shareMessage: row.shareMessage)
             .tag(collection.id)
             .onTapGesture {
                 onCollectionSelected(collection)
@@ -206,6 +207,8 @@ struct CollectionsListView: View {
 
 struct CollectionRowView: View {
     let collection: Collection
+    var isShared: Bool = false
+    var shareMessage: String?
 
     var body: some View {
         HStack(spacing: 12) {
@@ -214,11 +217,25 @@ struct CollectionRowView: View {
                 .foregroundStyle(collection.type.color)
                 .frame(width: 32, height: 32)
 
-            Text(collection.name.isEmpty ? collection.type.singularName : collection.name)
-                .font(.body)
-                .fontWeight(.medium)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(collection.name.isEmpty ? collection.type.singularName : collection.name)
+                    .font(.body)
+                    .fontWeight(.medium)
+
+                if let shareMessage {
+                    Text(shareMessage)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
 
             Spacer()
+
+            if isShared {
+                Image(systemName: "person.2.fill")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
         .contentShape(Rectangle())
     }
