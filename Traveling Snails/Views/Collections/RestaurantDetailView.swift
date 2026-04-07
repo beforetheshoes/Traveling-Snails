@@ -392,8 +392,18 @@ struct RestaurantDetailView: View {
                 latitude: item.latitude,
                 longitude: item.longitude
             )
-            let placemark = MKPlacemark(coordinate: coordinate)
-            let mapItem = MKMapItem(placemark: placemark)
+            let mapItem: MKMapItem
+            if #available(iOS 26.0, macOS 26.0, *) {
+                let location = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
+                let address = MKAddress(
+                    fullAddress: item.address,
+                    shortAddress: item.formattedLocation
+                )
+                mapItem = MKMapItem(location: location, address: address)
+            } else {
+                let placemark = MKPlacemark(coordinate: coordinate)
+                mapItem = MKMapItem(placemark: placemark)
+            }
             mapItem.name = item.title
             mapItem.openInMaps()
         } label: {
