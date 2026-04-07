@@ -545,5 +545,231 @@ func makeMigrator() -> DatabaseMigrator {
         try #sql("ALTER TABLE \"restaurantItems\" ADD COLUMN \"lastEditedByUserRecordName\" TEXT DEFAULT ''").execute(db)
     }
 
+    // MARK: - Fix collection item schemas for CloudKit sync
+    //
+    // SQLiteData requires `NOT NULL ON CONFLICT REPLACE DEFAULT (uuid())` on primary keys
+    // for synced tables. The collection item tables were created without this clause,
+    // which can cause sync reconciliation failures. This migration recreates each table
+    // with the correct primary key constraint.
+
+    migrator.registerMigration("Fix collection item primary keys for CloudKit sync") { db in
+        // --- collections ---
+        try #sql(
+            """
+            CREATE TABLE "collections_new" (
+              "id" TEXT PRIMARY KEY NOT NULL ON CONFLICT REPLACE DEFAULT (uuid()),
+              "name" TEXT NOT NULL DEFAULT '',
+              "notes" TEXT NOT NULL DEFAULT '',
+              "type" TEXT NOT NULL DEFAULT 'book',
+              "coverImageURL" TEXT NOT NULL DEFAULT '',
+              "coverImageData" BLOB,
+              "sortOrder" INTEGER NOT NULL DEFAULT 0,
+              "isProtected" INTEGER NOT NULL DEFAULT 0,
+              "createdDate" TEXT NOT NULL ON CONFLICT REPLACE DEFAULT (datetime('now'))
+            ) STRICT
+            """
+        ).execute(db)
+        try #sql("""
+            INSERT INTO "collections_new" SELECT
+              "id", "name", "notes", "type", "coverImageURL", "coverImageData",
+              "sortOrder", "isProtected", "createdDate"
+            FROM "collections"
+            """).execute(db)
+        try #sql("DROP TABLE \"collections\"").execute(db)
+        try #sql("ALTER TABLE \"collections_new\" RENAME TO \"collections\"").execute(db)
+        try #sql("CREATE INDEX IF NOT EXISTS \"idx_collections_type\" ON \"collections\"(\"type\")").execute(db)
+        try #sql("CREATE INDEX IF NOT EXISTS \"idx_collections_createdDate\" ON \"collections\"(\"createdDate\")").execute(db)
+
+        // --- bookItems ---
+        try #sql(
+            """
+            CREATE TABLE "bookItems_new" (
+              "id" TEXT PRIMARY KEY NOT NULL ON CONFLICT REPLACE DEFAULT (uuid()),
+              "collectionID" TEXT NOT NULL REFERENCES "collections"("id") ON DELETE CASCADE,
+              "title" TEXT NOT NULL DEFAULT '',
+              "author" TEXT NOT NULL DEFAULT '',
+              "isbn" TEXT NOT NULL DEFAULT '',
+              "publisher" TEXT NOT NULL DEFAULT '',
+              "publishedDate" TEXT NOT NULL DEFAULT '',
+              "pageCount" INTEGER NOT NULL DEFAULT 0,
+              "description" TEXT NOT NULL DEFAULT '',
+              "coverImageURL" TEXT NOT NULL DEFAULT '',
+              "coverImageData" BLOB,
+              "externalID" TEXT NOT NULL DEFAULT '',
+              "rating" INTEGER NOT NULL DEFAULT 0,
+              "status" TEXT NOT NULL DEFAULT 'wantToRead',
+              "startedDate" TEXT NOT NULL ON CONFLICT REPLACE DEFAULT (datetime('now')),
+              "finishedDate" TEXT NOT NULL ON CONFLICT REPLACE DEFAULT (datetime('now')),
+              "hasStartedDate" INTEGER NOT NULL DEFAULT 0,
+              "hasFinishedDate" INTEGER NOT NULL DEFAULT 0,
+              "notes" TEXT NOT NULL DEFAULT '',
+              "sortOrder" INTEGER NOT NULL DEFAULT 0,
+              "createdDate" TEXT NOT NULL ON CONFLICT REPLACE DEFAULT (datetime('now')),
+              "addedByUserRecordName" TEXT DEFAULT '',
+              "lastEditedByUserRecordName" TEXT DEFAULT ''
+            ) STRICT
+            """
+        ).execute(db)
+        try #sql("""
+            INSERT INTO "bookItems_new" SELECT
+              "id", "collectionID", "title", "author", "isbn", "publisher", "publishedDate",
+              "pageCount", "description", "coverImageURL", "coverImageData", "externalID",
+              "rating", "status", "startedDate", "finishedDate", "hasStartedDate",
+              "hasFinishedDate", "notes", "sortOrder", "createdDate",
+              "addedByUserRecordName", "lastEditedByUserRecordName"
+            FROM "bookItems"
+            """).execute(db)
+        try #sql("DROP TABLE \"bookItems\"").execute(db)
+        try #sql("ALTER TABLE \"bookItems_new\" RENAME TO \"bookItems\"").execute(db)
+        try #sql("CREATE INDEX IF NOT EXISTS \"idx_bookItems_collectionID\" ON \"bookItems\"(\"collectionID\")").execute(db)
+        try #sql("CREATE INDEX IF NOT EXISTS \"idx_bookItems_externalID\" ON \"bookItems\"(\"externalID\")").execute(db)
+
+        // --- movieItems ---
+        try #sql(
+            """
+            CREATE TABLE "movieItems_new" (
+              "id" TEXT PRIMARY KEY NOT NULL ON CONFLICT REPLACE DEFAULT (uuid()),
+              "collectionID" TEXT NOT NULL REFERENCES "collections"("id") ON DELETE CASCADE,
+              "title" TEXT NOT NULL DEFAULT '',
+              "overview" TEXT NOT NULL DEFAULT '',
+              "releaseDate" TEXT NOT NULL DEFAULT '',
+              "runtime" INTEGER NOT NULL DEFAULT 0,
+              "director" TEXT NOT NULL DEFAULT '',
+              "cast" TEXT NOT NULL DEFAULT '',
+              "genres" TEXT NOT NULL DEFAULT '',
+              "posterURL" TEXT NOT NULL DEFAULT '',
+              "backdropURL" TEXT NOT NULL DEFAULT '',
+              "coverImageData" BLOB,
+              "externalID" TEXT NOT NULL DEFAULT '',
+              "imdbID" TEXT NOT NULL DEFAULT '',
+              "rating" INTEGER NOT NULL DEFAULT 0,
+              "status" TEXT NOT NULL DEFAULT 'wantToWatch',
+              "watchedDate" TEXT NOT NULL ON CONFLICT REPLACE DEFAULT (datetime('now')),
+              "hasWatchedDate" INTEGER NOT NULL DEFAULT 0,
+              "notes" TEXT NOT NULL DEFAULT '',
+              "sortOrder" INTEGER NOT NULL DEFAULT 0,
+              "createdDate" TEXT NOT NULL ON CONFLICT REPLACE DEFAULT (datetime('now')),
+              "voteAverage" REAL NOT NULL DEFAULT 0,
+              "originalLanguage" TEXT NOT NULL DEFAULT '',
+              "addedByUserRecordName" TEXT DEFAULT '',
+              "lastEditedByUserRecordName" TEXT DEFAULT ''
+            ) STRICT
+            """
+        ).execute(db)
+        try #sql("""
+            INSERT INTO "movieItems_new" SELECT
+              "id", "collectionID", "title", "overview", "releaseDate", "runtime",
+              "director", "cast", "genres", "posterURL", "backdropURL", "coverImageData",
+              "externalID", "imdbID", "rating", "status", "watchedDate", "hasWatchedDate",
+              "notes", "sortOrder", "createdDate", "voteAverage", "originalLanguage",
+              "addedByUserRecordName", "lastEditedByUserRecordName"
+            FROM "movieItems"
+            """).execute(db)
+        try #sql("DROP TABLE \"movieItems\"").execute(db)
+        try #sql("ALTER TABLE \"movieItems_new\" RENAME TO \"movieItems\"").execute(db)
+        try #sql("CREATE INDEX IF NOT EXISTS \"idx_movieItems_collectionID\" ON \"movieItems\"(\"collectionID\")").execute(db)
+        try #sql("CREATE INDEX IF NOT EXISTS \"idx_movieItems_externalID\" ON \"movieItems\"(\"externalID\")").execute(db)
+
+        // --- tVShowItems ---
+        try #sql(
+            """
+            CREATE TABLE "tVShowItems_new" (
+              "id" TEXT PRIMARY KEY NOT NULL ON CONFLICT REPLACE DEFAULT (uuid()),
+              "collectionID" TEXT NOT NULL REFERENCES "collections"("id") ON DELETE CASCADE,
+              "title" TEXT NOT NULL DEFAULT '',
+              "overview" TEXT NOT NULL DEFAULT '',
+              "firstAirDate" TEXT NOT NULL DEFAULT '',
+              "lastAirDate" TEXT NOT NULL DEFAULT '',
+              "numberOfSeasons" INTEGER NOT NULL DEFAULT 0,
+              "numberOfEpisodes" INTEGER NOT NULL DEFAULT 0,
+              "creators" TEXT NOT NULL DEFAULT '',
+              "cast" TEXT NOT NULL DEFAULT '',
+              "genres" TEXT NOT NULL DEFAULT '',
+              "posterURL" TEXT NOT NULL DEFAULT '',
+              "backdropURL" TEXT NOT NULL DEFAULT '',
+              "coverImageData" BLOB,
+              "externalID" TEXT NOT NULL DEFAULT '',
+              "imdbID" TEXT NOT NULL DEFAULT '',
+              "rating" INTEGER NOT NULL DEFAULT 0,
+              "status" TEXT NOT NULL DEFAULT 'wantToWatch',
+              "showStatus" TEXT NOT NULL DEFAULT '',
+              "notes" TEXT NOT NULL DEFAULT '',
+              "sortOrder" INTEGER NOT NULL DEFAULT 0,
+              "createdDate" TEXT NOT NULL ON CONFLICT REPLACE DEFAULT (datetime('now')),
+              "voteAverage" REAL NOT NULL DEFAULT 0,
+              "originalLanguage" TEXT NOT NULL DEFAULT '',
+              "network" TEXT NOT NULL DEFAULT '',
+              "addedByUserRecordName" TEXT DEFAULT '',
+              "lastEditedByUserRecordName" TEXT DEFAULT ''
+            ) STRICT
+            """
+        ).execute(db)
+        try #sql("""
+            INSERT INTO "tVShowItems_new" SELECT
+              "id", "collectionID", "title", "overview", "firstAirDate", "lastAirDate",
+              "numberOfSeasons", "numberOfEpisodes", "creators", "cast", "genres",
+              "posterURL", "backdropURL", "coverImageData", "externalID", "imdbID",
+              "rating", "status", "showStatus", "notes", "sortOrder", "createdDate",
+              "voteAverage", "originalLanguage", "network",
+              "addedByUserRecordName", "lastEditedByUserRecordName"
+            FROM "tVShowItems"
+            """).execute(db)
+        try #sql("DROP TABLE \"tVShowItems\"").execute(db)
+        try #sql("ALTER TABLE \"tVShowItems_new\" RENAME TO \"tVShowItems\"").execute(db)
+        try #sql("CREATE INDEX IF NOT EXISTS \"idx_tVShowItems_collectionID\" ON \"tVShowItems\"(\"collectionID\")").execute(db)
+        try #sql("CREATE INDEX IF NOT EXISTS \"idx_tVShowItems_externalID\" ON \"tVShowItems\"(\"externalID\")").execute(db)
+
+        // --- restaurantItems ---
+        try #sql(
+            """
+            CREATE TABLE "restaurantItems_new" (
+              "id" TEXT PRIMARY KEY NOT NULL ON CONFLICT REPLACE DEFAULT (uuid()),
+              "collectionID" TEXT NOT NULL REFERENCES "collections"("id") ON DELETE CASCADE,
+              "title" TEXT NOT NULL DEFAULT '',
+              "cuisine" TEXT NOT NULL DEFAULT '',
+              "phone" TEXT NOT NULL DEFAULT '',
+              "address" TEXT NOT NULL DEFAULT '',
+              "latitude" REAL NOT NULL DEFAULT 0,
+              "longitude" REAL NOT NULL DEFAULT 0,
+              "priceLevel" INTEGER NOT NULL DEFAULT 0,
+              "websiteURL" TEXT NOT NULL DEFAULT '',
+              "coverImageData" BLOB,
+              "externalID" TEXT NOT NULL DEFAULT '',
+              "rating" INTEGER NOT NULL DEFAULT 0,
+              "status" TEXT NOT NULL DEFAULT 'wantToVisit',
+              "visitedDate" TEXT NOT NULL ON CONFLICT REPLACE DEFAULT (datetime('now')),
+              "hasVisitedDate" INTEGER NOT NULL DEFAULT 0,
+              "notes" TEXT NOT NULL DEFAULT '',
+              "sortOrder" INTEGER NOT NULL DEFAULT 0,
+              "createdDate" TEXT NOT NULL ON CONFLICT REPLACE DEFAULT (datetime('now')),
+              "category" TEXT DEFAULT '',
+              "city" TEXT DEFAULT '',
+              "state" TEXT DEFAULT '',
+              "postalCode" TEXT DEFAULT '',
+              "country" TEXT DEFAULT '',
+              "timeZoneIdentifier" TEXT DEFAULT '',
+              "coverImageType" TEXT DEFAULT '',
+              "addedByUserRecordName" TEXT DEFAULT '',
+              "lastEditedByUserRecordName" TEXT DEFAULT ''
+            ) STRICT
+            """
+        ).execute(db)
+        try #sql("""
+            INSERT INTO "restaurantItems_new" SELECT
+              "id", "collectionID", "title", "cuisine", "phone", "address",
+              "latitude", "longitude", "priceLevel", "websiteURL", "coverImageData",
+              "externalID", "rating", "status", "visitedDate", "hasVisitedDate",
+              "notes", "sortOrder", "createdDate",
+              "category", "city", "state", "postalCode", "country",
+              "timeZoneIdentifier", "coverImageType",
+              "addedByUserRecordName", "lastEditedByUserRecordName"
+            FROM "restaurantItems"
+            """).execute(db)
+        try #sql("DROP TABLE \"restaurantItems\"").execute(db)
+        try #sql("ALTER TABLE \"restaurantItems_new\" RENAME TO \"restaurantItems\"").execute(db)
+        try #sql("CREATE INDEX IF NOT EXISTS \"idx_restaurantItems_collectionID\" ON \"restaurantItems\"(\"collectionID\")").execute(db)
+        try #sql("CREATE INDEX IF NOT EXISTS \"idx_restaurantItems_externalID\" ON \"restaurantItems\"(\"externalID\")").execute(db)
+    }
+
     return migrator
 }

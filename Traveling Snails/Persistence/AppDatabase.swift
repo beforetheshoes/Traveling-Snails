@@ -26,6 +26,8 @@ func appDatabase() throws -> DatabaseQueue {
     let migrator = makeMigrator()
     try migrator.migrate(database)
 
+    try CollectionItemDeletionLogger.install(on: database)
+
     DatabaseAccess.database = database
     return database
 }

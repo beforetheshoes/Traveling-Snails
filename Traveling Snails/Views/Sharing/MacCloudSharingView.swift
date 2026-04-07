@@ -53,7 +53,7 @@ struct MacCloudSharingView: NSViewRepresentable {
             let itemProvider = NSItemProvider()
             itemProvider.registerCloudKitShare(
                 sharedRecord.share,
-                container: CKContainer.default()
+                container: CKContainer(identifier: "iCloud.TravelingSnails")
             )
 
             service.perform(withItems: [itemProvider])
