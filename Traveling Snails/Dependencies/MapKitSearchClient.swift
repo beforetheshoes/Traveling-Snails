@@ -101,51 +101,7 @@ extension MapKitSearchClient: DependencyKey {
             let response = try await search.start()
 
             return response.mapItems.compactMap { mapItem -> RestaurantSearchResult? in
-                guard let name = mapItem.name, !name.isEmpty else { return nil }
-
-                let placemark = mapItem.placemark
-
-                // Build street address
-                let streetParts = [
-                    placemark.subThoroughfare,
-                    placemark.thoroughfare,
-                ].compactMap { $0 }
-                let streetAddress = streetParts.joined(separator: " ")
-
-                // Full address for display
-                let fullParts = [
-                    streetAddress.isEmpty ? nil : streetAddress,
-                    placemark.locality,
-                    placemark.administrativeArea,
-                ].compactMap { $0 }
-                let address = fullParts.joined(separator: ", ")
-
-                // Stable identifier via MKMapItem.Identifier (iOS 18+ / macOS 15+)
-                let stableID: String
-                if let identifier = mapItem.identifier {
-                    stableID = identifier.rawValue
-                } else {
-                    stableID = "\(name)-\(placemark.coordinate.latitude)-\(placemark.coordinate.longitude)"
-                }
-
-                let categoryLabel = POICategoryLabel(from: mapItem.pointOfInterestCategory)
-
-                return RestaurantSearchResult(
-                    id: stableID,
-                    name: name,
-                    address: address,
-                    city: placemark.locality ?? "",
-                    state: placemark.administrativeArea ?? "",
-                    postalCode: placemark.postalCode ?? "",
-                    country: placemark.country ?? "",
-                    phone: mapItem.phoneNumber ?? "",
-                    websiteURL: mapItem.url?.absoluteString ?? "",
-                    latitude: placemark.coordinate.latitude,
-                    longitude: placemark.coordinate.longitude,
-                    category: categoryLabel.rawValue,
-                    timeZoneIdentifier: mapItem.timeZone?.identifier ?? "",
-                    priceLevel: 0
-                )
+                restaurantSearchResult(from: mapItem)
             }
         },
         generateSnapshot: { latitude, longitude, title in
@@ -320,6 +276,77 @@ private func extractLinkHref(from html: String, rel: String, preferLargest: Bool
     // Return first match
     guard let range = Range(matches[0].range(at: 1), in: html) else { return nil }
     return String(html[range])
+}
+
+// MARK: - MKMapItem → RestaurantSearchResult
+
+private func restaurantSearchResult(from mapItem: MKMapItem) -> RestaurantSearchResult? {
+    guard let name = mapItem.name, !name.isEmpty else { return nil }
+
+    let coordinate: CLLocationCoordinate2D
+    let address: String
+    let city: String
+    let state: String
+    let postalCode: String
+    let country: String
+
+    if #available(iOS 26.0, macOS 26.0, *) {
+        coordinate = mapItem.location.coordinate
+        let reps = mapItem.addressRepresentations
+        address = reps?.fullAddress(includingRegion: false, singleLine: true) ?? ""
+        city = reps?.cityName ?? ""
+        country = reps?.regionName ?? ""
+        // MKAddressRepresentations doesn't expose state/postalCode as
+        // structured fields yet. Parse from the full address if we can,
+        // otherwise leave empty — these are optional display fields.
+        state = ""
+        postalCode = ""
+    } else {
+        let placemark = mapItem.placemark
+        coordinate = placemark.coordinate
+
+        let streetParts = [
+            placemark.subThoroughfare,
+            placemark.thoroughfare,
+        ].compactMap { $0 }
+        let streetAddress = streetParts.joined(separator: " ")
+        let fullParts = [
+            streetAddress.isEmpty ? nil : streetAddress,
+            placemark.locality,
+            placemark.administrativeArea,
+        ].compactMap { $0 }
+        address = fullParts.joined(separator: ", ")
+        city = placemark.locality ?? ""
+        state = placemark.administrativeArea ?? ""
+        postalCode = placemark.postalCode ?? ""
+        country = placemark.country ?? ""
+    }
+
+    let stableID: String
+    if let identifier = mapItem.identifier {
+        stableID = identifier.rawValue
+    } else {
+        stableID = "\(name)-\(coordinate.latitude)-\(coordinate.longitude)"
+    }
+
+    let categoryLabel = POICategoryLabel(from: mapItem.pointOfInterestCategory)
+
+    return RestaurantSearchResult(
+        id: stableID,
+        name: name,
+        address: address,
+        city: city,
+        state: state,
+        postalCode: postalCode,
+        country: country,
+        phone: mapItem.phoneNumber ?? "",
+        websiteURL: mapItem.url?.absoluteString ?? "",
+        latitude: coordinate.latitude,
+        longitude: coordinate.longitude,
+        category: categoryLabel.rawValue,
+        timeZoneIdentifier: mapItem.timeZone?.identifier ?? "",
+        priceLevel: 0
+    )
 }
 
 // MARK: - Map Snapshot Generation
