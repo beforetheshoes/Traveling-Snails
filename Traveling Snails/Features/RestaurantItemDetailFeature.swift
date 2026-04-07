@@ -58,6 +58,7 @@ struct RestaurantItemDetailFeature {
 
     @Dependency(\.defaultDatabase) private var database
     @Dependency(\.mapKitSearchClient) private var mapKitSearchClient
+    @Dependency(\.userIdentityClient) private var userIdentityClient
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
@@ -82,9 +83,13 @@ struct RestaurantItemDetailFeature {
             case .ratingChanged(let rating):
                 state.restaurantItem.rating = rating
                 let updated = state.restaurantItem
-                return .run { _ in
+                return .run { [userIdentityClient] _ in
+                    let recordName = (try? await userIdentityClient.currentUserRecordName()) ?? ""
                     try await database.write { db in
                         try RestaurantItem.upsert { updated }.execute(db)
+                        try RestaurantItem.find(updated.id)
+                            .update { $0.lastEditedByUserRecordName = #bind(recordName) }
+                            .execute(db)
                     }
                 } catch: { error, _ in
                     Logger.shared.error("Failed to save rating: \(error)", category: .database)
@@ -96,9 +101,13 @@ struct RestaurantItemDetailFeature {
                     state.restaurantItem.setVisitedDate(Date())
                 }
                 let updated = state.restaurantItem
-                return .run { _ in
+                return .run { [userIdentityClient] _ in
+                    let recordName = (try? await userIdentityClient.currentUserRecordName()) ?? ""
                     try await database.write { db in
                         try RestaurantItem.upsert { updated }.execute(db)
+                        try RestaurantItem.find(updated.id)
+                            .update { $0.lastEditedByUserRecordName = #bind(recordName) }
+                            .execute(db)
                     }
                 } catch: { error, _ in
                     Logger.shared.error("Failed to save status: \(error)", category: .database)
@@ -117,9 +126,13 @@ struct RestaurantItemDetailFeature {
                 state.isEditing = false
                 state.restaurantItem.notes = state.editedNotes
                 let updated = state.restaurantItem
-                return .run { _ in
+                return .run { [userIdentityClient] _ in
+                    let recordName = (try? await userIdentityClient.currentUserRecordName()) ?? ""
                     try await database.write { db in
                         try RestaurantItem.upsert { updated }.execute(db)
+                        try RestaurantItem.find(updated.id)
+                            .update { $0.lastEditedByUserRecordName = #bind(recordName) }
+                            .execute(db)
                     }
                 } catch: { error, _ in
                     Logger.shared.error("Failed to save notes: \(error)", category: .database)
@@ -136,9 +149,13 @@ struct RestaurantItemDetailFeature {
                     state.restaurantItem.clearVisitedDate()
                 }
                 let updated = state.restaurantItem
-                return .run { _ in
+                return .run { [userIdentityClient] _ in
+                    let recordName = (try? await userIdentityClient.currentUserRecordName()) ?? ""
                     try await database.write { db in
                         try RestaurantItem.upsert { updated }.execute(db)
+                        try RestaurantItem.find(updated.id)
+                            .update { $0.lastEditedByUserRecordName = #bind(recordName) }
+                            .execute(db)
                     }
                 } catch: { error, _ in
                     Logger.shared.error("Failed to save visited date: \(error)", category: .database)

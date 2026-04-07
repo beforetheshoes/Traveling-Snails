@@ -33,6 +33,8 @@ nonisolated struct TVShowItem: Hashable, Identifiable {
     var voteAverage: Double
     var originalLanguage: String
     var network: String
+    var addedByUserRecordName: String
+    var lastEditedByUserRecordName: String
 
     init(
         id: UUID = UUID(),
@@ -59,7 +61,9 @@ nonisolated struct TVShowItem: Hashable, Identifiable {
         createdDate: Date = Date(),
         voteAverage: Double = 0,
         originalLanguage: String = "",
-        network: String = ""
+        network: String = "",
+        addedByUserRecordName: String = "",
+        lastEditedByUserRecordName: String = ""
     ) {
         self.id = id
         self.collectionID = collectionID
@@ -86,6 +90,8 @@ nonisolated struct TVShowItem: Hashable, Identifiable {
         self.voteAverage = voteAverage
         self.originalLanguage = originalLanguage
         self.network = network
+        self.addedByUserRecordName = addedByUserRecordName
+        self.lastEditedByUserRecordName = lastEditedByUserRecordName
     }
 
     var coverImageURL: String { posterURL }

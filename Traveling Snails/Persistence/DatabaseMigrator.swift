@@ -534,5 +534,16 @@ func makeMigrator() -> DatabaseMigrator {
         try #sql("ALTER TABLE \"restaurantItems\" ADD COLUMN \"coverImageType\" TEXT DEFAULT ''").execute(db)
     }
 
+    migrator.registerMigration("Add item attribution columns") { db in
+        try #sql("ALTER TABLE \"bookItems\" ADD COLUMN \"addedByUserRecordName\" TEXT DEFAULT ''").execute(db)
+        try #sql("ALTER TABLE \"bookItems\" ADD COLUMN \"lastEditedByUserRecordName\" TEXT DEFAULT ''").execute(db)
+        try #sql("ALTER TABLE \"movieItems\" ADD COLUMN \"addedByUserRecordName\" TEXT DEFAULT ''").execute(db)
+        try #sql("ALTER TABLE \"movieItems\" ADD COLUMN \"lastEditedByUserRecordName\" TEXT DEFAULT ''").execute(db)
+        try #sql("ALTER TABLE \"tvShowItems\" ADD COLUMN \"addedByUserRecordName\" TEXT DEFAULT ''").execute(db)
+        try #sql("ALTER TABLE \"tvShowItems\" ADD COLUMN \"lastEditedByUserRecordName\" TEXT DEFAULT ''").execute(db)
+        try #sql("ALTER TABLE \"restaurantItems\" ADD COLUMN \"addedByUserRecordName\" TEXT DEFAULT ''").execute(db)
+        try #sql("ALTER TABLE \"restaurantItems\" ADD COLUMN \"lastEditedByUserRecordName\" TEXT DEFAULT ''").execute(db)
+    }
+
     return migrator
 }

@@ -32,7 +32,12 @@ final class SQLiteDataTestBase {
                         Lodging.self,
                         Transportation.self,
                         TransportationLeg.self,
-                        EmbeddedFileAttachment.self
+                        EmbeddedFileAttachment.self,
+                        Collection.self,
+                        BookItem.self,
+                        MovieItem.self,
+                        TVShowItem.self,
+                        RestaurantItem.self
                     )
                 }
             } catch {

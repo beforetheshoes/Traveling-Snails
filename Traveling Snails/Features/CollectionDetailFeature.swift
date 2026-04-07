@@ -50,6 +50,11 @@ struct CollectionDetailFeature {
         var shareError: String?
         var isEditingName = false
         var editedName: String = ""
+        var participants: [ShareParticipant] = []
+        var isLoadingParticipants = false
+        var showingParticipants = false
+        var isShared = false
+        var canWrite = true
     }
 
     enum Action: Equatable {
@@ -67,6 +72,11 @@ struct CollectionDetailFeature {
         case shareCreated(SharedRecord)
         case shareFailed(String)
         case shareDismissed
+        case manageShareTapped
+        case toggleParticipantSheet
+
+        case loadShareStatus
+        case shareStatusLoaded(isShared: Bool, canWrite: Bool, participants: [ShareParticipant])
 
         case editNameTapped
         case editedNameChanged(String)
@@ -84,12 +94,16 @@ struct CollectionDetailFeature {
     @Dependency(\.defaultDatabase) private var database
     @Dependency(\.defaultSyncEngine) private var syncEngine
     @Dependency(\.mapKitSearchClient) private var mapKitSearchClient
+    @Dependency(\.userIdentityClient) private var userIdentityClient
 
     var body: some ReducerOf<Self> {
         Reduce { state, action in
             switch action {
             case .onAppear:
-                return .send(.refreshCollection)
+                return .merge(
+                    .send(.refreshCollection),
+                    .send(.loadShareStatus)
+                )
 
             case .refreshCollection:
                 let collectionID = state.collection.id
@@ -161,6 +175,58 @@ struct CollectionDetailFeature {
             case .shareDismissed:
                 state.sharedRecord = nil
                 state.shareError = nil
+                return .send(.loadShareStatus)
+
+            case .manageShareTapped:
+                guard !state.isPreparingShare else { return .none }
+                state.isPreparingShare = true
+                let collection = state.collection
+                return .run { [syncEngine] send in
+                    do {
+                        let record = try await syncEngine.share(record: collection) { _ in }
+                        await send(.shareCreated(record))
+                    } catch {
+                        await send(.shareFailed(error.localizedDescription))
+                    }
+                }
+
+            case .toggleParticipantSheet:
+                state.showingParticipants.toggle()
+                return .none
+
+            case .loadShareStatus:
+                state.isLoadingParticipants = true
+                let metadataID = state.collection.syncMetadataID
+                return .run { [database, userIdentityClient] send in
+                    let share = try? await database.read { db in
+                        try SyncMetadata
+                            .find(metadataID)
+                            .select(\.share)
+                            .fetchOne(db)
+                            ?? nil
+                    }
+                    let isShared = share != nil
+                    var participants: [ShareParticipant] = []
+                    var canWrite = true
+                    if let share {
+                        await userIdentityClient.cacheParticipantNames(share.participants)
+                        participants = ShareParticipant.from(share: share)
+                        let currentUser = share.currentUserParticipant
+                        canWrite = currentUser?.permission == .readWrite
+                            || share.owner == currentUser
+                    }
+                    await send(.shareStatusLoaded(
+                        isShared: isShared,
+                        canWrite: canWrite,
+                        participants: participants
+                    ))
+                }
+
+            case .shareStatusLoaded(let isShared, let canWrite, let participants):
+                state.isLoadingParticipants = false
+                state.isShared = isShared
+                state.canWrite = canWrite
+                state.participants = participants
                 return .none
 
             case .editNameTapped:
