@@ -14,10 +14,14 @@ actor APIKeyManager {
     static let shared = APIKeyManager()
 
     private let container = CKContainer(identifier: "iCloud.TravelingSnails")
-    private let keychainService = "com.ryanleewilliams.Traveling-Snails.apikeys"
+    private let keychainClient: KeychainClient
 
     private var inMemoryCache: [String: String] = [:]
     private var hasFetched = false
+
+    init(keychainClient: KeychainClient = .liveValue) {
+        self.keychainClient = keychainClient
+    }
 
     // MARK: - Public API
 
@@ -28,7 +32,7 @@ actor APIKeyManager {
             return cached
         }
 
-        // 2. Keychain
+        // 2. Keychain (Data Protection only — no legacy fallback yet)
         if let keychainValue = readFromKeychain(key: name) {
             inMemoryCache[name] = keychainValue
             return keychainValue
@@ -92,59 +96,33 @@ actor APIKeyManager {
     // MARK: - Keychain
 
     private func saveToKeychain(key: String, value: String) {
-        guard let data = value.data(using: .utf8) else { return }
-
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: keychainService,
-            kSecAttrAccount as String: key,
-            kSecUseDataProtectionKeychain as String: true,
-        ]
-
-        // Delete existing
-        SecItemDelete(query as CFDictionary)
-
-        // Add new
-        var addQuery = query
-        addQuery[kSecValueData as String] = data
-        addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
-
-        let status = SecItemAdd(addQuery as CFDictionary, nil)
-        if status != errSecSuccess {
-            Logger.shared.warning("APIKeyManager: Keychain save failed for '\(key)': \(status)", category: .network)
+        let success = keychainClient.save(key, value, true)
+        if !success {
+            Logger.shared.warning("APIKeyManager: Keychain save failed for '\(key)'", category: .network)
         }
     }
 
     private func readFromKeychain(key: String) -> String? {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: keychainService,
-            kSecAttrAccount as String: key,
-            kSecReturnData as String: true,
-            kSecMatchLimit as String: kSecMatchLimitOne,
-            kSecUseDataProtectionKeychain as String: true,
-        ]
-
-        var result: AnyObject?
-        let status = SecItemCopyMatching(query as CFDictionary, &result)
-
-        guard status == errSecSuccess,
-              let data = result as? Data,
-              let value = String(data: data, encoding: .utf8) else {
-            return nil
+        // 1. Try Data Protection keychain (post-PR#84)
+        if let value = keychainClient.read(key, true) {
+            return value
         }
 
-        return value
+        // 2. Fallback: try legacy keychain (pre-PR#84 entries)
+        if let legacyValue = keychainClient.read(key, false) {
+            Logger.shared.info("APIKeyManager: migrating '\(key)' from legacy to Data Protection keychain", category: .network)
+            _ = keychainClient.save(key, legacyValue, true)
+            keychainClient.delete(key, false)
+            return legacyValue
+        }
+
+        return nil
     }
 
-    /// Remove all cached keys from Keychain
+    /// Remove all cached keys from Keychain (both Data Protection and legacy)
     func clearKeychain() {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: keychainService,
-            kSecUseDataProtectionKeychain as String: true,
-        ]
-        SecItemDelete(query as CFDictionary)
+        keychainClient.deleteAll(true)
+        keychainClient.deleteAll(false)
         inMemoryCache.removeAll()
         hasFetched = false
     }
