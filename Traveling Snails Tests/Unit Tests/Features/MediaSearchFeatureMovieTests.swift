@@ -118,6 +118,39 @@ struct MediaSearchFeatureMovieTests {
         #expect(items.first?.genres == "Action, Drama")
     }
 
+    // MARK: - Dismiss after save
+
+    @Test("itemSaved sets shouldDismiss to true", .tags(.unit, .fast, .parallel))
+    func itemSavedSetsShouldDismiss() async throws {
+        let dbq = try DatabaseQueue(path: ":memory:")
+        try makeMigrator().migrate(dbq)
+
+        let collectionID = UUID()
+        let collection = Collection(id: collectionID, type: .movie)
+        try await dbq.write { db in
+            try Collection.insert { collection }.execute(db)
+        }
+
+        let result = makeResult(id: "dismiss-test", title: "Dismiss Movie")
+
+        let store = TestStore(
+            initialState: MediaSearchFeature.State(
+                collectionID: collectionID,
+                collectionType: .movie
+            )
+        ) {
+            MediaSearchFeature()
+        } withDependencies: {
+            $0.defaultDatabase = dbq
+        }
+        store.exhaustivity = .off
+
+        await store.send(.resultSelected(.movie(result)))
+        await store.receive(\.itemSaved) {
+            $0.shouldDismiss = true
+        }
+    }
+
     // MARK: - Search placeholder and sheet title
 
     @Test("Movie search has correct placeholder and title", .tags(.unit, .fast, .parallel))
