@@ -78,6 +78,7 @@ struct MediaSearchFeature {
         var isSearching = false
         var errorMessage: String?
         var hasSearched = false
+        var shouldDismiss = false
 
         var searchPlaceholder: String {
             switch collectionType {
@@ -194,6 +195,7 @@ struct MediaSearchFeature {
                                 .execute(db)
                         }
                         await RecentItemGuard.shared.guardBook(bookItem)
+                        await send(.itemSaved)
                         if !bookItem.coverImageURL.isEmpty {
                             if let imageData = await MediaCacheService.shared.downloadCoverImage(from: bookItem.coverImageURL) {
                                 try await database.write { db in
@@ -203,7 +205,6 @@ struct MediaSearchFeature {
                                 }
                             }
                         }
-                        await send(.itemSaved)
                     }
 
                 case .movie(let movieResult):
@@ -217,6 +218,7 @@ struct MediaSearchFeature {
                                 .execute(db)
                         }
                         await RecentItemGuard.shared.guardMovie(movieItem)
+                        await send(.itemSaved)
                         if !movieItem.posterURL.isEmpty {
                             if let imageData = await MediaCacheService.shared.downloadCoverImage(from: movieItem.posterURL) {
                                 try await database.write { db in
@@ -226,7 +228,6 @@ struct MediaSearchFeature {
                                 }
                             }
                         }
-                        await send(.itemSaved)
                     }
 
                 case .tvShow(let tvResult):
@@ -240,6 +241,7 @@ struct MediaSearchFeature {
                                 .execute(db)
                         }
                         await RecentItemGuard.shared.guardTVShow(tvItem)
+                        await send(.itemSaved)
                         if !tvItem.posterURL.isEmpty {
                             if let imageData = await MediaCacheService.shared.downloadCoverImage(from: tvItem.posterURL) {
                                 try await database.write { db in
@@ -249,7 +251,6 @@ struct MediaSearchFeature {
                                 }
                             }
                         }
-                        await send(.itemSaved)
                     }
 
                 case .restaurant(let restaurantResult):
@@ -271,6 +272,7 @@ struct MediaSearchFeature {
                 }
 
             case .itemSaved:
+                state.shouldDismiss = true
                 return .none
 
             case .generateSnapshot(let restaurantItem):

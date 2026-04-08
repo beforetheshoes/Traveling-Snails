@@ -66,6 +66,9 @@ struct MediaSearchSheet: View {
                 }
             }
         }
+        .onChange(of: store.shouldDismiss) { _, shouldDismiss in
+            if shouldDismiss { dismiss() }
+        }
         #if os(macOS)
         .frame(minWidth: 500, minHeight: 400)
         #endif
