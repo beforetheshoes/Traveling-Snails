@@ -27,6 +27,10 @@ func appDatabase() throws -> DatabaseQueue {
     try migrator.migrate(database)
 
     try CollectionItemDeletionLogger.install(on: database)
+    try SyncEventLogger.install(on: database)
+
+    // Log any deletions that occurred since last launch
+    CollectionItemDeletionLogger.logRecentDeletions(from: database)
 
     DatabaseAccess.database = database
     return database

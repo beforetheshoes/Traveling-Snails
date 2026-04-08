@@ -193,6 +193,7 @@ struct MediaSearchFeature {
                                 .update { $0.addedByUserRecordName = #bind(recordName) }
                                 .execute(db)
                         }
+                        await RecentItemGuard.shared.guardBook(bookItem)
                         if !bookItem.coverImageURL.isEmpty {
                             if let imageData = await MediaCacheService.shared.downloadCoverImage(from: bookItem.coverImageURL) {
                                 try await database.write { db in
@@ -215,6 +216,7 @@ struct MediaSearchFeature {
                                 .update { $0.addedByUserRecordName = #bind(recordName) }
                                 .execute(db)
                         }
+                        await RecentItemGuard.shared.guardMovie(movieItem)
                         if !movieItem.posterURL.isEmpty {
                             if let imageData = await MediaCacheService.shared.downloadCoverImage(from: movieItem.posterURL) {
                                 try await database.write { db in
@@ -237,6 +239,7 @@ struct MediaSearchFeature {
                                 .update { $0.addedByUserRecordName = #bind(recordName) }
                                 .execute(db)
                         }
+                        await RecentItemGuard.shared.guardTVShow(tvItem)
                         if !tvItem.posterURL.isEmpty {
                             if let imageData = await MediaCacheService.shared.downloadCoverImage(from: tvItem.posterURL) {
                                 try await database.write { db in
@@ -259,6 +262,7 @@ struct MediaSearchFeature {
                                 .update { $0.addedByUserRecordName = #bind(recordName) }
                                 .execute(db)
                         }
+                        await RecentItemGuard.shared.guardRestaurant(restaurantItem)
                         await send(.itemSaved)
                         if restaurantItem.hasCoordinate || !restaurantItem.websiteURL.isEmpty {
                             await send(.generateSnapshot(restaurantItem))
