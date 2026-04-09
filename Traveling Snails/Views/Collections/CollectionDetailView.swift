@@ -218,9 +218,14 @@ struct CollectionDetailView: View {
         )) {
             ParticipantListView(
                 participants: store.state.participants,
+                isOwner: store.state.isOwner,
                 onManageSharing: {
                     store.send(.toggleParticipantSheet)
                     store.send(.manageShareTapped)
+                },
+                onLeaveShare: {
+                    store.send(.toggleParticipantSheet)
+                    store.send(.leaveShareTapped)
                 }
             )
             .frame(minWidth: 280)

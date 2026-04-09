@@ -7,7 +7,9 @@ import SwiftUI
 
 struct ParticipantListView: View {
     let participants: [ShareParticipant]
+    var isOwner: Bool = true
     let onManageSharing: () -> Void
+    var onLeaveShare: (() -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -22,11 +24,19 @@ struct ParticipantListView: View {
             Divider()
                 .padding(.vertical, 8)
 
-            Button(action: onManageSharing) {
-                Label("Manage Sharing", systemImage: "person.badge.plus")
+            if isOwner {
+                Button(action: onManageSharing) {
+                    Label("Manage Sharing", systemImage: "person.badge.plus")
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+            } else if let onLeaveShare {
+                Button(role: .destructive, action: onLeaveShare) {
+                    Label("Leave Share", systemImage: "person.badge.minus")
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
         }
         .padding(.vertical, 8)
     }

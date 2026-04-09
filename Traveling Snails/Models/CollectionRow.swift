@@ -27,10 +27,12 @@ struct CollectionRow: Identifiable {
             } else {
                 return "Shared"
             }
-        } else if let ownerName = share.owner.userIdentity.nameComponents?.formatted() {
-            return "Shared by \(ownerName)"
         } else {
-            return nil
+            let ownerName = share.owner.userIdentity.nameComponents?.formatted() ?? ""
+            if ownerName.trimmingCharacters(in: .whitespaces).isEmpty {
+                return "Shared with you"
+            }
+            return "Shared by \(ownerName)"
         }
     }
 

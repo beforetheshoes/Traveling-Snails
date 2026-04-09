@@ -174,10 +174,11 @@ struct CollectionSharingTests {
             ),
         ]
 
-        await store.send(.shareStatusLoaded(isShared: true, canWrite: true, participants: participants)) {
+        await store.send(.shareStatusLoaded(isShared: true, canWrite: true, isOwner: true, participants: participants)) {
             $0.isLoadingParticipants = false
             $0.isShared = true
             $0.canWrite = true
+            $0.isOwner = true
             $0.participants = participants
         }
     }
@@ -193,10 +194,57 @@ struct CollectionSharingTests {
         }
         store.exhaustivity = .off
 
-        await store.send(.shareStatusLoaded(isShared: true, canWrite: false, participants: [])) {
+        await store.send(.shareStatusLoaded(isShared: true, canWrite: false, isOwner: false, participants: [])) {
             $0.isLoadingParticipants = false
             $0.isShared = true
             $0.canWrite = false
+            $0.isOwner = false
+        }
+    }
+
+    @Test("Manage share tapped as non-owner shows participants", .tags(.unit, .fast, .sharing))
+    func manageShareNonOwner() async throws {
+        let store = TestStore(
+            initialState: CollectionDetailFeature.State(
+                collection: Collection(name: "Test", type: .movie),
+                isShared: true,
+                isOwner: false
+            )
+        ) {
+            CollectionDetailFeature()
+        }
+        store.exhaustivity = .off
+
+        await store.send(.manageShareTapped) {
+            $0.showingParticipants = true
+        }
+    }
+
+    @Test("Manage share tapped as owner sets preparing state", .tags(.unit, .fast, .sharing))
+    func manageShareOwner() async throws {
+        let db = try DatabaseQueue(path: ":memory:")
+        try makeMigrator().migrate(db)
+
+        let collection = Collection(name: "Test", type: .movie)
+        try await db.write { db in
+            try Collection.upsert { collection }.execute(db)
+        }
+
+        let store = TestStore(
+            initialState: CollectionDetailFeature.State(
+                collection: collection,
+                isShared: true,
+                isOwner: true
+            )
+        ) {
+            CollectionDetailFeature()
+        } withDependencies: {
+            $0.defaultDatabase = db
+        }
+        store.exhaustivity = .off
+
+        await store.send(.manageShareTapped) {
+            $0.isPreparingShare = true
         }
     }
 
