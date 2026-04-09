@@ -55,6 +55,7 @@ struct CollectionDetailFeature {
         var showingParticipants = false
         var isShared = false
         var canWrite = true
+        var isOwner = true
     }
 
     enum Action: Equatable {
@@ -76,7 +77,10 @@ struct CollectionDetailFeature {
         case toggleParticipantSheet
 
         case loadShareStatus
-        case shareStatusLoaded(isShared: Bool, canWrite: Bool, participants: [ShareParticipant])
+        case shareStatusLoaded(isShared: Bool, canWrite: Bool, isOwner: Bool, participants: [ShareParticipant])
+
+        case leaveShareTapped
+        case fetchSharedZoneChanges
 
         case editNameTapped
         case editedNameChanged(String)
@@ -178,16 +182,21 @@ struct CollectionDetailFeature {
                 return .send(.loadShareStatus)
 
             case .manageShareTapped:
-                guard !state.isPreparingShare else { return .none }
-                state.isPreparingShare = true
-                let collection = state.collection
-                return .run { [syncEngine] send in
-                    do {
-                        let record = try await syncEngine.share(record: collection) { _ in }
-                        await send(.shareCreated(record))
-                    } catch {
-                        await send(.shareFailed(error.localizedDescription))
+                if state.isOwner {
+                    guard !state.isPreparingShare else { return .none }
+                    state.isPreparingShare = true
+                    let collection = state.collection
+                    return .run { [syncEngine] send in
+                        do {
+                            let record = try await syncEngine.share(record: collection) { _ in }
+                            await send(.shareCreated(record))
+                        } catch {
+                            await send(.shareFailed(error.localizedDescription))
+                        }
                     }
+                } else {
+                    state.showingParticipants = true
+                    return .none
                 }
 
             case .toggleParticipantSheet:
@@ -208,26 +217,69 @@ struct CollectionDetailFeature {
                     let isShared = share != nil
                     var participants: [ShareParticipant] = []
                     var canWrite = true
+                    var isOwner = true
                     if let share {
                         await userIdentityClient.cacheParticipantNames(share.participants)
                         participants = ShareParticipant.from(share: share)
                         let currentUser = share.currentUserParticipant
                         canWrite = currentUser?.permission == .readWrite
                             || share.owner == currentUser
+                        isOwner = share.owner == currentUser
                     }
                     await send(.shareStatusLoaded(
                         isShared: isShared,
                         canWrite: canWrite,
+                        isOwner: isOwner,
                         participants: participants
                     ))
                 }
 
-            case .shareStatusLoaded(let isShared, let canWrite, let participants):
+            case .shareStatusLoaded(let isShared, let canWrite, let isOwner, let participants):
                 state.isLoadingParticipants = false
                 state.isShared = isShared
                 state.canWrite = canWrite
+                state.isOwner = isOwner
                 state.participants = participants
+                if isShared && !isOwner {
+                    return .send(.fetchSharedZoneChanges)
+                }
                 return .none
+
+            case .fetchSharedZoneChanges:
+                let metadataID = state.collection.syncMetadataID
+                return .run { [syncEngine, database] _ in
+                    // Read the shared zone from SyncMetadata. The shared
+                    // CKSyncEngine may only do DatabaseChanges (zone discovery)
+                    // and skip ZoneChanges (actual record fetch) if the change
+                    // token is up to date. Passing a specific zone scope forces
+                    // the ZoneChanges fetch.
+                    let lastKnownRecord = try? await database.read { db in
+                        try SyncMetadata
+                            .find(metadataID)
+                            .select(\._lastKnownServerRecordAllFields)
+                            .fetchOne(db)
+                            ?? nil
+                    }
+                    if let lastKnownRecord,
+                       lastKnownRecord.recordID.zoneID.ownerName != CKCurrentUserDefaultName
+                    {
+                        try? await syncEngine.fetchChanges(
+                            CKSyncEngine.FetchChangesOptions(
+                                scope: .zoneIDs([lastKnownRecord.recordID.zoneID])
+                            )
+                        )
+                    } else {
+                        try? await syncEngine.fetchChanges()
+                    }
+                }
+
+            case .leaveShareTapped:
+                let collectionID = state.collection.id
+                return .run { [database] _ in
+                    try await database.write { db in
+                        try Collection.find(collectionID).delete().execute(db)
+                    }
+                }
 
             case .editNameTapped:
                 state.isEditingName = true
